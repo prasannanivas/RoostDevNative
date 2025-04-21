@@ -15,35 +15,41 @@ const Home = () => {
   const [clientQuestionaire, setClientQuestionaire] = useState({});
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
+  const fetchClientInfo = async () => {
+    if (!auth?.client) return;
+    try {
+      const response = await fetch(
+        `http://54.89.183.155:5000/client/${auth.client.id}`
+      );
+      const data = await response.json();
+      setClientQuestionaire({
+        applyingbehalf: data.applyingbehalf,
+        employmentStatus: data.employmentStatus,
+        ownAnotherProperty: data.ownAnotherProperty,
+      });
+      setShowQuestionnaire(
+        !data.applyingbehalf ||
+          !data.employmentStatus ||
+          !data.ownAnotherProperty
+      );
+    } catch (error) {
+      console.error("Error fetching client info", error);
+    }
+  };
+
   useEffect(() => {
-    //   console.log("Auth changed:", auth);
     if (auth?.client) {
       startTransition(() => {
-        const getClientInfo = async () => {
-          try {
-            // Update URL to match your backend for mobile (e.g., using your computer's IP)
-            await fetch(`http://54.89.183.155:5000/client/${auth.client.id}`)
-              .then((response) => response.json())
-              .then((data) => {
-                setClientQuestionaire({
-                  applyingbehalf: data.applyingbehalf,
-                  employmentStatus: data.employmentStatus,
-                  ownAnotherProperty: data.ownAnotherProperty,
-                });
-                setShowQuestionnaire(
-                  !data.applyingbehalf ||
-                    !data.employmentStatus ||
-                    !data.ownAnotherProperty
-                );
-              });
-          } catch (error) {
-            console.error("Error fetching client info", error);
-          }
-        };
-        getClientInfo();
+        fetchClientInfo();
       });
     }
   }, [auth]);
+
+  useEffect(() => {
+    if (auth?.client) {
+      auth.refetch = fetchClientInfo;
+    }
+  }, [auth?.client]);
 
   if (!auth) {
     return <LoginScreen />;

@@ -343,6 +343,7 @@ const RealtorHome = () => {
               <RealtorRewards
                 realtor={realtorFromContext.realtorInfo || {}}
                 invitedRealtors={realtorFromContext.invitedRealtors || []}
+                invitedClients={realtorFromContext.invitedClients || []}
                 getInitials={getInitials}
                 onClose={() => setShowRewards(false)}
               />

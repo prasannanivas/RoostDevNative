@@ -191,12 +191,12 @@ const ClientDetails = () => {
         <View style={styles.statusBadge}>
           <Text style={styles.statusBadgeText}>{client.status}</Text>
         </View>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.requestButton}
           onPress={() => setIsModalOpen(true)}
         >
           <Text style={styles.requestButtonText}>Request Document</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <RequestDocumentModal
@@ -206,7 +206,7 @@ const ClientDetails = () => {
       />
 
       <View style={styles.contentWrapper}>
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Document Review</Text>
           {mergedDocs && mergedDocs.length > 0 ? (
             mergedDocs.map((doc, index) => (
@@ -261,7 +261,7 @@ const ClientDetails = () => {
           ) : (
             <Text style={styles.emptyState}>No documents to review</Text>
           )}
-        </View>
+        </View> */}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Documents Submitted</Text>

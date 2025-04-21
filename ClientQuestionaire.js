@@ -1,3 +1,4 @@
+// ClientQuestionaire.js
 import React, { useState } from "react";
 import {
   View,
@@ -7,22 +8,31 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from "react-native";
 import axios from "axios";
 import { useAuth } from "./context/AuthContext";
 
-function ClientQuestionaire() {
+export default function ClientQuestionaire() {
   const { auth } = useAuth();
   const clientId = auth.client.id;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     applyingbehalf: "",
     employmentStatus: "",
     ownAnotherProperty: "",
+    otherDetails: {
+      name: "",
+      email: "",
+      phone: "",
+      relationship: "",
+      employmentStatus: "",
+      ownAnotherProperty: "",
+    },
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Submit the questionnaire data to the backend
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
@@ -31,7 +41,8 @@ function ClientQuestionaire() {
         formData
       );
       Alert.alert("Success", "Questionnaire submitted successfully!");
-      // You can also trigger a refresh or navigation here
+      // Trigger refetch in Home component by updating auth
+      auth.refetch && auth.refetch();
     } catch (error) {
       console.error("Error submitting questionnaire:", error);
       Alert.alert("Error", "There was an error submitting the questionnaire.");
@@ -40,20 +51,23 @@ function ClientQuestionaire() {
     }
   };
 
-  // Update the form field when a button is pressed
   const handleButtonSelect = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const nextStep = () => {
-    setCurrentStep(currentStep + 1);
+  const handleOtherDetailsChange = (field, value) => {
+    setFormData({
+      ...formData,
+      otherDetails: {
+        ...formData.otherDetails,
+        [field]: value,
+      },
+    });
   };
 
-  const prevStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
+  const nextStep = () => setCurrentStep((s) => s + 1);
+  const prevStep = () => setCurrentStep((s) => s - 1);
 
-  // Render the appropriate step content based on currentStep
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -62,178 +76,198 @@ function ClientQuestionaire() {
             <Text style={styles.sectionTitle}>Application Details</Text>
             <Text style={styles.label}>Who is applying for this property?</Text>
             <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.applyingbehalf === "self" && styles.selectedButton,
-                ]}
-                onPress={() => handleButtonSelect("applyingbehalf", "self")}
-              >
-                <Text
+              {["self", "other"].map((opt) => (
+                <TouchableOpacity
+                  key={opt}
                   style={[
-                    styles.optionText,
-                    formData.applyingbehalf === "self" && styles.selectedText,
+                    styles.optionButton,
+                    formData.applyingbehalf === opt && styles.selectedButton,
                   ]}
+                  onPress={() => handleButtonSelect("applyingbehalf", opt)}
                 >
-                  Just me
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.applyingbehalf === "other" && styles.selectedButton,
-                ]}
-                onPress={() => handleButtonSelect("applyingbehalf", "other")}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.applyingbehalf === "other" && styles.selectedText,
-                  ]}
-                >
-                  Me and someone else
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      formData.applyingbehalf === opt && styles.selectedText,
+                    ]}
+                  >
+                    {opt === "self" ? "Just me" : "Me and someone else"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         );
+
       case 2:
-        return (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Employment Information</Text>
-            <Text style={styles.label}>What is your employment status?</Text>
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.employmentStatus === "Employed" &&
-                    styles.selectedButton,
-                ]}
-                onPress={() =>
-                  handleButtonSelect("employmentStatus", "Employed")
-                }
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.employmentStatus === "Employed" &&
-                      styles.selectedText,
-                  ]}
-                >
-                  Employed at a company
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.employmentStatus === "Selfemployed" &&
-                    styles.selectedButton,
-                ]}
-                onPress={() =>
-                  handleButtonSelect("employmentStatus", "Selfemployed")
-                }
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.employmentStatus === "Selfemployed" &&
-                      styles.selectedText,
-                  ]}
-                >
-                  Self employed
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.employmentStatus === "Unemployed" &&
-                    styles.selectedButton,
-                ]}
-                onPress={() =>
-                  handleButtonSelect("employmentStatus", "Unemployed")
-                }
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.employmentStatus === "Unemployed" &&
-                      styles.selectedText,
-                  ]}
-                >
-                  Unemployed
-                </Text>
-              </TouchableOpacity>
+        if (formData.applyingbehalf === "other") {
+          return (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Other Person's Details</Text>
+              {[
+                { key: "name", placeholder: "Full Name" },
+                {
+                  key: "email",
+                  placeholder: "Email",
+                  keyboard: "email-address",
+                },
+                {
+                  key: "phone",
+                  placeholder: "Phone Number",
+                  keyboard: "phone-pad",
+                },
+                { key: "relationship", placeholder: "Relationship" },
+              ].map(({ key, placeholder, keyboard }) => (
+                <TextInput
+                  key={key}
+                  style={styles.input}
+                  placeholder={placeholder}
+                  value={formData.otherDetails[key]}
+                  onChangeText={(text) => handleOtherDetailsChange(key, text)}
+                  keyboardType={keyboard || "default"}
+                  autoCapitalize="none"
+                />
+              ))}
             </View>
-          </View>
-        );
+          );
+        }
+        setCurrentStep(3);
+        return null;
+
       case 3:
         return (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Property Ownership</Text>
-            <Text style={styles.label}>Do you own another property?</Text>
+            <Text style={styles.sectionTitle}>Employment Information</Text>
+            {/* Self status */}
+            <Text style={styles.label}>Your Employment Status</Text>
             <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.ownAnotherProperty === "Yes - with a mortgage" &&
-                    styles.selectedButton,
-                ]}
-                onPress={() =>
-                  handleButtonSelect(
-                    "ownAnotherProperty",
-                    "Yes - with a mortgage"
-                  )
-                }
-              >
-                <Text
+              {["Employed", "Selfemployed", "Unemployed"].map((st) => (
+                <TouchableOpacity
+                  key={st}
                   style={[
-                    styles.optionText,
-                    formData.ownAnotherProperty === "Yes - with a mortgage" &&
-                      styles.selectedText,
+                    styles.optionButton,
+                    formData.employmentStatus === st && styles.selectedButton,
                   ]}
+                  onPress={() => handleButtonSelect("employmentStatus", st)}
                 >
-                  Yes - with a mortgage
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.ownAnotherProperty === "Yes - All paid off" &&
-                    styles.selectedButton,
-                ]}
-                onPress={() =>
-                  handleButtonSelect("ownAnotherProperty", "Yes - All paid off")
-                }
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.ownAnotherProperty === "Yes - All paid off" &&
-                      styles.selectedText,
-                  ]}
-                >
-                  Yes - All paid off
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  formData.ownAnotherProperty === "No" && styles.selectedButton,
-                ]}
-                onPress={() => handleButtonSelect("ownAnotherProperty", "No")}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    formData.ownAnotherProperty === "No" && styles.selectedText,
-                  ]}
-                >
-                  No
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      formData.employmentStatus === st && styles.selectedText,
+                    ]}
+                  >
+                    {st}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
+
+            {formData.applyingbehalf === "other" && (
+              <>
+                <Text style={styles.label}>
+                  {formData.otherDetails.name}'s Employment Status
+                </Text>
+                <View style={styles.buttonGroup}>
+                  {["Employed", "Selfemployed", "Unemployed"].map((st) => (
+                    <TouchableOpacity
+                      key={st}
+                      style={[
+                        styles.optionButton,
+                        formData.otherDetails.employmentStatus === st &&
+                          styles.selectedButton,
+                      ]}
+                      onPress={() =>
+                        handleOtherDetailsChange("employmentStatus", st)
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          formData.otherDetails.employmentStatus === st &&
+                            styles.selectedText,
+                        ]}
+                      >
+                        {st}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
           </View>
         );
+
+      case 4:
+        return (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Property Ownership</Text>
+
+            <Text style={styles.label}>Do you own another property?</Text>
+            <View style={styles.buttonGroup}>
+              {["Yes - with a mortgage", "Yes - All paid off", "No"].map(
+                (opt) => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={[
+                      styles.optionButton,
+                      formData.ownAnotherProperty === opt &&
+                        styles.selectedButton,
+                    ]}
+                    onPress={() =>
+                      handleButtonSelect("ownAnotherProperty", opt)
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.optionText,
+                        formData.ownAnotherProperty === opt &&
+                          styles.selectedText,
+                      ]}
+                    >
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
+            </View>
+
+            {formData.applyingbehalf?.toLowerCase() === "other" && (
+              <>
+                <Text style={styles.label}>
+                  Does {formData.otherDetails.name} own another property?
+                </Text>
+                <View style={styles.buttonGroup}>
+                  {["Yes - with a mortgage", "Yes - All paid off", "No"].map(
+                    (opt) => (
+                      <TouchableOpacity
+                        key={opt}
+                        style={[
+                          styles.optionButton,
+                          formData.otherDetails.ownAnotherProperty === opt &&
+                            styles.selectedButton,
+                        ]}
+                        onPress={() =>
+                          handleOtherDetailsChange("ownAnotherProperty", opt)
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            formData.otherDetails.ownAnotherProperty === opt &&
+                              styles.selectedText,
+                          ]}
+                        >
+                          {opt}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                </View>
+              </>
+            )}
+          </View>
+        );
+
       default:
         return null;
     }
@@ -249,19 +283,19 @@ function ClientQuestionaire() {
             <Text style={styles.navButtonText}>Previous</Text>
           </TouchableOpacity>
         )}
-        {currentStep < 3 && (
+        {currentStep < 4 && (
           <TouchableOpacity style={styles.navButton} onPress={nextStep}>
             <Text style={styles.navButtonText}>Next</Text>
           </TouchableOpacity>
         )}
-        {currentStep === 3 && (
+        {currentStep === 4 && (
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color="#FFF" />
             ) : (
               <Text style={styles.submitButtonText}>Submit Questionnaire</Text>
             )}
@@ -271,8 +305,6 @@ function ClientQuestionaire() {
     </ScrollView>
   );
 }
-
-export default ClientQuestionaire;
 
 const styles = StyleSheet.create({
   container: {
@@ -353,5 +385,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FFFFFF",
     fontWeight: "600",
+  },
+  /* new TextInput style */
+  input: {
+    borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 15,
+    fontSize: 14,
+    color: "#23231A",
   },
 });

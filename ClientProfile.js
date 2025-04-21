@@ -290,6 +290,13 @@ export default function ClientProfile({ onClose }) {
             <Text style={styles.passwordButtonText}>Change Password</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Logout Section */}
+        <View style={styles.logoutSection}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Password Modal */}
@@ -411,6 +418,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  logoutSection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
   },
 
   profileTitle: {
