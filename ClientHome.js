@@ -11,6 +11,8 @@ import {
   SafeAreaView,
   Alert,
   Platform,
+  RefreshControl,
+  Linking,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -23,10 +25,10 @@ const ClientHome = () => {
   const { auth } = useAuth();
   const { documents: contextDocuments, clientInfo } = useClient();
   const [showProfile, setShowProfile] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const clientFromContext = clientInfo || auth.client;
 
-  console.log("Client from context:", clientFromContext);
   const clientId = clientFromContext.id;
 
   const [documentsFromApi, setDocumentsFromApi] = useState([]);
@@ -37,6 +39,7 @@ const ClientHome = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Pull in contextDocs when they change
   useEffect(() => {
@@ -86,83 +89,153 @@ const ClientHome = () => {
   // Pick PDF
   const pickDocumentFile = async () => {
     try {
+      setIsLoading(true);
       const res = await DocumentPicker.getDocumentAsync({
         type: "application/pdf",
       });
-      if (res.type === "success") {
-        setSelectedFile({ uri: res.uri, name: res.name, type: res.mimeType });
+
+      console.log("Document picker result:", res);
+
+      if (!res.canceled && res.assets && res.assets[0]) {
+        const file = res.assets[0];
+        // Verify file is actually a PDF
+        if (
+          !file.mimeType?.includes("pdf") &&
+          !file.name?.toLowerCase().endsWith(".pdf")
+        ) {
+          Alert.alert("Invalid File", "Please select a PDF file");
+          return;
+        }
+
+        // Verify file size (limit to 10MB)
+        if (file.size && file.size > 10 * 1024 * 1024) {
+          Alert.alert(
+            "File Too Large",
+            "Please select a file smaller than 10MB"
+          );
+          return;
+        }
+
+        setSelectedFile({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType,
+        });
+        Alert.alert("Success", "File selected successfully");
+      } else {
+        Alert.alert("Cancelled", "No file was selected");
       }
     } catch (e) {
-      Alert.alert("File error", "Could not pick file");
+      console.error("File pick error:", e);
+      Alert.alert("Error", "Could not pick file. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Scan & PDF
   const pickCameraFile = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      return Alert.alert("Permission denied", "Camera needed");
-    }
-
-    const snap = async () => {
-      const r = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaType.Images,
-        allowsEditing: true,
-        quality: 0.8,
-      });
-      if (!r.canceled && r.assets?.length) return r.assets[0].uri;
-      return null;
-    };
-
-    let pages = [],
-      again = true;
-    while (again) {
-      const uri = await snap();
-      if (uri) {
-        pages.push(uri);
-        // ask
-        // eslint-disable-next-line no-await-in-loop
-        again = await new Promise((res) =>
-          Alert.alert("Another page?", `Scanned ${pages.length}. More?`, [
-            { text: "No", onPress: () => res(false) },
-            { text: "Yes", onPress: () => res(true) },
-          ])
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        return Alert.alert(
+          "Camera Permission Required",
+          "Please enable camera access in your device settings to scan documents.",
+          [
+            { text: "OK" },
+            {
+              text: "Open Settings",
+              onPress: () => Linking.openSettings(),
+            },
+          ]
         );
-      } else again = false;
-    }
+      }
 
-    if (pages.length) {
-      const html = await Promise.all(
-        pages.map(async (u) => {
-          const blob = await (await fetch(u)).blob();
-          const b64 = await new Promise((res) => {
-            const r = new FileReader();
-            r.onloadend = () => res(r.result);
-            r.readAsDataURL(blob);
+      const snap = async () => {
+        try {
+          const r = await ImagePicker.launchCameraAsync({
+            mediaTypes: "images",
+            allowsEditing: true,
+            quality: 0.8,
           });
-          return `<img src="${b64}" style="page-break-after: always;" />`;
-        })
-      ).then(
-        (arr) => `
+          if (!r.canceled && r.assets?.length) return r.assets[0].uri;
+          return null;
+        } catch (err) {
+          console.error("Camera error:", err);
+          Alert.alert(
+            "Camera Error",
+            "Failed to capture image. Please try again.",
+            [{ text: "OK" }]
+          );
+          return null;
+        }
+      };
+
+      let pages = [],
+        again = true;
+      while (again) {
+        const uri = await snap();
+        if (uri) {
+          pages.push(uri);
+          again = await new Promise((res) =>
+            Alert.alert("Another page?", `Scanned ${pages.length}. More?`, [
+              { text: "No", onPress: () => res(false) },
+              { text: "Yes", onPress: () => res(true) },
+            ])
+          );
+        } else again = false;
+      }
+
+      if (pages.length) {
+        const html = await Promise.all(
+          pages.map(async (u) => {
+            const blob = await (await fetch(u)).blob();
+            const b64 = await new Promise((res) => {
+              const r = new FileReader();
+              r.onloadend = () => res(r.result);
+              r.readAsDataURL(blob);
+            });
+            return `<img src="${b64}" style="page-break-after: always;" />`;
+          })
+        ).then(
+          (arr) => `
         <html><body style="margin:0">${arr.join("")}</body></html>
       `
-      );
+        );
 
-      const { uri: pdfUri } = await Print.printToFileAsync({ html });
-      setSelectedFile({
-        uri: pdfUri,
-        name: `scan-${Date.now()}.pdf`,
-        type: "application/pdf",
-      });
+        const { uri: pdfUri } = await Print.printToFileAsync({ html });
+        setSelectedFile({
+          uri: pdfUri,
+          name: `scan-${Date.now()}.pdf`,
+          type: "application/pdf",
+        });
+      }
+    } catch (error) {
+      Alert.alert(
+        "Scanner Error",
+        "An unexpected error occurred while accessing the camera.",
+        [{ text: "OK" }]
+      );
     }
   };
 
   // Choose method
   const handleFileSelection = () =>
     Alert.alert("Attach document", "", [
-      { text: "Upload PDF", onPress: pickDocumentFile },
-      { text: "Scan Document", onPress: pickCameraFile },
-      { text: "Cancel", style: "cancel" },
+      {
+        text: "Upload PDF",
+        onPress: pickDocumentFile,
+        disabled: isLoading,
+      },
+      {
+        text: "Scan Document",
+        onPress: pickCameraFile,
+        disabled: isLoading,
+      },
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
     ]);
 
   // Upload
@@ -205,6 +278,41 @@ const ClientHome = () => {
       closeModal();
     } catch (e) {
       Alert.alert("Error", "Upload failed");
+    }
+  };
+
+  // Refresh logic
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    auth.refetch?.().finally(() => setRefreshing(false));
+  }, [auth]);
+
+  // Help button logic
+  const handleHelpPress = async () => {
+    const phoneNumber = "+16475730423";
+    const message = "Can you help me with my mortgage application?";
+
+    // Try SMS first
+    const smsUrl = `sms:${phoneNumber}${
+      Platform.OS === "ios" ? "&" : "?"
+    }body=${encodeURIComponent(message)}`;
+    const canOpenSms = await Linking.canOpenURL(smsUrl);
+
+    if (canOpenSms) {
+      await Linking.openURL(smsUrl);
+    } else {
+      // If SMS fails, try WhatsApp
+      const whatsappUrl = `whatsapp://send?phone=${phoneNumber.replace(
+        "+",
+        ""
+      )}&text=${encodeURIComponent(message)}`;
+      const canOpenWhatsapp = await Linking.canOpenURL(whatsappUrl);
+
+      if (canOpenWhatsapp) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        Alert.alert("Error", "No messaging app available");
+      }
     }
   };
 
@@ -259,83 +367,93 @@ const ClientHome = () => {
                 .toUpperCase()}
             </Text>
           </View>
-          <Text style={styles.welcomeName}>
+          <Text
+            style={styles.welcomeName}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             Welcome {clientFromContext.name}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.helpButton}>
+        <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
           <Text style={styles.helpButtonText}>HELP</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.mainContent}>
-        <Text style={styles.bigTitle}>Everything need for a mortgage</Text>
-        <Text style={styles.subTitle}>
-          We understand we are asking for a lot but it’s what’s needed for all
-          mortgages in Ontario
-        </Text>
+      <ScrollView
+        style={styles.mainContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.contentContainer}>
+          <Text style={styles.bigTitle}>Everything need for a mortgage</Text>
+          <Text style={styles.subTitle}>
+            We understand we are asking for a lot but it’s what’s needed for all
+            mortgages in Ontario
+          </Text>
 
-        {/* Profile Panel */}
-        <Modal
-          visible={showProfile}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setShowProfile(false)}
-        >
-          <View style={styles.profileModalContainer}>
-            <View style={styles.profileModalContent}>
-              <TouchableOpacity
-                style={styles.closeProfileButton}
-                onPress={() => setShowProfile(false)}
-              >
-                <Text style={styles.closeProfileText}>×</Text>
-              </TouchableOpacity>
-              <ClientProfile />
-            </View>
-          </View>
-        </Modal>
+          {loadingDocuments ? (
+            <ActivityIndicator
+              size="large"
+              color="#019B8E"
+              style={styles.loadingIndicator}
+            />
+          ) : (
+            <View>
+              {/* Needed */}
+              <Text style={styles.sectionHeader}>WHAT’S NEEDED FOR YOU</Text>
+              <View style={styles.docsContainer}>
+                {docsNeeded.length > 0 ? (
+                  docsNeeded.map(renderDocumentRow)
+                ) : (
+                  <Text style={styles.noDocsText}>No documents needed.</Text>
+                )}
+              </View>
 
-        {loadingDocuments ? (
-          <ActivityIndicator
-            size="large"
-            color="#019B8E"
-            style={styles.loadingIndicator}
-          />
-        ) : (
-          <>
-            {/* Needed */}
-            <Text style={styles.sectionHeader}>WHAT’S NEEDED FOR YOU</Text>
-            <View style={styles.docsContainer}>
-              {docsNeeded.length > 0 ? (
-                docsNeeded.map(renderDocumentRow)
-              ) : (
-                <Text style={styles.noDocsText}>No documents needed.</Text>
-              )}
-            </View>
-
-            {/* Requested */}
-            {clientFromContext.applyingbehalf &&
-              clientFromContext.applyingbehalf.toLowerCase() === "other" && (
-                <>
-                  {" "}
-                  <Text style={styles.sectionHeader}>
-                    WHAT’S NEEDED FOR{" "}
-                    {clientFromContext.otherDetails?.name || ""}
-                  </Text>
-                  <View style={styles.docsContainer}>
-                    {docsRequested.length > 0 ? (
-                      docsRequested.map(renderDocumentRow)
-                    ) : (
-                      <Text style={styles.noDocsText}>
-                        No documents requested.
-                      </Text>
-                    )}
+              {/* Requested */}
+              {clientFromContext.applyingbehalf &&
+                clientFromContext.applyingbehalf.toLowerCase() === "other" && (
+                  <View>
+                    <Text style={styles.sectionHeader}>
+                      WHAT’S NEEDED FOR{" "}
+                      {clientFromContext.otherDetails?.name || ""}
+                    </Text>
+                    <View style={styles.docsContainer}>
+                      {docsRequested.length > 0 ? (
+                        docsRequested.map(renderDocumentRow)
+                      ) : (
+                        <Text style={styles.noDocsText}>
+                          No documents requested.
+                        </Text>
+                      )}
+                    </View>
                   </View>
-                </>
-              )}
-          </>
-        )}
+                )}
+            </View>
+          )}
+        </View>
       </ScrollView>
+
+      {/* Profile Panel */}
+      <Modal
+        visible={showProfile}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowProfile(false)}
+      >
+        <View style={styles.profileModalContainer}>
+          <View style={styles.profileModalContent}>
+            <TouchableOpacity
+              style={styles.closeProfileButton}
+              onPress={() => setShowProfile(false)}
+            >
+              <Text style={styles.closeProfileText}>×</Text>
+            </TouchableOpacity>
+            <ClientProfile />
+          </View>
+        </View>
+      </Modal>
 
       {/* Upload Modal */}
       <Modal
@@ -356,13 +474,24 @@ const ClientHome = () => {
               <Text style={{ fontWeight: "bold" }}>{selectedDocType}</Text>
             </Text>
             <TouchableOpacity
-              style={styles.selectFileButton}
+              style={[
+                styles.selectFileButton,
+                isLoading && styles.disabledButton,
+              ]}
               onPress={handleFileSelection}
+              disabled={isLoading}
             >
               <Text style={styles.selectFileButtonText}>
-                {selectedFile?.name || "Select File"}
+                {isLoading ? "Loading..." : selectedFile?.name || "Select File"}
               </Text>
             </TouchableOpacity>
+            {isLoading && (
+              <ActivityIndicator
+                size="small"
+                color="#019B8E"
+                style={styles.loadingIndicator}
+              />
+            )}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.uploadButton}
@@ -396,22 +525,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#23231A",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     justifyContent: "space-between",
+    width: "100%",
+    paddingRight: Platform.OS === "ios" ? 24 : 16, // Add more padding on iOS
   },
   initials: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    marginRight: 12,
+    maxWidth: "80%", // Limit width to prevent overlap
   },
   initialsCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: "#019B8E",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    marginRight: 8,
+    flexShrink: 0,
   },
   initialsText: {
     color: "#FFFFFF",
@@ -419,20 +554,22 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   welcomeName: {
-    flex: 1,
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
+    flex: 1,
   },
   helpButton: {
     backgroundColor: "#019B8E",
     borderRadius: 16,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     paddingVertical: 6,
+    flexShrink: 0,
+    marginLeft: "auto", // Push to the right
   },
   helpButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
   },
   /* MAIN CONTENT */
@@ -440,6 +577,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingBottom: 20,
   },
   bigTitle: {
     fontSize: 22,
@@ -470,11 +611,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     justifyContent: "space-between",
+    gap: 8, // Add gap between label and button
   },
   docLabel: {
     fontSize: 14,
     color: "#23231A",
     fontWeight: "500",
+    flex: 1, // Allow label to take available space
+    marginRight: 8, // Add margin to separate from button
   },
   // Pill styles
   addPill: {
@@ -482,6 +626,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
+    minWidth: 85, // Add minimum width
+    alignItems: "center", // Center text
+    flexShrink: 0, // Prevent shrinking
   },
   addPillText: {
     color: "blue",
@@ -495,6 +642,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
+    minWidth: 85, // Add minimum width
+    alignItems: "center", // Center text
+    flexShrink: 0, // Prevent shrinking
   },
   submittedPillText: {
     color: "blue",
@@ -506,6 +656,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
+    minWidth: 85, // Add minimum width
+    alignItems: "center", // Center text
+    flexShrink: 0, // Prevent shrinking
   },
   completePillText: {
     color: "#FFFFFF",
@@ -555,6 +708,9 @@ const styles = StyleSheet.create({
   selectFileButtonText: {
     textAlign: "center",
     color: "#333",
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   modalActions: {
     flexDirection: "row",

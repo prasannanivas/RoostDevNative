@@ -58,10 +58,10 @@ export default function LoginScreen() {
         login(data);
         navigation.navigate("Home"); // Adjust destination as needed
       } else {
-        setError("Invalid credentials");
+        setError("Check the account information you entered and try again.");
       }
     } catch (error) {
-      setError("Network error. Please try again.");
+      setError("Network error. Please try again.", error);
       console.error("Login error:", error);
     } finally {
       setLoading(false);
@@ -69,7 +69,7 @@ export default function LoginScreen() {
   };
 
   const handleSignUp = () => {
-    navigation.navigate("SignUp");
+    navigation.navigate("SignupStack");
   };
 
   const handleRealtorLogin = () => {

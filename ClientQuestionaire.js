@@ -33,7 +33,67 @@ export default function ClientQuestionaire() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateStep = (step) => {
+    switch (step) {
+      case 1:
+        return formData.applyingbehalf !== "";
+      case 2:
+        if (formData.applyingbehalf === "other") {
+          const { name, email, phone, relationship } = formData.otherDetails;
+          return name && email && phone && relationship;
+        }
+        return true;
+      case 3:
+        if (formData.applyingbehalf === "other") {
+          return (
+            formData.employmentStatus && formData.otherDetails.employmentStatus
+          );
+        }
+        return formData.employmentStatus !== "";
+      case 4:
+        if (formData.applyingbehalf === "other") {
+          return (
+            formData.ownAnotherProperty &&
+            formData.otherDetails.ownAnotherProperty
+          );
+        }
+        return formData.ownAnotherProperty !== "";
+      default:
+        return false;
+    }
+  };
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep === 2 && formData.applyingbehalf === "self") {
+        setCurrentStep(3);
+      } else {
+        setCurrentStep((s) => Math.min(s + 1, 4));
+      }
+    } else {
+      Alert.alert(
+        "Required Fields",
+        "Please fill in all required fields before continuing."
+      );
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep === 3 && formData.applyingbehalf === "self") {
+      setCurrentStep(1);
+    } else {
+      setCurrentStep((s) => Math.max(s - 1, 1));
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!validateStep(currentStep)) {
+      Alert.alert(
+        "Required Fields",
+        "Please fill in all required fields before submitting."
+      );
+      return;
+    }
     setIsLoading(true);
     try {
       await axios.put(
@@ -64,9 +124,6 @@ export default function ClientQuestionaire() {
       },
     });
   };
-
-  const nextStep = () => setCurrentStep((s) => s + 1);
-  const prevStep = () => setCurrentStep((s) => s - 1);
 
   const renderStep = () => {
     switch (currentStep) {

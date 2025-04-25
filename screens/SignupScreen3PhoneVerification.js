@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function PhoneVerificationScreen() {
+export default function PhoneVerificationScreen({ navigation }) {
   // Store each digit in a separate array element
   const [digits, setDigits] = useState(["", "", "", "", ""]);
 
@@ -44,13 +44,12 @@ export default function PhoneVerificationScreen() {
 
   const handleVerify = () => {
     const code = digits.join("");
-    console.log("Verification code entered:", code);
-    // TODO: Verify the code with your backend or proceed to next step
+    // Add your verification logic here
+    navigation.navigate("Success");
   };
 
   const handleBack = () => {
-    console.log("Back arrow pressed");
-    // TODO: navigation.goBack() or close
+    navigation.goBack();
   };
 
   return (

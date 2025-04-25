@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function AccountTypeScreen() {
+export default function AccountTypeScreen({ navigation }) {
   const [accountType, setAccountType] = useState("mortgage"); // Default selection
   const [recoId, setRecoId] = useState("");
   const [recoError, setRecoError] = useState(false);
@@ -37,25 +37,20 @@ export default function AccountTypeScreen() {
   };
 
   const handleNext = () => {
-    // If user is a realtor, validate the RECO ID
     if (accountType === "realtor") {
       if (!validateRecoId()) {
-        return; // Stop if invalid
+        return;
       }
     }
-    // Otherwise proceed
-    console.log("Selected account type:", accountType, "RECO ID:", recoId);
-    // TODO: Navigate to next screen or step
+    navigation.navigate('Details', { accountType, recoId });
   };
 
   const handleBack = () => {
-    console.log("Back pressed");
-    // TODO: Navigate back or close
+    navigation.goBack();
   };
 
   const handleLogin = () => {
-    console.log("Navigate to Login");
-    // TODO: Navigate to login screen
+    navigation.navigate('Login');
   };
 
   return (

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   SafeAreaView,
   ScrollView,
@@ -7,75 +8,183 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import DropDownPicker from "react-native-dropdown-picker";
+import { TextInputMask } from "react-native-masked-text"; // Add this import
 
-export default function SignUpDetailsScreen({ navigation }) {
-  // Example local state for the input fields
+export default function SignUpDetailsScreen({ navigation, route }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-
-  // For demonstration, show this error box if an email is already registered
-  // In a real app, you’d conditionally show this after checking with your backend
+  const [location, setLocation] = useState("");
+  const [formattedPhone, setFormattedPhone] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [canadianCities] = useState([
+    { label: "Toronto, ON", value: "Toronto" },
+    { label: "Vancouver, BC", value: "Vancouver" },
+    { label: "Montreal, QC", value: "Montreal" },
+    { label: "Calgary, AB", value: "Calgary" },
+    { label: "Ottawa, ON", value: "Ottawa" },
+    { label: "Edmonton, AB", value: "Edmonton" },
+    { label: "Winnipeg, MB", value: "Winnipeg" },
+    { label: "Halifax, NS", value: "Halifax" },
+  ]);
   const [emailAlreadyExists] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleBack = () => {
-    // Go back or close
-    console.log("Back arrow pressed");
-    // e.g., navigation.goBack();
+    navigation.goBack();
   };
 
-  const handleLogin = () => {
-    // Navigate to login screen
-    console.log("Back to login pressed");
-    // e.g., navigation.navigate("LoginScreen");
+  const handleLogin = async () => {
+    try {
+      if (password !== confirmPassword) {
+        setPasswordError("Passwords do not match");
+        return;
+      }
+      if (password.length < 6) {
+        setPasswordError("Password must be at least 6 characters");
+        return;
+      }
+
+      setIsLoading(true);
+      setPhoneError("");
+      setEmailError("");
+      setPasswordError("");
+      const fullName = `${firstName} ${lastName}`;
+      const endpoint = route.params?.isRealtor
+        ? "http://54.89.183.155:5000/realtor/signup"
+        : "http://54.89.183.155:5000/client/signup";
+
+      const response = await axios.post(endpoint, {
+        name: fullName,
+        phone: formattedPhone,
+        email,
+        location,
+        password: password,
+      });
+
+      navigation.navigate("PhoneVerification", {
+        firstName,
+        lastName,
+        phone: formattedPhone,
+        email,
+      });
+    } catch (error) {
+      if (error.response?.data?.error?.includes("email_1 dup key")) {
+        setEmailError("Email already exists");
+      } else if (error.response?.data?.error?.includes("phone_1 dup key")) {
+        setPhoneError("The phone number already exists please login.");
+      } else {
+        setPhoneError("An error occurred during signup.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
-        {/* Brand Title */}
         <Text style={styles.brandTitle}>Roost</Text>
-
-        {/* Heading */}
         <Text style={styles.heading}>Let’s get started!</Text>
 
-        {/* Input Fields */}
+        {isLoading && (
+          <View style={styles.spinnerContainer}>
+            <ActivityIndicator size="large" color="#019B8E" />
+          </View>
+        )}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, isLoading && styles.inputDisabled]}
           placeholder="First Name"
           placeholderTextColor="#999999"
           value={firstName}
           onChangeText={setFirstName}
+          editable={!isLoading}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, isLoading && styles.inputDisabled]}
           placeholder="Last Name"
           placeholderTextColor="#999999"
           value={lastName}
           onChangeText={setLastName}
+          editable={!isLoading}
         />
+
+        <View style={styles.phoneContainer}>
+          <Text style={styles.phonePrefix}>+1</Text>
+          <TextInputMask
+            type={"custom"}
+            options={{
+              mask: "(999) 999-9999",
+            }}
+            style={[styles.phoneInput, isLoading && styles.inputDisabled]}
+            placeholder="Phone Number"
+            placeholderTextColor="#999999"
+            value={phone}
+            onChangeText={(text) => {
+              setPhone(text);
+              setFormattedPhone("+1" + text.replace(/\D/g, ""));
+            }}
+            keyboardType="phone-pad"
+            editable={!isLoading}
+          />
+        </View>
+
         <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          placeholderTextColor="#999999"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
-        />
-        <TextInput
-          style={styles.input}
+          style={[styles.input, isLoading && styles.inputDisabled]}
           placeholder="Email"
           placeholderTextColor="#999999"
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
+          editable={!isLoading}
         />
 
-        {/* Warning Box (Shown if email is already registered) */}
+        <DropDownPicker
+          open={dropdownOpen}
+          value={location}
+          items={canadianCities}
+          setOpen={setDropdownOpen}
+          setValue={setLocation}
+          placeholder="Select City"
+          searchable={true}
+          searchPlaceholder="Search for a city..."
+          style={[styles.dropdownStyle, isLoading && styles.inputDisabled]}
+          containerStyle={styles.dropdownContainer}
+          disabled={isLoading}
+          zIndex={1000}
+        />
+
+        <TextInput
+          style={[styles.input, isLoading && styles.inputDisabled]}
+          placeholder="Password"
+          placeholderTextColor="#999999"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          editable={!isLoading}
+        />
+        <TextInput
+          style={[styles.input, isLoading && styles.inputDisabled]}
+          placeholder="Confirm Password"
+          placeholderTextColor="#999999"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          editable={!isLoading}
+        />
+
         {emailAlreadyExists && (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>
@@ -86,18 +195,39 @@ export default function SignUpDetailsScreen({ navigation }) {
             </Text>
           </View>
         )}
+        {emailError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{emailError}</Text>
+          </View>
+        ) : null}
+        {phoneError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{phoneError}</Text>
+          </View>
+        ) : null}
+        {passwordError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{passwordError}</Text>
+          </View>
+        ) : null}
       </ScrollView>
-
-      {/* Bottom Bar */}
       <View style={styles.bottomBar}>
-        {/* Back Arrow */}
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-
-        {/* Back to login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Next</Text>
+        <TouchableOpacity
+          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={styles.loginButtonText}> Loading...</Text>
+            </View>
+          ) : (
+            <Text style={styles.loginButtonText}>Next</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -121,10 +251,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 30,
     color: "#23231A",
-    // If Figma uses a custom font or styling, load it via Expo's Font API
   },
   heading: {
-    fontSize: 18, // Adjust to match Figma (some designs might use 20 or 22)
+    fontSize: 18,
     fontWeight: "600",
     color: "#23231A",
     marginBottom: 20,
@@ -140,11 +269,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#23231A",
   },
-
-  // Warning box styling
   errorBox: {
     width: "100%",
-    backgroundColor: "#FCEED2", // Light orange background
+    backgroundColor: "#FCEED2",
     borderRadius: 8,
     padding: 10,
     marginBottom: 20,
@@ -157,21 +284,17 @@ const styles = StyleSheet.create({
   boldText: {
     fontWeight: "700",
   },
-
-  // Bottom bar
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#23231A", // Dark bar at the bottom
+    backgroundColor: "#23231A",
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
-  backButton: {
-    // No extra styling to keep the icon flush against the bar
-  },
+  backButton: {},
   loginButton: {
-    backgroundColor: "#019B8E", // Teal brand color
+    backgroundColor: "#019B8E",
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -180,5 +303,54 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  spinnerContainer: {
+    marginVertical: 20,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inputDisabled: {
+    opacity: 0.7,
+    backgroundColor: "#f5f5f5",
+  },
+  phoneContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#C4C4C4",
+    borderRadius: 8,
+    backgroundColor: "white",
+  },
+  phonePrefix: {
+    paddingLeft: 15,
+    paddingRight: 5,
+    fontSize: 16,
+    color: "#23231A",
+  },
+  phoneInput: {
+    flex: 1,
+    height: 50,
+    paddingHorizontal: 5,
+    fontSize: 16,
+    color: "#23231A",
+  },
+  dropdownStyle: {
+    borderColor: "#C4C4C4",
+    borderRadius: 8,
+  },
+  dropdownContainer: {
+    width: "100%",
+    marginBottom: 15,
   },
 });

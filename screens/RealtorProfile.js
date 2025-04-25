@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,18 +9,20 @@ import {
   Alert,
   StyleSheet,
   Image,
+  PanResponder,
+  Animated,
+  Dimensions,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRealtor } from "../context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 
-export default function RealtorProfile() {
+export default function RealtorProfile({ realtor: propRealtor, onClose }) {
   const { realtorInfo } = useRealtor();
   const { logout } = useAuth();
-  console.log(logout);
   const navigation = useNavigation();
-  const realtor = realtorInfo; // If the context stores the realtor object here
+  const realtor = propRealtor || realtorInfo;
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
@@ -255,6 +257,43 @@ export default function RealtorProfile() {
     }
   };
 
+  // Add swipe gesture handling
+  const panY = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const resetPositionAnim = Animated.timing(translateY, {
+    toValue: 0,
+    duration: 200,
+    useNativeDriver: true,
+  });
+
+  const closeAnim = Animated.timing(translateY, {
+    toValue: Dimensions.get("window").height,
+    duration: 200,
+    useNativeDriver: true,
+  });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (event, gesture) => {
+        if (gesture.dy > 0) {
+          translateY.setValue(gesture.dy);
+        }
+      },
+      onPanResponderRelease: (event, gesture) => {
+        if (gesture.dy > 50) {
+          closeAnim.start(() => {
+            if (onClose) onClose();
+          });
+        } else {
+          resetPositionAnim.start();
+        }
+      },
+    })
+  ).current;
+
   // If no realtor data yet
   if (!realtor) {
     return (
@@ -265,7 +304,17 @@ export default function RealtorProfile() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} bounces={false}>
+      {/* Add swipe handle at the top */}
+      <View {...panResponder.panHandlers}>
+        <View style={styles.swipeHandle} />
+      </View>
+
+      {/* Close button */}
+      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <Text style={styles.closeButtonText}>✕</Text>
+      </TouchableOpacity>
+
       {/* Header: Avatar, Name, Info */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfilePicture}>
@@ -708,6 +757,45 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+
+  /* Swipe handle */
+  swipeHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#DDDDDD",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginTop: 10,
+    marginBottom: 10,
+  },
+
+  /* Close button */
+  closeButton: {
+    position: "absolute",
+    right: 15,
+    top: 45, // Increased top padding for better accessibility
+    width: 36, // Increased touch target size
+    height: 36, // Increased touch target size
+    borderRadius: 18,
+    backgroundColor: "#EEEEEE",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+    elevation: 3, // Add elevation for Android
+    shadowColor: "#000", // Add shadow for iOS
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  closeButtonText: {
+    fontSize: 18, // Slightly larger text
+    color: "#333333",
+    fontWeight: "600",
+    lineHeight: 36, // Match the height for vertical centering
   },
 
   /* Loading fallback */

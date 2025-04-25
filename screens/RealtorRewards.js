@@ -1,5 +1,5 @@
 // RealtorRewards.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  PanResponder,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -21,12 +24,14 @@ import { Picker } from "@react-native-picker/picker";
  *  invitedRealtors: array of { _id, referenceName, status, documents }
  *  invitedClients: array of { _id, referenceName, status, ... }
  *  getInitials: fn(name) => initials
+ *  onClose: fn() => void
  */
 export default function RealtorRewards({
   realtor,
   invitedRealtors,
   invitedClients,
   getInitials,
+  onClose,
 }) {
   console.log("invitedClients", invitedClients);
   console.log("invitedRealtors", invitedRealtors);
@@ -50,6 +55,45 @@ export default function RealtorRewards({
 
   const POINTS_TO_DOLLARS = 3.14;
   const currentPoints = realtor?.points || 0;
+
+  // Add new animation state
+  const panY = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const resetPositionAnim = Animated.timing(translateY, {
+    toValue: 0,
+    duration: 200,
+    useNativeDriver: true,
+  });
+
+  const closeAnim = Animated.timing(translateY, {
+    toValue: Dimensions.get("window").height,
+    duration: 200,
+    useNativeDriver: true,
+  });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (event, gesture) => {
+        if (gesture.dy > 0) {
+          // Only allow downward swipe
+          translateY.setValue(gesture.dy);
+        }
+      },
+      onPanResponderRelease: (event, gesture) => {
+        if (gesture.dy > 50) {
+          // If dragged down more than 50px
+          closeAnim.start(() => {
+            if (onClose) onClose();
+          });
+        } else {
+          resetPositionAnim.start();
+        }
+      },
+    })
+  ).current;
 
   // Fetch rewards on mount
   useEffect(() => {
@@ -208,7 +252,23 @@ export default function RealtorRewards({
     });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} bounces={false}>
+      {/* Add swipe handle at the top */}
+      <View {...panResponder.panHandlers}>
+        <View style={styles.swipeHandle} />
+      </View>
+
+      {/* Move close button below handle */}
+      <View style={styles.closeButtonContainer}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={onClose}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="close" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         <FontAwesome name="trophy" size={24} color="#019B8E" />
@@ -801,5 +861,29 @@ const styles = StyleSheet.create({
   claimBtnTxt: {
     color: "#fff",
     fontWeight: "600",
+  },
+
+  /* Swipe Handle */
+  swipeHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#DDDDDD",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  closeButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEEEEE",
+  },
+  closeButton: {
+    padding: 8,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 20,
   },
 });

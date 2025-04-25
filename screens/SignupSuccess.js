@@ -10,73 +10,77 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 // import ConfettiIcon from "../assets/confetti.png"; // Example if you have a custom asset
 
-export default function WelcomeRealtorScreen() {
+export default function SignupSuccessScreen({ navigation }) {
   const handleTutorial = (topic) => {
     console.log("Navigate to tutorial topic:", topic);
     // TODO: Implement actual navigation or linking logic
   };
 
   const handleGetStarted = () => {
-    console.log("Let me get started!");
-    // TODO: Navigate to the main app or next screen
+    navigation.navigate("Home"); // Using screen name instead of "/"
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} bounces={false}>
-        {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>
-
-        {/* Heading */}
-        <Text style={styles.heading}>All signed up!</Text>
-
-        {/* Confetti / Party Popper Icon */}
-        {/* Replace Ionicons with a custom image if you have one: 
-            <Image source={ConfettiIcon} style={styles.confettiIcon} />
-        */}
-        <Ionicons
-          name="wine"
-          size={164}
-          color="#FF0000"
-          style={styles.confettiIcon}
-        />
-
-        {/* Subheading */}
-        <Text style={styles.subheading}>
-          Before you start{"\n"}You can watch a few tutorials
-        </Text>
-
-        {/* Tutorial Buttons */}
-        <TouchableOpacity
-          style={styles.tutorialButton}
-          onPress={() => handleTutorial("rewards")}
+      <View style={styles.mainContainer}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          bounces={true}
+          showsVerticalScrollIndicator={true}
         >
-          <Text style={styles.tutorialButtonText}>How do rewards work?</Text>
-        </TouchableOpacity>
+          {/* Brand Title */}
+          <Text style={styles.brandTitle}>Roost</Text>
 
-        <TouchableOpacity
-          style={styles.tutorialButton}
-          onPress={() => handleTutorial("maximize")}
-        >
-          <Text style={styles.tutorialButtonText}>How to maximize Roost</Text>
-        </TouchableOpacity>
+          {/* Heading */}
+          <Text style={styles.heading}>All signed up!</Text>
 
-        <TouchableOpacity
-          style={styles.tutorialButton}
-          onPress={() => handleTutorial("help")}
-        >
-          <Text style={styles.tutorialButtonText}>What if I need help?</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Confetti / Party Popper Icon */}
+          {/* Replace Ionicons with a custom image if you have one: 
+              <Image source={ConfettiIcon} style={styles.confettiIcon} />
+          */}
+          <Ionicons
+            name="wine"
+            size={100} // reduced from 164
+            color="#FF0000"
+            style={styles.confettiIcon}
+          />
 
-      {/* Bottom Button */}
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={styles.getStartedButton}
-          onPress={handleGetStarted}
-        >
-          <Text style={styles.getStartedButtonText}>Let me get started!</Text>
-        </TouchableOpacity>
+          {/* Subheading */}
+          <Text style={styles.subheading}>
+            Before you start{"\n"}You can watch a few tutorials
+          </Text>
+
+          {/* Tutorial Buttons */}
+          <TouchableOpacity
+            style={styles.tutorialButton}
+            onPress={() => handleTutorial("rewards")}
+          >
+            <Text style={styles.tutorialButtonText}>How do rewards work?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tutorialButton}
+            onPress={() => handleTutorial("maximize")}
+          >
+            <Text style={styles.tutorialButtonText}>How to maximize Roost</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tutorialButton}
+            onPress={() => handleTutorial("help")}
+          >
+            <Text style={styles.tutorialButtonText}>What if I need help?</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <View style={styles.bottomContainer}>
+          <TouchableOpacity
+            style={styles.getStartedButton}
+            onPress={handleGetStarted}
+          >
+            <Text style={styles.getStartedButtonText}>Let me get started!</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -87,70 +91,80 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  container: {
+  mainContainer: {
+    flex: 1,
+    position: "relative",
+  },
+  scrollContent: {
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingTop: 40,
+    paddingBottom: 90, // Added extra padding for bottom button
     alignItems: "center",
-    justifyContent: "center",
-    flexGrow: 1,
   },
   brandTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
     color: "#23231A",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   heading: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
     color: "#23231A",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   confettiIcon: {
-    marginBottom: 20,
-    width: 164,
-    height: 164,
+    marginBottom: 15,
+    width: 100,
+    height: 100,
   },
   subheading: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#23231A",
     textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 30,
+    lineHeight: 20,
+    marginBottom: 20,
+    marginTop: 10,
   },
-
   // Tutorial Buttons
   tutorialButton: {
     width: "100%",
     borderColor: "#019B8E",
     borderWidth: 2,
     borderRadius: 8,
-    paddingVertical: 12,
-    marginBottom: 15,
+    paddingVertical: 10,
+    marginBottom: 10,
     alignItems: "center",
   },
   tutorialButtonText: {
     color: "#019B8E",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
-
   // Bottom Container & Button
   bottomContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopWidth: 1,
     borderTopColor: "#E0E0E0",
-    padding: 20,
+    padding: 16,
     backgroundColor: "#FFFFFF",
+    width: "100%",
   },
   getStartedButton: {
     backgroundColor: "#019B8E",
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 12,
     alignItems: "center",
+    width: "100%",
+    minHeight: 48,
   },
   getStartedButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+    textAlign: "center",
   },
 });
