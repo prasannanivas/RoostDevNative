@@ -22,6 +22,8 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   const [emailAlreadyExists] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email) => {
@@ -42,14 +44,30 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       setIsLoading(true);
       setPhoneError("");
       setEmailError("");
+      setFirstNameError("");
+      setLastNameError("");
+
+      if (!firstName.trim()) {
+        setFirstNameError("First name is required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!lastName.trim()) {
+        setLastNameError("Last name is required");
+        setIsLoading(false);
+        return;
+      }
 
       if (!validatePhone(phone)) {
         setPhoneError("Please enter a valid 10-digit phone number");
+        setIsLoading(false);
         return;
       }
 
       if (!validateEmail(email)) {
         setEmailError("Please enter a valid email address");
+        setIsLoading(false);
         return;
       }
 
@@ -93,6 +111,11 @@ export default function SignUpDetailsScreen({ navigation, route }) {
           onChangeText={setFirstName}
           editable={!isLoading}
         />
+        {firstNameError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{firstNameError}</Text>
+          </View>
+        ) : null}
         <TextInput
           style={[styles.input, isLoading && styles.inputDisabled]}
           placeholder="Last Name"
@@ -101,6 +124,11 @@ export default function SignUpDetailsScreen({ navigation, route }) {
           onChangeText={setLastName}
           editable={!isLoading}
         />
+        {lastNameError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{lastNameError}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.phoneContainer}>
           <Text style={styles.phonePrefix}>+1</Text>

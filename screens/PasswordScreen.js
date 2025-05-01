@@ -26,8 +26,20 @@ export default function PasswordScreen({ navigation, route }) {
     try {
       setPasswordError("");
 
-      if (password.length < 6) {
-        setPasswordError("Password must be at least 6 characters");
+      const hasNumber = /\d/.test(password);
+      const hasUpperCase = /[A-Z]/.test(password);
+
+      if (password.length < 8) {
+        setPasswordError(
+          "The Password should be at 8 characters long including a number and an uppercase letter"
+        );
+        return;
+      }
+
+      if (!hasNumber || !hasUpperCase) {
+        setPasswordError(
+          "The Password should be at 8 characters long including a number and an uppercase letter"
+        );
         return;
       }
 
@@ -55,7 +67,7 @@ export default function PasswordScreen({ navigation, route }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.heading}>Create Password</Text>
+        <Text style={styles.heading}>Secure your account</Text>
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -138,9 +150,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    display: "flex",
+    justifyContent: "center",
+  },
+  subHeading: {
+    fontSize: 16,
+    color: "#666666",
+    marginBottom: 10,
   },
   heading: {
     fontSize: 24,
+    textAlign: "center",
     fontWeight: "600",
     color: "#23231A",
     marginBottom: 30,
@@ -164,7 +184,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   errorBox: {
-    backgroundColor: "#FCEED2",
+    backgroundColor: "lightgreen",
     borderRadius: 8,
     padding: 10,
     marginTop: 10,
