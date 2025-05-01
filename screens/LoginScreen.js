@@ -28,7 +28,6 @@ const COLORS = {
 export default function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation();
-  const [loginType, setLoginType] = useState("client");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,29 +38,34 @@ export default function LoginScreen() {
     setError(null);
 
     try {
-      const endpoint =
-        loginType === "realtor"
-          ? "http://54.89.183.155:5000/realtor/login"
-          : "http://54.89.183.155:5000/client/login";
-
-      const response = await fetch(endpoint, {
+      // Try client login first
+      let response = await fetch("http://54.89.183.155:5000/client/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: email, password }),
       });
 
-      const data = await response.json();
+      let data = await response.json();
 
-      if (data.realtor || data.client) {
-        // Handle successful login - you'll need to implement your login state management
+      // If client login fails, try realtor login
+      if (!data.client) {
+        response = await fetch("http://54.89.183.155:5000/realtor/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: email, password }),
+        });
+        data = await response.json();
+      }
+
+      if (data.client || data.realtor) {
         console.log("Login successful:", data);
         login(data);
-        navigation.navigate("Home"); // Adjust destination as needed
+        navigation.navigate("Home");
       } else {
         setError("Check the account information you entered and try again.");
       }
     } catch (error) {
-      setError("Network error. Please try again.", error);
+      setError("Network error. Please try again.");
       console.error("Login error:", error);
     } finally {
       setLoading(false);
@@ -72,10 +76,6 @@ export default function LoginScreen() {
     navigation.navigate("SignupStack");
   };
 
-  const handleRealtorLogin = () => {
-    // Handle realtor login logic
-  };
-
   const handleResetPassword = () => {
     // Handle password reset logic
   };
@@ -83,42 +83,6 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
-        {/* Login Type Toggle */}
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              loginType === "client" && styles.toggleButtonActive,
-            ]}
-            onPress={() => setLoginType("client")}
-          >
-            <Text
-              style={[
-                styles.toggleButtonText,
-                loginType === "client" && styles.toggleButtonTextActive,
-              ]}
-            >
-              Client
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              loginType === "realtor" && styles.toggleButtonActive,
-            ]}
-            onPress={() => setLoginType("realtor")}
-          >
-            <Text
-              style={[
-                styles.toggleButtonText,
-                loginType === "realtor" && styles.toggleButtonTextActive,
-              ]}
-            >
-              Realtor
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Brand Title */}
         <Text style={styles.brandTitle}>Roost</Text>
 
@@ -170,16 +134,6 @@ export default function LoginScreen() {
         {/* Sign Up Button */}
         <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
           <Text style={styles.signUpButtonText}>Sign Up</Text>
-        </TouchableOpacity>
-
-        {/* Realtor Login Button (for testing) */}
-        <TouchableOpacity
-          style={styles.realtorButton}
-          onPress={handleRealtorLogin}
-        >
-          <Text style={styles.realtorButtonText}>
-            REALTOR LOGIN ONLY FOR TESTING
-          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -309,28 +263,5 @@ const styles = StyleSheet.create({
   linkText: {
     color: "#A4E3DB", // Lighter teal for links, adjust if needed
     textDecorationLine: "underline",
-  },
-  toggleContainer: {
-    flexDirection: "row",
-    marginBottom: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.inputBorder,
-    overflow: "hidden",
-  },
-  toggleButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    backgroundColor: COLORS.background,
-  },
-  toggleButtonActive: {
-    backgroundColor: COLORS.teal,
-  },
-  toggleButtonText: {
-    color: COLORS.textDark,
-    fontWeight: "500",
-  },
-  toggleButtonTextActive: {
-    color: COLORS.background,
   },
 });
