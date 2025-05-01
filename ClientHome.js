@@ -18,15 +18,18 @@ import {
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
 import ClientProfile from "./ClientProfile";
+import NotificationComponent from "./NotificationComponent";
 
 const ClientHome = () => {
   const { auth } = useAuth();
   const { documents: contextDocuments, clientInfo } = useClient();
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -42,6 +45,14 @@ const ClientHome = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [capturedImages, setCapturedImages] = useState([]);
+
+  // Complete modal state
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [selectedCompleteDoc, setSelectedCompleteDoc] = useState(null);
+
+  // Submitted modal state
+  const [showSubmittedModal, setShowSubmittedModal] = useState(false);
+  const [selectedSubmittedDoc, setSelectedSubmittedDoc] = useState(null);
 
   // Pull in contextDocs when they change
   useEffect(() => {
@@ -267,6 +278,26 @@ const ClientHome = () => {
     }
   };
 
+  // Delete document
+  const handleDeleteDocument = async (docType) => {
+    try {
+      const response = await fetch(
+        `http://54.89.183.155:5000/documents/${clientId}/documents/${docType}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) throw new Error("Delete failed");
+
+      setClientDocs((prev) => prev.filter((doc) => doc.docType !== docType));
+      setShowSubmittedModal(false);
+      Alert.alert("Success", "Document deleted successfully");
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete document");
+    }
+  };
+
   // Refresh logic
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -302,6 +333,11 @@ const ClientHome = () => {
     }
   };
 
+  // Notifications button logic
+  const handleNotifications = () => {
+    setShowNotifications(true);
+  };
+
   // Render row
   const renderDocumentRow = (doc) => {
     const status = doc.status?.toLowerCase();
@@ -317,15 +353,27 @@ const ClientHome = () => {
       );
     } else if (status === "submitted") {
       action = (
-        <View style={styles.submittedPill}>
+        <TouchableOpacity
+          style={styles.submittedPill}
+          onPress={() => {
+            setSelectedSubmittedDoc(doc);
+            setShowSubmittedModal(true);
+          }}
+        >
           <Text style={styles.submittedPillText}>Submitted</Text>
-        </View>
+        </TouchableOpacity>
       );
     } else if (status === "approved" || status === "complete") {
       action = (
-        <View style={styles.completePill}>
+        <TouchableOpacity
+          style={styles.completePill}
+          onPress={() => {
+            setSelectedCompleteDoc(doc);
+            setShowCompleteModal(true);
+          }}
+        >
           <Text style={styles.completePillText}>Complete</Text>
-        </View>
+        </TouchableOpacity>
       );
     }
     return (
@@ -361,6 +409,14 @@ const ClientHome = () => {
             Welcome {clientFromContext.name}
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={handleNotifications}
+        >
+          <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
           <Text style={styles.helpButtonText}>HELP</Text>
         </TouchableOpacity>
@@ -552,6 +608,95 @@ const ClientHome = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Complete Document Modal */}
+      <Modal
+        visible={showCompleteModal}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowCompleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {selectedCompleteDoc?.displayName ||
+                  selectedCompleteDoc?.docType}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                onPress={() => setShowCompleteModal(false)}
+              >
+                <Text style={styles.closeModalText}>X</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.completeModalText}>
+              You have already submitted this document and accepted as valid
+            </Text>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCompleteModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Submitted Document Modal */}
+      <Modal
+        visible={showSubmittedModal}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowSubmittedModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {selectedSubmittedDoc?.displayName ||
+                  selectedSubmittedDoc?.docType}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                onPress={() => setShowSubmittedModal(false)}
+              >
+                <Text style={styles.closeModalText}>X</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.completeModalText}>
+              You have already submitted this document. If you wish to reupload
+              it, delete the existing doc and try again.
+            </Text>
+
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteButton]}
+                onPress={() =>
+                  handleDeleteDocument(selectedSubmittedDoc?.docType)
+                }
+              >
+                <Text style={styles.modalButtonText}>Delete</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.nevermindButton]}
+                onPress={() => setShowSubmittedModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Never Mind</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <NotificationComponent
+        visible={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -612,13 +757,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     width: "fit-content",
   },
+  notificationButton: {
+    padding: 8,
+    marginRight: 8,
+  },
   helpButton: {
     backgroundColor: "#019B8E",
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     flexShrink: 0,
-    marginLeft: "auto",
   },
   helpButtonText: {
     color: "#FFFFFF",
@@ -919,5 +1067,47 @@ const styles = StyleSheet.create({
   closeProfileText: {
     fontSize: 24,
     color: "#333",
+  },
+  completeModalText: {
+    fontSize: 16,
+    color: "#23231A",
+    textAlign: "center",
+    marginVertical: 20,
+  },
+  closeButton: {
+    backgroundColor: "#019B8E",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginTop: 15,
+    width: "100%",
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  modalButtonGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  deleteButton: {
+    backgroundColor: "#DC3545",
+  },
+  nevermindButton: {
+    backgroundColor: "#019B8E",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "500",
   },
 });
