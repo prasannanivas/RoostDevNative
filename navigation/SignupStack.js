@@ -3,6 +3,7 @@ import SignupScreen from "../screens/SignupScreen";
 import SignupScreen2 from "../screens/SignupScreen2";
 import SignupScreen3PhoneVerification from "../screens/SignupScreen3PhoneVerification";
 import SignupSuccess from "../screens/SignupSuccess";
+import PasswordScreen from "../screens/PasswordScreen";
 
 const Stack = createStackNavigator();
 
@@ -24,6 +25,7 @@ export default function SignupStack() {
         component={SignupScreen2}
         initialParams={{ isRealtor: false }} // Default to client
       />
+      <Stack.Screen name="Password" component={PasswordScreen} />
       <Stack.Screen
         name="PhoneVerification"
         component={SignupScreen3PhoneVerification}

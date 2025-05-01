@@ -27,8 +27,8 @@ export default function AccountTypeScreen({ navigation }) {
 
   // Simple validation example
   const validateRecoId = () => {
-    // Check if RECO ID meets your criteria
-    if (!recoId || recoId.trim().length < 5) {
+    const recoRegex = /^\d{7}$/;
+    if (!recoRegex.test(recoId)) {
       setRecoError(true);
       return false;
     }
@@ -42,7 +42,7 @@ export default function AccountTypeScreen({ navigation }) {
         return;
       }
     }
-    navigation.navigate('Details', { accountType, recoId });
+    navigation.navigate("Details", { accountType, recoId });
   };
 
   const handleBack = () => {
@@ -50,7 +50,7 @@ export default function AccountTypeScreen({ navigation }) {
   };
 
   const handleLogin = () => {
-    navigation.navigate('Login');
+    navigation.navigate("Login");
   };
 
   return (
@@ -135,9 +135,13 @@ export default function AccountTypeScreen({ navigation }) {
             <TextInput
               style={styles.recoInput}
               placeholder="Your RECO id number"
-              placeholderTextColor="#999999"
+              placeholderTextColor="#9999999"
               value={recoId}
-              onChangeText={setRecoId}
+              onChangeText={(text) =>
+                text.match(/^\d{0,7}$/) ? setRecoId(text) : null
+              }
+              keyboardType="numeric"
+              maxLength={7}
             />
             {recoError && (
               <View style={styles.recoErrorContainer}>

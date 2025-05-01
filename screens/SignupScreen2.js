@@ -11,34 +11,27 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import DropDownPicker from "react-native-dropdown-picker";
-import { TextInputMask } from "react-native-masked-text"; // Add this import
+import { TextInputMask } from "react-native-masked-text";
 
 export default function SignUpDetailsScreen({ navigation, route }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [location, setLocation] = useState("");
   const [formattedPhone, setFormattedPhone] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [canadianCities] = useState([
-    { label: "Toronto, ON", value: "Toronto" },
-    { label: "Vancouver, BC", value: "Vancouver" },
-    { label: "Montreal, QC", value: "Montreal" },
-    { label: "Calgary, AB", value: "Calgary" },
-    { label: "Ottawa, ON", value: "Ottawa" },
-    { label: "Edmonton, AB", value: "Edmonton" },
-    { label: "Winnipeg, MB", value: "Winnipeg" },
-    { label: "Halifax, NS", value: "Halifax" },
-  ]);
   const [emailAlreadyExists] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    return phone.replace(/\D/g, "").length === 10;
+  };
 
   const handleBack = () => {
     navigation.goBack();
@@ -46,37 +39,26 @@ export default function SignUpDetailsScreen({ navigation, route }) {
 
   const handleLogin = async () => {
     try {
-      if (password !== confirmPassword) {
-        setPasswordError("Passwords do not match");
-        return;
-      }
-      if (password.length < 6) {
-        setPasswordError("Password must be at least 6 characters");
-        return;
-      }
-
       setIsLoading(true);
       setPhoneError("");
       setEmailError("");
-      setPasswordError("");
-      const fullName = `${firstName} ${lastName}`;
-      const endpoint = route.params?.isRealtor
-        ? "http://54.89.183.155:5000/realtor/signup"
-        : "http://54.89.183.155:5000/client/signup";
 
-      const response = await axios.post(endpoint, {
-        name: fullName,
-        phone: formattedPhone,
-        email,
-        location,
-        password: password,
-      });
+      if (!validatePhone(phone)) {
+        setPhoneError("Please enter a valid 10-digit phone number");
+        return;
+      }
 
-      navigation.navigate("PhoneVerification", {
+      if (!validateEmail(email)) {
+        setEmailError("Please enter a valid email address");
+        return;
+      }
+
+      navigation.navigate("Password", {
         firstName,
         lastName,
         phone: formattedPhone,
         email,
+        isRealtor: route.params?.isRealtor,
       });
     } catch (error) {
       if (error.response?.data?.error?.includes("email_1 dup key")) {
@@ -151,40 +133,6 @@ export default function SignUpDetailsScreen({ navigation, route }) {
           editable={!isLoading}
         />
 
-        <DropDownPicker
-          open={dropdownOpen}
-          value={location}
-          items={canadianCities}
-          setOpen={setDropdownOpen}
-          setValue={setLocation}
-          placeholder="Select City"
-          searchable={true}
-          searchPlaceholder="Search for a city..."
-          style={[styles.dropdownStyle, isLoading && styles.inputDisabled]}
-          containerStyle={styles.dropdownContainer}
-          disabled={isLoading}
-          zIndex={1000}
-        />
-
-        <TextInput
-          style={[styles.input, isLoading && styles.inputDisabled]}
-          placeholder="Password"
-          placeholderTextColor="#999999"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!isLoading}
-        />
-        <TextInput
-          style={[styles.input, isLoading && styles.inputDisabled]}
-          placeholder="Confirm Password"
-          placeholderTextColor="#999999"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          editable={!isLoading}
-        />
-
         {emailAlreadyExists && (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>
@@ -203,11 +151,6 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         {phoneError ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{phoneError}</Text>
-          </View>
-        ) : null}
-        {passwordError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{passwordError}</Text>
           </View>
         ) : null}
       </ScrollView>
@@ -344,13 +287,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     fontSize: 16,
     color: "#23231A",
-  },
-  dropdownStyle: {
-    borderColor: "#C4C4C4",
-    borderRadius: 8,
-  },
-  dropdownContainer: {
-    width: "100%",
-    marginBottom: 15,
   },
 });
