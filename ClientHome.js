@@ -13,6 +13,7 @@ import {
   Platform,
   RefreshControl,
   Linking,
+  Image,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -40,6 +41,7 @@ const ClientHome = () => {
   const [selectedDocType, setSelectedDocType] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [capturedImages, setCapturedImages] = useState([]);
 
   // Pull in contextDocs when they change
   useEffect(() => {
@@ -84,6 +86,7 @@ const ClientHome = () => {
     setShowModal(false);
     setSelectedDocType(null);
     setSelectedFile(null);
+    setCapturedImages([]);
   };
 
   // Pick PDF
@@ -151,72 +154,55 @@ const ClientHome = () => {
         );
       }
 
-      const snap = async () => {
-        try {
-          const r = await ImagePicker.launchCameraAsync({
-            mediaTypes: "images",
-            allowsEditing: true,
-            quality: 0.8,
-          });
-          if (!r.canceled && r.assets?.length) return r.assets[0].uri;
-          return null;
-        } catch (err) {
-          console.error("Camera error:", err);
-          Alert.alert(
-            "Camera Error",
-            "Failed to capture image. Please try again.",
-            [{ text: "OK" }]
-          );
-          return null;
-        }
-      };
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        quality: 0.8,
+      });
 
-      let pages = [],
-        again = true;
-      while (again) {
-        const uri = await snap();
-        if (uri) {
-          pages.push(uri);
-          again = await new Promise((res) =>
-            Alert.alert("Another page?", `Scanned ${pages.length}. More?`, [
-              { text: "No", onPress: () => res(false) },
-              { text: "Yes", onPress: () => res(true) },
-            ])
-          );
-        } else again = false;
-      }
-
-      if (pages.length) {
-        const html = await Promise.all(
-          pages.map(async (u) => {
-            const blob = await (await fetch(u)).blob();
-            const b64 = await new Promise((res) => {
-              const r = new FileReader();
-              r.onloadend = () => res(r.result);
-              r.readAsDataURL(blob);
-            });
-            return `<img src="${b64}" style="page-break-after: always;" />`;
-          })
-        ).then(
-          (arr) => `
-        <html><body style="margin:0">${arr.join("")}</body></html>
-      `
-        );
-
-        const { uri: pdfUri } = await Print.printToFileAsync({ html });
-        setSelectedFile({
-          uri: pdfUri,
-          name: `scan-${Date.now()}.pdf`,
-          type: "application/pdf",
-        });
+      if (!result.canceled && result.assets?.length) {
+        setCapturedImages((prev) => [...prev, result.assets[0].uri]);
       }
     } catch (error) {
+      console.error("Camera error:", error);
       Alert.alert(
         "Scanner Error",
         "An unexpected error occurred while accessing the camera.",
         [{ text: "OK" }]
       );
     }
+  };
+
+  // Remove image from gallery
+  const removeImage = (index) => {
+    setCapturedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Convert images to PDF
+  const convertImagesToPDF = async () => {
+    if (capturedImages.length === 0) return;
+
+    const html = await Promise.all(
+      capturedImages.map(async (u) => {
+        const blob = await (await fetch(u)).blob();
+        const b64 = await new Promise((res) => {
+          const r = new FileReader();
+          r.onloadend = () => res(r.result);
+          r.readAsDataURL(blob);
+        });
+        return `<img src="${b64}" style="page-break-after: always;" />`;
+      })
+    ).then(
+      (arr) => `<html><body style="margin:0">${arr.join("")}</body></html>`
+    );
+
+    const { uri: pdfUri } = await Print.printToFileAsync({ html });
+    setSelectedFile({
+      uri: pdfUri,
+      name: `scan-${Date.now()}.pdf`,
+      type: "application/pdf",
+    });
+    setCapturedImages([]);
   };
 
   // Choose method
@@ -462,29 +448,91 @@ const ClientHome = () => {
         transparent
         onRequestClose={closeModal}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={closeModal}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Upload Document</Text>
-            <Text style={styles.modalSubtitle}>
-              You are uploading for:{" "}
-              <Text style={{ fontWeight: "bold" }}>{selectedDocType}</Text>
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.selectFileButton,
-                isLoading && styles.disabledButton,
-              ]}
-              onPress={handleFileSelection}
-              disabled={isLoading}
-            >
-              <Text style={styles.selectFileButtonText}>
-                {isLoading ? "Loading..." : selectedFile?.name || "Select File"}
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              capturedImages.length > 0 && styles.modalContentFullscreen,
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{selectedDocType}</Text>
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                onPress={closeModal}
+              >
+                <Text style={styles.closeModalText}>X</Text>
+              </TouchableOpacity>
+            </View>
+
+            {capturedImages.length > 0 ? (
+              <>
+                <ScrollView style={styles.imageScrollView}>
+                  <View style={styles.imageGrid}>
+                    {capturedImages.map((uri, index) => (
+                      <View key={index} style={styles.gridItem}>
+                        <Image
+                          source={{ uri }}
+                          style={styles.gridImage}
+                          resizeMode="cover"
+                        />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(index)}
+                        >
+                          <Text style={styles.removeButtonText}>Remove</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+                <View style={styles.bottomButtonContainer}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.backButton]}
+                    onPress={() => setCapturedImages([])}
+                  >
+                    <Text style={styles.backButtonText}> {"<-"} </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.addMoreButton]}
+                    onPress={pickCameraFile}
+                  >
+                    <Text style={styles.actionButtonText}>
+                      Add Another Photo
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.doneButton]}
+                    onPress={convertImagesToPDF}
+                  >
+                    <Text style={styles.doneButtonText}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : !selectedFile ? (
+              <View style={styles.buttonGroup}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.actionButtonHalf]}
+                  onPress={pickCameraFile}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.actionButtonText}>Take Picture</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.actionButtonHalf]}
+                  onPress={pickDocumentFile}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.actionButtonText}>Upload from files</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Text style={styles.fileSelected}>
+                {selectedFile?.name || "File selected"}
               </Text>
-            </TouchableOpacity>
+            )}
+
             {isLoading && (
               <ActivityIndicator
                 size="small"
@@ -492,22 +540,17 @@ const ClientHome = () => {
                 style={styles.loadingIndicator}
               />
             )}
-            <View style={styles.modalActions}>
+
+            {selectedFile && (
               <TouchableOpacity
                 style={styles.uploadButton}
                 onPress={handleUpload}
               >
                 <Text style={styles.uploadButtonText}>Upload</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={closeModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            )}
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -559,13 +602,23 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
   },
+  removeButtonText: {
+    backgroundColor: "#019B8E",
+    color: "#FFFFFF",
+    textAlign: "center",
+    borderRadius: 50,
+    marginTop: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    width: "fit-content",
+  },
   helpButton: {
     backgroundColor: "#019B8E",
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     flexShrink: 0,
-    marginLeft: "auto", // Push to the right
+    marginLeft: "auto",
   },
   helpButtonText: {
     color: "#FFFFFF",
@@ -611,14 +664,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     justifyContent: "space-between",
-    gap: 8, // Add gap between label and button
+    gap: 8,
   },
   docLabel: {
     fontSize: 14,
     color: "#23231A",
     fontWeight: "500",
-    flex: 1, // Allow label to take available space
-    marginRight: 8, // Add margin to separate from button
+    flex: 1,
+    marginRight: 8,
   },
   // Pill styles
   addPill: {
@@ -626,9 +679,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
-    minWidth: 85, // Add minimum width
-    alignItems: "center", // Center text
-    flexShrink: 0, // Prevent shrinking
+    minWidth: 85,
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  closeModalButton: {
+    color: "#23231A",
+    fontWeight: "600",
+    fontSize: 24,
+    padding: 10,
+    borderRadius: 50,
+    backgroundColor: "#f0f0f0",
+  },
+  closeModalText: {
+    color: "#23231A",
   },
   addPillText: {
     color: "blue",
@@ -642,12 +706,23 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
-    minWidth: 85, // Add minimum width
-    alignItems: "center", // Center text
-    flexShrink: 0, // Prevent shrinking
+    minWidth: 85,
+    alignItems: "center",
+    flexShrink: 0,
   },
   submittedPillText: {
     color: "blue",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  cancelButton: {
+    backgroundColor: "#f0f0f0",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  cancelButtonText: {
+    color: "#666",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -656,9 +731,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
-    minWidth: 85, // Add minimum width
-    alignItems: "center", // Center text
-    flexShrink: 0, // Prevent shrinking
+    minWidth: 85,
+    alignItems: "center",
+    flexShrink: 0,
   },
   completePillText: {
     color: "#FFFFFF",
@@ -687,54 +762,142 @@ const styles = StyleSheet.create({
     padding: 20,
     width: "90%",
     maxWidth: 400,
+    position: "relative",
+  },
+  modalContentFullscreen: {
+    width: "100%",
+    height: "100%",
+    maxWidth: "100%",
+    borderRadius: 0,
+    backgroundColor: "#fff",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 20,
+    paddingRight: 10,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
-    marginBottom: 10,
-    color: "#333",
+    color: "#23231A",
+    flex: 1,
   },
-  modalSubtitle: {
-    fontSize: 14,
-    marginBottom: 20,
-    color: "#666",
+  removeButton: {
+    position: "absolute",
+    bottom: -20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
-  selectFileButton: {
-    backgroundColor: "#f0f0f0",
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 20,
-  },
-  selectFileButtonText: {
+  removeButtonText: {
+    backgroundColor: "#019B8E",
+    color: "#FFFFFF",
     textAlign: "center",
-    color: "#333",
+    borderRadius: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12,
   },
-  disabledButton: {
-    opacity: 0.5,
+  imageScrollView: {
+    flex: 1,
+    width: "100%",
+    backgroundColor: "black",
   },
-  modalActions: {
+  imageGrid: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    padding: 8,
+  },
+  gridItem: {
+    width: "48%",
+    aspectRatio: 0.75,
+    marginBottom: 24,
+    position: "relative",
+  },
+  gridImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+  },
+  bottomButtonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    backgroundColor: "#fff",
+  },
+  backButton: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  backButtonText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  addMoreButton: {
+    backgroundColor: "#019B8E",
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+    borderRadius: 25,
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  doneButton: {
+    backgroundColor: "#019B8E",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  doneButtonText: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginVertical: 15,
+  },
+  actionButtonText: {
+    backgroundColor: "#019B8E",
+    color: "#fff",
+    fontWeight: "500",
+  },
+  actionButton: {
+    backgroundColor: "#019B8E",
+    padding: 16,
+    borderRadius: 50,
+    alignItems: "center",
+  },
+  actionButtonHalf: {
+    flex: 1,
+  },
+  fileSelected: {
+    textAlign: "center",
+    marginVertical: 15,
+    color: "#666",
   },
   uploadButton: {
     backgroundColor: "#019B8E",
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 6,
-    marginLeft: 10,
+    marginTop: 15,
+    width: "100%",
   },
   uploadButtonText: {
     color: "#fff",
     fontWeight: "500",
-  },
-  cancelButton: {
-    backgroundColor: "#f0f0f0",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-  },
-  cancelButtonText: {
-    color: "#666",
+    textAlign: "center",
   },
   /* PROFILE MODAL */
   profileModalContainer: {
