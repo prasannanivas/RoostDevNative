@@ -52,14 +52,25 @@ export default function PasswordScreen({ navigation, route }) {
       // Get user data from previous screen
       const userData = route.params;
 
-      // Navigate to phone verification with all user data including password
-      navigation.navigate("PhoneVerification", {
-        ...userData,
-        password,
-      });
+      console.log(
+        "Password validated, proceeding to verification screen with user data:",
+        { ...userData, password: "***" }
+      );
+
+      // Add a small delay to ensure the loading state is visible
+      setTimeout(() => {
+        // Navigate to phone verification with all user data including password
+        navigation.navigate("PhoneVerification", {
+          ...userData,
+          password,
+        });
+
+        // Reset loading state if navigation fails
+        setIsLoading(false);
+      }, 300);
     } catch (error) {
+      console.error("Error in password screen:", error);
       setPasswordError("An error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
@@ -19,7 +20,6 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [formattedPhone, setFormattedPhone] = useState("");
-  const [emailAlreadyExists] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [firstNameError, setFirstNameError] = useState("");
@@ -37,6 +37,59 @@ export default function SignUpDetailsScreen({ navigation, route }) {
 
   const handleBack = () => {
     navigation.goBack();
+  };
+
+  const checkEmailOrPhoneExists = async () => {
+    try {
+      let existingAccount = false;
+
+      // If email is provided, check if it exists
+      if (email) {
+        try {
+          await axios.post("http://54.89.183.155:5000/presignup/email", {
+            email: email,
+          });
+          // If we reach here, email doesn't exist
+        } catch (error) {
+          // If we get an error response, the email already exists
+          if (error.response?.data?.error) {
+            setEmailError(
+              error.response.data.error ||
+                "This email is already registered. Please use a different email."
+            );
+            existingAccount = true;
+          }
+        }
+      }
+
+      // If phone is provided, check if it exists
+      if (phone) {
+        try {
+          await axios.post("http://54.89.183.155:5000/presignup/phone", {
+            phone: formattedPhone,
+          });
+          // If we reach here, phone doesn't exist
+        } catch (error) {
+          // If we get an error response, the phone already exists
+          if (error.response?.data?.error) {
+            setPhoneError(
+              error.response.data.error ||
+                "This phone number is already registered. Please use a different number."
+            );
+            existingAccount = true;
+          }
+        }
+      }
+
+      return existingAccount; // Return true if either email or phone already exists
+    } catch (error) {
+      console.error("Error checking email/phone:", error);
+      Alert.alert(
+        "Error",
+        "Could not verify account information. Please try again."
+      );
+      return true; // Return true to block navigation on error
+    }
   };
 
   const handleLogin = async () => {
@@ -59,33 +112,50 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         return;
       }
 
-      if (!validatePhone(phone)) {
+      // Either phone or email is required, not both
+      if (!phone && !email) {
+        setEmailError("Either phone number or email is required");
+        setPhoneError("Either phone number or email is required");
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate phone if provided
+      if (phone && !validatePhone(phone)) {
         setPhoneError("Please enter a valid 10-digit phone number");
         setIsLoading(false);
         return;
       }
 
-      if (!validateEmail(email)) {
+      // Validate email if provided
+      if (email && !validateEmail(email)) {
         setEmailError("Please enter a valid email address");
         setIsLoading(false);
         return;
       }
 
+      // Check if email or phone already exists
+      const exists = await checkEmailOrPhoneExists();
+      if (exists) {
+        setIsLoading(false);
+        return;
+      }
+
+      // If no errors, proceed to next screen
       navigation.navigate("Password", {
         firstName,
         lastName,
-        phone: formattedPhone,
-        email,
-        isRealtor: route.params?.isRealtor,
+        phone: phone ? formattedPhone : null,
+        email: email || null,
+        isRealtor: route.params?.accountType === "realtor",
+        recoId: route.params?.recoId,
       });
     } catch (error) {
-      if (error.response?.data?.error?.includes("email_1 dup key")) {
-        setEmailError("Email already exists");
-      } else if (error.response?.data?.error?.includes("phone_1 dup key")) {
-        setPhoneError("The phone number already exists please login.");
-      } else {
-        setPhoneError("An error occurred during signup.");
-      }
+      console.error("Error in signup process:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred during signup. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +165,11 @@ export default function SignUpDetailsScreen({ navigation, route }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         <Text style={styles.brandTitle}>Roost</Text>
-        <Text style={styles.heading}>Let’s get started!</Text>
+        <Text style={styles.heading}>Let's get started!</Text>
+
+        <Text style={styles.noteText}>
+          Only one contact method is required (phone or email)
+        </Text>
 
         {isLoading && (
           <View style={styles.spinnerContainer}>
@@ -138,12 +212,13 @@ export default function SignUpDetailsScreen({ navigation, route }) {
               mask: "(999) 999-9999",
             }}
             style={[styles.phoneInput, isLoading && styles.inputDisabled]}
-            placeholder="Phone Number"
+            placeholder="Phone Number (Optional if email provided)"
             placeholderTextColor="#999999"
             value={phone}
             onChangeText={(text) => {
               setPhone(text);
               setFormattedPhone("+1" + text.replace(/\D/g, ""));
+              if (text) setEmailError("");
             }}
             keyboardType="phone-pad"
             editable={!isLoading}
@@ -152,25 +227,18 @@ export default function SignUpDetailsScreen({ navigation, route }) {
 
         <TextInput
           style={[styles.input, isLoading && styles.inputDisabled]}
-          placeholder="Email"
+          placeholder="Email (Optional if phone provided)"
           placeholderTextColor="#999999"
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (text) setPhoneError("");
+          }}
           editable={!isLoading}
         />
 
-        {emailAlreadyExists && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>
-              This email address is already registered, please try and login. If
-              you forgot your password click{" "}
-              <Text style={styles.boldText}>REST PASSWORD</Text> or use a
-              different email
-            </Text>
-          </View>
-        )}
         {emailError ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{emailError}</Text>
@@ -227,7 +295,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#23231A",
+    marginBottom: 10,
+  },
+  noteText: {
+    fontSize: 14,
+    color: "#019B8E",
+    textAlign: "center",
     marginBottom: 20,
+    fontWeight: "600",
   },
   input: {
     width: "100%",
