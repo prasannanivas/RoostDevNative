@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,46 +10,27 @@ import {
   PanResponder,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-
-const mockNotifications = [
-  {
-    id: 1,
-    title: "Document Approved",
-    message: "Your T4 document has been approved",
-    time: "2h ago",
-    read: false,
-    category: "DOCUMENTS",
-    icon: "document-text",
-  },
-  {
-    id: 2,
-    title: "Action Required",
-    message: "Please upload your Notice of Assessment",
-    time: "1d ago",
-    read: true,
-    category: "DOCUMENTS",
-    icon: "alert-circle",
-    urgent: true,
-  },
-  {
-    id: 3,
-    title: "Application Update",
-    message: "Your mortgage application is being reviewed",
-    time: "2d ago",
-    read: true,
-    category: "UPDATES",
-    icon: "refresh-circle",
-  },
-];
+import { useNotification } from "./context/NotificationContext";
 
 const NotificationComponent = ({ visible, onClose }) => {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const {
+    notifications,
+    loading,
+    error,
+    markNotificationAsRead,
+    markAllAsRead,
+  } = useNotification();
+
+  const [unreadCount, setUnreadCount] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  // Mark notification as read - update both locally and on the server
 
   React.useEffect(() => {
     if (visible) {
@@ -76,6 +57,8 @@ const NotificationComponent = ({ visible, onClose }) => {
   }, [visible]);
 
   const handleClose = () => {
+    console.log("Closing notifications");
+    markAllAsRead();
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -94,12 +77,6 @@ const NotificationComponent = ({ visible, onClose }) => {
         useNativeDriver: true,
       }),
     ]).start(() => onClose());
-  };
-
-  const handleMarkAsRead = (id) => {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
   };
 
   const NotificationItem = ({ notification }) => {
@@ -158,7 +135,7 @@ const NotificationComponent = ({ visible, onClose }) => {
         ]}
       >
         <TouchableOpacity
-          onPress={() => handleMarkAsRead(notification.id)}
+          onPress={() => markNotificationAsRead(notification.id)}
           style={[
             styles.notificationContent,
             !notification.read && styles.unreadNotification,
@@ -223,7 +200,9 @@ const NotificationComponent = ({ visible, onClose }) => {
               onPress={(e) => e.stopPropagation()}
             >
               <View style={styles.header}>
-                <Text style={styles.headerText}>Notifications</Text>
+                <Text style={styles.headerText}>
+                  Notifications {unreadCount > 0 && `(${unreadCount})`}
+                </Text>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={handleClose}
@@ -238,7 +217,27 @@ const NotificationComponent = ({ visible, onClose }) => {
                 style={styles.notificationsList}
                 showsVerticalScrollIndicator={false}
               >
-                {notifications.length > 0 ? (
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#019B8E" />
+                    <Text style={styles.loadingText}>
+                      Loading notifications...
+                    </Text>
+                  </View>
+                ) : error ? (
+                  <View style={styles.emptyState}>
+                    <View style={styles.emptyStateIconContainer}>
+                      <Ionicons name="alert-circle" size={40} color="#DC3545" />
+                    </View>
+                    <Text style={styles.emptyStateText}>{error}</Text>
+                    <TouchableOpacity
+                      style={styles.retryButton}
+                      onPress={fetchNotifications}
+                    >
+                      <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : notifications.length > 0 ? (
                   notifications.map((notification) => (
                     <NotificationItem
                       key={notification.id}
@@ -417,6 +416,28 @@ const styles = StyleSheet.create({
     maxWidth: 240,
     lineHeight: 20,
     letterSpacing: -0.2,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: "#666666",
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#019B8E",
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 

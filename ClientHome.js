@@ -21,12 +21,14 @@ import * as Print from "expo-print";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
+import { useNotification } from "./context/NotificationContext";
 import ClientProfile from "./ClientProfile";
 import NotificationComponent from "./NotificationComponent";
 
 const ClientHome = () => {
   const { auth } = useAuth();
   const { documents: contextDocuments, clientInfo } = useClient();
+  const { unreadCount } = useNotification();
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -279,10 +281,10 @@ const ClientHome = () => {
   };
 
   // Delete document
-  const handleDeleteDocument = async (docType) => {
+  const handleDeleteDocument = async (documentDetails) => {
     try {
       const response = await fetch(
-        `http://54.89.183.155:5000/documents/${clientId}/documents/${docType}`,
+        `http://54.89.183.155:5000/documents/${clientId}/documents/${documentDetails._id}`,
         {
           method: "DELETE",
         }
@@ -290,7 +292,9 @@ const ClientHome = () => {
 
       if (!response.ok) throw new Error("Delete failed");
 
-      setClientDocs((prev) => prev.filter((doc) => doc.docType !== docType));
+      setClientDocs((prev) =>
+        prev.filter((doc) => doc._id !== documentDetails._id)
+      );
       setShowSubmittedModal(false);
       Alert.alert("Success", "Document deleted successfully");
     } catch (error) {
@@ -336,6 +340,25 @@ const ClientHome = () => {
   // Notifications button logic
   const handleNotifications = () => {
     setShowNotifications(true);
+  };
+
+  // Render notification button with badge
+  const renderNotificationButton = () => {
+    return (
+      <TouchableOpacity
+        style={styles.notificationButton}
+        onPress={handleNotifications}
+      >
+        <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+        {unreadCount > 0 && (
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationBadgeText}>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
   };
 
   // Render row
@@ -410,12 +433,7 @@ const ClientHome = () => {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.notificationButton}
-          onPress={handleNotifications}
-        >
-          <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        {renderNotificationButton()}
 
         <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
           <Text style={styles.helpButtonText}>HELP</Text>
@@ -675,9 +693,7 @@ const ClientHome = () => {
             <View style={styles.modalButtonGroup}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.deleteButton]}
-                onPress={() =>
-                  handleDeleteDocument(selectedSubmittedDoc?.docType)
-                }
+                onPress={() => handleDeleteDocument(selectedSubmittedDoc)}
               >
                 <Text style={styles.modalButtonText}>Delete</Text>
               </TouchableOpacity>
@@ -696,6 +712,7 @@ const ClientHome = () => {
       <NotificationComponent
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
+        userId={clientFromContext.id}
       />
     </SafeAreaView>
   );
@@ -760,6 +777,24 @@ const styles = StyleSheet.create({
   notificationButton: {
     padding: 8,
     marginRight: 8,
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "bold",
   },
   helpButton: {
     backgroundColor: "#019B8E",

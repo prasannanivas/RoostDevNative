@@ -77,7 +77,8 @@ export default function LoginScreen() {
   };
 
   const handleResetPassword = () => {
-    // Handle password reset logic
+    // Navigate to the password reset screen
+    navigation.navigate("PasswordReset");
   };
 
   return (
