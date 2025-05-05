@@ -103,7 +103,7 @@ export default function ClientProfile({ onClose }) {
         // documentApprovals,
       };
       const response = await axios.put(
-        `http://54.89.183.155:5000/client/${clientInfo.id}`,
+        `http://44.202.249.124:5000/client/${clientInfo.id}`,
         payload
       );
       if (response.status === 200) {
@@ -125,7 +125,7 @@ export default function ClientProfile({ onClose }) {
     }
     try {
       const response = await axios.post(
-        `http://54.89.183.155:5000/client/${clientInfo.id}/updatepassword`,
+        `http://44.202.249.124:5000/client/${clientInfo.id}/updatepassword`,
         {
           oldPassword: passwordData.oldPassword,
           newPassword: passwordData.newPassword,

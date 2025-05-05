@@ -99,7 +99,7 @@ export default function PasswordResetScreen({ navigation }) {
       const identifier = contactMethod === "email" ? email : formattedPhone;
 
       const response = await axios.post(
-        "http://54.89.183.155:5000/otp/password-reset/find-user",
+        "http://44.202.249.124:5000/otp/password-reset/find-user",
         {
           identifier: identifier,
         }
@@ -142,7 +142,7 @@ export default function PasswordResetScreen({ navigation }) {
       setError("");
 
       const response = await axios.post(
-        "http://54.89.183.155:5000/otp/email/generate",
+        "http://44.202.249.124:5000/otp/email/generate",
         {
           email: email,
         }
@@ -190,7 +190,7 @@ export default function PasswordResetScreen({ navigation }) {
   const verifyEmailOTP = async (otpValue) => {
     try {
       const response = await axios.post(
-        "http://54.89.183.155:5000/otp/email/verify",
+        "http://44.202.249.124:5000/otp/email/verify",
         {
           email: email,
           otp: otpValue,
@@ -278,7 +278,7 @@ export default function PasswordResetScreen({ navigation }) {
 
       // Call the password reset endpoint
       const response = await axios.post(
-        "http://54.89.183.155:5000/otp/password-reset",
+        "http://44.202.249.124:5000/otp/password-reset",
         {
           userId: userData.userId,
           newPassword: newPassword,

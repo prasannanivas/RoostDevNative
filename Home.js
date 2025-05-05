@@ -17,7 +17,7 @@ const Home = () => {
     if (!auth?.client) return;
     try {
       const response = await fetch(
-        `http://54.89.183.155:5000/client/${auth.client.id}`
+        `http://44.202.249.124:5000/client/${auth.client.id}`
       );
       const data = await response.json();
       setClientQuestionaire({

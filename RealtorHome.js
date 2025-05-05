@@ -97,7 +97,7 @@ const RealtorHome = () => {
       };
 
       const response = await fetch(
-        `http://54.89.183.155:5000/realtor/${realtor.id}/invite-client`,
+        `http://44.202.249.124:5000/realtor/${realtor.id}/invite-client`,
         {
           method: "POST",
           headers: {
@@ -278,7 +278,7 @@ const RealtorHome = () => {
                 {!imageLoadError ? (
                   <Image
                     source={{
-                      uri: `http://54.89.183.155:5000/realtor/profilepic/${realtor.id}`,
+                      uri: `http://44.202.249.124:5000/realtor/profilepic/${realtor.id}`,
                     }}
                     style={styles.avatar}
                     onError={() => setImageLoadError(true)}

@@ -46,7 +46,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       // If email is provided, check if it exists
       if (email) {
         try {
-          await axios.post("http://54.89.183.155:5000/presignup/email", {
+          await axios.post("http://44.202.249.124:5000/presignup/email", {
             email: email,
           });
           // If we reach here, email doesn't exist
@@ -65,7 +65,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       // If phone is provided, check if it exists
       if (phone) {
         try {
-          await axios.post("http://54.89.183.155:5000/presignup/phone", {
+          await axios.post("http://44.202.249.124:5000/presignup/phone", {
             phone: formattedPhone,
           });
           // If we reach here, phone doesn't exist

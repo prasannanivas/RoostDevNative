@@ -17,7 +17,7 @@ export const RealtorProvider = ({ children }) => {
       // Fetch realtor info
       try {
         const realtorResponse = await fetch(
-          `http://54.89.183.155:5000/realtor/${realtor.id}`,
+          `http://44.202.249.124:5000/realtor/${realtor.id}`,
           {
             method: "GET",
             headers: {
@@ -36,7 +36,7 @@ export const RealtorProvider = ({ children }) => {
       // Fetch invited data
       try {
         const invitedResponse = await fetch(
-          `http://54.89.183.155:5000/realtor/invited/${realtor.id}`,
+          `http://44.202.249.124:5000/realtor/invited/${realtor.id}`,
           {
             method: "GET",
             headers: {

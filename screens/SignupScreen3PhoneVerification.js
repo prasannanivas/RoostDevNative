@@ -84,7 +84,7 @@ export default function PhoneVerificationScreen({ navigation, route }) {
       setError("");
 
       const response = await axios.post(
-        "http://54.89.183.155:5000/otp/email/generate",
+        "http://44.202.249.124:5000/otp/email/generate",
         {
           email: userData.email,
         }
@@ -124,7 +124,7 @@ export default function PhoneVerificationScreen({ navigation, route }) {
   const verifyEmailOTP = async (otp) => {
     try {
       const response = await axios.post(
-        "http://54.89.183.155:5000/otp/email/verify",
+        "http://44.202.249.124:5000/otp/email/verify",
         {
           email: userData.email,
           otp,
@@ -141,8 +141,8 @@ export default function PhoneVerificationScreen({ navigation, route }) {
   const registerUser = async () => {
     try {
       const endpoint = userData.isRealtor
-        ? "http://54.89.183.155:5000/realtor/signup"
-        : "http://54.89.183.155:5000/client/signup";
+        ? "http://44.202.249.124:5000/realtor/signup"
+        : "http://44.202.249.124:5000/client/signup";
 
       const payload = {
         name: `${userData.firstName} ${userData.lastName}`,

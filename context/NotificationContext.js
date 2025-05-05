@@ -1,6 +1,20 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
+import * as Notifications from "expo-notifications";
+import { AppState } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  registerForPushNotificationsAsync,
+  registerDeviceOnServer,
+  showLocalNotification,
+} from "../services/NotificationService";
 
 const NotificationContext = createContext(null);
 
@@ -9,14 +23,124 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]); // Placeholder for notifications array
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [expoPushToken, setExpoPushToken] = useState(null);
+
+  const notificationListener = useRef();
+  const responseListener = useRef();
+  const appState = useRef(AppState.currentState);
 
   const { auth } = useAuth(); // Assuming you have a useAuth hook to get the current user
-  console.log("Auth in NotificationProvider:", auth);
   const userId = auth?.client?.id || auth?.realtor?.id || null; // Adjust this based on your auth structure
+  const userType = auth?.client ? "client" : auth?.realtor ? "realtor" : null;
+
+  // Register for push notifications when the app is first loaded
+  useEffect(() => {
+    if (userId) {
+      registerForNotifications();
+    }
+
+    // Set up notification listeners
+    setupNotificationListeners();
+
+    // Set up app state listener to refresh notifications when app comes to foreground
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        // App has come to the foreground
+        fetchNotifications();
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      // Clean up listeners - using subscription.remove() as per updated API
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+      subscription.remove();
+    };
+  }, [userId]);
+
+  // Register for push notifications
+  const registerForNotifications = async () => {
+    try {
+      // Check if we already have a token stored
+      const storedToken = await AsyncStorage.getItem("expoPushToken");
+
+      // Get a new token or use the stored one
+      const token = storedToken || (await registerForPushNotificationsAsync());
+
+      if (token) {
+        setExpoPushToken(token);
+
+        // Store the token for future app launches
+        if (!storedToken) {
+          await AsyncStorage.setItem("expoPushToken", token);
+        }
+
+        // Register the device with your backend
+        if (userId) {
+          await registerDeviceOnServer(userId, token, userType);
+        }
+      }
+    } catch (error) {
+      console.error("Error setting up push notifications:", error);
+    }
+  };
+
+  // Set up notification listeners
+  const setupNotificationListeners = () => {
+    // This listener is called when a notification is received while the app is foregrounded
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        const { title, body, data } = notification.request.content;
+        console.log("Notification received in foreground:", {
+          title,
+          body,
+          data,
+        });
+
+        // You can show a custom UI or simply refresh the notifications
+        fetchNotifications();
+      });
+
+    // This listener is called when a user taps on a notification
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const { title, body, data } = response.notification.request.content;
+        console.log("Notification response received:", { title, body, data });
+
+        // Handle notification tap - navigate to relevant screen
+        handleNotificationTap(data);
+      });
+  };
+
+  // Handle when user taps on a notification
+  const handleNotificationTap = (data) => {
+    // Handle navigation or other actions based on notification data
+    // This will depend on your app's navigation structure
+    console.log("Handling notification tap with data:", data);
+
+    // Example: navigate to a specific document if the notification is about a document
+    if (data.type === "DOCUMENT_REQUESTED" && data.documentId) {
+      // Navigate to document screen
+      // navigation.navigate('Document', { id: data.documentId });
+    }
+
+    // Mark the notification as read
+    if (data.notificationId) {
+      markNotificationAsRead(data.notificationId);
+    }
+  };
 
   useEffect(() => {
     if (userId) {
-      fetchNotifications(userId);
+      fetchNotifications();
     }
   }, [userId]);
 
@@ -28,7 +152,7 @@ export const NotificationProvider = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://54.89.183.155:5000/notifications?userId=${userId}`
+        `http://44.202.249.124:5000/notifications?userId=${userId}`
       );
 
       const formattedNotifications = response.data.notifications.map(
@@ -79,11 +203,21 @@ export const NotificationProvider = ({ children }) => {
 
     return iconMap[type] || "document-text";
   };
+
+  // Update the global badge count (app icon badge)
+  const updateGlobalUnreadCount = async (count) => {
+    try {
+      await Notifications.setBadgeCountAsync(count);
+    } catch (error) {
+      console.error("Error updating badge count:", error);
+    }
+  };
+
   // Function to mark a notification as read
   const markNotificationAsRead = async (notificationId) => {
     try {
       await axios.put(
-        `http://54.89.183.155:5000/notifications/${notificationId}/read`,
+        `http://44.202.249.124:5000/notifications/${notificationId}/read`,
         {}
       );
       // Decrease unread count by 1
@@ -102,9 +236,10 @@ export const NotificationProvider = ({ children }) => {
 
     try {
       await axios.put(
-        `http://54.89.183.155:5000/notifications/mark-all-read?userId=${userId}`
+        `http://44.202.249.124:5000/notifications/mark-all-read?userId=${userId}`
       );
       setUnreadCount(0);
+      updateGlobalUnreadCount(0);
       fetchNotifications();
       return true;
     } catch (error) {
@@ -113,9 +248,26 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  // Function to send a test local notification (for development testing)
+  const sendTestNotification = async () => {
+    try {
+      await showLocalNotification(
+        "Test Notification",
+        "This is a test notification from Roost",
+        { type: "TEST", notificationId: "test-123" }
+      );
+      return true;
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      return false;
+    }
+  };
+
   // Reset when logged out
   const resetNotifications = () => {
     setUnreadCount(0);
+    updateGlobalUnreadCount(0);
+    setNotifications([]);
   };
 
   return (
@@ -123,11 +275,15 @@ export const NotificationProvider = ({ children }) => {
       value={{
         unreadCount,
         notifications,
-        isLoading,
+        loading: isLoading,
+        error,
+        expoPushToken,
         markNotificationAsRead,
         markAllAsRead,
         resetNotifications,
-        setUnreadCount, // Expose setUnreadCount to allow direct updates
+        setUnreadCount,
+        sendTestNotification, // Include this for testing
+        refreshNotifications: fetchNotifications,
       }}
     >
       {children}

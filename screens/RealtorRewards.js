@@ -99,7 +99,7 @@ export default function RealtorRewards({
   useEffect(() => {
     (async () => {
       try {
-        const resp = await fetch("http://54.89.183.155:5000/admin/rewards");
+        const resp = await fetch("http://44.202.249.124:5000/admin/rewards");
         console.log("Rewards response", resp);
         const data = await resp.json();
         setRewards(data);
@@ -132,7 +132,7 @@ export default function RealtorRewards({
         type: "Realtor",
       };
       const resp = await fetch(
-        `http://54.89.183.155:5000/realtor/${realtor._id}/invite-realtor`,
+        `http://44.202.249.124:5000/realtor/${realtor._id}/invite-realtor`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -173,7 +173,7 @@ export default function RealtorRewards({
           selectedReward.rewardFor === "Clients" ? selectedClient : undefined,
       };
       const resp = await fetch(
-        `http://54.89.183.155:5000/realtor/${realtor._id}/claim-reward`,
+        `http://44.202.249.124:5000/realtor/${realtor._id}/claim-reward`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -183,7 +183,7 @@ export default function RealtorRewards({
       if (resp.ok) {
         // Refresh rewards
         const fresh = await fetch(
-          "http://54.89.183.155:5000/admin/rewards"
+          "http://44.202.249.124:5000/admin/rewards"
         ).then((r) => r.json());
         console.log("Claim successful", fresh);
         setRewards(fresh);
@@ -214,7 +214,7 @@ export default function RealtorRewards({
       >
         {reward.imageUrl ? (
           <Image
-            source={{ uri: `http://54.89.183.155:5000${reward.imageUrl}` }}
+            source={{ uri: `http://44.202.249.124:5000${reward.imageUrl}` }}
             style={styles.rewardImage}
           />
         ) : (
@@ -489,7 +489,7 @@ export default function RealtorRewards({
                 {selectedReward.imageUrl && (
                   <Image
                     source={{
-                      uri: `http://54.89.183.155:5000${selectedReward.imageUrl}`,
+                      uri: `http://44.202.249.124:5000${selectedReward.imageUrl}`,
                     }}
                     style={styles.claimImage}
                   />

@@ -65,7 +65,7 @@ const ClientHome = () => {
   useEffect(() => {
     if (!clientId) return;
     setLoadingDocuments(true);
-    fetch(`http://54.89.183.155:5000/client/neededdocument/${clientId}`)
+    fetch(`http://44.202.249.124:5000/client/neededdocument/${clientId}`)
       .then((r) => r.json())
       .then((data) => {
         setDocumentsFromApi(data.documents_needed || []);
@@ -255,7 +255,7 @@ const ClientHome = () => {
 
     try {
       const resp = await fetch(
-        `http://54.89.183.155:5000/documents/${clientId}/documents`,
+        `http://44.202.249.124:5000/documents/${clientId}/documents`,
         {
           method: "POST",
           body: data,
@@ -284,7 +284,7 @@ const ClientHome = () => {
   const handleDeleteDocument = async (documentDetails) => {
     try {
       const response = await fetch(
-        `http://54.89.183.155:5000/documents/${clientId}/documents/${documentDetails._id}`,
+        `http://44.202.249.124:5000/documents/${clientId}/documents/${documentDetails._id}`,
         {
           method: "DELETE",
         }

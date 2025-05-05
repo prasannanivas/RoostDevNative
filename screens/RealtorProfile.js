@@ -75,7 +75,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
 
     try {
       const response = await fetch(
-        `http://54.89.183.155:5000/realtor/${realtor._id}`,
+        `http://44.202.249.124:5000/realtor/${realtor._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -117,7 +117,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
 
     try {
       const response = await fetch(
-        `http://54.89.183.155:5000/realtor/${realtor._id}/updatepassword`,
+        `http://44.202.249.124:5000/realtor/${realtor._id}/updatepassword`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -210,7 +210,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
         });
 
         const response = await fetch(
-          `http://54.89.183.155:5000/realtor/profilepic/${realtor._id}`,
+          `http://44.202.249.124:5000/realtor/profilepic/${realtor._id}`,
           {
             method: "POST",
             body: formData,
@@ -321,7 +321,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           {realtor.profilePicture ? (
             <Image
               source={{
-                uri: `http://54.89.183.155:5000/realtor/profilepic/${realtor._id}`,
+                uri: `http://44.202.249.124:5000/realtor/profilepic/${realtor._id}`,
               }}
               style={styles.avatar}
             />

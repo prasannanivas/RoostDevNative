@@ -97,7 +97,7 @@ export default function ClientQuestionaire() {
     setIsLoading(true);
     try {
       await axios.put(
-        `http://54.89.183.155:5000/client/questionaire/${clientId}`,
+        `http://44.202.249.124:5000/client/questionaire/${clientId}`,
         formData
       );
       Alert.alert("Success", "Questionnaire submitted successfully!");

@@ -16,9 +16,9 @@ export const ClientProvider = ({ children }) => {
 
     async function fetchDocuments(clientID) {
       try {
-        // Replace 54.89.183.155 with your computer's IP or an accessible URL
+        // Replace 44.202.249.124 with your computer's IP or an accessible URL
         const response = await fetch(
-          `http://54.89.183.155:5000/documents/${clientID}/documents`,
+          `http://44.202.249.124:5000/documents/${clientID}/documents`,
           {
             method: "GET",
             headers: {
@@ -37,9 +37,9 @@ export const ClientProvider = ({ children }) => {
 
     async function fetchClient(clientID) {
       try {
-        // Replace 54.89.183.155 with your computer's IP or an accessible URL
+        // Replace 44.202.249.124 with your computer's IP or an accessible URL
         const response = await fetch(
-          `http://54.89.183.155:5000/client/${clientID}`,
+          `http://44.202.249.124:5000/client/${clientID}`,
           {
             method: "GET",
             headers: {
