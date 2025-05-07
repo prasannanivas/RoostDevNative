@@ -227,11 +227,12 @@ export default function RealtorRewards({
       };
 
       if (selectedReward.rewardFor === "Clients") {
-        payload.clientId = selectedClient;
+        payload.clientId = selectedClientData.inviteeId;
         payload.toAddress = addressToSend;
       } else {
         // For realtor rewards, also include the address
         payload.toAddress = addressToSend;
+        payload.targetRealtorId = realtor._id;
       }
 
       const resp = await fetch(
@@ -248,31 +249,11 @@ export default function RealtorRewards({
         const fresh = await fetch(
           "http://44.202.249.124:5000/admin/rewards"
         ).then((r) => r.json());
-
-        // Refresh realtor data to get updated points
-        const realtorResp = await fetch(
-          `http://44.202.249.124:5000/realtor/${realtor._id}`
-        );
-
-        const updatedRealtorData = await realtorResp.json();
-
         console.log("Claim successful", fresh);
-        console.log("Updated realtor data", updatedRealtorData);
-
-        // Update state with fresh data
         setRewards(fresh);
-
-        // Reset UI state
         setClaimModal(false);
         setAddressConfirmation(false);
-
-        // Show success message
         Alert.alert("Success", "Reward claimed successfully!");
-
-        // Call onRefresh if provided by parent component to update realtor data
-        if (onRefresh) {
-          onRefresh(updatedRealtorData);
-        }
       } else {
         const errorData = await resp.json();
         console.error("Claim failed", errorData);
@@ -310,6 +291,11 @@ export default function RealtorRewards({
           </View>
         )}
         <Text style={styles.rewardName}>{reward.rewardName}</Text>
+        {reward.description ? (
+          <Text numberOfLines={1} style={styles.rewardDesc}>
+            {reward.description}
+          </Text>
+        ) : null}
         <Text style={styles.rewardAmt}>${reward.rewardAmount.toFixed(2)}</Text>
         <View style={styles.progressBar}>
           <View
@@ -584,6 +570,11 @@ export default function RealtorRewards({
                 <Text style={styles.claimAmt}>
                   ${selectedReward.rewardAmount.toFixed(2)}
                 </Text>
+                {selectedReward.description && (
+                  <Text style={styles.claimDescription}>
+                    {selectedReward.description}
+                  </Text>
+                )}
                 <View style={styles.claimPtsRow}>
                   <Text>
                     Required Points:{" "}
@@ -924,6 +915,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: "#23231A",
   },
+  rewardDesc: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
   rewardAmt: {
     fontSize: 14,
     marginBottom: 6,
@@ -1022,6 +1018,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   claimAmt: { fontSize: 16, marginBottom: 8, color: "#23231A" },
+  claimDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 12,
+    lineHeight: 20,
+  },
   claimPtsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
