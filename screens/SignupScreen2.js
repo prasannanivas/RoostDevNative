@@ -25,6 +25,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [invitedBy, setInvitedBy] = useState(null);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,13 +43,25 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   const checkEmailOrPhoneExists = async () => {
     try {
       let existingAccount = false;
+      let inviteInfo = null;
 
       // If email is provided, check if it exists
       if (email) {
         try {
-          await axios.post("http://44.202.249.124:5000/presignup/email", {
-            email: email,
-          });
+          const response = await axios.post(
+            "http://44.202.249.124:5000/presignup/email",
+            {
+              email: email,
+            }
+          );
+
+          console.log("Email check response:", response.data);
+
+          // Check if response contains invitedBy information
+          if (response.data && response.data.invitedBy) {
+            inviteInfo = response.data.invitedBy;
+            console.log("Found invite info via email:", inviteInfo);
+          }
           // If we reach here, email doesn't exist
         } catch (error) {
           // If we get an error response, the email already exists
@@ -65,9 +78,20 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       // If phone is provided, check if it exists
       if (phone) {
         try {
-          await axios.post("http://44.202.249.124:5000/presignup/phone", {
-            phone: formattedPhone,
-          });
+          const response = await axios.post(
+            "http://44.202.249.124:5000/presignup/phone",
+            {
+              phone: formattedPhone,
+            }
+          );
+
+          console.log("Phone check response:", response.data);
+
+          // Check if response contains invitedBy information
+          if (response.data && response.data.invitedBy && !inviteInfo) {
+            inviteInfo = response.data.invitedBy;
+            console.log("Found invite info via phone:", inviteInfo);
+          }
           // If we reach here, phone doesn't exist
         } catch (error) {
           // If we get an error response, the phone already exists
@@ -81,14 +105,19 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         }
       }
 
-      return existingAccount; // Return true if either email or phone already exists
+      // Save invitedBy information if available
+      if (inviteInfo) {
+        setInvitedBy(inviteInfo);
+      }
+
+      return { existingAccount, inviteInfo }; // Return both values
     } catch (error) {
       console.error("Error checking email/phone:", error);
       Alert.alert(
         "Error",
         "Could not verify account information. Please try again."
       );
-      return true; // Return true to block navigation on error
+      return { existingAccount: true, inviteInfo: null }; // Return error state
     }
   };
 
@@ -135,13 +164,19 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       }
 
       // Check if email or phone already exists
-      const exists = await checkEmailOrPhoneExists();
-      if (exists) {
+      const { existingAccount, inviteInfo } = await checkEmailOrPhoneExists();
+      if (existingAccount) {
         setIsLoading(false);
         return;
       }
 
+      console.log(
+        "Navigating to password screen with invite info:",
+        inviteInfo || invitedBy
+      );
+
       // If no errors, proceed to next screen
+      // Use the directly returned inviteInfo instead of relying on the state update
       navigation.navigate("Password", {
         firstName,
         lastName,
@@ -149,6 +184,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         email: email || null,
         isRealtor: route.params?.accountType === "realtor",
         recoId: route.params?.recoId,
+        invitedBy: inviteInfo || invitedBy, // Use the one we just received or fall back to state
       });
     } catch (error) {
       console.error("Error in signup process:", error);

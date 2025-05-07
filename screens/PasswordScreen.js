@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,16 +7,26 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function PasswordScreen({ navigation, route }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [inviteCodeRequired, setInviteCodeRequired] = useState(false);
+
+  const { invitedBy } = route.params || {};
+
+  useEffect(() => {
+    // Check if invitation info is missing
+    setInviteCodeRequired(!invitedBy);
+  }, [invitedBy]);
 
   const handleBack = () => {
     navigation.goBack();
@@ -48,22 +58,37 @@ export default function PasswordScreen({ navigation, route }) {
         return;
       }
 
+      // Check invite code if required
+      if (inviteCodeRequired && !inviteCode.trim()) {
+        setPasswordError("Please enter an invite code to continue");
+        return;
+      }
+
       setIsLoading(true);
       // Get user data from previous screen
       const userData = route.params;
 
+      // Add inviterCode to userData if manually entered
+      const finalUserData = {
+        ...userData,
+        password,
+      };
+
+      if (inviteCodeRequired && inviteCode) {
+        finalUserData.inviterCode = inviteCode;
+      } else if (invitedBy) {
+        finalUserData.inviterId = invitedBy.id;
+      }
+
       console.log(
         "Password validated, proceeding to verification screen with user data:",
-        { ...userData, password: "***" }
+        { ...finalUserData, password: "***" }
       );
 
       // Add a small delay to ensure the loading state is visible
       setTimeout(() => {
         // Navigate to phone verification with all user data including password
-        navigation.navigate("PhoneVerification", {
-          ...userData,
-          password,
-        });
+        navigation.navigate("PhoneVerification", finalUserData);
 
         // Reset loading state if navigation fails
         setIsLoading(false);
@@ -79,6 +104,30 @@ export default function PasswordScreen({ navigation, route }) {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.heading}>Secure your account</Text>
+
+        {/* Display invitation message if available */}
+        {invitedBy ? (
+          <View style={styles.inviteBox}>
+            <Text style={styles.inviteText}>
+              You have been invited by{" "}
+              <Text style={styles.inviterName}>{invitedBy.name}</Text>
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.inputContainer}>
+            <Text style={styles.subHeading}>
+              Enter the invite code of your Realtor to continue
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Invite Code"
+              placeholderTextColor="#999999"
+              value={inviteCode}
+              onChangeText={setInviteCode}
+              autoCapitalize="none"
+            />
+          </View>
+        )}
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -228,5 +277,19 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  inviteBox: {
+    backgroundColor: "#F0F0F0",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+  },
+  inviteText: {
+    fontSize: 16,
+    color: "#23231A",
+  },
+  inviterName: {
+    fontWeight: "600",
+    color: "#019B8E",
   },
 });

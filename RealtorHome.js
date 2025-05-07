@@ -139,7 +139,12 @@ const RealtorHome = () => {
   };
 
   const handleShareMessage = (type) => {
-    const message = `Hey, I am inviting you to join me on Roost. Please accept my invitation to get started!`;
+    // Create message with invite code if available
+    const inviteCode = realtorFromContext?.realtorInfo?.inviteCode
+      ? `Use my invite code: ${realtorFromContext.realtorInfo.inviteCode}`
+      : "";
+
+    const message = `Hey, I am inviting you to join me on Roost. ${inviteCode} Please accept my invitation to get started!`;
 
     if (!isEmail && formData.phone) {
       const cleanPhone = formData.phone.replace(/\D/g, "");
@@ -331,11 +336,17 @@ const RealtorHome = () => {
             const statusText =
               client.status === "PENDING"
                 ? "Invited"
+                : client.clientAddress === null
+                ? "Account Deleted"
                 : client.status === "ACCEPTED" &&
-                  (!client.documents || client.documents.length === 0)
+                  (!client.documents ||
+                    client.documents.length === 0 ||
+                    client?.clientAddress !== null)
                 ? "Signed Up"
                 : client.status === "ACCEPTED" && client.documents.length > 0
                 ? `${docCount.approved}/${client.documents.length} Completed`
+                : client.clientAddress === null
+                ? "Account Deleted"
                 : client.status;
 
             return (

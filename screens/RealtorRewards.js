@@ -22,7 +22,7 @@ import { Picker } from "@react-native-picker/picker";
  * Props:
  *  realtor: { _id, points, pointsHistory: [{points,reason,date}], ... }
  *  invitedRealtors: array of { _id, referenceName, status, documents }
- *  invitedClients: array of { _id, referenceName, status, ... }
+ *  invitedClients: array of { _id, referenceName, status, clientAddress, ... }
  *  getInitials: fn(name) => initials
  *  onClose: fn() => void
  */
@@ -52,6 +52,15 @@ export default function RealtorRewards({
   const [selectedReward, setSelectedReward] = useState(null);
   const [selectedClient, setSelectedClient] = useState("");
   const [claimLoading, setClaimLoading] = useState(false);
+  const [selectedClientData, setSelectedClientData] = useState(null);
+  const [addressConfirmation, setAddressConfirmation] = useState(false);
+  const [addressToSend, setAddressToSend] = useState({
+    address: "",
+    city: "",
+    postalCode: "",
+  });
+
+  console.log("sewlectedClient", selectedClient);
 
   const POINTS_TO_DOLLARS = 3.14;
   const currentPoints = realtor?.points || 0;
@@ -159,42 +168,120 @@ export default function RealtorRewards({
     setInviteLoading(false);
   };
 
+  // Get selected client data when client is selected
+  useEffect(() => {
+    if (selectedClient) {
+      const client = invitedClients.find((c) => c._id === selectedClient);
+      if (client) {
+        setSelectedClientData(client);
+        if (client.clientAddress) {
+          setAddressToSend({
+            address: client.clientAddress.address || "",
+            city: client.clientAddress.city || "",
+            postalCode: client.clientAddress.postalCode || "",
+          });
+        }
+      }
+    } else {
+      setSelectedClientData(null);
+      setAddressToSend({
+        address: "",
+        city: "",
+        postalCode: "",
+      });
+    }
+  }, [selectedClient, invitedClients]);
+
+  // Populate address when realtor is selected for reward
+  useEffect(() => {
+    if (selectedReward && selectedReward.rewardFor === "Realtors" && realtor) {
+      // Use realtor's brokerage address if available
+      if (realtor.brokerageInfo) {
+        setAddressToSend({
+          address: realtor.brokerageInfo.brokerageAddress || "",
+          city: realtor.brokerageInfo.brokerageCity || "",
+          postalCode: realtor.brokerageInfo.brokeragePostalCode || "",
+        });
+      }
+    }
+  }, [selectedReward, realtor]);
+
   // Claim reward
   const handleClaimReward = async () => {
     if (selectedReward.rewardFor === "Clients" && !selectedClient) {
       Alert.alert("Select a client first");
       return;
     }
-    setClaimLoading(true);
+
+    // Show address confirmation for both clients and realtors
+    setAddressConfirmation(true);
+    return;
+  };
+
+  const submitRewardClaim = async () => {
     try {
       const payload = {
         rewardId: selectedReward._id,
-        clientId:
-          selectedReward.rewardFor === "Clients" ? selectedClient : undefined,
+        realtorId: realtor._id,
+        to: selectedReward.rewardFor === "Clients" ? "Client" : "Realtor",
       };
+
+      if (selectedReward.rewardFor === "Clients") {
+        payload.clientId = selectedClient;
+        payload.toAddress = addressToSend;
+      } else {
+        // For realtor rewards, also include the address
+        payload.toAddress = addressToSend;
+      }
+
       const resp = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor._id}/claim-reward`,
+        `http://44.202.249.124:5000/realtor/claimRewards`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       );
+
       if (resp.ok) {
         // Refresh rewards
         const fresh = await fetch(
           "http://44.202.249.124:5000/admin/rewards"
         ).then((r) => r.json());
+
+        // Refresh realtor data to get updated points
+        const realtorResp = await fetch(
+          `http://44.202.249.124:5000/realtor/${realtor._id}`
+        );
+
+        const updatedRealtorData = await realtorResp.json();
+
         console.log("Claim successful", fresh);
+        console.log("Updated realtor data", updatedRealtorData);
+
+        // Update state with fresh data
         setRewards(fresh);
+
+        // Reset UI state
         setClaimModal(false);
+        setAddressConfirmation(false);
+
+        // Show success message
+        Alert.alert("Success", "Reward claimed successfully!");
+
+        // Call onRefresh if provided by parent component to update realtor data
+        if (onRefresh) {
+          onRefresh(updatedRealtorData);
+        }
       } else {
-        console.error("Claim failed");
+        const errorData = await resp.json();
+        console.error("Claim failed", errorData);
+        Alert.alert("Error", errorData.message || "Failed to claim reward");
       }
     } catch (e) {
       console.error(e);
+      throw e;
     }
-    setClaimLoading(false);
   };
 
   const renderRewardCard = (reward) => {
@@ -514,7 +601,11 @@ export default function RealtorRewards({
                       >
                         <Picker.Item label="Choose a client" value="" />
                         {(invitedClients || [])
-                          .filter((c) => c.status === "ACCEPTED")
+                          .filter(
+                            (c) =>
+                              c.status === "ACCEPTED" &&
+                              c.clientAddress !== null
+                          )
                           .map((c) => (
                             <Picker.Item
                               key={c._id}
@@ -558,6 +649,99 @@ export default function RealtorRewards({
                 </TouchableOpacity>
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Address Confirmation Modal */}
+      <Modal
+        visible={
+          addressConfirmation &&
+          (selectedClientData !== null ||
+            selectedReward?.rewardFor === "Realtors")
+        }
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAddressConfirmation(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.addressModal}>
+            <TouchableOpacity
+              style={styles.claimClose}
+              onPress={() => setAddressConfirmation(false)}
+            >
+              <Ionicons name="close-outline" size={24} color="#333" />
+            </TouchableOpacity>
+
+            <Text style={styles.addressModalTitle}>
+              Confirm Shipping Address
+            </Text>
+            <Text style={styles.addressModalSubtitle}>
+              Please confirm or edit the address for{" "}
+              {selectedReward?.rewardFor === "Clients"
+                ? selectedClientData?.referenceName
+                : realtor?.name || "yourself"}
+            </Text>
+
+            <Text style={styles.label}>Address:</Text>
+            <TextInput
+              style={styles.input}
+              value={addressToSend.address}
+              onChangeText={(text) =>
+                setAddressToSend((prev) => ({ ...prev, address: text }))
+              }
+            />
+
+            <Text style={styles.label}>City:</Text>
+            <TextInput
+              style={styles.input}
+              value={addressToSend.city}
+              onChangeText={(text) =>
+                setAddressToSend((prev) => ({ ...prev, city: text }))
+              }
+            />
+
+            <Text style={styles.label}>Postal Code:</Text>
+            <TextInput
+              style={styles.input}
+              value={addressToSend.postalCode}
+              onChangeText={(text) =>
+                setAddressToSend((prev) => ({ ...prev, postalCode: text }))
+              }
+              keyboardType="numeric"
+            />
+
+            <View style={styles.addressButtonsRow}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setAddressConfirmation(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  claimLoading && styles.buttonDisabled,
+                ]}
+                onPress={async () => {
+                  setClaimLoading(true);
+                  try {
+                    await submitRewardClaim();
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  setClaimLoading(false);
+                }}
+                disabled={claimLoading}
+              >
+                {claimLoading ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <Text style={styles.confirmButtonText}>Confirm & Submit</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -885,5 +1069,59 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#F5F5F5",
     borderRadius: 20,
+  },
+
+  /* Address confirmation modal */
+  addressModal: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+    maxHeight: "80%",
+  },
+  addressModalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 8,
+    textAlign: "center",
+    color: "#23231A",
+  },
+  addressModalSubtitle: {
+    fontSize: 14,
+    marginBottom: 16,
+    textAlign: "center",
+    color: "#666",
+  },
+  addressButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#EEEEEE",
+    padding: 12,
+    borderRadius: 6,
+    alignItems: "center",
+    marginRight: 8,
+  },
+  cancelButtonText: {
+    color: "#333",
+    fontWeight: "600",
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: "#019B8E",
+    padding: 12,
+    borderRadius: 6,
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  confirmButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

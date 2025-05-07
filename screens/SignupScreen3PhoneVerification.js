@@ -156,6 +156,13 @@ export default function PhoneVerificationScreen({ navigation, route }) {
         payload.recoId = userData.recoId;
       }
 
+      // Add invite information if available
+      if (userData.inviterId) {
+        payload.inviterId = userData.inviterId;
+      } else if (userData.inviterCode) {
+        payload.inviterCode = userData.inviterCode;
+      }
+
       const response = await axios.post(endpoint, payload);
 
       if (response.data) {

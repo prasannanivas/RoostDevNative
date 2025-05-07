@@ -12,6 +12,7 @@ import {
   PanResponder,
   Animated,
   Dimensions,
+  Clipboard,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRealtor } from "../context/RealtorContext";
@@ -27,6 +28,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
   const [error, setError] = useState("");
+  const [codeCopied, setCodeCopied] = useState(false);
 
   // Main form data
   const [formData, setFormData] = useState({
@@ -257,6 +259,14 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
     }
   };
 
+  const copyInviteCode = () => {
+    if (realtor?.inviteCode) {
+      Clipboard.setString(realtor.inviteCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
+  };
+
   // Add swipe gesture handling
   const panY = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
@@ -365,6 +375,28 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
       {/* Personal Info (Disabled fields for name, email, phone, location) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Personal Information</Text>
+
+        {/* Invite Code Section - Added for realtor invites */}
+        {realtor?.inviteCode && (
+          <View style={styles.inviteCodeContainer}>
+            <Text style={styles.inviteCodeLabel}>Your Invite Code:</Text>
+            <View style={styles.inviteCodeWrapper}>
+              <Text style={styles.inviteCode}>{realtor.inviteCode}</Text>
+              <TouchableOpacity
+                style={styles.copyButton}
+                onPress={copyInviteCode}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.copyButtonText}>
+                  {codeCopied ? "Copied!" : "Copy"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.inviteCodeHint}>
+              Share this code with clients and realtors to earn rewards
+            </Text>
+          </View>
+        )}
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Name:</Text>
@@ -803,5 +835,48 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  /* Invite Code Section */
+  inviteCodeContainer: {
+    backgroundColor: "#F9F9F9",
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  inviteCodeLabel: {
+    fontSize: 14,
+    color: "#23231A",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  inviteCodeWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  inviteCode: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#019B8E",
+    letterSpacing: 1,
+  },
+  copyButton: {
+    backgroundColor: "#019B8E",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  copyButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  inviteCodeHint: {
+    fontSize: 12,
+    color: "#666666",
+    fontStyle: "italic",
   },
 });
