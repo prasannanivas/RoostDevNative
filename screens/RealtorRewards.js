@@ -14,8 +14,15 @@ import {
   PanResponder,
   Animated,
   Dimensions,
+  Linking,
 } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import {
+  FontAwesome,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+  Entypo,
+} from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 
 /**
@@ -39,8 +46,10 @@ export default function RealtorRewards({
   const [isEmail, setIsEmail] = useState(true);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
+  const [showContactOptions, setShowContactOptions] = useState(false);
   const [inviteData, setInviteData] = useState({
-    referenceName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
   });
@@ -60,7 +69,7 @@ export default function RealtorRewards({
     postalCode: "",
   });
 
-  console.log("sewlectedClient", selectedClient);
+  console.log("selectedClient", selectedClient);
 
   const POINTS_TO_DOLLARS = 3.14;
   const currentPoints = realtor?.points || 0;
@@ -127,19 +136,32 @@ export default function RealtorRewards({
       pointsNeeded,
       isEligible: currentPoints >= pointsNeeded,
     };
-  };
-
-  // Invite realtor
+  }; // Invite realtor
   const handleInviteRealtor = async () => {
     setInviteLoading(true);
     setInviteFeedback({ msg: "", type: "" });
+    setShowContactOptions(false);
+
+    // Validate that either email or phone is provided
+    if (!inviteData.email && !inviteData.phone) {
+      setInviteFeedback({ msg: "Phone or Email required", type: "error" });
+      setInviteLoading(false);
+      return;
+    }
+
     try {
+      // Build the message text
+      const inviteMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
+
+      // Construct the API payload - keep the format the same by combining first and last name
       const payload = {
-        referenceName: inviteData.referenceName,
-        email: isEmail ? inviteData.email : "",
-        phone: isEmail ? "" : inviteData.phone,
+        referenceName: `${inviteData.firstName} ${inviteData.lastName}`.trim(),
+        email: inviteData.email,
+        phone: inviteData.phone,
         type: "Realtor",
       };
+
+      // Send the invite via the API - keep loading indicator showing
       const resp = await fetch(
         `http://44.202.249.124:5000/realtor/${realtor._id}/invite-realtor`,
         {
@@ -148,13 +170,16 @@ export default function RealtorRewards({
           body: JSON.stringify(payload),
         }
       );
+
+      // Handle the response and set feedback
       if (resp.ok) {
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
-        setTimeout(() => {
-          setShowInviteForm(false);
-          setInviteData({ referenceName: "", email: "", phone: "" });
-          setInviteFeedback({ msg: "", type: "" });
-        }, 2000);
+
+        // Instead of automatically opening apps, show contact option icons
+        setShowContactOptions(true);
+
+        // Don't automatically close the form so the user can use the contact options
+        // The user can manually close the form when they're done
       } else {
         setInviteFeedback({
           msg: "Failed – try again",
@@ -164,8 +189,63 @@ export default function RealtorRewards({
     } catch (e) {
       console.error(e);
       setInviteFeedback({ msg: "Error occurred", type: "error" });
+    } finally {
+      // Always ensure the loading indicator is removed when complete
+      setInviteLoading(false);
     }
-    setInviteLoading(false);
+  };
+  // Handle opening specific apps when user taps an icon
+  const openWhatsApp = () => {
+    const whatsappMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
+    const phone = inviteData.phone.replace(/[^0-9]/g, "");
+    let whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
+      whatsappMessage
+    )}`;
+
+    Linking.canOpenURL(whatsappUrl)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(whatsappUrl);
+        } else {
+          Alert.alert(
+            "WhatsApp not installed",
+            "Please install WhatsApp to use this feature",
+            [{ text: "OK" }]
+          );
+        }
+      })
+      .catch((err) => console.error("Error opening WhatsApp:", err));
+  };
+
+  const openSMS = () => {
+    const smsMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
+    const smsUrl = `sms:${inviteData.phone}?body=${encodeURIComponent(
+      smsMessage
+    )}`;
+
+    Linking.canOpenURL(smsUrl)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(smsUrl);
+        }
+      })
+      .catch((err) => console.error("Error opening SMS:", err));
+  };
+
+  const openEmail = () => {
+    const emailSubject = "Join Roost";
+    const emailBody = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
+    const mailtoUrl = `mailto:${inviteData.email}?subject=${encodeURIComponent(
+      emailSubject
+    )}&body=${encodeURIComponent(emailBody)}`;
+
+    Linking.canOpenURL(mailtoUrl)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(mailtoUrl);
+        }
+      })
+      .catch((err) => console.error("Error opening email:", err));
   };
 
   // Get selected client data when client is selected
@@ -296,7 +376,7 @@ export default function RealtorRewards({
             {reward.description}
           </Text>
         ) : null}
-        <Text style={styles.rewardAmt}>${reward.rewardAmount.toFixed(2)}</Text>
+        {/* <Text style={styles.rewardAmt}>${reward.rewardAmount.toFixed(2)}</Text> */}
         <View style={styles.progressBar}>
           <View
             style={[
@@ -330,7 +410,6 @@ export default function RealtorRewards({
       <View {...panResponder.panHandlers}>
         <View style={styles.swipeHandle} />
       </View>
-
       {/* Move close button below handle */}
       <View style={styles.closeButtonContainer}>
         <TouchableOpacity
@@ -341,7 +420,6 @@ export default function RealtorRewards({
           <Ionicons name="close" size={24} color="#333" />
         </TouchableOpacity>
       </View>
-
       {/* Header */}
       <View style={styles.header}>
         <FontAwesome name="trophy" size={24} color="#019B8E" />
@@ -356,7 +434,6 @@ export default function RealtorRewards({
       <Text style={styles.desc}>
         Collect points and trade them in from vacations to cash
       </Text>
-
       {/* Invite Realtors */}
       <View style={styles.explanation}>
         <Text style={styles.exLine}>
@@ -381,7 +458,6 @@ export default function RealtorRewards({
           mortgage partner
         </Text>
       </View>
-
       {/* Invite Form Modal */}
       <Modal visible={showInviteForm} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -399,82 +475,133 @@ export default function RealtorRewards({
                 {inviteFeedback.msg}
               </Text>
             ) : null}
-            <Text style={styles.label}>Nickname:</Text>
+            <Text style={styles.label}>First Name:</Text>
             <TextInput
               style={styles.input}
-              value={inviteData.referenceName}
+              value={inviteData.firstName}
               onChangeText={(t) =>
                 setInviteData((prev) => ({
                   ...prev,
-                  referenceName: t,
+                  firstName: t,
                 }))
               }
             />
-
-            <Text style={styles.label}>Contact via:</Text>
-            <View style={styles.toggleRow}>
-              <TouchableOpacity
-                style={[styles.toggle, isEmail && styles.toggleActive]}
-                onPress={() => setIsEmail(true)}
-              >
-                <Text
-                  style={[styles.toggleTxt, isEmail && styles.toggleTxtActive]}
-                >
-                  Email
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggle, !isEmail && styles.toggleActive]}
-                onPress={() => setIsEmail(false)}
-              >
-                <Text
-                  style={[styles.toggleTxt, !isEmail && styles.toggleTxtActive]}
-                >
-                  Phone
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.label}>{isEmail ? "Email:" : "Phone:"}</Text>
+            <Text style={styles.label}>Last Name:</Text>
             <TextInput
               style={styles.input}
-              keyboardType={isEmail ? "email-address" : "phone-pad"}
-              value={isEmail ? inviteData.email : inviteData.phone}
+              value={inviteData.lastName}
               onChangeText={(t) =>
                 setInviteData((prev) => ({
                   ...prev,
-                  [isEmail ? "email" : "phone"]: t,
+                  lastName: t,
                 }))
               }
             />
-
-            <View style={styles.modalBtns}>
-              <TouchableOpacity
-                style={[
-                  styles.modalBtn,
-                  inviteLoading && styles.modalBtnDisabled,
-                ]}
-                disabled={inviteLoading}
-                onPress={handleInviteRealtor}
-              >
-                {inviteLoading ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.modalBtnTxt}>Send Invite</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalBtn}
-                onPress={() => setShowInviteForm(false)}
-                disabled={inviteLoading}
-              >
-                <Text style={styles.modalBtnTxt}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.label}>Email:</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="email-address"
+              value={inviteData.email}
+              onChangeText={(t) =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  email: t,
+                }))
+              }
+            />
+            <Text style={styles.label}>Phone:</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="phone-pad"
+              value={inviteData.phone}
+              onChangeText={(t) =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  phone: t,
+                }))
+              }
+            />
+            {showContactOptions && inviteFeedback.type === "success" ? (
+              <View style={styles.contactOptions}>
+                <Text style={styles.contactOptionsTitle}>Contact via:</Text>
+                <View style={styles.contactIcons}>
+                  {inviteData.phone && (
+                    <>
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={openWhatsApp}
+                      >
+                        <MaterialCommunityIcons
+                          name="whatsapp"
+                          size={32}
+                          color="#25D366"
+                        />
+                        <Text style={styles.contactIconText}>WhatsApp</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={openSMS}
+                      >
+                        <MaterialIcons name="sms" size={32} color="#2196F3" />
+                        <Text style={styles.contactIconText}>SMS</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                  {inviteData.email && (
+                    <TouchableOpacity
+                      style={styles.contactIconBtn}
+                      onPress={openEmail}
+                    >
+                      <Entypo name="mail" size={32} color="#F44336" />
+                      <Text style={styles.contactIconText}>Email</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <TouchableOpacity
+                  style={styles.closeModalBtn}
+                  onPress={() => {
+                    setShowInviteForm(false);
+                    setShowContactOptions(false);
+                    setInviteData({
+                      firstName: "",
+                      lastName: "",
+                      email: "",
+                      phone: "",
+                    });
+                    setInviteFeedback({ msg: "", type: "" });
+                  }}
+                >
+                  <Text style={styles.closeModalBtnTxt}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.modalBtns}>
+                <TouchableOpacity
+                  style={[
+                    styles.modalBtn,
+                    inviteLoading && styles.modalBtnDisabled,
+                  ]}
+                  disabled={inviteLoading}
+                  onPress={handleInviteRealtor}
+                >
+                  {inviteLoading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.modalBtnTxt}>Send Invite</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalBtn}
+                  onPress={() => setShowInviteForm(false)}
+                  disabled={inviteLoading}
+                >
+                  <Text style={styles.modalBtnTxt}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
-
       {/* Available Rewards */}
       <Text style={styles.sectionTitle}>Rewards for You</Text>
       {fetchingRewards ? (
@@ -488,7 +615,6 @@ export default function RealtorRewards({
       ) : (
         <Text>No rewards available</Text>
       )}
-
       <Text style={styles.sectionTitle}>Rewards for Clients</Text>
       {!fetchingRewards && (
         <View style={styles.rewardsGrid}>
@@ -497,10 +623,9 @@ export default function RealtorRewards({
             .map(renderRewardCard)}
         </View>
       )}
-
       {/* Points History */}
       <Text style={styles.sectionTitle}>Points History</Text>
-      {realtor.pointsHistory.map((e, i) => (
+      {realtor?.pointsHistory?.map((e, i) => (
         <View key={i} style={styles.historyRow}>
           <View style={styles.historyPts}>
             <FontAwesome name="star" size={14} color="#F9A602" />
@@ -512,30 +637,32 @@ export default function RealtorRewards({
           </View>
         </View>
       ))}
-
       {/* Invited Realtors */}
       <Text style={styles.sectionTitle}>Invited Realtors</Text>
-      {invitedRealtors.map((c) => (
-        <View key={c._id} style={styles.clientCard}>
-          <View style={styles.initialsCircle}>
-            <Text style={styles.initialsTxt}>
-              {getInitials(c.referenceName)}
-            </Text>
+      {invitedRealtors && invitedRealtors.length > 0 ? (
+        invitedRealtors.map((c) => (
+          <View key={c._id} style={styles.clientCard}>
+            <View style={styles.initialsCircle}>
+              <Text style={styles.initialsTxt}>
+                {getInitials(c.referenceName)}
+              </Text>
+            </View>
+            <View>
+              <Text style={styles.clientName}>{c.referenceName}</Text>
+              <Text style={styles.clientStatus}>
+                {c.status === "PENDING"
+                  ? "Invited"
+                  : c.status === "ACCEPTED" &&
+                    (!c.documents || c.documents.length === 0)
+                  ? "Signed Up"
+                  : c.status}
+              </Text>
+            </View>
           </View>
-          <View>
-            <Text style={styles.clientName}>{c.referenceName}</Text>
-            <Text style={styles.clientStatus}>
-              {c.status === "PENDING"
-                ? "Invited"
-                : c.status === "ACCEPTED" &&
-                  (!c.documents || c.documents.length === 0)
-                ? "Signed Up"
-                : c.status}
-            </Text>
-          </View>
-        </View>
-      ))}
-
+        ))
+      ) : (
+        <Text>No invited realtors</Text>
+      )}
       {/* Claim Reward Modal */}
       <Modal
         visible={claimModal && selectedReward !== null}
@@ -567,9 +694,9 @@ export default function RealtorRewards({
                     style={styles.claimImage}
                   />
                 )}
-                <Text style={styles.claimAmt}>
+                {/* <Text style={styles.claimAmt}>
                   ${selectedReward.rewardAmount.toFixed(2)}
-                </Text>
+                </Text> */}
                 {selectedReward.description && (
                   <Text style={styles.claimDescription}>
                     {selectedReward.description}
@@ -643,7 +770,6 @@ export default function RealtorRewards({
           </View>
         </View>
       </Modal>
-
       {/* Address Confirmation Modal */}
       <Modal
         visible={
@@ -874,6 +1000,47 @@ const styles = StyleSheet.create({
   },
   modalBtnTxt: { color: "#fff", fontWeight: "600" },
   modalBtnDisabled: { opacity: 0.6 },
+
+  /* Contact options */
+  contactOptions: {
+    alignItems: "center",
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  contactOptionsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 15,
+    color: "#23231A",
+  },
+  contactIcons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  contactIconBtn: {
+    alignItems: "center",
+    marginHorizontal: 15,
+    paddingVertical: 10,
+  },
+  contactIconText: {
+    marginTop: 5,
+    fontSize: 12,
+    color: "#23231A",
+  },
+  closeModalBtn: {
+    backgroundColor: "#019B8E",
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  closeModalBtnTxt: {
+    color: "#fff",
+    fontWeight: "600",
+  },
 
   /* Rewards grid */
   sectionTitle: {
