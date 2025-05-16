@@ -140,8 +140,7 @@ export default function PasswordScreen({ navigation, route }) {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                autoComplete="off"
-                textContentType="none"
+                textContentType="password"
                 autoCorrect={false}
                 spellCheck={false}
                 keyboardType="default"
@@ -166,8 +165,7 @@ export default function PasswordScreen({ navigation, route }) {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
-                autoComplete="off"
-                textContentType="none"
+                textContentType="password"
                 autoCorrect={false}
                 spellCheck={false}
                 keyboardType="default"
@@ -202,12 +200,10 @@ export default function PasswordScreen({ navigation, route }) {
                     placeholderTextColor="#999999"
                     value={inviteCode}
                     onChangeText={setInviteCode}
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    textContentType="none"
                     autoCorrect={false}
                     spellCheck={false}
                     keyboardType="default"
+                    autoCapitalize="none"
                   />
                 </View>
               </View>
