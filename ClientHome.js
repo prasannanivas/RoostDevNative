@@ -27,7 +27,12 @@ import NotificationComponent from "./NotificationComponent";
 
 const ClientHome = () => {
   const { auth } = useAuth();
-  const { documents: contextDocuments, clientInfo } = useClient();
+  const {
+    documents: contextDocuments,
+    clientInfo,
+    fetchRefreshData,
+    loadingClient,
+  } = useClient();
   const { unreadCount } = useNotification();
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,7 +45,6 @@ const ClientHome = () => {
   const [documentsFromApi, setDocumentsFromApi] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [clientDocs, setClientDocs] = useState(contextDocuments || []);
-
   // Upload modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState(null);
@@ -48,42 +52,61 @@ const ClientHome = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [capturedImages, setCapturedImages] = useState([]);
 
+  // Button loading states
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
   // Complete modal state
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedCompleteDoc, setSelectedCompleteDoc] = useState(null);
 
   // Submitted modal state
   const [showSubmittedModal, setShowSubmittedModal] = useState(false);
-  const [selectedSubmittedDoc, setSelectedSubmittedDoc] = useState(null);
-
-  // Pull in contextDocs when they change
+  const [selectedSubmittedDoc, setSelectedSubmittedDoc] = useState(null); // Keep client docs updated from context
   useEffect(() => {
-    setClientDocs(contextDocuments || []);
+    if (contextDocuments && contextDocuments.length > 0) {
+      console.log(
+        "Updating client documents from context:",
+        contextDocuments.length,
+        "documents"
+      );
+      setClientDocs(contextDocuments);
+    }
   }, [contextDocuments]);
 
-  // Fetch what's needed
+  // Update loading state from context
   useEffect(() => {
-    if (!clientId) return;
-    setLoadingDocuments(true);
-    fetch(`http://44.202.249.124:5000/client/neededdocument/${clientId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setDocumentsFromApi(data.documents_needed || []);
-        setLoadingDocuments(false);
-      })
-      .catch((e) => {
-        console.error(e);
-        setLoadingDocuments(false);
+    setLoadingDocuments(loadingClient);
+  }, [loadingClient]);
+  // Fetch documents from the server
+  // Initial data loading
+  useEffect(() => {
+    if (clientId) {
+      console.log("Initial data loading for client:", clientId);
+      fetchRefreshData(clientId).then((result) => {
+        if (result?.neededDocsResponse?.documents_needed) {
+          setDocumentsFromApi(result.neededDocsResponse.documents_needed);
+        }
       });
+    }
   }, [clientId]);
+  // Merge API + client uploads with proper logging
+  const merged = React.useMemo(() => {
+    const result = documentsFromApi.map((apiDoc) => {
+      const match = clientDocs.find(
+        (d) => d.docType?.toLowerCase() === apiDoc.docType?.toLowerCase()
+      );
+      return match ? { ...apiDoc, ...match } : apiDoc;
+    });
 
-  // Merge API + client uploads
-  const merged = documentsFromApi.map((apiDoc) => {
-    const match = clientDocs.find(
-      (d) => d.docType?.toLowerCase() === apiDoc.docType?.toLowerCase()
+    // Log merge results on changes
+    console.log(
+      `Merged documents: ${result.length} (API: ${documentsFromApi.length}, Client: ${clientDocs.length})`
     );
-    return match ? { ...apiDoc, ...match } : apiDoc;
-  });
+
+    return result;
+  }, [documentsFromApi, clientDocs]);
 
   // Sections
   const docsNeeded = merged.filter((d) => d.type === "Needed");
@@ -166,11 +189,13 @@ const ClientHome = () => {
           ]
         );
       }
-
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: "images",
         allowsEditing: true,
         quality: 0.8,
+        aspect: [4, 3], // Set a fixed aspect ratio
+        allowsMultipleSelection: false,
+        exif: false, // Don't include EXIF data to reduce file size
       });
 
       if (!result.canceled && result.assets?.length) {
@@ -194,7 +219,6 @@ const ClientHome = () => {
   // Convert images to PDF
   const convertImagesToPDF = async () => {
     if (capturedImages.length === 0) return;
-
     const html = await Promise.all(
       capturedImages.map(async (u) => {
         const blob = await (await fetch(u)).blob();
@@ -235,13 +259,14 @@ const ClientHome = () => {
         text: "Cancel",
         style: "cancel",
       },
-    ]);
-
-  // Upload
+    ]); // Upload
   const handleUpload = async () => {
     if (!selectedFile || !selectedDocType) {
       return Alert.alert("Select file/type");
     }
+
+    setUploadLoading(true);
+
     const data = new FormData();
     data.append("docType", selectedDocType);
     data.append("pdfFile", {
@@ -263,26 +288,35 @@ const ClientHome = () => {
         }
       );
       if (!resp.ok) throw new Error("upload failed");
-      const json = await resp.json();
-      setClientDocs((prev) => {
-        const i = prev.findIndex(
-          (d) => d.docType.toLowerCase() === selectedDocType.toLowerCase()
-        );
-        if (i < 0) return [...prev, json.document];
-        const upd = [...prev];
-        upd[i] = json.document;
-        return upd;
-      });
-      Alert.alert("Uploaded!");
+
+      // Sync with backend after successful upload
+      const refreshResult = await fetchRefreshData(clientId);
+
+      // Update needed documents if available
+      if (refreshResult?.neededDocsResponse?.documents_needed) {
+        setDocumentsFromApi(refreshResult.neededDocsResponse.documents_needed);
+      }
+
+      Alert.alert("Success", "Document uploaded successfully");
       closeModal();
     } catch (e) {
+      console.error("Upload error:", e);
       Alert.alert("Error", "Upload failed");
+    } finally {
+      setUploadLoading(false);
     }
-  };
-
-  // Delete document
+  }; // Delete document
   const handleDeleteDocument = async (documentDetails) => {
+    console.log("Deleting document:", documentDetails);
+    setDeleteLoading(true);
+
     try {
+      if (!documentDetails || !documentDetails._id) {
+        Alert.alert("Error", "Document ID is missing");
+        console.error("Document ID is missing:", documentDetails);
+        return;
+      }
+
       const response = await fetch(
         `http://44.202.249.124:5000/documents/${clientId}/documents/${documentDetails._id}`,
         {
@@ -290,23 +324,58 @@ const ClientHome = () => {
         }
       );
 
-      if (!response.ok) throw new Error("Delete failed");
+      // Clone the response before consuming the body
+      const responseClone = response.clone();
+      const responseData = await responseClone.json().catch(() => ({}));
+      console.log("Delete response:", responseData);
+      if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
 
-      setClientDocs((prev) =>
-        prev.filter((doc) => doc._id !== documentDetails._id)
-      );
+      // Sync with backend after successful deletion
+      const refreshResult = await fetchRefreshData(clientId);
+
+      // Update needed documents if available
+      if (refreshResult?.neededDocsResponse?.documents_needed) {
+        setDocumentsFromApi(refreshResult.neededDocsResponse.documents_needed);
+      }
+
       setShowSubmittedModal(false);
       Alert.alert("Success", "Document deleted successfully");
     } catch (error) {
       Alert.alert("Error", "Failed to delete document");
+      console.error(error);
+    } finally {
+      setDeleteLoading(false);
     }
-  };
+  }; // Centralized refresh logic
+  const onRefresh = React.useCallback(async () => {
+    if (refreshing) return; // Prevent multiple simultaneous refreshes
 
-  // Refresh logic
-  const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    auth.refetch?.().finally(() => setRefreshing(false));
-  }, [auth]);
+    setActionLoading(true);
+
+    try {
+      // Refresh auth data
+      const authPromise = auth.refetch?.() || Promise.resolve();
+
+      // Refresh all client data from the context
+      const refreshResult = await fetchRefreshData(clientId);
+
+      // Update needed documents from the response
+      if (refreshResult?.neededDocsResponse?.documents_needed) {
+        setDocumentsFromApi(refreshResult.neededDocsResponse.documents_needed);
+      }
+
+      // Wait for auth refresh to complete as well
+      await authPromise;
+
+      console.log("Refresh complete with updated data");
+    } catch (error) {
+      console.error("Error during refresh:", error);
+    } finally {
+      setRefreshing(false);
+      setActionLoading(false);
+    }
+  }, [auth, clientId, refreshing]);
 
   // Help button logic
   const handleHelpPress = async () => {
@@ -360,7 +429,6 @@ const ClientHome = () => {
       </TouchableOpacity>
     );
   };
-
   // Render row
   const renderDocumentRow = (doc) => {
     const status = doc.status?.toLowerCase();
@@ -368,34 +436,57 @@ const ClientHome = () => {
     if (status === "pending" || status === "rejected") {
       action = (
         <TouchableOpacity
-          style={styles.addPill}
-          onPress={() => handleAdd(doc.docType)}
+          style={[styles.addPill, actionLoading && styles.pillDisabled]}
+          onPress={() => {
+            setActionLoading(true);
+            handleAdd(doc.docType);
+            setTimeout(() => setActionLoading(false), 300); // Reset after animation
+          }}
+          disabled={actionLoading}
         >
-          <Text style={styles.addPillText}>Add</Text>
+          {actionLoading ? (
+            <ActivityIndicator size="small" color="blue" />
+          ) : (
+            <Text style={styles.addPillText}>Add</Text>
+          )}
         </TouchableOpacity>
       );
     } else if (status === "submitted") {
       action = (
         <TouchableOpacity
-          style={styles.submittedPill}
+          style={[styles.submittedPill, actionLoading && styles.pillDisabled]}
           onPress={() => {
+            setActionLoading(true);
             setSelectedSubmittedDoc(doc);
             setShowSubmittedModal(true);
+            setTimeout(() => setActionLoading(false), 300); // Reset after animation
           }}
+          disabled={actionLoading}
         >
-          <Text style={styles.submittedPillText}>Submitted</Text>
+          {actionLoading ? (
+            <ActivityIndicator size="small" color="blue" />
+          ) : (
+            <Text style={styles.submittedPillText}>Submitted</Text>
+          )}
         </TouchableOpacity>
       );
     } else if (status === "approved" || status === "complete") {
       action = (
         <TouchableOpacity
-          style={styles.completePill}
+          style={[styles.completePill, actionLoading && styles.pillDisabled]}
           onPress={() => {
+            setActionLoading(true);
             setSelectedCompleteDoc(doc);
             setShowCompleteModal(true);
+            setTimeout(() => setActionLoading(false), 300); // Reset after animation
           }}
+          disabled={actionLoading}
         >
-          <Text style={styles.completePillText}>Complete</Text>
+          {actionLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.completePillText}>Complete</Text>
+          )}
         </TouchableOpacity>
       );
     }
@@ -476,8 +567,8 @@ const ClientHome = () => {
                 clientFromContext.applyingbehalf.toLowerCase() === "other" && (
                   <View>
                     <Text style={styles.sectionHeader}>
-                      WHAT’S NEEDED FOR{" "}
-                      {clientFromContext.otherDetails?.name || ""}
+                      {"WHAT'S NEEDED FOR " +
+                        (clientFromContext.otherDetails?.name || "")}
                     </Text>
                     <View style={styles.docsContainer}>
                       {docsRequested.length > 0 ? (
@@ -538,7 +629,6 @@ const ClientHome = () => {
                 <Text style={styles.closeModalText}>X</Text>
               </TouchableOpacity>
             </View>
-
             {capturedImages.length > 0 ? (
               <>
                 <ScrollView style={styles.imageScrollView}>
@@ -565,7 +655,7 @@ const ClientHome = () => {
                     style={[styles.actionButton, styles.backButton]}
                     onPress={() => setCapturedImages([])}
                   >
-                    <Text style={styles.backButtonText}> {"<-"} </Text>
+                    <Text style={styles.backButtonText}>{"<-"}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionButton, styles.addMoreButton]}
@@ -606,7 +696,6 @@ const ClientHome = () => {
                 {selectedFile?.name || "File selected"}
               </Text>
             )}
-
             {isLoading && (
               <ActivityIndicator
                 size="small"
@@ -614,13 +703,20 @@ const ClientHome = () => {
                 style={styles.loadingIndicator}
               />
             )}
-
             {selectedFile && (
               <TouchableOpacity
-                style={styles.uploadButton}
+                style={[
+                  styles.uploadButton,
+                  uploadLoading && styles.buttonDisabled,
+                ]}
                 onPress={handleUpload}
+                disabled={uploadLoading}
               >
-                <Text style={styles.uploadButtonText}>Upload</Text>
+                {uploadLoading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.uploadButtonText}>Upload</Text>
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -692,12 +788,20 @@ const ClientHome = () => {
 
             <View style={styles.modalButtonGroup}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.deleteButton]}
+                style={[
+                  styles.modalButton,
+                  styles.deleteButton,
+                  deleteLoading && styles.buttonDisabled,
+                ]}
                 onPress={() => handleDeleteDocument(selectedSubmittedDoc)}
+                disabled={deleteLoading}
               >
-                <Text style={styles.modalButtonText}>Delete</Text>
+                {deleteLoading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.modalButtonText}>Delete</Text>
+                )}
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={[styles.modalButton, styles.nevermindButton]}
                 onPress={() => setShowSubmittedModal(false)}
@@ -953,6 +1057,7 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     borderRadius: 0,
     backgroundColor: "#fff",
+    paddingTop: Platform.OS === "ios" ? 40 : 20, // Add more padding for iOS notch
   },
   modalHeader: {
     flexDirection: "row",
@@ -987,24 +1092,30 @@ const styles = StyleSheet.create({
   imageScrollView: {
     flex: 1,
     width: "100%",
-    backgroundColor: "black",
+    backgroundColor: "#ffffff",
   },
   imageGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    padding: 8,
+    padding: 12,
+    backgroundColor: "#ffffff",
   },
   gridItem: {
     width: "48%",
     aspectRatio: 0.75,
     marginBottom: 24,
     position: "relative",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 12,
+    overflow: "hidden",
+    padding: 4,
   },
   gridImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 12,
+    borderRadius: 8,
+    backgroundColor: "#000",
   },
   bottomButtonContainer: {
     flexDirection: "row",
@@ -1144,5 +1255,11 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: "#fff",
     fontWeight: "500",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  pillDisabled: {
+    opacity: 0.7,
   },
 });
