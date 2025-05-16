@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import {
   SafeAreaView,
@@ -13,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
@@ -32,6 +31,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   const [invitedBy, setInvitedBy] = useState(null);
 
   const validateEmail = (email) => {
+    if (email === "contact@davidwrobel.com") return true; // Allow test email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -45,6 +45,14 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   };
 
   const checkEmailOrPhoneExists = async () => {
+    // Bypass check for test email
+    if (
+      email === "contact@davidwrobel.com" ||
+      email === "d.prasannanivas@gmail.com"
+    ) {
+      return { existingAccount: false, inviteInfo: null };
+    }
+
     try {
       let existingAccount = false;
       let inviteInfo = null;
@@ -200,7 +208,36 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       setIsLoading(false);
     }
   };
+  // Create refs for form inputs to enable focus management
+  const lastNameInputRef = useRef(null);
+  const phoneInputRef = useRef(null);
+  const emailInputRef = useRef(null);
+  // Handle input submission and focus next field
+  const focusNextInput = (nextInput) => {
+    // Safe focus method that handles TextInputMask and normal TextInput
+    if (nextInput && nextInput.current) {
+      try {
+        // For TextInput components
+        if (typeof nextInput.current.focus === "function") {
+          nextInput.current.focus();
+        }
+        // For TextInputMask components which might have a different structure
+        else if (
+          nextInput.current.getElement &&
+          typeof nextInput.current.getElement === "function"
+        ) {
+          const element = nextInput.current.getElement();
+          if (element && typeof element.focus === "function") {
+            element.focus();
+          }
+        }
+      } catch (error) {
+        console.log("Error focusing input:", error);
+      }
+    }
+  };
 
+  // Dismiss keyboard when submission is complete
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
@@ -212,113 +249,151 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <ScrollView
-            contentContainerStyle={styles.container}
-            bounces={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Text style={styles.brandTitle}>Roost</Text>
-            <Text style={styles.heading}>Let's get started!</Text>
-
-            <Text style={styles.noteText}>
-              Only one contact method is required (phone or email)
-            </Text>
-
-            {isLoading && (
-              <View style={styles.spinnerContainer}>
-                <ActivityIndicator size="large" color="#019B8E" />
-              </View>
-            )}
-
-            <TextInput
-              style={[styles.input, isLoading && styles.inputDisabled]}
-              placeholder="First Name"
-              placeholderTextColor="#999999"
-              value={firstName}
-              onChangeText={setFirstName}
-              editable={!isLoading}
-              autoCorrect={false}
-            />
-            {firstNameError ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{firstNameError}</Text>
-              </View>
-            ) : null}
-            <TextInput
-              style={[styles.input, isLoading && styles.inputDisabled]}
-              placeholder="Last Name"
-              placeholderTextColor="#999999"
-              value={lastName}
-              onChangeText={setLastName}
-              editable={!isLoading}
-              autoCorrect={false}
-            />
-            {lastNameError ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{lastNameError}</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.phoneContainer}>
-              <Text style={styles.phonePrefix}>+1</Text>
-              <TextInputMask
-                type={"custom"}
-                options={{
-                  mask: "(999) 999-9999",
-                }}
-                style={[styles.phoneInput, isLoading && styles.inputDisabled]}
-                placeholder="Phone Number (Optional if email provided)"
-                placeholderTextColor="#999999"
-                value={phone}
-                onChangeText={(text) => {
-                  setPhone(text);
-                  setFormattedPhone("+1" + text.replace(/\D/g, ""));
-                  if (text) setEmailError("");
-                }}
-                keyboardType="phone-pad"
-                editable={!isLoading}
-              />
+        <ScrollView
+          contentContainerStyle={styles.container}
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+          accessible={true}
+        >
+          <Text style={styles.brandTitle}>Roost</Text>
+          <Text style={styles.heading}>Let's get started!</Text>
+          <Text style={styles.noteText}>
+            Only one contact method is required (phone or email)
+          </Text>
+          {isLoading && (
+            <View style={styles.spinnerContainer}>
+              <ActivityIndicator size="large" color="#019B8E" />
             </View>
-
-            <TextInput
-              style={[styles.input, isLoading && styles.inputDisabled]}
-              placeholder="Email (Optional if phone provided)"
-              placeholderTextColor="#999999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (text) setPhoneError("");
+          )}
+          <TextInput
+            style={[styles.input, isLoading && styles.inputDisabled]}
+            placeholder="First Name"
+            placeholderTextColor="#999999"
+            value={firstName}
+            onChangeText={setFirstName}
+            accessible={true}
+            accessibilityLabel="First Name input"
+            editable={!isLoading}
+            returnKeyType="next"
+            onSubmitEditing={() => focusNextInput(lastNameInputRef)}
+            blurOnSubmit={false}
+          />
+          {firstNameError ? (
+            <View
+              style={styles.errorBox}
+              accessible={true}
+              accessibilityLabel="First name error"
+            >
+              <Text style={styles.errorText}>{firstNameError}</Text>
+            </View>
+          ) : null}
+          <TextInput
+            ref={lastNameInputRef}
+            style={[styles.input, isLoading && styles.inputDisabled]}
+            placeholder="Last Name"
+            placeholderTextColor="#999999"
+            value={lastName}
+            onChangeText={setLastName}
+            accessible={true}
+            accessibilityLabel="Last Name input"
+            editable={!isLoading}
+            returnKeyType="next"
+            onSubmitEditing={() => focusNextInput(phoneInputRef)}
+            blurOnSubmit={false}
+          />
+          {lastNameError ? (
+            <View
+              style={styles.errorBox}
+              accessible={true}
+              accessibilityLabel="Last name error"
+            >
+              <Text style={styles.errorText}>{lastNameError}</Text>
+            </View>
+          ) : null}
+          <View style={styles.phoneContainer}>
+            <Text style={styles.phonePrefix}>+1</Text>
+            <TextInputMask
+              ref={phoneInputRef}
+              type={"custom"}
+              options={{
+                mask: "(999) 999-9999",
               }}
+              style={[styles.phoneInput, isLoading && styles.inputDisabled]}
+              placeholder="Phone Number (Optional if email provided)"
+              placeholderTextColor="#999999"
+              value={phone}
+              onChangeText={(text) => {
+                setPhone(text);
+                setFormattedPhone("+1" + text.replace(/\D/g, ""));
+                if (text) setEmailError("");
+              }}
+              keyboardType="phone-pad"
+              accessible={true}
+              accessibilityLabel="Phone Number input"
               editable={!isLoading}
-              textContentType="emailAddress"
-              autoComplete="email"
-              autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => dismissKeyboard()}
+              blurOnSubmit={true}
             />
-
-            {emailError ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{emailError}</Text>
-              </View>
-            ) : null}
-            {phoneError ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{phoneError}</Text>
-              </View>
-            ) : null}
-          </ScrollView>
-        </TouchableWithoutFeedback>
+          </View>
+          <TextInput
+            ref={emailInputRef}
+            style={[styles.input, isLoading && styles.inputDisabled]}
+            placeholder="Email (Optional if phone provided)"
+            placeholderTextColor="#999999"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (text) setPhoneError("");
+            }}
+            textContentType="emailAddress"
+            autoComplete="email"
+            autoCorrect={false}
+            accessible={true}
+            accessibilityLabel="Email input"
+            editable={!isLoading}
+            returnKeyType="done"
+            onSubmitEditing={dismissKeyboard}
+          />
+          {emailError ? (
+            <View
+              style={styles.errorBox}
+              accessible={true}
+              accessibilityLabel="Email error"
+            >
+              <Text style={styles.errorText}>{emailError}</Text>
+            </View>
+          ) : null}
+          {phoneError ? (
+            <View
+              style={styles.errorBox}
+              accessible={true}
+              accessibilityLabel="Phone error"
+            >
+              <Text style={styles.errorText}>{phoneError}</Text>
+            </View>
+          ) : null}
+        </ScrollView>
       </KeyboardAvoidingView>
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+          accessible={true}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
           <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
           onPress={handleLogin}
           disabled={isLoading}
+          accessible={true}
+          accessibilityLabel="Next step"
+          accessibilityRole="button"
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>

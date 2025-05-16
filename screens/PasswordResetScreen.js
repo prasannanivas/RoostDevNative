@@ -460,7 +460,6 @@ export default function PasswordResetScreen({ navigation }) {
             maxLength={1}
             textAlign="center"
             autoFocus={index === 0}
-            editable={!isLoading}
           />
         ))}
       </View>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   View,
@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -36,6 +35,37 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Create refs for form inputs
+  const passwordInputRef = useRef(null);
+  // Handle input submission and focus next field
+  const focusNextInput = (nextInput) => {
+    // Safe focus method that handles TextInputMask and normal TextInput
+    if (nextInput && nextInput.current) {
+      try {
+        // For TextInput components
+        if (typeof nextInput.current.focus === "function") {
+          nextInput.current.focus();
+        }
+        // For TextInputMask components which might have a different structure
+        else if (
+          nextInput.current.getElement &&
+          typeof nextInput.current.getElement === "function"
+        ) {
+          const element = nextInput.current.getElement();
+          if (element && typeof element.focus === "function") {
+            element.focus();
+          }
+        }
+      } catch (error) {
+        console.log("Error focusing input:", error);
+      }
+    }
+  };
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
 
   const handleLogin = async () => {
     setLoading(true);
@@ -85,10 +115,6 @@ export default function LoginScreen() {
     navigation.navigate("PasswordReset");
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -96,84 +122,109 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <ScrollView
-            contentContainerStyle={styles.container}
-            bounces={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Brand Title */}
-            <Text style={styles.brandTitle}>Roost</Text>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+          accessible={true}
+        >
+          {/* Brand Title */}
+          <Text style={styles.brandTitle}>Roost</Text>
 
-            {/* Error Message */}
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
-            {/* Email Input */}
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-              textContentType="emailAddress"
-              autoComplete="email"
-              autoCorrect={false}
-            />
-
-            {/* Password Input */}
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#999999"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              textContentType="password"
-              autoComplete="password"
-              autoCorrect={false}
-            />
-
-            {/* Reset Password */}
-            <TouchableOpacity onPress={handleResetPassword}>
-              <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
-            </TouchableOpacity>
-
-            {/* Log In Button */}
-            <TouchableOpacity
-              style={[
-                styles.loginButton,
-                loading && styles.loginButtonDisabled,
-              ]}
-              onPress={handleLogin}
-              disabled={loading}
+          {/* Error Message */}
+          {error && (
+            <Text
+              style={styles.errorText}
+              accessible={true}
+              accessibilityLabel={`Error: ${error}`}
             >
-              <Text style={styles.loginButtonText}>
-                {loading ? "Logging in..." : "Log In"}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Sign Up Prompt */}
-            <Text style={styles.signUpPrompt}>
-              Don’t have an Account? Sign Up for Free
+              {error}
             </Text>
+          )}
 
-            {/* Sign Up Button */}
-            <TouchableOpacity
-              style={styles.signUpButton}
-              onPress={handleSignUp}
-            >
-              <Text style={styles.signUpButtonText}>Sign Up</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+          {/* Email Input */}
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#999999"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            textContentType="emailAddress"
+            autoComplete="email"
+            autoCorrect={false}
+            accessible={true}
+            accessibilityLabel="Email input"
+            returnKeyType="next"
+            onSubmitEditing={() => focusNextInput(passwordInputRef)}
+            blurOnSubmit={false}
+          />
+
+          {/* Password Input */}
+          <TextInput
+            ref={passwordInputRef}
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#999999"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            textContentType="password"
+            autoComplete="password"
+            autoCorrect={false}
+            accessible={true}
+            accessibilityLabel="Password input"
+            returnKeyType="done"
+            onSubmitEditing={() => dismissKeyboard()}
+          />
+
+          {/* Reset Password */}
+          <TouchableOpacity
+            onPress={handleResetPassword}
+            accessible={true}
+            accessibilityLabel="Reset password"
+            accessibilityRole="button"
+          >
+            <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
+          </TouchableOpacity>
+
+          {/* Log In Button */}
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+            accessible={true}
+            accessibilityLabel="Log in"
+            accessibilityRole="button"
+          >
+            <Text style={styles.loginButtonText}>
+              {loading ? "Logging in..." : "Log In"}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Sign Up Prompt */}
+          <Text style={styles.signUpPrompt}>
+            Don't have an Account? Sign Up for Free
+          </Text>
+
+          {/* Sign Up Button */}
+          <TouchableOpacity
+            style={styles.signUpButton}
+            onPress={handleSignUp}
+            accessible={true}
+            accessibilityLabel="Sign up for a new account"
+            accessibilityRole="button"
+          >
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
 
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
         <Text style={styles.footerText}>
-          By logging in, you agree to Roost’s{" "}
+          By logging in, you agree to Roost's{" "}
           <Text style={styles.linkText}>Terms of Use</Text> and{" "}
           <Text style={styles.linkText}>Privacy Policy</Text>.
         </Text>
