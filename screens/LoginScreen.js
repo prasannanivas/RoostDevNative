@@ -8,6 +8,10 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -81,62 +85,90 @@ export default function LoginScreen() {
     navigation.navigate("PasswordReset");
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} bounces={false}>
-        {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <ScrollView
+            contentContainerStyle={styles.container}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Brand Title */}
+            <Text style={styles.brandTitle}>Roost</Text>
 
-        {/* Error Message */}
-        {error && <Text style={styles.errorText}>{error}</Text>}
+            {/* Error Message */}
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
-        {/* Email Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#999999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-        />
+            {/* Email Input */}
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999999"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+              textContentType="emailAddress"
+              autoComplete="email"
+              autoCorrect={false}
+            />
 
-        {/* Password Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#999999"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+            {/* Password Input */}
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#999999"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              textContentType="password"
+              autoComplete="password"
+              autoCorrect={false}
+            />
 
-        {/* Reset Password */}
-        <TouchableOpacity onPress={handleResetPassword}>
-          <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
-        </TouchableOpacity>
+            {/* Reset Password */}
+            <TouchableOpacity onPress={handleResetPassword}>
+              <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
+            </TouchableOpacity>
 
-        {/* Log In Button */}
-        <TouchableOpacity
-          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.loginButtonText}>
-            {loading ? "Logging in..." : "Log In"}
-          </Text>
-        </TouchableOpacity>
+            {/* Log In Button */}
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                loading && styles.loginButtonDisabled,
+              ]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? "Logging in..." : "Log In"}
+              </Text>
+            </TouchableOpacity>
 
-        {/* Sign Up Prompt */}
-        <Text style={styles.signUpPrompt}>
-          Don’t have an Account? Sign Up for Free
-        </Text>
+            {/* Sign Up Prompt */}
+            <Text style={styles.signUpPrompt}>
+              Don’t have an Account? Sign Up for Free
+            </Text>
 
-        {/* Sign Up Button */}
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
-        </TouchableOpacity>
-      </ScrollView>
+            {/* Sign Up Button */}
+            <TouchableOpacity
+              style={styles.signUpButton}
+              onPress={handleSignUp}
+            >
+              <Text style={styles.signUpButtonText}>Sign Up</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>

@@ -10,6 +10,10 @@ import {
   View,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
@@ -197,95 +201,116 @@ export default function SignUpDetailsScreen({ navigation, route }) {
     }
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} bounces={false}>
-        <Text style={styles.brandTitle}>Roost</Text>
-        <Text style={styles.heading}>Let's get started!</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <ScrollView
+            contentContainerStyle={styles.container}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.brandTitle}>Roost</Text>
+            <Text style={styles.heading}>Let's get started!</Text>
 
-        <Text style={styles.noteText}>
-          Only one contact method is required (phone or email)
-        </Text>
+            <Text style={styles.noteText}>
+              Only one contact method is required (phone or email)
+            </Text>
 
-        {isLoading && (
-          <View style={styles.spinnerContainer}>
-            <ActivityIndicator size="large" color="#019B8E" />
-          </View>
-        )}
+            {isLoading && (
+              <View style={styles.spinnerContainer}>
+                <ActivityIndicator size="large" color="#019B8E" />
+              </View>
+            )}
 
-        <TextInput
-          style={[styles.input, isLoading && styles.inputDisabled]}
-          placeholder="First Name"
-          placeholderTextColor="#999999"
-          value={firstName}
-          onChangeText={setFirstName}
-          editable={!isLoading}
-        />
-        {firstNameError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{firstNameError}</Text>
-          </View>
-        ) : null}
-        <TextInput
-          style={[styles.input, isLoading && styles.inputDisabled]}
-          placeholder="Last Name"
-          placeholderTextColor="#999999"
-          value={lastName}
-          onChangeText={setLastName}
-          editable={!isLoading}
-        />
-        {lastNameError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{lastNameError}</Text>
-          </View>
-        ) : null}
+            <TextInput
+              style={[styles.input, isLoading && styles.inputDisabled]}
+              placeholder="First Name"
+              placeholderTextColor="#999999"
+              value={firstName}
+              onChangeText={setFirstName}
+              editable={!isLoading}
+              autoCorrect={false}
+            />
+            {firstNameError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{firstNameError}</Text>
+              </View>
+            ) : null}
+            <TextInput
+              style={[styles.input, isLoading && styles.inputDisabled]}
+              placeholder="Last Name"
+              placeholderTextColor="#999999"
+              value={lastName}
+              onChangeText={setLastName}
+              editable={!isLoading}
+              autoCorrect={false}
+            />
+            {lastNameError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{lastNameError}</Text>
+              </View>
+            ) : null}
 
-        <View style={styles.phoneContainer}>
-          <Text style={styles.phonePrefix}>+1</Text>
-          <TextInputMask
-            type={"custom"}
-            options={{
-              mask: "(999) 999-9999",
-            }}
-            style={[styles.phoneInput, isLoading && styles.inputDisabled]}
-            placeholder="Phone Number (Optional if email provided)"
-            placeholderTextColor="#999999"
-            value={phone}
-            onChangeText={(text) => {
-              setPhone(text);
-              setFormattedPhone("+1" + text.replace(/\D/g, ""));
-              if (text) setEmailError("");
-            }}
-            keyboardType="phone-pad"
-            editable={!isLoading}
-          />
-        </View>
+            <View style={styles.phoneContainer}>
+              <Text style={styles.phonePrefix}>+1</Text>
+              <TextInputMask
+                type={"custom"}
+                options={{
+                  mask: "(999) 999-9999",
+                }}
+                style={[styles.phoneInput, isLoading && styles.inputDisabled]}
+                placeholder="Phone Number (Optional if email provided)"
+                placeholderTextColor="#999999"
+                value={phone}
+                onChangeText={(text) => {
+                  setPhone(text);
+                  setFormattedPhone("+1" + text.replace(/\D/g, ""));
+                  if (text) setEmailError("");
+                }}
+                keyboardType="phone-pad"
+                editable={!isLoading}
+              />
+            </View>
 
-        <TextInput
-          style={[styles.input, isLoading && styles.inputDisabled]}
-          placeholder="Email (Optional if phone provided)"
-          placeholderTextColor="#999999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (text) setPhoneError("");
-          }}
-          editable={!isLoading}
-        />
+            <TextInput
+              style={[styles.input, isLoading && styles.inputDisabled]}
+              placeholder="Email (Optional if phone provided)"
+              placeholderTextColor="#999999"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (text) setPhoneError("");
+              }}
+              editable={!isLoading}
+              textContentType="emailAddress"
+              autoComplete="email"
+              autoCorrect={false}
+            />
 
-        {emailError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{emailError}</Text>
-          </View>
-        ) : null}
-        {phoneError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{phoneError}</Text>
-          </View>
-        ) : null}
-      </ScrollView>
+            {emailError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{emailError}</Text>
+              </View>
+            ) : null}
+            {phoneError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{phoneError}</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={20} color="#FFFFFF" />

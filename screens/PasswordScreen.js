@@ -8,6 +8,11 @@ import {
   View,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -30,6 +35,10 @@ export default function PasswordScreen({ navigation, route }) {
 
   const handleBack = () => {
     navigation.goBack();
+  };
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   const handleContinue = async () => {
@@ -102,85 +111,115 @@ export default function PasswordScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.heading}>Secure your account</Text>
-
-        {/* Display invitation message if available */}
-        {invitedBy ? (
-          <View style={styles.inviteBox}>
-            <Text style={styles.inviteText}>
-              You have been invited by{" "}
-              <Text style={styles.inviterName}>{invitedBy.name}</Text>
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.inputContainer}>
-            <Text style={styles.subHeading}>
-              Enter the invite code of your Realtor to continue
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Invite Code"
-              placeholderTextColor="#999999"
-              value={inviteCode}
-              onChangeText={setInviteCode}
-              autoCapitalize="none"
-            />
-          </View>
-        )}
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#999999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            autoComplete="off"
-            textContentType="none"
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <ScrollView
+            contentContainerStyle={styles.container}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={24}
-              color="#666"
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            placeholderTextColor="#999999"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showConfirmPassword}
-            autoComplete="off"
-            textContentType="none"
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            <Ionicons
-              name={showConfirmPassword ? "eye-off" : "eye"}
-              size={24}
-              color="#666"
-            />
-          </TouchableOpacity>
-        </View>
-
-        {passwordError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{passwordError}</Text>
-          </View>
-        ) : null}
-      </View>
+            <Text style={styles.heading}>Secure your account</Text>
+            {/* Display invitation message if available */}
+            {invitedBy ? (
+              <View style={styles.inviteBox}>
+                <Text style={styles.inviteText}>
+                  You have been invited by{" "}
+                  <Text style={styles.inviterName}>{invitedBy.name}</Text>
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#999999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoComplete="off"
+                textContentType="none"
+                autoCorrect={false}
+                spellCheck={false}
+                keyboardType="default"
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#999999"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                autoComplete="off"
+                textContentType="none"
+                autoCorrect={false}
+                spellCheck={false}
+                keyboardType="default"
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
+            {!invitedBy && (
+              <View style={styles.inviteCodeContainer}>
+                <Text style={styles.inviteCodeHeading}>
+                  Enter the invite code of your Realtor to continue
+                </Text>
+                <View style={styles.enhancedInputContainer}>
+                  <Ionicons
+                    name="key"
+                    size={22}
+                    color="#019B8E"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.enhancedInput}
+                    placeholder="Enter Invite Code"
+                    placeholderTextColor="#999999"
+                    value={inviteCode}
+                    onChangeText={setInviteCode}
+                    autoCapitalize="none"
+                    autoComplete="off"
+                    textContentType="none"
+                    autoCorrect={false}
+                    spellCheck={false}
+                    keyboardType="default"
+                  />
+                </View>
+              </View>
+            )}
+            {passwordError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{passwordError}</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -224,6 +263,47 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#23231A",
     marginBottom: 30,
+  },
+  inviteCodeContainer: {
+    marginTop: 15,
+    marginBottom: 15,
+    padding: 15,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  inviteCodeHeading: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#019B8E",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  enhancedInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#019B8E",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    height: 55,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  enhancedInput: {
+    flex: 1,
+    height: 50,
+    fontSize: 16,
+    color: "#23231A",
+    fontWeight: "500",
   },
   inputContainer: {
     flexDirection: "row",
