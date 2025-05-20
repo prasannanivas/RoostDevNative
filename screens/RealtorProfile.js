@@ -24,18 +24,21 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
   const { logout } = useAuth();
   const navigation = useNavigation();
   const realtor = propRealtor || realtorInfo;
-
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
   const [error, setError] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
-
+  const [shareableLink, setShareableLink] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
   // Main form data
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     email: "",
-    location: "",
+    rewardsAddress: "",
+    rewardsCity: "",
+    rewardsPostalCode: "",
     brokerageName: "",
     brokerageAddress: "",
     brokerageCity: "",
@@ -51,15 +54,45 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
     newPassword: "",
     confirmPassword: "",
   });
+  // Fetch shareable link
+  const fetchShareableLink = async () => {
+    if (!realtor?._id) return;
+
+    try {
+      const response = await fetch(
+        `http://44.202.249.124:5000/realtor/${realtor._id}/shareable-link`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setShareableLink(data.shareableLink || "");
+      } else {
+        console.error("Failed to fetch shareable link");
+      }
+    } catch (error) {
+      console.error("Error fetching shareable link:", error);
+    }
+  };
 
   // Populate form with existing data
   useEffect(() => {
     if (realtor) {
+      // Split name into firstName and lastName
+      const nameParts = realtor.name ? realtor.name.split(" ") : ["", ""];
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      // Fetch shareable link when the component mounts
+      fetchShareableLink();
+
       setFormData({
-        name: realtor.name || "",
+        firstName: firstName,
+        lastName: lastName,
         phone: realtor.phone || "",
         email: realtor.email || "",
-        location: realtor.location || "",
+        rewardsAddress: realtor.rewardsAddress || realtor.location || "",
+        rewardsCity: realtor.rewardsCity || "",
+        rewardsPostalCode: realtor.rewardsPostalCode || "",
         brokerageName: realtor.brokerageInfo?.brokerageName || "",
         brokerageAddress: realtor.brokerageInfo?.brokerageAddress || "",
         brokerageCity: realtor.brokerageInfo?.brokerageCity || "",
@@ -73,15 +106,20 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
 
   // Handle brokerage info update
   const handleSubmit = async () => {
-    if (!realtor?._id) return;
-
     try {
+      // Join firstName and lastName before sending to API      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       const response = await fetch(
         `http://44.202.249.124:5000/realtor/${realtor._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            name: fullName, // Send the combined name to maintain API compatibility
+            rewardsAddress: formData.rewardsAddress,
+            rewardsCity: formData.rewardsCity,
+            rewardsPostalCode: formData.rewardsPostalCode,
             brokerageInfo: {
               brokerageName: formData.brokerageName,
               brokerageAddress: formData.brokerageAddress,
@@ -94,6 +132,8 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           }),
         }
       );
+
+      console.log("Response status:", response.status);
 
       if (response.ok) {
         setFeedback({
@@ -258,12 +298,19 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
       });
     }
   };
-
   const copyInviteCode = () => {
     if (realtor?.inviteCode) {
       Clipboard.setString(realtor.inviteCode);
       setCodeCopied(true);
       setTimeout(() => setCodeCopied(false), 2000);
+    }
+  };
+
+  const copyShareableLink = () => {
+    if (shareableLink) {
+      Clipboard.setString(shareableLink);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     }
   };
 
@@ -338,13 +385,17 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarInitial}>
-                {realtor.name ? realtor.name.charAt(0).toUpperCase() : "R"}
+                {formData.firstName
+                  ? formData.firstName.charAt(0).toUpperCase()
+                  : "R"}
               </Text>
             </View>
           )}
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.realtorName}>{realtor.name}</Text>
+          <Text style={styles.realtorName}>
+            {formData.firstName} {formData.lastName}
+          </Text>
           <Text style={styles.infoSubtitle}>
             Keep your personal info up to date
           </Text>
@@ -375,7 +426,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
       {/* Personal Info (Disabled fields for name, email, phone, location) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Personal Information</Text>
-
         {/* Invite Code Section - Added for realtor invites */}
         {realtor?.inviteCode && (
           <View style={styles.inviteCodeContainer}>
@@ -391,22 +441,56 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
                   {codeCopied ? "Copied!" : "Copy"}
                 </Text>
               </TouchableOpacity>
-            </View>
+            </View>{" "}
             <Text style={styles.inviteCodeHint}>
               Share this code with clients and realtors to earn rewards
             </Text>
+            {shareableLink && (
+              <View style={styles.shareableLinkContainer}>
+                <Text style={styles.shareableLinkLabel}>
+                  Shareable Referral Link:
+                </Text>
+                <View style={styles.shareableLinkWrapper}>
+                  <Text
+                    style={styles.shareableLink}
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
+                  >
+                    {shareableLink}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.copyButton}
+                    onPress={copyShareableLink}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.copyButtonText}>
+                      {linkCopied ? "Copied!" : "Copy"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.inviteCodeHint}>
+                  Share this link with potential clients for easy referrals
+                </Text>
+              </View>
+            )}
           </View>
         )}
-
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Name:</Text>
+          <Text style={styles.label}>First Name:</Text>
           <TextInput
             style={[styles.input, { backgroundColor: "#F0F0F0" }]}
-            value={formData.name}
+            value={formData.firstName}
             editable={false}
           />
         </View>
-
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Last Name:</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
+            value={formData.lastName}
+            editable={false}
+          />
+        </View>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Email:</Text>
           <TextInput
@@ -415,7 +499,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             editable={false}
           />
         </View>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Phone:</Text>
           <TextInput
@@ -424,13 +507,35 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             editable={false}
           />
         </View>
-
+        <Text style={styles.sectionSubTitle}>Send my rewards to:</Text>
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Location:</Text>
+          <Text style={styles.label}>Address:</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
-            value={formData.location}
-            editable={false}
+            style={styles.input}
+            value={formData.rewardsAddress}
+            onChangeText={(text) =>
+              setFormData({ ...formData, rewardsAddress: text })
+            }
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>City:</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.rewardsCity}
+            onChangeText={(text) =>
+              setFormData({ ...formData, rewardsCity: text })
+            }
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Postal Code:</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.rewardsPostalCode}
+            onChangeText={(text) =>
+              setFormData({ ...formData, rewardsPostalCode: text })
+            }
           />
         </View>
       </View>
@@ -438,7 +543,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
       {/* Brokerage Info (Editable) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Brokerage Information</Text>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Brokerage Name:</Text>
           <TextInput
@@ -449,7 +553,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             }
           />
         </View>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Brokerage Address:</Text>
           <TextInput
@@ -460,7 +563,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             }
           />
         </View>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Brokerage City:</Text>
           <TextInput
@@ -471,7 +573,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             }
           />
         </View>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Brokerage Postal Code:</Text>
           <TextInput
@@ -482,7 +583,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             }
           />
         </View>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Brokerage Phone:</Text>
           <TextInput
@@ -493,7 +593,6 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             }
           />
         </View>
-
         <View style={styles.formGroup}>
           <Text style={styles.label}>Brokerage Email:</Text>
           <TextInput
@@ -505,18 +604,14 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             }
           />
         </View>
-
         <View style={styles.formGroup}>
-          <Text style={styles.label}>License Number:</Text>
+          <Text style={styles.label}>RECO ID:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
             value={formData.licenseNumber}
-            onChangeText={(text) =>
-              setFormData({ ...formData, licenseNumber: text })
-            }
+            editable={false}
           />
         </View>
-
         <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
           <Text style={styles.saveButtonText}>Save Changes</Text>
         </TouchableOpacity>
@@ -692,6 +787,13 @@ const styles = StyleSheet.create({
     color: "#23231A",
     marginBottom: 10,
   },
+  sectionSubTitle: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#019B8E",
+    marginBottom: 12,
+    marginTop: 5,
+  },
 
   /* Form groups */
   formGroup: {
@@ -836,7 +938,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   /* Invite Code Section */
   inviteCodeContainer: {
     backgroundColor: "#F9F9F9",
@@ -878,5 +979,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666666",
     fontStyle: "italic",
+    marginBottom: 15,
+  },
+
+  /* Shareable Link Section */
+  shareableLinkContainer: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+  },
+  shareableLinkLabel: {
+    fontSize: 14,
+    color: "#23231A",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  shareableLinkWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  shareableLink: {
+    flex: 1,
+    fontSize: 14,
+    color: "#019B8E",
+    marginRight: 10,
   },
 });
