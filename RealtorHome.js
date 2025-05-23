@@ -337,466 +337,471 @@ Looking forward to working with you!`;
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#019B8E"]} // Android
-          tintColor="#019B8E" // iOS
-        />
-      }
-    >
-      <View style={styles.container}>
-        {/* ================= TOP HEADER ================= */}
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            style={styles.userInfoContainer}
-            onPress={handleProfileClick}
-            activeOpacity={0.7}
-          >
-            {realtor.id && (
-              <>
-                {!imageLoadError ? (
-                  <Image
-                    source={{
-                      uri: `http://44.202.249.124:5000/realtor/profilepic/${realtor.id}`,
-                    }}
-                    style={styles.avatar}
-                    onError={() => setImageLoadError(true)}
-                  />
-                ) : (
-                  <View
-                    style={[
-                      styles.avatar,
-                      {
-                        backgroundColor: "#23231A",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      },
-                    ]}
-                  >
-                    <Text style={styles.avatarText}>
-                      {getInitials(realtor.name)}
-                    </Text>
-                  </View>
-                )}
-              </>
-            )}
-            <View style={styles.nameAgencyContainer}>
-              <Text style={styles.realtorName}>{realtor.name}</Text>
-              <Text style={styles.agencyName}>ABC Realty</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuIconContainer}
-            onPress={handleRewardsClick}
-            activeOpacity={0.7}
-          >
-            <FontAwesome name="gift" size={24} color="#F99942" />
-          </TouchableOpacity>
-        </View>
-
-        {/* ================= TITLE: CLIENTS ================= */}
-        <View style={styles.clientsTitleContainer}>
-          <Text style={styles.clientsTitle}>Clients</Text>
-        </View>
-
-        {/* ================= SCROLL CONTENT ================= */}
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* List of Clients */}
-          {invited.map((client) => {
-            const docCount = client.documents
-              ? getDocumentCounts(client.documents)
-              : null;
-            const statusText =
-              client.status === "PENDING"
-                ? "Invited"
-                : client.clientAddress === null
-                ? "Account Deleted"
-                : client.status === "ACCEPTED" &&
-                  (!client.documents ||
-                    client.documents.length === 0 ||
-                    client?.clientAddress !== null)
-                ? "Signed Up"
-                : client.status === "ACCEPTED" && client.documents.length > 0
-                ? `${docCount.approved}/${client.documents.length} Completed`
-                : client.clientAddress === null
-                ? "Account Deleted"
-                : client.status;
-
-            return (
-              <TouchableOpacity
-                key={client._id}
-                style={styles.clientCard}
-                onPress={() => handleClientClick(client.inviteeId)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.initialsCircle}>
-                  <Text style={styles.initialsText}>
-                    {getInitials(client.referenceName)}
-                  </Text>
-                </View>
-                <View style={styles.clientDetails}>
-                  <Text style={styles.clientName}>{client.referenceName}</Text>
-                  <Text style={styles.clientStatus}>{statusText}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* ================= BOTTOM BUTTON: ADD CLIENTS ================= */}
-        <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity
-            style={styles.addClientsButton}
-            onPress={() => setShowForm(true)}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-            <Text style={styles.addClientsButtonText}>ADD CLIENTS</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ================== MODALS ================== */}
-
-        {/* Profile Modal - Slides from left */}
-        <Modal visible={showProfile} animationType="none" transparent={true}>
-          <Animated.View
-            style={[
-              styles.modalOverlay,
-              {
-                opacity: leftSlideAnim.interpolate({
-                  inputRange: [-1000, 0],
-                  outputRange: [0, 1],
-                }),
-              },
-            ]}
-          >
-            <Animated.View
-              style={[
-                styles.leftSlideModal,
-                { transform: [{ translateX: leftSlideAnim }] },
-              ]}
-            >
-              <ScrollView style={styles.modalContent}>
-                <RealtorProfile
-                  realtor={realtorFromContext.realtorInfo || {}}
-                  onClose={() => setShowProfile(false)}
-                />
-              </ScrollView>
-            </Animated.View>
-          </Animated.View>
-        </Modal>
-
-        {/* Rewards Modal - Slides from right */}
-        <Modal visible={showRewards} animationType="none" transparent={true}>
-          <Animated.View
-            style={[
-              styles.modalOverlay,
-              {
-                opacity: rightSlideAnim.interpolate({
-                  inputRange: [0, 1000],
-                  outputRange: [1, 0],
-                }),
-              },
-            ]}
-          >
-            <Animated.View
-              style={[
-                styles.rightSlideModal,
-                { transform: [{ translateX: rightSlideAnim }] },
-              ]}
-            >
-              <ScrollView style={styles.modalContent}>
-                <RealtorRewards
-                  realtor={realtorFromContext.realtorInfo || {}}
-                  invitedRealtors={realtorFromContext.invitedRealtors || []}
-                  invitedClients={realtorFromContext.invitedClients || []}
-                  getInitials={getInitials}
-                  onClose={() => setShowRewards(false)}
-                />
-              </ScrollView>
-            </Animated.View>
-          </Animated.View>
-        </Modal>
-
-        {/* CSV Upload Modal */}
-        <Modal
-          visible={showCSVUploadForm}
-          animationType="slide"
-          transparent={false}
+    <View style={styles.container}>
+      {/* ================= TOP HEADER ================= */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.userInfoContainer}
+          onPress={handleProfileClick}
+          activeOpacity={0.7}
         >
-          <CSVUploadForm
-            realtorId={realtor.id}
-            setShowCSVUploadForm={setShowCSVUploadForm}
-          />
-        </Modal>
-
-        {/* Invite Form Modal (Overlay) */}
-        <Modal
-          visible={showForm}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={() => setShowForm(false)}
-        >
-          <View style={styles.formOverlay}>
-            <View style={styles.formContainer}>
-              <Text style={styles.formTitle}>ADD A CLIENT</Text>
-              <Text style={styles.formSubtitle}>
-                Send your client an invite to view and share listing with you.
-              </Text>
-
-              {/* One/Multiple Toggle */}
-              <View style={styles.toggleContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleOption,
-                    !isMultiple && styles.toggleOptionActive,
-                  ]}
-                  onPress={() => setIsMultiple(false)}
-                >
-                  <Text
-                    style={
-                      !isMultiple ? styles.toggleTextActive : styles.toggleText
-                    }
-                  >
-                    One
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleOption,
-                    isMultiple && styles.toggleOptionActive,
-                  ]}
-                  onPress={() => setIsMultiple(true)}
-                >
-                  <Text
-                    style={
-                      isMultiple ? styles.toggleTextActive : styles.toggleText
-                    }
-                  >
-                    Multiple
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {!isMultiple ? (
-                /* Single Client Form */
-                <>
-                  <TextInput
-                    style={styles.inputField}
-                    placeholder="First Name"
-                    value={formData.firstName}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, firstName: text })
-                    }
-                  />
-                  <TextInput
-                    style={styles.inputField}
-                    placeholder="Last Name"
-                    value={formData.lastName}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, lastName: text })
-                    }
-                  />
-                  <TextInput
-                    style={styles.inputField}
-                    placeholder="Email"
-                    keyboardType="email-address"
-                    value={formData.email}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, email: text })
-                    }
-                  />
-                  <TextInput
-                    style={styles.inputField}
-                    placeholder="Phone"
-                    keyboardType="phone-pad"
-                    value={formData.phone}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, phone: text })
-                    }
-                  />
-
-                  {/* Replace the send invite button with this conditional rendering */}
-                  {!showContactOptions ? (
-                    <TouchableOpacity
-                      style={styles.sendInviteButton}
-                      onPress={handleInviteClient}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <ActivityIndicator color="#fff" />
-                      ) : (
-                        <Text style={styles.sendInviteButtonText}>
-                          Send Invite
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  ) : (
-                    /* Contact options when showContactOptions is true */
-                    <View style={styles.contactOptions}>
-                      <Text style={styles.contactOptionsTitle}>
-                        Contact via:
-                      </Text>
-                      <View style={styles.contactIcons}>
-                        {formData.phone && (
-                          <>
-                            <TouchableOpacity
-                              style={styles.contactIconBtn}
-                              onPress={openWhatsApp}
-                            >
-                              <MaterialCommunityIcons
-                                name="whatsapp"
-                                size={32}
-                                color="#25D366"
-                              />
-                              <Text style={styles.contactIconText}>
-                                WhatsApp
-                              </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={styles.contactIconBtn}
-                              onPress={openSMS}
-                            >
-                              <MaterialIcons
-                                name="sms"
-                                size={32}
-                                color="#2196F3"
-                              />
-                              <Text style={styles.contactIconText}>SMS</Text>
-                            </TouchableOpacity>
-                          </>
-                        )}
-
-                        {formData.email && (
-                          <TouchableOpacity
-                            style={styles.contactIconBtn}
-                            onPress={openEmail}
-                          >
-                            <Entypo name="mail" size={32} color="#F44336" />
-                            <Text style={styles.contactIconText}>Email</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-
-                      <TouchableOpacity
-                        style={styles.doneButton}
-                        onPress={() => {
-                          setShowForm(false);
-                          setShowContactOptions(false);
-                          setFormData({
-                            firstName: "",
-                            lastName: "",
-                            referenceName: "",
-                            phone: "",
-                            email: "",
-                          });
-                          setFeedback({ message: "", type: "" });
-                        }}
-                      >
-                        <Text style={styles.doneButtonText}>Done</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {/* Use contactInviteContainer instead of dividerContainer */}
-                  <View style={styles.contactInviteContainer}>
-                    <Text style={styles.orText}>
-                      Or you can invite the contact you have on your phone
-                    </Text>
-
-                    <TouchableOpacity
-                      style={styles.contactsButton}
-                      onPress={pickContact}
-                    >
-                      <Text style={styles.contactsButtonText}>
-                        Invite my contacts
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
+          {realtor.id && (
+            <>
+              {!imageLoadError ? (
+                <Image
+                  source={{
+                    uri: `http://44.202.249.124:5000/realtor/profilepic/${realtor.id}`,
+                  }}
+                  style={styles.avatar}
+                  onError={() => setImageLoadError(true)}
+                />
               ) : (
-                /* Multiple Clients Form */
-                <>
-                  <TouchableOpacity
-                    style={styles.uploadFileButton}
-                    onPress={() => {
-                      /* Handle file upload */
-                    }}
-                  >
-                    <Text style={styles.uploadFileText}>Upload File</Text>
-                  </TouchableOpacity>
+                <View
+                  style={[
+                    styles.avatar,
+                    {
+                      backgroundColor: "#23231A",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  <Text style={styles.avatarText}>
+                    {getInitials(realtor.name)}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+          <View style={styles.nameAgencyContainer}>
+            <Text style={styles.realtorName}>{realtor.name}</Text>
+            <Text style={styles.agencyName}>ABC Realty</Text>
+          </View>
+        </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.menuIconContainer}
+          onPress={handleRewardsClick}
+          activeOpacity={0.7}
+        >
+          <FontAwesome name="gift" size={24} color="#F99942" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ================= INVITE REALTORS BANNER ================= */}
+      <View style={styles.inviteBanner}>
+        <TouchableOpacity style={styles.inviteRealtorsButton}>
+          <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
+        </TouchableOpacity>
+        <Text style={styles.inviteBannerText}>
+          Earn an additional 5% pts from any activity from your fellow realtor
+          referrals*
+        </Text>
+      </View>
+
+      {/* ================= TITLE: CLIENTS ================= */}
+      <View style={styles.clientsTitleContainer}>
+        <Text style={styles.clientsTitle}>Clients</Text>
+        <Text style={{ color: "#666666", marginTop: 5, fontSize: 16 }}>
+          ACTIVE
+        </Text>
+      </View>
+
+      {/* ================= SCROLLABLE CLIENT LIST ================= */}
+      <ScrollView
+        style={styles.clientsScrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#019B8E"]} // Android
+            tintColor="#019B8E" // iOS
+          />
+        }
+      >
+        {/* List of Clients */}
+        {invited.map((client) => {
+          const docCount = client.documents
+            ? getDocumentCounts(client.documents)
+            : null;
+          const statusText =
+            client.status === "PENDING"
+              ? "Invited"
+              : client.clientAddress === null
+              ? "Account Deleted"
+              : client.status === "ACCEPTED" &&
+                (!client.documents ||
+                  client.documents.length === 0 ||
+                  client?.clientAddress !== null)
+              ? "Signed Up"
+              : client.status === "ACCEPTED" && client.documents.length > 0
+              ? `${docCount.approved}/${client.documents.length} Completed`
+              : client.clientAddress === null
+              ? "Account Deleted"
+              : client.status;
+
+          return (
+            <TouchableOpacity
+              key={client._id}
+              style={styles.clientCard}
+              onPress={() => handleClientClick(client.inviteeId)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.initialsCircle}>
+                <Text style={styles.initialsText}>
+                  {getInitials(client.referenceName)}
+                </Text>
+              </View>
+              <View style={styles.clientDetails}>
+                <Text style={styles.clientName}>{client.referenceName}</Text>
+                <Text style={styles.clientStatus}>{statusText}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+
+        {/* Add spacing at the bottom to prevent content from being hidden behind the button */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* ================= FIXED BOTTOM BUTTON: ADD CLIENTS ================= */}
+      <View style={styles.fixedBottomButtonContainer}>
+        <TouchableOpacity
+          style={styles.addClientsButton}
+          onPress={() => setShowForm(true)}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+          <Text style={styles.addClientsButtonText}>ADD CLIENTS</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ================== MODALS ================== */}
+
+      {/* Profile Modal - Slides from left */}
+      <Modal visible={showProfile} animationType="none" transparent={true}>
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            {
+              opacity: leftSlideAnim.interpolate({
+                inputRange: [-1000, 0],
+                outputRange: [0, 1],
+              }),
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.leftSlideModal,
+              { transform: [{ translateX: leftSlideAnim }] },
+            ]}
+          >
+            <ScrollView style={styles.modalContent}>
+              <RealtorProfile
+                realtor={realtorFromContext.realtorInfo || {}}
+                onClose={() => setShowProfile(false)}
+              />
+            </ScrollView>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+
+      {/* Rewards Modal - Slides from right */}
+      <Modal visible={showRewards} animationType="none" transparent={true}>
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            {
+              opacity: rightSlideAnim.interpolate({
+                inputRange: [0, 1000],
+                outputRange: [1, 0],
+              }),
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.rightSlideModal,
+              { transform: [{ translateX: rightSlideAnim }] },
+            ]}
+          >
+            <ScrollView style={styles.modalContent}>
+              <RealtorRewards
+                realtor={realtorFromContext.realtorInfo || {}}
+                invitedRealtors={realtorFromContext.invitedRealtors || []}
+                invitedClients={realtorFromContext.invitedClients || []}
+                getInitials={getInitials}
+                onClose={() => setShowRewards(false)}
+              />
+            </ScrollView>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+
+      {/* CSV Upload Modal */}
+      <Modal
+        visible={showCSVUploadForm}
+        animationType="slide"
+        transparent={false}
+      >
+        <CSVUploadForm
+          realtorId={realtor.id}
+          setShowCSVUploadForm={setShowCSVUploadForm}
+        />
+      </Modal>
+
+      {/* Invite Form Modal (Overlay) */}
+      <Modal
+        visible={showForm}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowForm(false)}
+      >
+        <View style={styles.formOverlay}>
+          <View style={styles.formContainer}>
+            {/* Add close button here */}
+            <TouchableOpacity
+              style={styles.closeFormButton}
+              onPress={() => setShowForm(false)}
+            >
+              <Ionicons name="close" size={24} color="#23231A" />
+            </TouchableOpacity>
+
+            <Text style={styles.formTitle}>ADD A CLIENT</Text>
+            <Text style={styles.formSubtitle}>
+              Send your client an invite to view and share listing with you.
+            </Text>
+
+            {/* One/Multiple Toggle */}
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.toggleOption,
+                  !isMultiple && styles.toggleOptionActive,
+                ]}
+                onPress={() => setIsMultiple(false)}
+              >
+                <Text
+                  style={
+                    !isMultiple ? styles.toggleTextActive : styles.toggleText
+                  }
+                >
+                  One
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.toggleOption,
+                  isMultiple && styles.toggleOptionActive,
+                ]}
+                onPress={() => setIsMultiple(true)}
+              >
+                <Text
+                  style={
+                    isMultiple ? styles.toggleTextActive : styles.toggleText
+                  }
+                >
+                  Multiple
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {!isMultiple ? (
+              /* Single Client Form */
+              <>
+                <TextInput
+                  style={styles.inputField}
+                  placeholder="First Name"
+                  value={formData.firstName}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, firstName: text })
+                  }
+                />
+                <TextInput
+                  style={styles.inputField}
+                  placeholder="Last Name"
+                  value={formData.lastName}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, lastName: text })
+                  }
+                />
+                <TextInput
+                  style={styles.inputField}
+                  placeholder="Email"
+                  keyboardType="email-address"
+                  value={formData.email}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, email: text })
+                  }
+                />
+                <TextInput
+                  style={styles.inputField}
+                  placeholder="Phone"
+                  keyboardType="phone-pad"
+                  value={formData.phone}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, phone: text })
+                  }
+                />
+
+                {/* Replace the send invite button with this conditional rendering */}
+                {!showContactOptions ? (
                   <TouchableOpacity
                     style={styles.sendInviteButton}
-                    onPress={() => {
-                      /* Handle sending multiple invites */
-                    }}
+                    onPress={handleInviteClient}
+                    disabled={isLoading}
                   >
-                    <Text style={styles.sendInviteButtonText}>
-                      Send Invites
+                    {isLoading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.sendInviteButtonText}>
+                        Send Invite
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  /* Contact options when showContactOptions is true */
+                  <View style={styles.contactOptions}>
+                    <Text style={styles.contactOptionsTitle}>Contact via:</Text>
+                    <View style={styles.contactIcons}>
+                      {formData.phone && (
+                        <>
+                          <TouchableOpacity
+                            style={styles.contactIconBtn}
+                            onPress={openWhatsApp}
+                          >
+                            <MaterialCommunityIcons
+                              name="whatsapp"
+                              size={32}
+                              color="#25D366"
+                            />
+                            <Text style={styles.contactIconText}>WhatsApp</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.contactIconBtn}
+                            onPress={openSMS}
+                          >
+                            <MaterialIcons
+                              name="sms"
+                              size={32}
+                              color="#2196F3"
+                            />
+                            <Text style={styles.contactIconText}>SMS</Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+
+                      {formData.email && (
+                        <TouchableOpacity
+                          style={styles.contactIconBtn}
+                          onPress={openEmail}
+                        >
+                          <Entypo name="mail" size={32} color="#F44336" />
+                          <Text style={styles.contactIconText}>Email</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.doneButton}
+                      onPress={() => {
+                        setShowForm(false);
+                        setShowContactOptions(false);
+                        setFormData({
+                          firstName: "",
+                          lastName: "",
+                          referenceName: "",
+                          phone: "",
+                          email: "",
+                        });
+                        setFeedback({ message: "", type: "" });
+                      }}
+                    >
+                      <Text style={styles.doneButtonText}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Use contactInviteContainer instead of dividerContainer */}
+                <View style={styles.contactInviteContainer}>
+                  <Text style={styles.orText}>
+                    Or you can invite the contact you have on your phone
+                  </Text>
+
+                  <TouchableOpacity
+                    style={styles.contactsButton}
+                    onPress={pickContact}
+                  >
+                    <Text style={styles.contactsButtonText}>
+                      Invite my contacts
                     </Text>
                   </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              /* Multiple Clients Form */
+              <>
+                <TouchableOpacity
+                  style={styles.uploadFileButton}
+                  onPress={() => {
+                    /* Handle file upload */
+                  }}
+                >
+                  <Text style={styles.uploadFileText}>Upload File</Text>
+                </TouchableOpacity>
 
-                  <Text style={styles.orDivider}>OR</Text>
+                <TouchableOpacity
+                  style={styles.sendInviteButton}
+                  onPress={() => {
+                    /* Handle sending multiple invites */
+                  }}
+                >
+                  <Text style={styles.sendInviteButtonText}>Send Invites</Text>
+                </TouchableOpacity>
 
-                  <Text style={styles.alternativeText}>
-                    You can always email a file (Excel or .CSV) to us at{" "}
-                    <Text style={{ fontWeight: "bold" }}>
-                      files@roostapp.io
-                    </Text>{" "}
-                    and we can take care of it for you
-                  </Text>
-                </>
-              )}
-            </View>
+                <Text style={styles.orDivider}>OR</Text>
+
+                <Text style={styles.alternativeText}>
+                  You can always email a file (Excel or .CSV) to us at{" "}
+                  <Text style={{ fontWeight: "bold" }}>files@roostapp.io</Text>{" "}
+                  and we can take care of it for you
+                </Text>
+              </>
+            )}
           </View>
-        </Modal>
-      </View>
-    </ScrollView>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F3F3", // Light gray to match the screenshot background
+    backgroundColor: "#F3F3F3",
+    position: "relative", // To position absolute elements
   },
   /* ================= TOP HEADER STYLES ================= */
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 50, // Extra top padding for status bar
-    paddingBottom: 10,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
+    paddingTop: 50,
+    paddingBottom: 15,
+    backgroundColor: "#232427",
   },
   userInfoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 12,
-  },
-  avatarOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    justifyContent: "center",
-    alignItems: "center",
   },
   avatarText: {
     color: "#FFFFFF",
@@ -807,45 +812,76 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   realtorName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#23231A",
+    color: "#FFFFFF",
+    textTransform: "uppercase",
   },
   agencyName: {
     fontSize: 14,
-    color: "#999999",
+    color: "#B0B0B0",
   },
   menuIconContainer: {
-    padding: 5,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: "#2D4D4D",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  /* ================= CLIENTS TITLE ================= */
-  clientsTitleContainer: {
+  // Invite Banner
+  inviteBanner: {
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 5,
+  },
+  inviteRealtorsButton: {
+    backgroundColor: "#40797B",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  inviteRealtorsText: {
+    color: "#FFFFFF",
+    fontWeight: "500",
+    fontSize: 16,
+  },
+  inviteBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#40797B",
+    lineHeight: 20,
+  },
+
+  // Clients section
+  clientsTitleContainer: {
+    alignItems: "center",
+    marginVertical: 10,
   },
   clientsTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#232427",
   },
-
-  /* ================= SCROLL CONTENT ================= */
   scrollContent: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+  },
+  clientsScrollView: {
+    flex: 1,
   },
 
-  /* ================= CLIENT CARD ================= */
+  // Client cards
   clientCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 15,
-    marginBottom: 10,
+    marginVertical: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -853,61 +889,87 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   initialsCircle: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: "#23231A",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#7D7D7D",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
   initialsText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   clientDetails: {
     flex: 1,
   },
   clientName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "500",
-    color: "#23231A",
-    marginBottom: 4,
+    color: "#232427",
+    marginBottom: 8,
   },
   clientStatus: {
     fontSize: 14,
-    color: "#666666",
+    color: "#232427",
+    fontWeight: "500",
+    backgroundColor: "#F2E4D4",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 15,
+    alignSelf: "flex-start",
   },
 
-  /* ================= BOTTOM BUTTON ================= */
+  // Bottom button
   bottomButtonContainer: {
-    backgroundColor: "#FFFFFF",
+    alignItems: "center",
     padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 10,
+    paddingBottom: 40,
+  },
+  fixedBottomButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    padding: 20,
+    paddingBottom: 30,
+    backgroundColor: "#F3F3F3", // Match background color
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
   },
   addClientsButton: {
     flexDirection: "row",
-    backgroundColor: "#F99942", // Orange button
+    backgroundColor: "#E49455",
     borderRadius: 30,
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 30,
     justifyContent: "center",
     alignItems: "center",
+    width: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   addClientsButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
-    marginLeft: 8,
+    marginLeft: 10,
   },
 
+  // Keep all existing styles below this point
+  contactInviteContainer: {
+    backgroundColor: "#F3F3F3", // Light gray background
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 20,
+    alignItems: "center",
+  },
   /* ================= MODALS & FORMS ================= */
   modalOverlay: {
     flex: 1,
@@ -931,6 +993,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     overflow: "hidden", // Add this to prevent overflow
+    position: "relative", // Add this for absolute positioning of close button
   },
   formTitle: {
     fontSize: 24,
@@ -1102,35 +1165,43 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 30,
     alignItems: "center",
-    width: "80%", // Make the button slightly narrower than container
+    width: "80%",
   },
   contactsButtonText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
   uploadFileButton: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 16,
-    alignItems: "flex-start",
+    backgroundColor: "#E49455",
+    borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginVertical: 20,
   },
   uploadFileText: {
-    color: "#666",
+    color: "#FFFFFF",
     fontSize: 16,
+    fontWeight: "600",
   },
   orDivider: {
     textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginVertical: 20,
+    color: "#999",
+    fontSize: 14,
+    marginVertical: 15,
   },
   alternativeText: {
     textAlign: "center",
-    fontSize: 16,
     color: "#666",
-    paddingHorizontal: 20,
+    fontSize: 14,
+    marginTop: 10,
+  },
+  closeFormButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    padding: 5,
   },
   contactOptions: {
     alignItems: "center",

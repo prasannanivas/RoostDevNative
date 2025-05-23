@@ -47,6 +47,13 @@ export default function RealtorRewards({
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
   const [showContactOptions, setShowContactOptions] = useState(false);
+  // Add these state variables in the component
+
+  // Add these lines after other useState declarations
+  const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(true);
+  const [isRealtorsCollapsed, setIsRealtorsCollapsed] = useState(true);
+
+  // Then replace the Points History and Invited Realtors sections with the following code
   const [inviteData, setInviteData] = useState({
     firstName: "",
     lastName: "",
@@ -406,58 +413,196 @@ export default function RealtorRewards({
 
   return (
     <ScrollView contentContainerStyle={styles.container} bounces={false}>
-      {/* Add swipe handle at the top */}
-      <View {...panResponder.panHandlers}>
-        <View style={styles.swipeHandle} />
-      </View>
-      {/* Move close button below handle */}
-      <View style={styles.closeButtonContainer}>
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={onClose}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="close" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
       {/* Header */}
       <View style={styles.header}>
-        <FontAwesome name="trophy" size={24} color="#019B8E" />
-        <Text style={styles.headerTxt}>Reward Points</Text>
+        <View style={styles.headerContent}>
+          <Ionicons name="gift-outline" size={24} color="#FFF" />
+          <Text style={styles.headerTxt}>REWARDS</Text>
+        </View>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Ionicons name="close" size={24} color="#FFF" />
+        </TouchableOpacity>
       </View>
-      <View style={styles.pointsBadge}>
-        <FontAwesome name="star" size={18} color="#FFD700" />
-        <Text style={styles.pointsNum}>{currentPoints}</Text>
-        <Text style={styles.pointsLbl}>Points</Text>
+
+      {/* Points Display */}
+      <View style={styles.pointsContainer}>
+        <View style={styles.pointsRow}>
+          <Text style={styles.pointsNum}>{currentPoints}</Text>
+          <Text style={styles.pointsLbl}>points</Text>
+        </View>
       </View>
-      <Text style={styles.subTitle}>Let’s build great things together!</Text>
-      <Text style={styles.desc}>
-        Collect points and trade them in from vacations to cash
-      </Text>
-      {/* Invite Realtors */}
-      <View style={styles.explanation}>
-        <Text style={styles.exLine}>
-          <Text style={styles.bold}>1 PT</Text> for every client invited
-        </Text>
-        <Text style={styles.exLine}>
-          <Text style={styles.bold}>10 PT</Text> for every fellow realtor
-          invited
-        </Text>
-        <Text style={[styles.exLine, styles.bonusTitle]}>BONUS</Text>
-        <Text style={styles.bonusText}>
-          Earn an additional 10% from your referred realtor’s activities.
-        </Text>
+
+      {/* Referral Program */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Referral program</Text>
+
+        <View style={styles.rewardItem}>
+          <Text style={styles.rewardPoints}>1 PT</Text>
+          <Text style={styles.rewardText}>for every client invited</Text>
+        </View>
+
+        <View style={styles.rewardItem}>
+          <Text style={styles.rewardPoints}>10 PTS</Text>
+          <Text style={styles.rewardText}>
+            for every fellow realtor invited
+          </Text>
+        </View>
+
+        {/* Bonus Section */}
+        <View style={styles.bonusContainer}>
+          <Text style={styles.bonusTitle}>BONUS</Text>
+          <Text style={styles.bonusText}>
+            Earn an additional 5% pts from any activity from your fellow realtor
+            referrals*
+          </Text>
+          <Text style={styles.bonusExample}>
+            Example - Realtor B completes a deal they get 300pts, Realtor A
+            would earn 15pts automatically.
+          </Text>
+        </View>
+
+        {/* Invite Button */}
         <TouchableOpacity
           style={styles.inviteBtn}
           onPress={() => setShowInviteForm(true)}
         >
           <Text style={styles.inviteBtnTxt}>Invite Realtors</Text>
         </TouchableOpacity>
-        <Text style={styles.exLine}>
-          <Text style={styles.bold}>300 PT</Text> your client uses a preferred
-          mortgage partner
-        </Text>
       </View>
+
+      {/* Rewards Section */}
+      <View>
+        <Text style={styles.rewardsTitle}>Rewards</Text>
+
+        {/* Client Rewards */}
+        <Text style={styles.rewardsSubTitle}>FOR YOUR CLIENTS</Text>
+        <Text style={styles.rewardsDescription}>
+          These rewards go straight to you clients as a gift, we include your
+          photo, details and a thank you for using you as their realtor.
+        </Text>
+
+        {fetchingRewards ? (
+          <ActivityIndicator />
+        ) : (
+          <View style={styles.rewardsGrid}>
+            {rewards
+              .filter((r) => r?.rewardFor === "Clients" && r?.isVisible)
+              .map((reward) => (
+                <TouchableOpacity
+                  key={reward._id}
+                  style={styles.rewardCard}
+                  onPress={() => {
+                    setSelectedReward(reward);
+                    setClaimModal(true);
+                    setSelectedClient("");
+                  }}
+                >
+                  {reward.imageUrl ? (
+                    <Image
+                      source={{
+                        uri: `http://44.202.249.124:5000${reward.imageUrl}`,
+                      }}
+                      style={styles.rewardImage}
+                    />
+                  ) : (
+                    <View style={styles.rewardInitials}>
+                      <Text style={{ color: "#FFF", fontWeight: "600" }}>
+                        {getInitials(reward.rewardName)}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.rewardCardContent}>
+                    <Text style={styles.rewardType}>Cash</Text>
+                    <Text style={styles.rewardName}>
+                      ${reward.rewardAmount}
+                    </Text>
+                    <View style={styles.progressBar}>
+                      <View
+                        style={[
+                          styles.progressFill,
+                          {
+                            width: `${
+                              getRewardProgress(reward.rewardAmount).progress
+                            }%`,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.percentageText}>
+                      {Math.floor(
+                        getRewardProgress(reward.rewardAmount).progress
+                      )}
+                      %
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+          </View>
+        )}
+
+        {/* Realtor Rewards */}
+        <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
+        {fetchingRewards ? (
+          <ActivityIndicator />
+        ) : (
+          <View style={styles.rewardsGrid}>
+            {rewards
+              .filter((r) => r?.rewardFor === "Realtors" && r?.isVisible)
+              .map((reward) => (
+                <TouchableOpacity
+                  key={reward._id}
+                  style={styles.rewardCard}
+                  onPress={() => {
+                    setSelectedReward(reward);
+                    setClaimModal(true);
+                    setSelectedClient("");
+                  }}
+                >
+                  {reward.imageUrl ? (
+                    <Image
+                      source={{
+                        uri: `http://44.202.249.124:5000${reward.imageUrl}`,
+                      }}
+                      style={styles.rewardImage}
+                    />
+                  ) : (
+                    <View style={styles.rewardInitials}>
+                      <Text style={{ color: "#FFF", fontWeight: "600" }}>
+                        {getInitials(reward.rewardName)}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.rewardCardContent}>
+                    <Text style={styles.rewardType}>Cash</Text>
+                    <Text style={styles.rewardName}>
+                      ${reward.rewardAmount}
+                    </Text>
+                    <View style={styles.progressBar}>
+                      <View
+                        style={[
+                          styles.progressFill,
+                          {
+                            width: `${
+                              getRewardProgress(reward.rewardAmount).progress
+                            }%`,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.percentageText}>
+                      {Math.floor(
+                        getRewardProgress(reward.rewardAmount).progress
+                      )}
+                      %
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+          </View>
+        )}
+      </View>
+
+      {/* Keep all the other functionality intact */}
       {/* Invite Form Modal */}
       <Modal visible={showInviteForm} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -602,66 +747,81 @@ export default function RealtorRewards({
           </View>
         </View>
       </Modal>
-      {/* Available Rewards */}
-      <Text style={styles.sectionTitle}>Rewards for You</Text>
-      {fetchingRewards ? (
-        <ActivityIndicator />
-      ) : rewards?.length > 0 ? (
-        <View style={styles.rewardsGrid}>
-          {rewards
-            .filter((r) => r?.rewardFor === "Realtors" && r?.isVisible)
-            .map(renderRewardCard)}
-        </View>
-      ) : (
-        <Text>No rewards available</Text>
-      )}
-      <Text style={styles.sectionTitle}>Rewards for Clients</Text>
-      {!fetchingRewards && (
-        <View style={styles.rewardsGrid}>
-          {(rewards || [])
-            .filter((r) => r?.rewardFor === "Clients" && r?.isVisible)
-            .map(renderRewardCard)}
-        </View>
-      )}
       {/* Points History */}
-      <Text style={styles.sectionTitle}>Points History</Text>
-      {realtor?.pointsHistory?.map((e, i) => (
-        <View key={i} style={styles.historyRow}>
-          <View style={styles.historyPts}>
-            <FontAwesome name="star" size={14} color="#F9A602" />
-            <Text style={styles.historyPtsTxt}>+{e.points}</Text>
-          </View>
-          <View style={styles.historyDetails}>
-            <Text style={styles.historyReason}>{e.reason}</Text>
-            <Text style={styles.historyDate}>{formatDate(e.date)}</Text>
-          </View>
+      <TouchableOpacity
+        style={styles.collapsibleHeader}
+        onPress={() => setIsHistoryCollapsed(!isHistoryCollapsed)}
+      >
+        <Text style={styles.sectionTitle}>
+          Points History ({realtor?.pointsHistory?.length || 0})
+        </Text>
+        <Ionicons
+          name={isHistoryCollapsed ? "chevron-down" : "chevron-up"}
+          size={24}
+          color="#23231A"
+        />
+      </TouchableOpacity>
+      {!isHistoryCollapsed && (
+        <View style={styles.collapsibleContent}>
+          {realtor?.pointsHistory?.map((e, i) => (
+            <View key={i} style={styles.historyRow}>
+              <View style={styles.historyPts}>
+                <FontAwesome name="star" size={14} color="#F9A602" />
+                <Text style={styles.historyPtsTxt}>+{e.points}</Text>
+              </View>
+              <View style={styles.historyDetails}>
+                <Text style={styles.historyReason}>{e.reason}</Text>
+                <Text style={styles.historyDate}>{formatDate(e.date)}</Text>
+              </View>
+            </View>
+          ))}
+          {(!realtor?.pointsHistory || realtor.pointsHistory.length === 0) && (
+            <Text style={styles.noDataText}>No points history available</Text>
+          )}
         </View>
-      ))}
+      )}
+
       {/* Invited Realtors */}
-      <Text style={styles.sectionTitle}>Invited Realtors</Text>
-      {invitedRealtors && invitedRealtors.length > 0 ? (
-        invitedRealtors.map((c) => (
-          <View key={c._id} style={styles.clientCard}>
-            <View style={styles.initialsCircle}>
-              <Text style={styles.initialsTxt}>
-                {getInitials(c.referenceName)}
-              </Text>
-            </View>
-            <View>
-              <Text style={styles.clientName}>{c.referenceName}</Text>
-              <Text style={styles.clientStatus}>
-                {c.status === "PENDING"
-                  ? "Invited"
-                  : c.status === "ACCEPTED" &&
-                    (!c.documents || c.documents.length === 0)
-                  ? "Signed Up"
-                  : c.status}
-              </Text>
-            </View>
-          </View>
-        ))
-      ) : (
-        <Text>No invited realtors</Text>
+      <TouchableOpacity
+        style={styles.collapsibleHeader}
+        onPress={() => setIsRealtorsCollapsed(!isRealtorsCollapsed)}
+      >
+        <Text style={styles.sectionTitle}>
+          Invited Realtors ({invitedRealtors?.length || 0})
+        </Text>
+        <Ionicons
+          name={isRealtorsCollapsed ? "chevron-down" : "chevron-up"}
+          size={24}
+          color="#23231A"
+        />
+      </TouchableOpacity>
+      {!isRealtorsCollapsed && (
+        <View style={styles.collapsibleContent}>
+          {invitedRealtors && invitedRealtors.length > 0 ? (
+            invitedRealtors.map((c) => (
+              <View key={c._id} style={styles.clientCard}>
+                <View style={styles.initialsCircle}>
+                  <Text style={styles.initialsTxt}>
+                    {getInitials(c.referenceName)}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styles.clientName}>{c.referenceName}</Text>
+                  <Text style={styles.clientStatus}>
+                    {c.status === "PENDING"
+                      ? "Invited"
+                      : c.status === "ACCEPTED" &&
+                        (!c.documents || c.documents.length === 0)
+                      ? "Signed Up"
+                      : c.status}
+                  </Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noDataText}>No invited realtors</Text>
+          )}
+        </View>
       )}
       {/* Claim Reward Modal */}
       <Modal
@@ -770,6 +930,7 @@ export default function RealtorRewards({
           </View>
         </View>
       </Modal>
+
       {/* Address Confirmation Modal */}
       <Modal
         visible={
@@ -868,70 +1029,212 @@ export default function RealtorRewards({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 0,
     backgroundColor: "#fff",
+    flex: 1,
   },
+
+  /* Header */
   header: {
+    backgroundColor: "#23231A",
+    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  },
+  headerContent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    flex: 1,
+    justifyContent: "center",
   },
   headerTxt: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
-    marginLeft: 8,
-    color: "#23231A",
+    color: "#FFFFFF",
+    textTransform: "uppercase",
   },
-  pointsBadge: {
-    flexDirection: "row",
+  closeButton: {
+    position: "absolute",
+    right: 15,
+    padding: 5,
+  },
+
+  /* Points display */
+  pointsContainer: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
     alignItems: "center",
-    marginBottom: 4,
   },
   pointsNum: {
-    fontSize: 24,
+    fontSize: 48,
     fontWeight: "700",
-    color: "#019B8E",
-    marginHorizontal: 6,
+    color: "#45665B",
+    marginRight: 10,
   },
   pointsLbl: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 36,
+    color: "#333",
+    fontWeight: "400",
   },
-  subTitle: {
+  pointsRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+
+  /* Referral program section */
+  sectionContainer: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#23231A",
+  },
+  rewardItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  rewardPoints: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#45665B",
+  },
+  rewardText: {
     fontSize: 16,
-    color: "#23231A",
+    color: "#333",
+    textAlign: "right",
   },
-  desc: {
-    fontSize: 14,
-    color: "#666",
+
+  /* Bonus section */
+  bonusContainer: {
+    backgroundColor: "#E5EFF0",
+    borderRadius: 10,
+    padding: 20,
+    marginTop: 10,
     marginBottom: 20,
   },
-  explanation: {
-    marginBottom: 20,
-  },
-  exLine: {
-    fontSize: 14,
-    color: "#23231A",
-    marginBottom: 4,
-  },
-  bold: { fontWeight: "600" },
   bonusTitle: {
-    color: "#F04D4D",
-    marginTop: 8,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#23231A",
   },
   bonusText: {
     fontSize: 14,
+    color: "#45665B",
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  bonusExample: {
+    fontSize: 14,
+    color: "#45665B",
+    marginTop: 10,
+    fontStyle: "italic",
+  },
+
+  /* Invite button */
+  inviteBtn: {
+    backgroundColor: "#45665B",
+    borderRadius: 25,
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    alignItems: "center",
+    alignSelf: "center",
+    marginVertical: 15,
+  },
+  inviteBtnTxt: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
+  /* Rewards section */
+  rewardsTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 10,
     color: "#23231A",
+    paddingHorizontal: 20,
+  },
+  rewardsSubTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 10,
+    marginBottom: 15,
+    color: "#666",
+    paddingHorizontal: 20,
+  },
+  rewardsDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+
+  /* Rewards grid with new card design */
+  rewardsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+  },
+  rewardCard: {
+    width: "48%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: "hidden",
+  },
+  rewardImage: {
+    width: "100%",
+    height: 150,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  rewardCardContent: {
+    padding: 12,
+  },
+  rewardType: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 4,
+  },
+  rewardName: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 8,
+    color: "#23231A",
+  },
+
+  /* Progress bar styling to match screenshot */
+  progressBar: {
+    height: 10,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 5,
+    overflow: "hidden",
     marginBottom: 8,
   },
-  inviteBtn: {
-    backgroundColor: "#019B8E",
-    padding: 10,
-    borderRadius: 6,
-    alignItems: "center",
-    marginVertical: 10,
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#E49455",
+    borderRadius: 5,
   },
-  inviteBtnTxt: { color: "#fff", fontWeight: "600" },
+  percentageText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#E49455",
+  },
 
   /* Invite Form */
   modalOverlay: {
@@ -980,6 +1283,30 @@ const styles = StyleSheet.create({
     borderColor: "#019B8E",
     padding: 8,
     alignItems: "center",
+  },
+  // Add these styles to the StyleSheet
+
+  /* Collapsible sections */
+  collapsibleHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    backgroundColor: "#F8F9FA",
+  },
+  collapsibleContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  noDataText: {
+    fontSize: 14,
+    color: "#666",
+    fontStyle: "italic",
+    textAlign: "center",
+    paddingVertical: 15,
   },
   toggleActive: {
     backgroundColor: "#019B8E",
@@ -1039,81 +1366,6 @@ const styles = StyleSheet.create({
   },
   closeModalBtnTxt: {
     color: "#fff",
-    fontWeight: "600",
-  },
-
-  /* Rewards grid */
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginVertical: 12,
-    color: "#23231A",
-  },
-  rewardsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  rewardCard: {
-    width: "48%",
-    backgroundColor: "#F4F4F4",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-  },
-  rewardImage: {
-    width: "100%",
-    height: 80,
-    borderRadius: 6,
-    marginBottom: 6,
-  },
-  rewardInitials: {
-    width: "100%",
-    height: 80,
-    borderRadius: 6,
-    backgroundColor: "#019B8E",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  rewardName: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
-    color: "#23231A",
-  },
-  rewardDesc: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
-  },
-  rewardAmt: {
-    fontSize: 14,
-    marginBottom: 6,
-    color: "#23231A",
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: 4,
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#019B8E",
-  },
-  progressEligible: {
-    backgroundColor: "#2E7D32",
-  },
-  pointsNeededRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  pointsNeeded: { fontSize: 12, color: "#23231A" },
-  eligibleTag: {
-    fontSize: 12,
-    color: "#2E7D32",
     fontWeight: "600",
   },
 
