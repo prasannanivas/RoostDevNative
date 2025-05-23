@@ -45,6 +45,13 @@ const RealtorHome = () => {
   const [isEmail, setIsEmail] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteData, setInviteData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -59,6 +66,9 @@ const RealtorHome = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [isMultiple, setIsMultiple] = useState(false); // New state for single/multiple toggle
   const [showContactOptions, setShowContactOptions] = useState(false);
+  const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
+
+  const [showInviteForm, setShowInviteForm] = useState(false);
 
   // Add animation values
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
@@ -72,6 +82,64 @@ const RealtorHome = () => {
       useNativeDriver: true,
       bounciness: 0,
     }).start();
+  };
+
+  const handleInviteRealtor = async () => {
+    setInviteLoading(true);
+    setInviteFeedback({ msg: "", type: "" });
+    setShowContactOptions(false);
+
+    // Validate that either email or phone is provided
+    if (!inviteData.email && !inviteData.phone) {
+      setInviteFeedback({ msg: "Phone or Email required", type: "error" });
+      setInviteLoading(false);
+      return;
+    }
+
+    try {
+      // Build the message text
+      const inviteMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
+
+      // Construct the API payload - keep the format the same by combining first and last name
+      const payload = {
+        referenceName: `${inviteData.firstName} ${inviteData.lastName}`.trim(),
+        email: inviteData.email,
+        phone: inviteData.phone,
+        type: "Realtor",
+      };
+
+      // Send the invite via the API - keep loading indicator showing
+      const resp = await fetch(
+        `http://44.202.249.124:5000/realtor/${realtor.id}/invite-realtor`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      // Handle the response and set feedback
+      if (resp.ok) {
+        setInviteFeedback({ msg: "Realtor invited!", type: "success" });
+
+        // Instead of automatically opening apps, show contact option icons
+        setShowContactOptions(true);
+
+        // Don't automatically close the form so the user can use the contact options
+        // The user can manually close the form when they're done
+      } else {
+        setInviteFeedback({
+          msg: "Failed – try again",
+          type: "error",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      setInviteFeedback({ msg: "Error occurred", type: "error" });
+    } finally {
+      // Always ensure the loading indicator is removed when complete
+      setInviteLoading(false);
+    }
   };
 
   const slideOut = (direction) => {
@@ -390,7 +458,10 @@ Looking forward to working with you!`;
 
       {/* ================= INVITE REALTORS BANNER ================= */}
       <View style={styles.inviteBanner}>
-        <TouchableOpacity style={styles.inviteRealtorsButton}>
+        <TouchableOpacity
+          style={styles.inviteRealtorsButton}
+          onPress={() => setShowInviteForm(true)}
+        >
           <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
         </TouchableOpacity>
         <Text style={styles.inviteBannerText}>
@@ -550,7 +621,149 @@ Looking forward to working with you!`;
           setShowCSVUploadForm={setShowCSVUploadForm}
         />
       </Modal>
-
+      <Modal visible={showInviteForm} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContentForRealtorInvite}>
+            <Text style={styles.modalTitle}>Invite New Realtor</Text>
+            {inviteFeedback.msg ? (
+              <Text
+                style={[
+                  styles.feedbackMsg,
+                  inviteFeedback.type === "success"
+                    ? styles.success
+                    : styles.error,
+                ]}
+              >
+                {inviteFeedback.msg}
+              </Text>
+            ) : null}
+            <Text style={styles.label}>First Name:</Text>
+            <TextInput
+              style={styles.input}
+              value={inviteData.firstName}
+              onChangeText={(t) =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  firstName: t,
+                }))
+              }
+            />
+            <Text style={styles.label}>Last Name:</Text>
+            <TextInput
+              style={styles.input}
+              value={inviteData.lastName}
+              onChangeText={(t) =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  lastName: t,
+                }))
+              }
+            />
+            <Text style={styles.label}>Email:</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="email-address"
+              value={inviteData.email}
+              onChangeText={(t) =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  email: t,
+                }))
+              }
+            />
+            <Text style={styles.label}>Phone:</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="phone-pad"
+              value={inviteData.phone}
+              onChangeText={(t) =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  phone: t,
+                }))
+              }
+            />
+            {showContactOptions && inviteFeedback.type === "success" ? (
+              <View style={styles.contactOptions}>
+                <Text style={styles.contactOptionsTitle}>Contact via:</Text>
+                <View style={styles.contactIcons}>
+                  {inviteData.phone && (
+                    <>
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={openWhatsApp}
+                      >
+                        <MaterialCommunityIcons
+                          name="whatsapp"
+                          size={32}
+                          color="#25D366"
+                        />
+                        <Text style={styles.contactIconText}>WhatsApp</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={openSMS}
+                      >
+                        <MaterialIcons name="sms" size={32} color="#2196F3" />
+                        <Text style={styles.contactIconText}>SMS</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                  {inviteData.email && (
+                    <TouchableOpacity
+                      style={styles.contactIconBtn}
+                      onPress={openEmail}
+                    >
+                      <Entypo name="mail" size={32} color="#F44336" />
+                      <Text style={styles.contactIconText}>Email</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <TouchableOpacity
+                  style={styles.closeModalBtn}
+                  onPress={() => {
+                    setShowInviteForm(false);
+                    setShowContactOptions(false);
+                    setInviteData({
+                      firstName: "",
+                      lastName: "",
+                      email: "",
+                      phone: "",
+                    });
+                    setInviteFeedback({ msg: "", type: "" });
+                  }}
+                >
+                  <Text style={styles.closeModalBtnTxt}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.modalBtns}>
+                <TouchableOpacity
+                  style={[
+                    styles.modalBtn,
+                    inviteLoading && styles.modalBtnDisabled,
+                  ]}
+                  disabled={inviteLoading}
+                  onPress={handleInviteRealtor}
+                >
+                  {inviteLoading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.modalBtnTxt}>Send Invite</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalBtn}
+                  onPress={() => setShowInviteForm(false)}
+                  disabled={inviteLoading}
+                >
+                  <Text style={styles.modalBtnTxt}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
       {/* Invite Form Modal (Overlay) */}
       <Modal
         visible={showForm}
@@ -765,7 +978,7 @@ Looking forward to working with you!`;
 
                 <Text style={styles.alternativeText}>
                   You can always email a file (Excel or .CSV) to us at{" "}
-                  <Text style={{ fontWeight: "bold" }}>files@roostapp.io</Text>{" "}
+                  <Text style={{ fontWeight: "bold" }}>files@roostapp.io</Text>
                   and we can take care of it for you
                 </Text>
               </>
@@ -974,6 +1187,8 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   formOverlay: {
     flex: 1,
@@ -1082,6 +1297,50 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8d7da",
     color: "#721c24",
   },
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  feedbackMsg: {
+    textAlign: "center",
+    marginVertical: 8,
+  },
+  success: { color: "#155724" },
+  error: { color: "#721c24" },
+  label: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: "#23231A",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 12,
+  },
+  modalBtns: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  modalBtn: {
+    flex: 1,
+    backgroundColor: "#019B8E",
+    padding: 10,
+    borderRadius: 6,
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  modalBtnTxt: { color: "#fff", fontWeight: "600" },
+  modalBtnDisabled: { opacity: 0.6 },
   leftSlideModal: {
     position: "absolute",
     left: 0,
@@ -1091,6 +1350,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
+    overflow: "hidden",
+  },
+  modalContentForRealtorInvite: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 15,
+    width: "90%",
+    maxHeight: "90%",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     overflow: "hidden",
   },
   rightSlideModal: {
