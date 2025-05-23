@@ -13,15 +13,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function PhoneVerificationScreen({ navigation, route }) {
+export default function EmailVerificationScreen({ navigation, route }) {
   // Get user data from previous screen
   const userData = route.params || {};
 
-  // Determine if we're verifying phone or email
-  const verifyMethod = userData.phone ? "phone" : "email";
-  const contactValue = userData.phone || userData.email;
-
-  // Store each digit in a separate array element - updated to 6 digits
+  // Store each digit in a separate array element - 6 digits for email verification
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,12 +29,9 @@ export default function PhoneVerificationScreen({ navigation, route }) {
 
   // First useEffect for sending OTP - runs only once on component mount
   useEffect(() => {
-    // Only send OTP email once when the component first loads
-    if (verifyMethod === "email" && !otpSent) {
+    // Send OTP email once when the component first loads
+    if (!otpSent) {
       generateEmailOTP();
-    } else {
-      // For phone, we're just bypassing actual OTP verification for now
-      setOtpSent(true);
     }
   }, []); // Empty dependency array to run only once
 
@@ -108,15 +101,7 @@ export default function PhoneVerificationScreen({ navigation, route }) {
 
   const handleResend = () => {
     if (countdown === 0) {
-      if (verifyMethod === "email") {
-        generateEmailOTP();
-      } else {
-        // For phone, we're just bypassing actual OTP verification for now
-        Alert.alert(
-          "Code Resent",
-          `Verification code resent to ${userData.phone}`
-        );
-      }
+      generateEmailOTP();
       setCountdown(60);
     }
   };
@@ -146,8 +131,8 @@ export default function PhoneVerificationScreen({ navigation, route }) {
 
       const payload = {
         name: `${userData.firstName} ${userData.lastName}`,
-        phone: userData.phone || "",
-        email: userData.email || "",
+        phone: userData.phone || "", // Keep phone in payload if provided
+        email: userData.email,
         password: userData.password,
       };
 
@@ -192,23 +177,16 @@ export default function PhoneVerificationScreen({ navigation, route }) {
         return;
       }
 
-      let verificationSuccess = true;
-
-      // For email, verify OTP
-      if (verifyMethod === "email") {
-        verificationSuccess = await verifyEmailOTP(code);
-        if (!verificationSuccess) {
-          setError("Invalid verification code. Please try again.");
-          setIsLoading(false);
-          return;
-        }
+      // Verify email OTP
+      const verificationSuccess = await verifyEmailOTP(code);
+      if (!verificationSuccess) {
+        setError("Invalid verification code. Please try again.");
+        setIsLoading(false);
+        return;
       }
-      // For phone, we're accepting any code for now
 
       // If verification successful, register the user
-      if (verificationSuccess) {
-        await registerUser();
-      }
+      await registerUser();
     } catch (error) {
       console.error("Error during verification:", error);
       setError("Verification failed. Please try again.");
@@ -220,18 +198,6 @@ export default function PhoneVerificationScreen({ navigation, route }) {
     navigation.goBack();
   };
 
-  const getHeadingText = () => {
-    return verifyMethod === "phone"
-      ? "Verify your phone number"
-      : "Verify your email address";
-  };
-
-  const getSubheadingText = () => {
-    return verifyMethod === "phone"
-      ? "We just sent you a text message, please enter the number below"
-      : `We just sent a verification code to ${userData.email}, please enter it below`;
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
@@ -239,10 +205,13 @@ export default function PhoneVerificationScreen({ navigation, route }) {
         <Text style={styles.brandTitle}>Roost</Text>
 
         {/* Heading */}
-        <Text style={styles.heading}>{getHeadingText()}</Text>
+        <Text style={styles.heading}>Verify your email address</Text>
 
         {/* Subheading */}
-        <Text style={styles.subheading}>{getSubheadingText()}</Text>
+        <Text style={styles.subheading}>
+          We just sent a verification code to {userData.email}, please enter it
+          below
+        </Text>
 
         {isLoading && (
           <View style={styles.spinnerContainer}>
@@ -293,15 +262,10 @@ export default function PhoneVerificationScreen({ navigation, route }) {
             ]}
           >
             {countdown > 0
-              ? `Send message again in ${countdown} seconds`
-              : "Send message again"}
+              ? `Send code again in ${countdown} seconds`
+              : "Send code again"}
           </Text>
         </TouchableOpacity>
-
-        <Text style={styles.verificationNote}>
-          Note: For phone verification, any 6-digit code is accepted at the
-          moment
-        </Text>
       </ScrollView>
 
       {/* Bottom Bar */}
@@ -416,13 +380,6 @@ const styles = StyleSheet.create({
   },
   resendButtonTextDisabled: {
     color: "#C4C4C4",
-  },
-  verificationNote: {
-    fontSize: 12,
-    color: "#888888",
-    textAlign: "center",
-    fontStyle: "italic",
-    marginTop: 10,
   },
 
   // Bottom bar

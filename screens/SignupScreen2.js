@@ -153,24 +153,23 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         return;
       }
 
-      // Either phone or email is required, not both
-      if (!phone && !email) {
-        setEmailError("Either phone number or email is required");
-        setPhoneError("Either phone number or email is required");
+      // Email is now required
+      if (!email) {
+        setEmailError("Email address is required for verification");
         setIsLoading(false);
         return;
       }
 
-      // Validate phone if provided
+      // Validate email (required)
+      if (!validateEmail(email)) {
+        setEmailError("Please enter a valid email address");
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate phone only if it's provided
       if (phone && !validatePhone(phone)) {
         setPhoneError("Please enter a valid 10-digit phone number");
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate email if provided
-      if (email && !validateEmail(email)) {
-        setEmailError("Please enter a valid email address");
         setIsLoading(false);
         return;
       }
@@ -187,16 +186,15 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         inviteInfo || invitedBy
       );
 
-      // If no errors, proceed to next screen
-      // Use the directly returned inviteInfo instead of relying on the state update
+      // Navigate to next screen with email (required) and phone (optional)
       navigation.navigate("Password", {
         firstName,
         lastName,
-        phone: phone ? formattedPhone : null,
-        email: email || null,
+        phone: phone ? formattedPhone : null, // Phone still passed if provided
+        email: email, // Email is always provided now
         isRealtor: route.params?.accountType === "realtor",
         recoId: route.params?.recoId,
-        invitedBy: inviteInfo || invitedBy, // Use the one we just received or fall back to state
+        invitedBy: inviteInfo || invitedBy,
       });
     } catch (error) {
       console.error("Error in signup process:", error);
@@ -257,8 +255,9 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         >
           <Text style={styles.brandTitle}>Roost</Text>
           <Text style={styles.heading}>Let's get started!</Text>
+          {/* Update the note text to indicate email is required */}
           <Text style={styles.noteText}>
-            Only one contact method is required (phone or email)
+            Email is required for verification. Phone number is optional.
           </Text>
           {isLoading && (
             <View style={styles.spinnerContainer}>
@@ -319,40 +318,42 @@ export default function SignUpDetailsScreen({ navigation, route }) {
                 mask: "(999) 999-9999",
               }}
               style={[styles.phoneInput, isLoading && styles.inputDisabled]}
-              placeholder="Phone Number (Optional if email provided)"
+              placeholder="Phone Number (Optional)" // Updated text
               placeholderTextColor="#999999"
               value={phone}
               onChangeText={(text) => {
                 setPhone(text);
                 setFormattedPhone("+1" + text.replace(/\D/g, ""));
+                // Keep this line since phone is still being collected
                 if (text) setEmailError("");
               }}
               keyboardType="phone-pad"
               accessible={true}
-              accessibilityLabel="Phone Number input"
+              accessibilityLabel="Phone Number input (optional)" // Updated accessibility
               editable={!isLoading}
               returnKeyType="next"
-              onSubmitEditing={() => dismissKeyboard()}
-              blurOnSubmit={true}
+              onSubmitEditing={() => focusNextInput(emailInputRef)} // Focus email after phone
+              blurOnSubmit={false}
             />
           </View>
           <TextInput
             ref={emailInputRef}
             style={[styles.input, isLoading && styles.inputDisabled]}
-            placeholder="Email (Optional if phone provided)"
+            placeholder="Email (Required)" // Updated text
             placeholderTextColor="#999999"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
             onChangeText={(text) => {
               setEmail(text);
+              // Keep this since we still collect phone
               if (text) setPhoneError("");
             }}
             textContentType="emailAddress"
             autoComplete="email"
             autoCorrect={false}
             accessible={true}
-            accessibilityLabel="Email input"
+            accessibilityLabel="Email input (required)" // Updated accessibility
             editable={!isLoading}
             returnKeyType="done"
             onSubmitEditing={dismissKeyboard}

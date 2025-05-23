@@ -19,11 +19,11 @@ import { useRealtor } from "../context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 
-export default function RealtorProfile({ realtor: propRealtor, onClose }) {
-  const { realtorInfo } = useRealtor();
+export default function RealtorProfile({ onClose }) {
+  const { realtorInfo, fetchRefreshData } = useRealtor();
   const { logout } = useAuth();
   const navigation = useNavigation();
-  const realtor = propRealtor || realtorInfo;
+  const realtor = realtorInfo;
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
   const [error, setError] = useState("");
@@ -54,6 +54,22 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
     newPassword: "",
     confirmPassword: "",
   });
+  // Email change state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailChangeStep, setEmailChangeStep] = useState(1); // 1: Enter email, 2: Enter OTP, 3: Success
+  const [newEmail, setNewEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const otpInputRef = useRef(null);
+
+  // Add these state variables at the top of your component with the other state declarations
+  const saveTimerRef = useRef(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   // Fetch shareable link
   const fetchShareableLink = async () => {
     if (!realtor?._id) return;
@@ -72,6 +88,292 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
     } catch (error) {
       console.error("Error fetching shareable link:", error);
     }
+  };
+
+  // Email change handler functions
+  const handleEmailChangeStart = () => {
+    setNewEmail("");
+    setEmailOtp("");
+    setEmailError("");
+    setEmailChangeStep(1);
+    setShowEmailModal(true);
+  };
+
+  const handleEmailSubmit = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    try {
+      setEmailError("");
+
+      // First check if email already exists
+      const checkResponse = await fetch(
+        "http://44.202.249.124:5000/presignup/email",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: newEmail }),
+        }
+      );
+
+      if (!checkResponse.ok) {
+        // If response is not ok, the email might already exist
+        const errorData = await checkResponse.json();
+        setEmailError(
+          errorData.error ||
+            "This email is already registered. Please use a different email."
+        );
+        return;
+      }
+
+      // If we get here, the email is available (doesn't exist yet)
+      // Now send OTP to the new email using the correct endpoint
+      const otpResponse = await fetch(
+        "http://44.202.249.124:5000/otp/email/generate",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: newEmail }),
+        }
+      );
+
+      const otpData = await otpResponse.json();
+
+      if (otpData.message === "OTP sent successfully") {
+        setEmailChangeStep(2);
+        setCountdown(60); // Start 60 second countdown for resend
+        // Focus OTP input when it appears
+        setTimeout(() => {
+          if (otpInputRef.current) {
+            otpInputRef.current.focus();
+          }
+        }, 100);
+      } else {
+        setEmailError("Failed to send verification code. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in email check/OTP generation:", error);
+      setEmailError("An error occurred. Please try again.");
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    if (!emailOtp || emailOtp.length < 6) {
+      setEmailError("Please enter the complete 6-digit verification code");
+      return;
+    }
+
+    try {
+      setEmailError("");
+
+      // First verify the OTP using the correct endpoint
+      const verifyResponse = await fetch(
+        "http://44.202.249.124:5000/otp/email/verify",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: newEmail,
+            otp: emailOtp,
+          }),
+        }
+      );
+
+      const verifyData = await verifyResponse.json();
+
+      if (verifyData.success) {
+        // If OTP is verified, update the realtor's email
+        // Join firstName and lastName for the API request
+        const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
+        const updateResponse = await fetch(
+          `http://44.202.249.124:5000/realtor/${realtor._id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: fullName,
+              email: newEmail, // Update with new email
+              rewardsAddress: formData.rewardsAddress,
+              rewardsCity: formData.rewardsCity,
+              rewardsPostalCode: formData.rewardsPostalCode,
+              brokerageInfo: {
+                brokerageName: formData.brokerageName,
+                brokerageAddress: formData.brokerageAddress,
+                brokerageCity: formData.brokerageCity,
+                brokeragePostalCode: formData.brokeragePostalCode,
+                brokeragePhone: formData.brokeragePhone,
+                brokerageEmail: formData.brokerageEmail,
+                licenseNumber: formData.licenseNumber,
+              },
+            }),
+          }
+        );
+
+        if (updateResponse.ok) {
+          // Update local form data with new email
+          setFormData((prev) => ({ ...prev, email: newEmail }));
+          setEmailChangeStep(3);
+          setEmailChangeSuccess(true);
+
+          setFeedback({
+            message: "Email updated successfully!",
+            type: "success",
+          });
+
+          // Close the modal after showing success for 2 seconds
+          setTimeout(() => {
+            setShowEmailModal(false);
+            setEmailChangeSuccess(false);
+          }, 2000);
+        } else {
+          setEmailError("Failed to update email. Please try again.");
+        }
+      } else {
+        setEmailError("Invalid verification code. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in email verification/update:", error);
+      setEmailError("Failed to verify code. Please try again.");
+    }
+  };
+
+  // Handle close with data refresh
+  const handleClose = () => {
+    // If profile has been modified, refresh the data
+    if (realtor && realtor._id) {
+      fetchRefreshData(realtor._id);
+    }
+
+    // Call the original onClose prop
+    if (onClose) onClose();
+  };
+
+  // Update the handleFieldChange function to capture the latest state value
+
+  const handleFieldChange = (field, value) => {
+    // Update form data with the new value
+    setFormData((prev) => {
+      const updatedData = { ...prev, [field]: value };
+
+      // Clear any existing timer when the user types
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+
+      // Set a new timer for auto-save after 2 seconds of inactivity
+      // Use the UPDATED data in the timer callback
+      saveTimerRef.current = setTimeout(() => {
+        handleSubmitWithData(updatedData);
+      }, 2000);
+
+      return updatedData;
+    });
+  };
+
+  // Add a new helper function that accepts the current form data
+  const handleSubmitWithData = (currentFormData) => {
+    // Prevent duplicate save calls
+    if (isSaving) return;
+
+    try {
+      setIsSaving(true);
+      // Join firstName and lastName before sending to API
+      const fullName = `${currentFormData.firstName} ${currentFormData.lastName}`.trim();
+
+      fetch(
+        `http://44.202.249.124:5000/realtor/${realtor._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: fullName, // Send the combined name to maintain API compatibility
+            rewardsAddress: currentFormData.rewardsAddress,
+            rewardsCity: currentFormData.rewardsCity,
+            rewardsPostalCode: currentFormData.rewardsPostalCode,
+            brokerageInfo: {
+              brokerageName: currentFormData.brokerageName,
+              brokerageAddress: currentFormData.brokerageAddress,
+              brokerageCity: currentFormData.brokerageCity,
+              brokeragePostalCode: currentFormData.brokeragePostalCode,
+              brokeragePhone: currentFormData.brokeragePhone,
+              brokerageEmail: currentFormData.brokerageEmail,
+              licenseNumber: currentFormData.licenseNumber,
+            },
+          }),
+        }
+      )
+        .then((response) => {
+          if (response.ok) {
+            // Show success notification
+            setSaveSuccess(true);
+
+            // Fade in animation
+            Animated.timing(fadeAnim, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }).start();
+
+            // Fade out after 2 seconds
+            setTimeout(() => {
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }).start(() => setSaveSuccess(false));
+            }, 2000);
+          } else {
+            setFeedback({ message: "Failed to update profile", type: "error" });
+          }
+        })
+        .catch((error) => {
+          console.error("Profile update error:", error);
+          setFeedback({ message: "Error updating profile", type: "error" });
+        })
+        .finally(() => {
+          setIsSaving(false);
+        });
+    } catch (error) {
+      console.error("Profile update error:", error);
+      setFeedback({ message: "Error updating profile", type: "error" });
+      setIsSaving(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (countdown > 0) return;
+
+    try {
+      setEmailError("");
+      const response = await fetch(
+        "http://44.202.249.124:5000/otp/email/generate",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: newEmail }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.message === "OTP sent successfully") {
+        setEmailOtp("");
+        setCountdown(60); // Start 60 second countdown
+      } else {
+        setEmailError("Failed to resend code. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      setEmailError("Failed to resend verification code.");
+    }
+  };
+
+  const handleEmailModalClose = () => {
+    setShowEmailModal(false);
+    setEmailError("");
   };
 
   // Populate form with existing data
@@ -104,12 +406,30 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
     }
   }, [realtor]);
 
-  // Handle brokerage info update
-  const handleSubmit = async () => {
-    try {
-      // Join firstName and lastName before sending to API      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+  // Add useEffect for countdown timer if it doesn't exist already
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
 
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown]);
+
+  // Update the existing handleSubmit function
+  const handleSubmit = async () => {
+    // Prevent duplicate save calls
+    if (isSaving) return;
+
+    try {
+      setIsSaving(true);
+      // Join firstName and lastName before sending to API
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
       const response = await fetch(
         `http://44.202.249.124:5000/realtor/${realtor._id}`,
         {
@@ -133,18 +453,37 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
         }
       );
 
-      console.log("Response status:", response.status);
-
       if (response.ok) {
+        // Show success notification
+        setSaveSuccess(true);
         setFeedback({
           message: "Profile updated successfully!",
           type: "success",
         });
+
+        // Fade in animation
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+
+        // Fade out after 2 seconds
+        setTimeout(() => {
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setSaveSuccess(false));
+        }, 2000);
       } else {
         setFeedback({ message: "Failed to update profile", type: "error" });
       }
     } catch (error) {
+      console.error("Profile update error:", error);
       setFeedback({ message: "Error updating profile", type: "error" });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -342,7 +681,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
       onPanResponderRelease: (event, gesture) => {
         if (gesture.dy > 50) {
           closeAnim.start(() => {
-            if (onClose) onClose();
+            handleClose(); // Use handleClose instead of onClose
           });
         } else {
           resetPositionAnim.start();
@@ -368,7 +707,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
       </View>
 
       {/* Close button */}
-      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+      <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeButtonText}>✕</Text>
       </TouchableOpacity>
 
@@ -441,7 +780,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
                   {codeCopied ? "Copied!" : "Copy"}
                 </Text>
               </TouchableOpacity>
-            </View>{" "}
+            </View>
             <Text style={styles.inviteCodeHint}>
               Share this code with clients and realtors to earn rewards
             </Text>
@@ -493,11 +832,19 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
         </View>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Email:</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
-            value={formData.email}
-            editable={false}
-          />
+          <View style={styles.emailContainer}>
+            <TextInput
+              style={[styles.emailInput, { backgroundColor: "#F0F0F0" }]}
+              value={formData.email}
+              editable={false}
+            />
+            <TouchableOpacity
+              style={styles.changeEmailButton}
+              onPress={handleEmailChangeStart}
+            >
+              <Text style={styles.changeEmailText}>Change</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Phone:</Text>
@@ -513,9 +860,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           <TextInput
             style={styles.input}
             value={formData.rewardsAddress}
-            onChangeText={(text) =>
-              setFormData({ ...formData, rewardsAddress: text })
-            }
+            onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -523,9 +868,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           <TextInput
             style={styles.input}
             value={formData.rewardsCity}
-            onChangeText={(text) =>
-              setFormData({ ...formData, rewardsCity: text })
-            }
+            onChangeText={(text) => handleFieldChange("rewardsCity", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -534,7 +877,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             style={styles.input}
             value={formData.rewardsPostalCode}
             onChangeText={(text) =>
-              setFormData({ ...formData, rewardsPostalCode: text })
+              handleFieldChange("rewardsPostalCode", text)
             }
           />
         </View>
@@ -548,9 +891,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           <TextInput
             style={styles.input}
             value={formData.brokerageName}
-            onChangeText={(text) =>
-              setFormData({ ...formData, brokerageName: text })
-            }
+            onChangeText={(text) => handleFieldChange("brokerageName", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -558,9 +899,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           <TextInput
             style={styles.input}
             value={formData.brokerageAddress}
-            onChangeText={(text) =>
-              setFormData({ ...formData, brokerageAddress: text })
-            }
+            onChangeText={(text) => handleFieldChange("brokerageAddress", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -568,9 +907,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           <TextInput
             style={styles.input}
             value={formData.brokerageCity}
-            onChangeText={(text) =>
-              setFormData({ ...formData, brokerageCity: text })
-            }
+            onChangeText={(text) => handleFieldChange("brokerageCity", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -579,7 +916,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             style={styles.input}
             value={formData.brokeragePostalCode}
             onChangeText={(text) =>
-              setFormData({ ...formData, brokeragePostalCode: text })
+              handleFieldChange("brokeragePostalCode", text)
             }
           />
         </View>
@@ -588,9 +925,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           <TextInput
             style={styles.input}
             value={formData.brokeragePhone}
-            onChangeText={(text) =>
-              setFormData({ ...formData, brokeragePhone: text })
-            }
+            onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -599,9 +934,7 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
             style={styles.input}
             value={formData.brokerageEmail}
             keyboardType="email-address"
-            onChangeText={(text) =>
-              setFormData({ ...formData, brokerageEmail: text })
-            }
+            onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
           />
         </View>
         <View style={styles.formGroup}>
@@ -703,6 +1036,128 @@ export default function RealtorProfile({ realtor: propRealtor, onClose }) {
           </View>
         </View>
       </Modal>
+
+      {/* Email Change Modal - New addition */}
+      <Modal visible={showEmailModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Header */}
+            <Text style={styles.modalTitle}>
+              {emailChangeStep === 1
+                ? "Change Email Address"
+                : emailChangeStep === 2
+                ? "Verify Your Email"
+                : "Email Updated!"}
+            </Text>
+
+            {!emailChangeSuccess && (
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={handleEmailModalClose}
+              >
+                <Text style={styles.modalCloseText}>×</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Error Message */}
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
+
+            {/* Step 1: Enter New Email */}
+            {emailChangeStep === 1 && (
+              <>
+                <Text style={styles.modalSubtitle}>
+                  Enter your new email address below. We'll send a verification
+                  code to this address.
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="New Email Address"
+                  keyboardType="email-address"
+                  value={newEmail}
+                  onChangeText={(text) => setNewEmail(text)}
+                  autoCapitalize="none"
+                  autoFocus={true}
+                />
+                <TouchableOpacity
+                  style={styles.fullWidthButton}
+                  onPress={handleEmailSubmit}
+                >
+                  <Text style={styles.buttonText}>Continue</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Step 2: Enter OTP */}
+            {emailChangeStep === 2 && (
+              <>
+                <Text style={styles.modalSubtitle}>
+                  We've sent a verification code to {newEmail}. Enter it below
+                  to verify your email address.
+                </Text>
+                <TextInput
+                  ref={otpInputRef}
+                  style={styles.otpInput}
+                  placeholder="Enter verification code"
+                  keyboardType="numeric"
+                  value={emailOtp}
+                  onChangeText={(text) => setEmailOtp(text)}
+                  maxLength={6}
+                />
+                <TouchableOpacity
+                  style={styles.fullWidthButton}
+                  onPress={handleOtpSubmit}
+                >
+                  <Text style={styles.buttonText}>Verify Email</Text>
+                </TouchableOpacity>
+
+                {/* Resend button with countdown */}
+                <TouchableOpacity
+                  style={[
+                    styles.resendButton,
+                    countdown > 0 && styles.resendButtonDisabled,
+                  ]}
+                  onPress={handleResendOtp}
+                  disabled={countdown > 0}
+                >
+                  <Text
+                    style={[
+                      styles.resendButtonText,
+                      countdown > 0 && styles.resendButtonTextDisabled,
+                    ]}
+                  >
+                    {countdown > 0
+                      ? `Resend code in ${countdown} seconds`
+                      : "Resend verification code"}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Step 3: Success */}
+            {emailChangeStep === 3 && (
+              <View style={styles.successContainer}>
+                <View style={styles.successIconCircle}>
+                  <Text style={styles.successIconText}>✓</Text>
+                </View>
+                <Text style={styles.successText}>
+                  Email successfully updated!
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Auto-save Success Notification */}
+      {saveSuccess && (
+        <Animated.View
+          style={[styles.autoSaveNotification, { opacity: fadeAnim }]}
+        >
+          <Text style={styles.autoSaveText}>Changes saved!</Text>
+        </Animated.View>
+      )}
     </ScrollView>
   );
 }
@@ -1006,5 +1461,152 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#019B8E",
     marginRight: 10,
+  },
+
+  /* Email Change Modal */
+  successMessageContainer: {
+    alignItems: "center",
+    marginTop: 20,
+  },
+  successMessage: {
+    fontSize: 16,
+    color: "#155724",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  emailContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  emailInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#C4C4C4",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: "#23231A",
+    marginRight: 10,
+  },
+  changeEmailButton: {
+    backgroundColor: "#019B8E",
+    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  changeEmailText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalCloseButton: {
+    position: "absolute",
+    right: 15,
+    top: 15,
+  },
+  modalCloseText: {
+    fontSize: 24,
+    color: "#23231A",
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 20,
+  },
+  fullWidthButton: {
+    backgroundColor: "#019B8E",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 10,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  otpInput: {
+    borderWidth: 1,
+    borderColor: "#C4C4C4",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    fontSize: 18,
+    textAlign: "center",
+    letterSpacing: 8,
+    marginBottom: 20,
+  },
+  resendButton: {
+    marginTop: 15,
+    alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  resendButtonDisabled: {
+    opacity: 0.5,
+  },
+  resendButtonText: {
+    color: "#019B8E",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  resendButtonTextDisabled: {
+    color: "#999999",
+  },
+  successContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  successIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#019B8E",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  successIconText: {
+    color: "#FFFFFF",
+    fontSize: 30,
+    fontWeight: "bold",
+  },
+  successText: {
+    fontSize: 18,
+    color: "#23231A",
+    fontWeight: "600",
+  },
+  errorText: {
+    color: "#F04D4D",
+    fontSize: 14,
+    marginBottom: 10,
+  },
+
+  autoSaveNotification: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#019B8E",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  autoSaveText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

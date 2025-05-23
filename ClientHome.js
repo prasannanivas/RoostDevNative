@@ -595,13 +595,7 @@ const ClientHome = () => {
       >
         <View style={styles.profileModalContainer}>
           <View style={styles.profileModalContent}>
-            <TouchableOpacity
-              style={styles.closeProfileButton}
-              onPress={() => setShowProfile(false)}
-            >
-              <Text style={styles.closeProfileText}>×</Text>
-            </TouchableOpacity>
-            <ClientProfile />
+            <ClientProfile onClose={() => setShowProfile(false)} />
           </View>
         </View>
       </Modal>

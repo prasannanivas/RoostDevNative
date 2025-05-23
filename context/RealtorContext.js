@@ -58,6 +58,21 @@ export const RealtorProvider = ({ children }) => {
     }
   };
 
+  const fetchRefreshData = async (realtorId) => {
+    try {
+      const response = await fetch(
+        `http://44.202.249.124:5000/realtor/${realtorId}`
+      );
+      if (response.ok) {
+        const freshData = await response.json();
+        setRealtorInfo(freshData);
+        return freshData;
+      }
+    } catch (error) {
+      console.error("Error refreshing realtor data:", error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [realtor]);
@@ -71,6 +86,7 @@ export const RealtorProvider = ({ children }) => {
         loadingRealtor,
         realtorInfo,
         fetchLatestRealtor: fetchData,
+        fetchRefreshData,
         logout: auth?.logout,
       }}
     >

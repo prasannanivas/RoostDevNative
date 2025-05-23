@@ -12,6 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+// Keep the import for future use
 import { TextInputMask } from "react-native-masked-text";
 
 export default function PasswordResetScreen({ navigation }) {
@@ -20,14 +21,16 @@ export default function PasswordResetScreen({ navigation }) {
     CONTACT_INFO: 0,
     OTP_VERIFICATION: 1,
     NEW_PASSWORD: 2,
+    SUCCESS: 3, // Add a new success stage
   };
 
   // State variables
   const [stage, setStage] = useState(STAGES.CONTACT_INFO);
-  const [contactMethod, setContactMethod] = useState("email"); // "email" or "phone"
+  const [contactMethod, setContactMethod] = useState("email"); // Force to email only
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [formattedPhone, setFormattedPhone] = useState("");
+  // Keep these states for future use
+  // const [phone, setPhone] = useState("");
+  // const [formattedPhone, setFormattedPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -62,9 +65,10 @@ export default function PasswordResetScreen({ navigation }) {
     return emailRegex.test(email);
   };
 
-  const validatePhone = (phone) => {
-    return phone.replace(/\D/g, "").length === 10;
-  };
+  // Keep phone validation for future use
+  // const validatePhone = (phone) => {
+  //   return phone.replace(/\D/g, "").length === 10;
+  // };
 
   const validatePassword = (password) => {
     return password.length >= 8;
@@ -90,13 +94,13 @@ export default function PasswordResetScreen({ navigation }) {
     }
   };
 
-  // Find user by email or phone
+  // Find user by email only
   const findUser = async () => {
     try {
       setIsLoading(true);
       setError("");
 
-      const identifier = contactMethod === "email" ? email : formattedPhone;
+      const identifier = email;
 
       const response = await axios.post(
         "http://44.202.249.124:5000/otp/password-reset/find-user",
@@ -110,21 +114,13 @@ export default function PasswordResetScreen({ navigation }) {
       if (response.data && response.data.userId) {
         setUserData(response.data);
 
-        // Set the email and phone from response for later use
+        // Set the email from response for later use
         if (response.data.email && !email) {
           setEmail(response.data.email);
         }
 
-        if (response.data.phone && !formattedPhone) {
-          setFormattedPhone(response.data.phone);
-        }
-
-        // Now generate OTP
-        if (contactMethod === "email") {
-          return generateEmailOTP();
-        } else {
-          return generatePhoneOTP();
-        }
+        // Now generate Email OTP
+        return generateEmailOTP();
       } else {
         setError("No account found with that information. Please try again.");
         setIsLoading(false);
@@ -153,7 +149,7 @@ export default function PasswordResetScreen({ navigation }) {
       if (response?.data?.message === "OTP sent successfully") {
         setOtpSent(true);
         setCountdown(60);
-        Alert.alert("OTP Sent", `Verification code sent to ${email}`);
+
         setStage(STAGES.OTP_VERIFICATION);
       } else {
         setError("Failed to send verification code. Please try again.");
@@ -166,25 +162,25 @@ export default function PasswordResetScreen({ navigation }) {
     }
   };
 
-  // Handle phone OTP (mock implementation)
-  const generatePhoneOTP = async () => {
-    try {
-      setError("");
-
-      // Simulate OTP sending - in a real implementation, this would call your phone OTP endpoint
-      setTimeout(() => {
-        setOtpSent(true);
-        setCountdown(60);
-        Alert.alert("OTP Sent", `Verification code sent to ${formattedPhone}`);
-        setStage(STAGES.OTP_VERIFICATION);
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      console.error("Error sending phone OTP:", error);
-      setError("Error sending verification code. Please try again.");
-      setIsLoading(false);
-    }
-  };
+  // Keep phone OTP function for future use
+  // const generatePhoneOTP = async () => {
+  //   try {
+  //     setError("");
+  //
+  //     // Simulate OTP sending - in a real implementation, this would call your phone OTP endpoint
+  //     setTimeout(() => {
+  //       setOtpSent(true);
+  //       setCountdown(60);
+  //
+  //       setStage(STAGES.OTP_VERIFICATION);
+  //       setIsLoading(false);
+  //     }, 1500);
+  //   } catch (error) {
+  //     console.error("Error sending phone OTP:", error);
+  //     setError("Error sending verification code. Please try again.");
+  //     setIsLoading(false);
+  //   }
+  // };
 
   // Verify Email OTP
   const verifyEmailOTP = async (otpValue) => {
@@ -207,11 +203,7 @@ export default function PasswordResetScreen({ navigation }) {
   // Handle resend OTP
   const handleResendOTP = () => {
     if (countdown === 0) {
-      if (contactMethod === "email") {
-        generateEmailOTP();
-      } else {
-        generatePhoneOTP();
-      }
+      generateEmailOTP();
     }
   };
 
@@ -229,22 +221,15 @@ export default function PasswordResetScreen({ navigation }) {
         return;
       }
 
-      let verificationSuccess = true;
-
-      if (contactMethod === "email") {
-        verificationSuccess = await verifyEmailOTP(otpValue);
-        if (!verificationSuccess) {
-          setError("Invalid verification code. Please try again.");
-          setIsLoading(false);
-          return;
-        }
-      }
-      // For phone, accept any code for now
-
-      if (verificationSuccess) {
-        setStage(STAGES.NEW_PASSWORD);
+      const verificationSuccess = await verifyEmailOTP(otpValue);
+      if (!verificationSuccess) {
+        setError("Invalid verification code. Please try again.");
         setIsLoading(false);
+        return;
       }
+
+      setStage(STAGES.NEW_PASSWORD);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error during OTP verification:", error);
       setError("Verification failed. Please try again.");
@@ -285,19 +270,11 @@ export default function PasswordResetScreen({ navigation }) {
           userType: userData.userType,
         }
       );
+      console.log("Password reset response:", response);
 
-      if (response.data && response.data.success) {
-        // Show success message and redirect to login page
-        Alert.alert(
-          "Password Reset Successful",
-          "Your password has been reset successfully. Please login with your new password.",
-          [
-            {
-              text: "Login Now",
-              onPress: () => navigation.navigate("Login"),
-            },
-          ]
-        );
+      if (response.status === 200) {
+        // Instead of showing Alert, move to success stage
+        setStage(STAGES.SUCCESS);
       } else {
         setError("Failed to reset password. Please try again.");
       }
@@ -313,26 +290,14 @@ export default function PasswordResetScreen({ navigation }) {
   const handleContactInfoSubmit = () => {
     setError("");
 
-    if (contactMethod === "email") {
-      if (!email) {
-        setError("Please enter your email address");
-        return;
-      }
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
 
-      if (!validateEmail(email)) {
-        setError("Please enter a valid email address");
-        return;
-      }
-    } else {
-      if (!phone) {
-        setError("Please enter your phone number");
-        return;
-      }
-
-      if (!validatePhone(phone)) {
-        setError("Please enter a valid 10-digit phone number");
-        return;
-      }
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
     }
 
     findUser();
@@ -354,11 +319,11 @@ export default function PasswordResetScreen({ navigation }) {
     <>
       <Text style={styles.heading}>Reset Your Password</Text>
       <Text style={styles.subheading}>
-        Enter the email or phone number associated with your account
+        Enter the email address associated with your account
       </Text>
 
-      {/* Toggle buttons for contact method */}
-      <View style={styles.toggleContainer}>
+      {/* Comment out toggle buttons for contact method */}
+      {/* <View style={styles.toggleContainer}>
         <TouchableOpacity
           style={[
             styles.toggleButton,
@@ -391,19 +356,20 @@ export default function PasswordResetScreen({ navigation }) {
             Phone
           </Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
-      {contactMethod === "email" ? (
-        <TextInput
-          style={styles.input}
-          placeholder="Email Address"
-          placeholderTextColor="#999999"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      ) : (
+      <TextInput
+        style={styles.input}
+        placeholder="Email Address"
+        placeholderTextColor="#999999"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      {/* Comment out phone input */}
+      {/* {contactMethod === "phone" && (
         <View style={styles.phoneContainer}>
           <Text style={styles.phonePrefix}>+1</Text>
           <TextInputMask
@@ -422,7 +388,7 @@ export default function PasswordResetScreen({ navigation }) {
             keyboardType="phone-pad"
           />
         </View>
-      )}
+      } */}
 
       {error ? (
         <View style={styles.errorBox}>
@@ -435,13 +401,9 @@ export default function PasswordResetScreen({ navigation }) {
   // Render OTP Verification Stage
   const renderOTPVerificationStage = () => (
     <>
-      <Text style={styles.heading}>
-        Verify Your {contactMethod === "email" ? "Email" : "Phone"}
-      </Text>
+      <Text style={styles.heading}>Verify Your Email</Text>
       <Text style={styles.subheading}>
-        We sent a verification code to{" "}
-        {contactMethod === "email" ? email : formattedPhone}. Please enter it
-        below.
+        We sent a verification code to {email}. Please enter it below.
       </Text>
 
       {/* OTP Input Fields */}
@@ -492,12 +454,13 @@ export default function PasswordResetScreen({ navigation }) {
         </View>
       ) : null}
 
-      {contactMethod === "phone" && (
+      {/* Comment out phone verification note */}
+      {/* {contactMethod === "phone" && (
         <Text style={styles.verificationNote}>
           Note: For phone verification, any 6-digit code is accepted at the
           moment
         </Text>
-      )}
+      )} */}
     </>
   );
 
@@ -539,6 +502,27 @@ export default function PasswordResetScreen({ navigation }) {
     </>
   );
 
+  // Add new function to render success stage
+  const renderSuccessStage = () => (
+    <>
+      <View style={styles.successContainer}>
+        <Ionicons name="checkmark-circle" size={80} color="#019B8E" />
+        <Text style={styles.heading}>Password Reset Successful</Text>
+        <Text style={styles.subheading}>
+          Your password has been reset successfully. Please login with your new
+          password.
+        </Text>
+
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => navigation.navigate("Home")}
+        >
+          <Text style={styles.loginButtonText}>Login Now</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
   // Main return with conditional rendering based on stage
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -556,33 +540,36 @@ export default function PasswordResetScreen({ navigation }) {
         {stage === STAGES.CONTACT_INFO && renderContactInfoStage()}
         {stage === STAGES.OTP_VERIFICATION && renderOTPVerificationStage()}
         {stage === STAGES.NEW_PASSWORD && renderNewPasswordStage()}
+        {stage === STAGES.SUCCESS && renderSuccessStage()}
       </ScrollView>
 
-      {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
-        {/* Back Arrow */}
-        <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+      {/* Bottom Bar - Hide on success screen */}
+      {stage !== STAGES.SUCCESS && (
+        <View style={styles.bottomBar}>
+          {/* Back Arrow */}
+          <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        {/* Continue Button */}
-        <TouchableOpacity
-          style={[
-            styles.continueButton,
-            isLoading && styles.continueButtonDisabled,
-          ]}
-          onPress={() => {
-            if (stage === STAGES.CONTACT_INFO) handleContactInfoSubmit();
-            else if (stage === STAGES.OTP_VERIFICATION) handleVerifyOTP();
-            else if (stage === STAGES.NEW_PASSWORD) handleResetPassword();
-          }}
-          disabled={isLoading}
-        >
-          <Text style={styles.continueButtonText}>
-            {stage === STAGES.NEW_PASSWORD ? "Reset Password" : "Continue"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          {/* Continue Button */}
+          <TouchableOpacity
+            style={[
+              styles.continueButton,
+              isLoading && styles.continueButtonDisabled,
+            ]}
+            onPress={() => {
+              if (stage === STAGES.CONTACT_INFO) handleContactInfoSubmit();
+              else if (stage === STAGES.OTP_VERIFICATION) handleVerifyOTP();
+              else if (stage === STAGES.NEW_PASSWORD) handleResetPassword();
+            }}
+            disabled={isLoading}
+          >
+            <Text style={styles.continueButtonText}>
+              {stage === STAGES.NEW_PASSWORD ? "Reset Password" : "Continue"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -772,6 +759,27 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   continueButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // Add new styles
+  successContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  loginButton: {
+    backgroundColor: "#019B8E",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    marginTop: 30,
+    width: "80%",
+    alignItems: "center",
+  },
+  loginButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",

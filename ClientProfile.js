@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -10,14 +10,17 @@ import {
   StyleSheet,
   Switch,
   Image,
+  Animated, // Add this for animation
 } from "react-native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
+import Ionicons from "react-native-vector-icons/Ionicons"; // Import Ionicons
 
 export default function ClientProfile({ onClose }) {
   const { user, logout } = useAuth(); // if needed
-  const { clientInfo } = useClient();
+  const { clientInfo, fetchRefreshData } = useClient();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
   const [passwordData, setPasswordData] = useState({
@@ -27,9 +30,19 @@ export default function ClientProfile({ onClose }) {
   });
   const [error, setError] = useState("");
 
-  // Additional toggles for notifications
-  const [documentReminders, setDocumentReminders] = useState(false);
-  const [documentApprovals, setDocumentApprovals] = useState(false);
+  // Notification preferences - stored locally
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    // Push notifications
+    documentReminders: false,
+    documentApprovals: false,
+    newMessages: false,
+    marketingNotifications: false,
+
+    // Email notifications
+    termsOfServiceEmails: false,
+    statusUpdateEmails: false,
+    marketingEmails: false,
+  });
 
   // For demonstration, we split name into firstName & lastName to match screenshot
   const [formData, setFormData] = useState({
@@ -42,7 +55,26 @@ export default function ClientProfile({ onClose }) {
     postalCode: "",
   });
 
+  // Add a timer reference for auto-save
+  const saveTimerRef = useRef(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Email change states
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailChangeStep, setEmailChangeStep] = useState(1); // 1: Enter email, 2: Enter OTP, 3: Success
+  const [newEmail, setNewEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
+  const otpInputRef = useRef(null);
+
+  // Countdown state for OTP resend
+  const [countdown, setCountdown] = useState(0);
+
   useEffect(() => {
+    // Load client info
     if (clientInfo) {
       const [first = "", ...rest] = (clientInfo.name || "").split(" ");
       const last = rest.join(" ");
@@ -55,14 +87,68 @@ export default function ClientProfile({ onClose }) {
         city: clientInfo.address?.city || "",
         postalCode: clientInfo.address?.postalCode || "",
       });
-      // If your backend returns these booleans, set them here
-      // setDocumentReminders(clientInfo.documentReminders || false);
-      // setDocumentApprovals(clientInfo.documentApprovals || false);
     }
+
+    // Load notification preferences from AsyncStorage
+    loadNotificationPreferences();
   }, [clientInfo]);
+
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown]);
+
+  const loadNotificationPreferences = async () => {
+    try {
+      const savedPrefs = await AsyncStorage.getItem("notificationPreferences");
+      if (savedPrefs) {
+        setNotificationPrefs(JSON.parse(savedPrefs));
+      }
+    } catch (error) {
+      console.log("Error loading notification preferences:", error);
+    }
+  };
+
+  const saveNotificationPreferences = async (newPrefs) => {
+    try {
+      await AsyncStorage.setItem(
+        "notificationPreferences",
+        JSON.stringify(newPrefs)
+      );
+    } catch (error) {
+      console.log("Error saving notification preferences:", error);
+    }
+  };
+
+  const toggleNotificationPref = (key) => {
+    const newPrefs = {
+      ...notificationPrefs,
+      [key]: !notificationPrefs[key],
+    };
+    setNotificationPrefs(newPrefs);
+    saveNotificationPreferences(newPrefs);
+  };
 
   const handleChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+
+    // Clear any existing timer when the user types
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    // Set a new timer for auto-save after 10 seconds
+    saveTimerRef.current = setTimeout(() => {
+      handleSubmit();
+    }, 1000);
   };
 
   const handlePasswordInputChange = (key, value) => {
@@ -86,8 +172,13 @@ export default function ClientProfile({ onClose }) {
     }
   };
 
+  // Modified handleSubmit with success notification
   const handleSubmit = async () => {
+    // Prevent duplicate save calls
+    if (isSaving) return;
+
     try {
+      setIsSaving(true);
       // Merge firstName + lastName
       const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
       const payload = {
@@ -99,21 +190,65 @@ export default function ClientProfile({ onClose }) {
           city: formData.city,
           postalCode: formData.postalCode,
         },
-        // documentReminders,
-        // documentApprovals,
       };
       const response = await axios.put(
         `http://44.202.249.124:5000/client/${clientInfo.id}`,
         payload
       );
       if (response.status === 200) {
-        Alert.alert("Success", "Profile updated successfully!");
+        // Show success notification
+        setSaveSuccess(true);
+        // Fade in
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+
+        // Fade out after 2 seconds
+        setTimeout(() => {
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setSaveSuccess(false));
+        }, 2000);
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
+      console.error(
+        "Auto-save error:",
         error.response?.data?.error || "Error updating profile"
       );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Modify the close button handler to refresh data after closing
+  const handleClose = async () => {
+    // Clear any pending auto-save
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    // Save changes before closing
+    handleSubmit();
+
+    fetchRefreshData(clientInfo.id);
+    // Trigger client data refetch if possible
+    if (onClose) {
+      // Assuming the ClientContext has a method to refresh client data
+
+      onClose();
     }
   };
 
@@ -152,11 +287,170 @@ export default function ClientProfile({ onClose }) {
     return `${firstInitial}${lastInitial}` || "SM";
   };
 
+  // New handler functions for email change
+  const handleEmailChangeStart = () => {
+    setNewEmail("");
+    setEmailOtp("");
+    setEmailError("");
+    setEmailChangeStep(1);
+    setShowEmailModal(true);
+  };
+
+  // Update the handleEmailSubmit function to use the correct OTP generation endpoint
+  const handleEmailSubmit = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    try {
+      setEmailError("");
+
+      // First check if email already exists
+      await axios.post("http://44.202.249.124:5000/presignup/email", {
+        email: newEmail,
+      });
+
+      // If we get here, the email is available (doesn't exist yet)
+      // Now send OTP to the new email using the correct endpoint
+      const otpResponse = await axios.post(
+        "http://44.202.249.124:5000/otp/email/generate",
+        { email: newEmail }
+      );
+
+      if (otpResponse?.data?.message === "OTP sent successfully") {
+        setEmailChangeStep(2);
+        // Focus OTP input when it appears
+        setTimeout(() => {
+          if (otpInputRef.current) {
+            otpInputRef.current.focus();
+          }
+        }, 100);
+      } else {
+        setEmailError("Failed to send verification code. Please try again.");
+      }
+    } catch (error) {
+      if (error.response?.data?.error) {
+        setEmailError(
+          error.response.data.error ||
+            "This email is already registered. Please use a different email."
+        );
+      } else {
+        setEmailError("An error occurred. Please try again.");
+      }
+    }
+  };
+
+  // Update the handleOtpSubmit function to use the standard profile update endpoint
+
+  const handleOtpSubmit = async () => {
+    if (!emailOtp || emailOtp.length < 6) {
+      setEmailError("Please enter the complete 6-digit verification code");
+      return;
+    }
+
+    try {
+      setEmailError("");
+
+      // First verify the OTP using the correct endpoint
+      const verifyResponse = await axios.post(
+        "http://44.202.249.124:5000/otp/email/verify",
+        {
+          email: newEmail,
+          otp: emailOtp,
+        }
+      );
+
+      if (verifyResponse.data && verifyResponse.data.success) {
+        // If OTP is verified, update the profile with the new email
+        // using the standard profile update endpoint
+
+        // Create payload similar to regular profile update
+        const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+        const payload = {
+          name: fullName,
+          phone: formData.phone,
+          email: newEmail, // Use the new email
+          address: {
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
+          },
+        };
+
+        // Use PUT request to update profile
+        const updateResponse = await axios.put(
+          `http://44.202.249.124:5000/client/${clientInfo.id}`,
+          payload
+        );
+
+        if (updateResponse.status === 200) {
+          // Update local form data with new email
+          setFormData((prev) => ({ ...prev, email: newEmail }));
+          setEmailChangeStep(3);
+          setEmailChangeSuccess(true);
+
+          // Close the modal after showing success for 2 seconds
+          setTimeout(() => {
+            setShowEmailModal(false);
+            setEmailChangeSuccess(false);
+            // Refresh client data to reflect changes
+            fetchRefreshData(clientInfo.id);
+          }, 2000);
+        }
+      } else {
+        setEmailError("Invalid verification code. Please try again.");
+      }
+    } catch (error) {
+      if (error.response?.data?.error) {
+        setEmailError(error.response?.data?.error || "Invalid verification code");
+      } else {
+        setEmailError("Failed to verify code. Please try again.");
+      }
+    }
+  };
+
+  const handleEmailModalClose = () => {
+    setShowEmailModal(false);
+    setEmailError("");
+  };
+
+  // Function to handle resending the OTP
+  const handleResendOtp = async () => {
+    if (countdown > 0) return;
+
+    try {
+      setEmailError("");
+      const response = await axios.post(
+        "http://44.202.249.124:5000/otp/email/generate",
+        { email: newEmail }
+      );
+
+      if (response?.data?.message === "OTP sent successfully") {
+        setEmailOtp("");
+        setCountdown(60); // Start 60 second countdown
+      } else {
+        setEmailError("Failed to resend code. Please try again.");
+      }
+    } catch (error) {
+      setEmailError("Failed to resend verification code.");
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Close Button in top-right corner */}
+      {/* Success notification */}
+      {saveSuccess && (
+        <Animated.View style={[styles.saveNotification, { opacity: fadeAnim }]}>
+          <Text style={styles.saveNotificationText}>
+            Profile updated successfully
+          </Text>
+        </Animated.View>
+      )}
+
+      {/* Close Button in top-right corner - updated to use new handler */}
       {onClose && (
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
           <Text style={styles.closeButtonText}>×</Text>
         </TouchableOpacity>
       )}
@@ -195,19 +489,28 @@ export default function ClientProfile({ onClose }) {
               value={formData.phone}
               onChangeText={(text) => handleChange("phone", text)}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              keyboardType="email-address"
-              value={formData.email}
-              onChangeText={(text) => handleChange("email", text)}
-            />
+            {/* Email with Change Button */}
+            <View style={styles.emailContainer}>
+              <TextInput
+                style={[styles.input, styles.emailInput]}
+                placeholder="Email"
+                keyboardType="email-address"
+                value={formData.email}
+                editable={false} // Make it non-editable
+              />
+              <TouchableOpacity
+                style={styles.changeEmailButton}
+                onPress={handleEmailChangeStart}
+              >
+                <Text style={styles.changeEmailText}>Change</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
         {/* Address Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Address</Text>
+          <Text style={styles.cardTitle}>Send my rewards to</Text>
           <Text style={styles.cardSubtitle}>
             Make sure thing info is complete and up to date.
           </Text>
@@ -239,45 +542,6 @@ export default function ClientProfile({ onClose }) {
           </View>
         </View>
 
-        {/* Notifications Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Notifications</Text>
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Reminders</Text>
-            <TouchableOpacity
-              onPress={() => setDocumentReminders(!documentReminders)}
-              style={[
-                styles.toggleSwitch,
-                documentReminders && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  documentReminders && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Approvals</Text>
-            <TouchableOpacity
-              onPress={() => setDocumentApprovals(!documentApprovals)}
-              style={[
-                styles.toggleSwitch,
-                documentApprovals && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  documentApprovals && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Buttons */}
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
@@ -296,6 +560,154 @@ export default function ClientProfile({ onClose }) {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Notifications Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Notifications</Text>
+          {/* Document Reminders */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Document Reminders</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("documentReminders")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.documentReminders && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.documentReminders && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Document Approvals */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Document Approvals</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("documentApprovals")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.documentApprovals && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.documentApprovals && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* New Messages */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>New Messages</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("newMessages")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.newMessages && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.newMessages && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Marketing Notifications */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Marketing Notifications</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("marketingNotifications")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.marketingNotifications &&
+                  styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.marketingNotifications &&
+                    styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Email Notifications Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Email Notifications</Text>
+          <Text style={styles.cardSubtitle}>
+            Manage what emails you receive from us
+          </Text>
+
+          {/* Terms of Service Updates */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Terms of Service Updates</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("termsOfServiceEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.termsOfServiceEmails && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.termsOfServiceEmails &&
+                    styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Status Updates */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Status Updates</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("statusUpdateEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.statusUpdateEmails && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.statusUpdateEmails && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Marketing Emails */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Marketing Emails</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("marketingEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.marketingEmails && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.marketingEmails && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -364,6 +776,115 @@ export default function ClientProfile({ onClose }) {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Email Change Modal */}
+      <Modal visible={showEmailModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {emailChangeStep === 1
+                  ? "Change Email Address"
+                  : emailChangeStep === 2
+                  ? "Verify Your Email"
+                  : "Email Updated!"}
+              </Text>
+              {!emailChangeSuccess && (
+                <TouchableOpacity
+                  onPress={handleEmailModalClose}
+                  style={styles.modalCloseButton}
+                >
+                  <Text style={styles.modalCloseText}>×</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Error Message */}
+            {emailError ? (
+              <Text style={styles.errorMessage}>{emailError}</Text>
+            ) : null}
+
+            {/* Step 1: Enter New Email */}
+            {emailChangeStep === 1 && (
+              <>
+                <Text style={styles.modalSubtitle}>
+                  Enter your new email address below. We'll send a verification
+                  code to this address.
+                </Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="New Email Address"
+                  keyboardType="email-address"
+                  value={newEmail}
+                  onChangeText={(text) => setNewEmail(text)}
+                  autoCapitalize="none"
+                  autoFocus={true}
+                />
+                <TouchableOpacity
+                  style={styles.fullWidthButton}
+                  onPress={handleEmailSubmit}
+                >
+                  <Text style={styles.buttonText}>Continue</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Step 2: Enter OTP */}
+            {emailChangeStep === 2 && (
+              <>
+                <Text style={styles.modalSubtitle}>
+                  We've sent a verification code to {newEmail}. Enter it below to verify your email address.
+                </Text>
+                <TextInput
+                  ref={otpInputRef}
+                  style={styles.otpInput}
+                  placeholder="Enter verification code"
+                  keyboardType="numeric"
+                  value={emailOtp}
+                  onChangeText={(text) => setEmailOtp(text)}
+                  maxLength={6}
+                />
+                <TouchableOpacity
+                  style={styles.fullWidthButton}
+                  onPress={handleOtpSubmit}
+                >
+                  <Text style={styles.buttonText}>Verify Email</Text>
+                </TouchableOpacity>
+                
+                {/* Resend button with countdown */}
+                <TouchableOpacity
+                  style={[
+                    styles.resendButton,
+                    countdown > 0 && styles.resendButtonDisabled
+                  ]}
+                  onPress={handleResendOtp}
+                  disabled={countdown > 0}
+                >
+                  <Text style={[
+                    styles.resendButtonText,
+                    countdown > 0 && styles.resendButtonTextDisabled
+                  ]}>
+                    {countdown > 0 
+                      ? `Resend code in ${countdown} seconds` 
+                      : "Resend verification code"}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Step 3: Success */}
+            {emailChangeStep === 3 && (
+              <View style={styles.successContainer}>
+                <Ionicons name="checkmark-circle" size={60} color="#019B8E" />
+                <Text style={styles.successText}>
+                  Email successfully updated!
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </Modal>
     </View>
@@ -585,5 +1106,139 @@ const styles = StyleSheet.create({
     color: "red",
     marginBottom: 10,
     textAlign: "center",
+  },
+
+  // Success notification
+  saveNotification: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: "#019B8E",
+    padding: 10,
+    borderRadius: 5,
+    zIndex: 100,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  saveNotificationText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+
+  // Email Field Styles
+  emailContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  emailInput: {
+    flex: 1,
+    marginBottom: 0,
+    backgroundColor: "#F8F8F8", // Slightly grayed out to indicate non-editable
+  },
+  changeEmailButton: {
+    backgroundColor: "#019B8E",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    marginLeft: 10,
+  },
+  changeEmailText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  // Modal Styles
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 20,
+  },
+  modalCloseButton: {
+    padding: 5,
+  },
+  modalCloseText: {
+    fontSize: 24,
+    color: "#23231A",
+  },
+  fullWidthButton: {
+    backgroundColor: "#019B8E",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 10,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  textButton: {
+    marginTop: 15,
+    alignSelf: "center",
+  },
+  textButtonLabel: {
+    color: "#019B8E",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  otpInput: {
+    borderWidth: 1,
+    borderColor: "#C4C4C4",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    fontSize: 18,
+    textAlign: "center",
+    letterSpacing: 8,
+    marginBottom: 20,
+  },
+  successContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  successText: {
+    fontSize: 18,
+    color: "#23231A",
+    fontWeight: "600",
+    marginTop: 15,
+  },
+  // Resend button styles
+  resendButton: {
+    marginTop: 15,
+    borderWidth: 2,
+    borderColor: "#019B8E",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    alignItems: "center",
+  },
+  resendButtonDisabled: {
+    borderColor: "#C4C4C4",
+  },
+  resendButtonText: {
+    color: "#019B8E",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  resendButtonTextDisabled: {
+    color: "#C4C4C4",
   },
 });
