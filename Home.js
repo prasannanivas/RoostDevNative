@@ -24,6 +24,7 @@ const Home = () => {
         applyingbehalf: data.applyingbehalf,
         employmentStatus: data.employmentStatus,
         ownAnotherProperty: data.ownAnotherProperty,
+        otherDetails: data.otherDetails,
       });
       setShowQuestionnaire(
         !data.applyingbehalf ||
@@ -57,7 +58,11 @@ const Home = () => {
     <>
       {auth.client ? (
         <ClientProvider>
-          {showQuestionnaire ? <ClientQuestionaire /> : <ClientHome />}
+          {showQuestionnaire ? (
+            <ClientQuestionaire />
+          ) : (
+            <ClientHome questionnaireData={clientQuestionaire} />
+          )}
         </ClientProvider>
       ) : auth.realtor ? (
         <RealtorProvider>

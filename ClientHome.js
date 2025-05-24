@@ -25,7 +25,7 @@ import { useNotification } from "./context/NotificationContext";
 import ClientProfile from "./ClientProfile";
 import NotificationComponent from "./NotificationComponent";
 
-const ClientHome = () => {
+const ClientHome = ({ questionnaireData }) => {
   const { auth } = useAuth();
   const {
     documents: contextDocuments,
@@ -37,6 +37,8 @@ const ClientHome = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showQuestionnairePreview, setShowQuestionnairePreview] =
+    useState(false);
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -429,6 +431,19 @@ const ClientHome = () => {
       </TouchableOpacity>
     );
   };
+
+  // Add this right after the renderNotificationButton function
+  const renderQuestionnaireButton = () => {
+    return (
+      <TouchableOpacity
+        style={styles.questionnaireButton}
+        onPress={() => setShowQuestionnairePreview(true)}
+      >
+        <Ionicons name="document-text" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+    );
+  };
+
   // Render row
   const renderDocumentRow = (doc) => {
     const status = doc.status?.toLowerCase();
@@ -498,6 +513,90 @@ const ClientHome = () => {
     );
   };
 
+  // Component for displaying the questionnaire in read-only mode
+  const QuestionnairePreview = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={showQuestionnairePreview}
+      onRequestClose={() => setShowQuestionnairePreview(false)}
+    >
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "center",
+          padding: 20,
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 10,
+            padding: 20,
+            maxHeight: "80%",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 15,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <h3>Your Questionnaire Responses</h3>
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowQuestionnairePreview(false)}
+            >
+              <Ionicons name="close-circle" size={24} color="#555" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ marginBottom: 15 }}>
+            <View style={{ marginBottom: 10 }}>
+              <h4>Applying on Behalf:</h4>
+              <p>
+                {questionnaireData.applyingbehalf === "other"
+                  ? `Me and ${questionnaireData.otherDetails?.name}`
+                  : "Self" || "Not specified"}
+              </p>
+            </View>
+
+            <View style={{ marginBottom: 10 }}>
+              <h4>Employment Status:</h4>
+              <p>{questionnaireData.employmentStatus || "Not specified"}</p>
+            </View>
+
+            <View style={{ marginBottom: 10 }}>
+              <h4>Own Another Property:</h4>
+              <p>{questionnaireData.ownAnotherProperty ? "Yes" : "No"}</p>
+            </View>
+
+            {questionnaireData.otherDetails && (
+              <View>
+                <h4> {questionnaireData.otherDetails.name}'s Details:</h4>
+                <p>
+                  Relationship:{" "}
+                  {questionnaireData.otherDetails.relationship || "N/A"}
+                </p>
+                <p>
+                  Employment details:{" "}
+                  {questionnaireData.otherDetails.employmentStatus || "N/A"}
+                </p>
+                <p>
+                  Own another property:{" "}
+                  {questionnaireData.otherDetails.ownAnotherProperty || "N/A"}
+                </p>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Top Header */}
@@ -524,6 +623,7 @@ const ClientHome = () => {
           </Text>
         </TouchableOpacity>
 
+        {renderQuestionnaireButton()}
         {renderNotificationButton()}
 
         <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
@@ -806,6 +906,9 @@ const ClientHome = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Modal for questionnaire preview */}
+      <QuestionnairePreview />
 
       <NotificationComponent
         visible={showNotifications}
@@ -1255,5 +1358,10 @@ const styles = StyleSheet.create({
   },
   pillDisabled: {
     opacity: 0.7,
+  },
+  questionnaireButton: {
+    padding: 8,
+    marginRight: 8,
+    position: "relative",
   },
 });
