@@ -24,6 +24,8 @@ import { useClient } from "./context/ClientContext";
 import { useNotification } from "./context/NotificationContext";
 import ClientProfile from "./ClientProfile";
 import NotificationComponent from "./NotificationComponent";
+import { QuestionnaireProvider } from "./context/QuestionnaireContext";
+import Questionnaire from "./components/questionnaire/Questionnaire";
 
 const ClientHome = ({ questionnaireData }) => {
   const { auth } = useAuth();
@@ -39,6 +41,7 @@ const ClientHome = ({ questionnaireData }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showQuestionnairePreview, setShowQuestionnairePreview] =
     useState(false);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -431,16 +434,26 @@ const ClientHome = ({ questionnaireData }) => {
       </TouchableOpacity>
     );
   };
-
   // Add this right after the renderNotificationButton function
   const renderQuestionnaireButton = () => {
     return (
-      <TouchableOpacity
-        style={styles.questionnaireButton}
-        onPress={() => setShowQuestionnairePreview(true)}
-      >
-        <Ionicons name="document-text" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+      <View style={styles.questionnaireButtonContainer}>
+        <TouchableOpacity
+          style={styles.questionnaireButton}
+          onPress={() => setShowQuestionnairePreview(true)}
+        >
+          <Ionicons name="document-text" size={24} color="#FFFFFF" />
+          <Text style={styles.questionnaireButtonText}>Preview</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
+          onPress={() => setShowQuestionnaire(true)}
+        >
+          <Ionicons name="play" size={24} color="#FFFFFF" />
+          <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -545,7 +558,9 @@ const ClientHome = ({ questionnaireData }) => {
             }}
           >
             <View style={{ flex: 1 }}>
-              <h3>Your Questionnaire Responses</h3>
+              <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                Your Questionnaire Responses
+              </Text>
             </View>
             <TouchableOpacity
               onPress={() => setShowQuestionnairePreview(false)}
@@ -553,42 +568,59 @@ const ClientHome = ({ questionnaireData }) => {
               <Ionicons name="close-circle" size={24} color="#555" />
             </TouchableOpacity>
           </View>
-
           <View style={{ marginBottom: 15 }}>
             <View style={{ marginBottom: 10 }}>
-              <h4>Applying on Behalf:</h4>
-              <p>
+              <Text
+                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
+              >
+                Applying on Behalf:
+              </Text>
+              <Text>
                 {questionnaireData.applyingbehalf === "other"
                   ? `Me and ${questionnaireData.otherDetails?.name}`
-                  : "Self" || "Not specified"}
-              </p>
+                  : "Self"}
+              </Text>
             </View>
 
             <View style={{ marginBottom: 10 }}>
-              <h4>Employment Status:</h4>
-              <p>{questionnaireData.employmentStatus || "Not specified"}</p>
+              <Text
+                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
+              >
+                Employment Status:
+              </Text>
+              <Text>
+                {questionnaireData.employmentStatus || "Not specified"}
+              </Text>
             </View>
 
             <View style={{ marginBottom: 10 }}>
-              <h4>Own Another Property:</h4>
-              <p>{questionnaireData.ownAnotherProperty ? "Yes" : "No"}</p>
+              <Text
+                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
+              >
+                Own Another Property:
+              </Text>
+              <Text>{questionnaireData.ownAnotherProperty ? "Yes" : "No"}</Text>
             </View>
 
             {questionnaireData.otherDetails && (
               <View>
-                <h4> {questionnaireData.otherDetails.name}'s Details:</h4>
-                <p>
-                  Relationship:{" "}
+                <Text
+                  style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
+                >
+                  {questionnaireData.otherDetails.name}'s Details:
+                </Text>
+                <Text>
+                  Relationship:
                   {questionnaireData.otherDetails.relationship || "N/A"}
-                </p>
-                <p>
-                  Employment details:{" "}
+                </Text>
+                <Text>
+                  Employment details:
                   {questionnaireData.otherDetails.employmentStatus || "N/A"}
-                </p>
-                <p>
-                  Own another property:{" "}
+                </Text>
+                <Text>
+                  Own another property:
                   {questionnaireData.otherDetails.ownAnotherProperty || "N/A"}
-                </p>
+                </Text>
               </View>
             )}
           </View>
@@ -630,7 +662,6 @@ const ClientHome = ({ questionnaireData }) => {
           <Text style={styles.helpButtonText}>HELP</Text>
         </TouchableOpacity>
       </View>
-
       <ScrollView
         style={styles.mainContent}
         refreshControl={
@@ -685,7 +716,6 @@ const ClientHome = ({ questionnaireData }) => {
           )}
         </View>
       </ScrollView>
-
       {/* Profile Panel */}
       <Modal
         visible={showProfile}
@@ -699,7 +729,6 @@ const ClientHome = ({ questionnaireData }) => {
           </View>
         </View>
       </Modal>
-
       {/* Upload Modal */}
       <Modal
         visible={showModal}
@@ -816,7 +845,6 @@ const ClientHome = ({ questionnaireData }) => {
           </View>
         </View>
       </Modal>
-
       {/* Complete Document Modal */}
       <Modal
         visible={showCompleteModal}
@@ -852,7 +880,6 @@ const ClientHome = ({ questionnaireData }) => {
           </View>
         </View>
       </Modal>
-
       {/* Submitted Document Modal */}
       <Modal
         visible={showSubmittedModal}
@@ -906,10 +933,23 @@ const ClientHome = ({ questionnaireData }) => {
           </View>
         </View>
       </Modal>
-
       {/* Modal for questionnaire preview */}
       <QuestionnairePreview />
-
+      {/* Modal for testing the actual questionnaire */}
+      <Modal
+        visible={showQuestionnaire}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowQuestionnaire(false)}
+      >
+        <QuestionnaireProvider>
+          <Questionnaire
+            navigation={{
+              goBack: () => setShowQuestionnaire(false),
+            }}
+          />
+        </QuestionnaireProvider>
+      </Modal>
       <NotificationComponent
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
@@ -1359,9 +1399,26 @@ const styles = StyleSheet.create({
   pillDisabled: {
     opacity: 0.7,
   },
+  questionnaireButtonContainer: {
+    flexDirection: "row",
+    gap: 8,
+  },
   questionnaireButton: {
+    backgroundColor: "#019B8E",
     padding: 8,
-    marginRight: 8,
-    position: "relative",
+    borderRadius: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    minWidth: 80,
+    justifyContent: "center",
+  },
+  testQuestionnaireButton: {
+    backgroundColor: "#FF6B35",
+  },
+  questionnaireButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "500",
   },
 });
