@@ -27,9 +27,13 @@ const TextInput = ({
           {label}
           {isRequired && <Text style={styles.requiredIndicator}> *</Text>}
         </Text>
-      )}
+      )}{" "}
       <View style={[styles.inputContainer, error && styles.errorContainer]}>
-        {prefix && <Text style={styles.prefix}>{prefix}</Text>}
+        {prefix && (
+          <View style={styles.prefix}>
+            <Text style={styles.prefixText}>{prefix}</Text>
+          </View>
+        )}
         <RNTextInput
           style={[
             styles.input,
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
     borderWidth: 1,
     borderColor: "#D0D0D0",
     borderRadius: 25, // More rounded corners to match design
@@ -78,14 +82,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    overflow: "hidden", // Ensure prefix background doesn't overflow border radius
   },
   errorContainer: {
     borderColor: "#FF3B30",
   },
   prefix: {
     fontSize: 16,
-    color: "#23231A",
-    paddingLeft: 16,
+    color: "#666666",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontWeight: "500",
+    backgroundColor: "#F5F5F5",
+    borderRightWidth: 1,
+    borderRightColor: "#D0D0D0",
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 50,
+  },
+  prefixText: {
+    fontSize: 16,
+    color: "#666666",
     fontWeight: "500",
   },
   input: {
@@ -96,7 +113,7 @@ const styles = StyleSheet.create({
     color: "#23231A",
   },
   inputWithPrefix: {
-    paddingLeft: 4,
+    paddingLeft: 12, // Reduced padding when prefix is present
   },
   multilineInput: {
     paddingTop: 14,

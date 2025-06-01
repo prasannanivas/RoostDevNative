@@ -7,6 +7,7 @@ export const QuestionnaireProvider = ({ children }) => {
   const [responses, setResponses] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [visitedQuestions, setVisitedQuestions] = useState(new Set([1]));
+  const [questionHistory, setQuestionHistory] = useState([1]); // Track actual navigation order
 
   const updateResponse = (questionId, response) => {
     setResponses((prev) => ({
@@ -14,32 +15,33 @@ export const QuestionnaireProvider = ({ children }) => {
       [questionId]: response,
     }));
   };
-
   const goToNextQuestion = (nextQuestionId) => {
     if (nextQuestionId) {
       setCurrentQuestionId(nextQuestionId);
       setVisitedQuestions((prev) => new Set([...prev, nextQuestionId]));
+      setQuestionHistory((prev) => [...prev, nextQuestionId]);
     }
   };
 
   const goToPreviousQuestion = () => {
-    const visitedArray = Array.from(visitedQuestions).sort((a, b) => a - b);
-    const currentIndex = visitedArray.indexOf(currentQuestionId);
-    if (currentIndex > 0) {
-      const previousQuestionId = visitedArray[currentIndex - 1];
+    if (questionHistory.length > 1) {
+      const newHistory = [...questionHistory];
+      newHistory.pop(); // Remove current question
+      const previousQuestionId = newHistory[newHistory.length - 1];
       setCurrentQuestionId(previousQuestionId);
+      setQuestionHistory(newHistory);
     }
   };
 
   const markAsCompleted = () => {
     setIsCompleted(true);
   };
-
   const resetQuestionnaire = () => {
     setCurrentQuestionId(1);
     setResponses({});
     setIsCompleted(false);
     setVisitedQuestions(new Set([1]));
+    setQuestionHistory([1]);
   };
 
   const getProgress = () => {
@@ -58,7 +60,7 @@ export const QuestionnaireProvider = ({ children }) => {
         markAsCompleted,
         resetQuestionnaire,
         getProgress,
-        canGoBack: visitedQuestions.size > 1 && !isCompleted,
+        canGoBack: questionHistory.length > 1 && !isCompleted,
       }}
     >
       {children}

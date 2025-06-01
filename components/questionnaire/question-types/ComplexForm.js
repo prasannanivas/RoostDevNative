@@ -16,18 +16,10 @@ import {
 } from "../../../utils/questionnaireUtils";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
 import { getProfileInitialsForQuestion } from "../../../data/questionnaireData";
-import {
-  getInitialsCircleStyle,
-  getInitialsTextStyle,
-} from "../../../utils/initialsUtils";
-
 const ComplexForm = ({ question, value, onValueChange }) => {
   const { responses } = useQuestionnaire();
   const [formData, setFormData] = useState(value || {});
   const previousFormData = useRef(value || {});
-
-  // Get dynamic profile initials
-  const profileData = getProfileInitialsForQuestion(responses, question.id);
 
   useEffect(() => {
     // Only call onValueChange if formData has actually changed
@@ -110,6 +102,7 @@ const ComplexForm = ({ question, value, onValueChange }) => {
             onChangeText={(text) => handleFieldChange(field.key, text)}
             placeholder={field.placeholder}
             keyboardType={field.keyboard || "default"}
+            prefix={field.prefix}
           />
         );
     }
@@ -137,8 +130,6 @@ const ComplexForm = ({ question, value, onValueChange }) => {
       {question.text && (
         <Text style={styles.questionText}>{question.text}</Text>
       )}
-
-      {/* Removed initials display here since they're now shown in the header */}
 
       <View style={styles.formContainer}>
         {question.sections

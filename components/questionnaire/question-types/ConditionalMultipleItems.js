@@ -9,10 +9,6 @@ import {
 import TextInput from "../../common/TextInput";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
 import { getProfileInitialsForQuestion } from "../../../data/questionnaireData";
-import {
-  getInitialsCircleStyle,
-  getInitialsTextStyle,
-} from "../../../utils/initialsUtils";
 
 const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
   const { responses } = useQuestionnaire();
@@ -65,7 +61,6 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
     const newItems = items.filter((_, index) => index !== itemIndex);
     setItems(newItems);
   };
-
   const renderItemField = (field, itemIndex, itemValue) => {
     switch (field.type) {
       case "text":
@@ -80,6 +75,7 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
             }
             placeholder={field.placeholder}
             keyboardType={field.keyboard || "default"}
+            prefix={field.prefix}
             style={styles.field}
           />
         );
@@ -116,21 +112,6 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.questionText}>{question.text}</Text>
-
-      {(question.profileInitials || profileData.initials) && (
-        <View style={styles.profileContainer}>
-          <View
-            style={[
-              styles.profileCircle,
-              getInitialsCircleStyle(profileData.userType, 60),
-            ]}
-          >
-            <Text style={[styles.profileInitials, getInitialsTextStyle(18)]}>
-              {profileData.initials || question.profileInitials}
-            </Text>
-          </View>
-        </View>
-      )}
 
       <View style={styles.formContainer}>
         {/* Initial toggle field */}

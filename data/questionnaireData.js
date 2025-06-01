@@ -9,8 +9,8 @@ import { generateInitials } from "../utils/initialsUtils";
 export const getProfileInitialsForQuestion = (responses, questionId) => {
   // Questions related to primary applicant (Self)
 
-  // Questions related to co-signee
-  const coSigneeQuestions = [103, 105, 115, 117, 119];
+  // Questions related to co-signee (now all at the end of questionnaire)
+  const coSigneeQuestions = [101, 103, 105, 110, 111, 112, 113, 115, 117, 119];
 
   // Determine user type based on question
   let userType = "self";
@@ -384,6 +384,7 @@ const questions = [
         label: "Value",
         type: "text",
         keyboard: "numeric",
+        prefix: "$",
       },
     ],
     addButtonText: "Add another",
@@ -412,6 +413,7 @@ const questions = [
           label: "Value",
           type: "text",
           keyboard: "numeric",
+          prefix: "$",
         },
         {
           key: "planningSelling",
@@ -438,7 +440,7 @@ const questions = [
           label: "Amount",
           type: "text",
           keyboard: "numeric",
-
+          prefix: "$",
           condition: { key: "hasMortgage", value: "yes" },
         },
       ],
@@ -456,19 +458,6 @@ const questions = [
       { key: "lastName", label: "Last Name", required: true },
       { key: "email", label: "Email", keyboard: "email-address" },
       { key: "phone", label: "Phone", keyboard: "phone-pad" },
-    ],
-    nextQuestion: 101,
-  },
-  {
-    id: 101,
-    page: 101,
-    text: "What are your co-signer's details?",
-    type: "form",
-    fields: [
-      { key: "coFirstName", label: "First Name", required: true },
-      { key: "coLastName", label: "Last Name", required: true },
-      { key: "coEmail", label: "Email", keyboard: "email-address" },
-      { key: "coPhone", label: "Phone", keyboard: "phone-pad" },
     ],
     nextQuestion: 102,
   },
@@ -492,41 +481,6 @@ const questions = [
           { key: "sinNumber", label: "SIN Number" },
           {
             key: "dependents",
-            label: "Number of Dependents",
-            type: "select",
-            options: [
-              { value: "0", label: "0" },
-              { value: "1", label: "1" },
-              { value: "2", label: "2" },
-              { value: "3", label: "3" },
-              { value: "4+", label: "4+" },
-            ],
-          },
-        ],
-      },
-    ],
-    nextQuestion: 103,
-  },
-  {
-    id: 103,
-    page: 103,
-    text: "What is [coFirstName]'s details?", // This would be dynamically populated with co-signer's name
-    type: "complexForm",
-    profileInitials: "", // Would be dynamically generated from co-signer's name
-    sections: [
-      {
-        title: "Date of birth",
-        fields: [
-          { key: "coBirthMonth", label: "Month", type: "select" },
-          { key: "coBirthDay", label: "Day", type: "select" },
-          { key: "coBirthYear", label: "Year", type: "select" },
-        ],
-      },
-      {
-        fields: [
-          { key: "coSinNumber", label: "SIN Number" },
-          {
-            key: "coDependents",
             label: "Number of Dependents",
             type: "select",
             options: [
@@ -572,38 +526,6 @@ const questions = [
         ],
       },
     ],
-    nextQuestion: 105,
-  },
-  {
-    id: 105,
-    page: 105,
-    text: "Where is [coFirstName] currently living?", // Dynamically populated
-    type: "complexForm",
-    profileInitials: "",
-    sections: [
-      {
-        fields: [
-          { key: "coAddress", label: "Address", type: "text" },
-          {
-            key: "coLivingStatus",
-            label: "Living Status",
-            type: "select",
-            options: [
-              { value: "own", label: "I Own" },
-              { value: "rent", label: "I Rent" },
-              { value: "with_parents", label: "I Live with Parents" },
-            ],
-          },
-        ],
-      },
-      {
-        title: "How long have they lived here?",
-        fields: [
-          { key: "coMonths", label: "Month", type: "select" },
-          { key: "coYears", label: "Year", type: "select" },
-        ],
-      },
-    ],
     nextQuestion: 106,
   },
   {
@@ -646,7 +568,7 @@ const questions = [
         ],
       },
     ],
-    nextQuestion: 110, // Skip to co-signer income question
+    nextQuestion: 108, // Skip to co-signer income question
   },
   {
     id: 108,
@@ -677,7 +599,7 @@ const questions = [
         ],
       },
     ],
-    nextQuestion: 110, // Skip to co-signer income question
+    nextQuestion: 109, // Skip to co-signer income question
   },
   {
     id: 109,
@@ -688,6 +610,197 @@ const questions = [
     placeholder: "Enter amount",
     prefix: "$",
     keyboard: "numeric",
+    nextQuestion: 114,
+  },
+  {
+    id: 114,
+    page: 114,
+    text: "Who do you bank with?",
+    type: "dropdown",
+    profileInitials: "",
+    placeholder: "Bank Name",
+    options: [
+      { value: "td", label: "TD Canada Trust" },
+      { value: "rbc", label: "Royal Bank of Canada (RBC)" },
+      { value: "bmo", label: "Bank of Montreal (BMO)" },
+      { value: "scotiabank", label: "Scotiabank" },
+      { value: "cibc", label: "CIBC" },
+      { value: "national", label: "National Bank" },
+      { value: "desjardins", label: "Desjardins" },
+      { value: "tangerine", label: "Tangerine" },
+      { value: "vancity", label: "Vancity" },
+      { value: "atb", label: "ATB Financial" },
+      { value: "simplii", label: "Simplii" },
+      { value: "meridian", label: "Meridian" },
+      { value: "laurentian", label: "Laurentian" },
+      { value: "coast_capital", label: "Coast Capital" },
+      { value: "hsbc", label: "HSBC" },
+      { value: "eq", label: "EQ Bank" },
+      { value: "other", label: "Other" },
+    ],
+    nextQuestion: 116,
+  },
+  {
+    id: 116,
+    page: 116,
+    text: "Do you have any assets?",
+    type: "conditionalMultipleItems",
+    profileInitials: "",
+    initialField: {
+      key: "hasAssets",
+      type: "toggleButtonGroup",
+      options: [
+        { value: "no", label: "Nope" },
+        { value: "yes", label: "Yes" },
+      ],
+    },
+    itemFields: [
+      { key: "item", label: "Item", type: "text" },
+      {
+        key: "value",
+        label: "Value",
+        type: "text",
+        keyboard: "numeric",
+        prefix: "$",
+      },
+    ],
+    addButtonText: "Add another",
+    nextQuestion: 118,
+  },
+  {
+    id: 118,
+    page: 118,
+    text: "Do you have any other properties?",
+    type: "conditionalForm",
+    profileInitials: "",
+    initialField: {
+      key: "hasOtherProperties",
+      type: "toggleButtonGroup",
+      options: [
+        { value: "no", label: "Nope" },
+        { value: "yes", label: "Yes" },
+      ],
+    },
+    conditionalFields: {
+      yes: [
+        { key: "address", label: "Address", type: "text" },
+        {
+          key: "value",
+          label: "Value",
+          type: "text",
+          keyboard: "numeric",
+          prefix: "$",
+        },
+        {
+          key: "planningSelling",
+          label: "Planning on selling?",
+          type: "toggleButtonGroup",
+          options: [
+            { value: "no", label: "No" },
+            { value: "yes", label: "Yes" },
+          ],
+        },
+        {
+          key: "hasMortgage",
+          label: "Does it have a mortgage?",
+          type: "toggleButtonGroup",
+          options: [
+            { value: "no", label: "No" },
+            { value: "yes", label: "Yes" },
+          ],
+        },
+        {
+          key: "mortgageAmount",
+          label: "Amount",
+          type: "text",
+          keyboard: "numeric",
+          prefix: "$",
+          condition: { key: "hasMortgage", value: "yes" },
+        },
+      ],
+    },
+    nextQuestion: 101,
+  },
+  // === CO-SIGNER QUESTIONS SECTION ===
+  // All co-signer questions are now grouped together at the end
+  {
+    id: 101,
+    page: 101,
+    text: "What are your co-signer's details?",
+    type: "form",
+    fields: [
+      { key: "coFirstName", label: "First Name", required: true },
+      { key: "coLastName", label: "Last Name", required: true },
+      { key: "coEmail", label: "Email", keyboard: "email-address" },
+      { key: "coPhone", label: "Phone", keyboard: "phone-pad" },
+    ],
+    nextQuestion: 103,
+  },
+  {
+    id: 103,
+    page: 103,
+    text: "What is [coFirstName]'s details?", // This would be dynamically populated with co-signer's name
+    type: "complexForm",
+    profileInitials: "", // Would be dynamically generated from co-signer's name
+    sections: [
+      {
+        title: "Date of birth",
+        fields: [
+          { key: "coBirthMonth", label: "Month", type: "select" },
+          { key: "coBirthDay", label: "Day", type: "select" },
+          { key: "coBirthYear", label: "Year", type: "select" },
+        ],
+      },
+      {
+        fields: [
+          { key: "coSinNumber", label: "SIN Number" },
+          {
+            key: "coDependents",
+            label: "Number of Dependents",
+            type: "select",
+            options: [
+              { value: "0", label: "0" },
+              { value: "1", label: "1" },
+              { value: "2", label: "2" },
+              { value: "3", label: "3" },
+              { value: "4+", label: "4+" },
+            ],
+          },
+        ],
+      },
+    ],
+    nextQuestion: 105,
+  },
+  {
+    id: 105,
+    page: 105,
+    text: "Where is [coFirstName] currently living?", // Dynamically populated
+    type: "complexForm",
+    profileInitials: "",
+    sections: [
+      {
+        fields: [
+          { key: "coAddress", label: "Address", type: "text" },
+          {
+            key: "coLivingStatus",
+            label: "Living Status",
+            type: "select",
+            options: [
+              { value: "own", label: "I Own" },
+              { value: "rent", label: "I Rent" },
+              { value: "with_parents", label: "I Live with Parents" },
+            ],
+          },
+        ],
+      },
+      {
+        title: "How long have they lived here?",
+        fields: [
+          { key: "coMonths", label: "Month", type: "select" },
+          { key: "coYears", label: "Year", type: "select" },
+        ],
+      },
+    ],
     nextQuestion: 110,
   },
   {
@@ -730,7 +843,7 @@ const questions = [
         ],
       },
     ],
-    nextQuestion: 114, // Continue with banking questions
+    nextQuestion: 115, // Continue with banking questions
   },
   {
     id: 112,
@@ -761,7 +874,7 @@ const questions = [
         ],
       },
     ],
-    nextQuestion: 114, // Continue with banking questions
+    nextQuestion: 115, // Continue with banking questions
   },
   {
     id: 113,
@@ -772,34 +885,6 @@ const questions = [
     placeholder: "Enter amount",
     prefix: "$",
     keyboard: "numeric",
-    nextQuestion: 114,
-  },
-  {
-    id: 114,
-    page: 114,
-    text: "Who do you bank with?",
-    type: "dropdown",
-    profileInitials: "",
-    placeholder: "Bank Name",
-    options: [
-      { value: "td", label: "TD Canada Trust" },
-      { value: "rbc", label: "Royal Bank of Canada (RBC)" },
-      { value: "bmo", label: "Bank of Montreal (BMO)" },
-      { value: "scotiabank", label: "Scotiabank" },
-      { value: "cibc", label: "CIBC" },
-      { value: "national", label: "National Bank" },
-      { value: "desjardins", label: "Desjardins" },
-      { value: "tangerine", label: "Tangerine" },
-      { value: "vancity", label: "Vancity" },
-      { value: "atb", label: "ATB Financial" },
-      { value: "simplii", label: "Simplii" },
-      { value: "meridian", label: "Meridian" },
-      { value: "laurentian", label: "Laurentian" },
-      { value: "coast_capital", label: "Coast Capital" },
-      { value: "hsbc", label: "HSBC" },
-      { value: "eq", label: "EQ Bank" },
-      { value: "other", label: "Other" },
-    ],
     nextQuestion: 115,
   },
   {
@@ -829,32 +914,6 @@ const questions = [
       { value: "other", label: "Other" },
       { value: "same", label: "Same as primary applicant" },
     ],
-    nextQuestion: 116,
-  },
-  {
-    id: 116,
-    page: 116,
-    text: "Do you have any assets?",
-    type: "conditionalMultipleItems",
-    profileInitials: "",
-    initialField: {
-      key: "hasAssets",
-      type: "toggleButtonGroup",
-      options: [
-        { value: "no", label: "Nope" },
-        { value: "yes", label: "Yes" },
-      ],
-    },
-    itemFields: [
-      { key: "item", label: "Item", type: "text" },
-      {
-        key: "value",
-        label: "Value",
-        type: "text",
-        keyboard: "numeric",
-      },
-    ],
-    addButtonText: "Add another",
     nextQuestion: 117,
   },
   {
@@ -878,61 +937,10 @@ const questions = [
         label: "Value",
         type: "text",
         keyboard: "numeric",
+        prefix: "$",
       },
     ],
     addButtonText: "Add another",
-    nextQuestion: 118,
-  },
-  {
-    id: 118,
-    page: 118,
-    text: "Do you have any other properties?",
-    type: "conditionalForm",
-    profileInitials: "",
-    initialField: {
-      key: "hasOtherProperties",
-      type: "toggleButtonGroup",
-      options: [
-        { value: "no", label: "Nope" },
-        { value: "yes", label: "Yes" },
-      ],
-    },
-    conditionalFields: {
-      yes: [
-        { key: "address", label: "Address", type: "text" },
-        {
-          key: "value",
-          label: "Value",
-          type: "text",
-          keyboard: "numeric",
-        },
-        {
-          key: "planningSelling",
-          label: "Planning on selling?",
-          type: "toggleButtonGroup",
-          options: [
-            { value: "no", label: "No" },
-            { value: "yes", label: "Yes" },
-          ],
-        },
-        {
-          key: "hasMortgage",
-          label: "Does it have a mortgage?",
-          type: "toggleButtonGroup",
-          options: [
-            { value: "no", label: "No" },
-            { value: "yes", label: "Yes" },
-          ],
-        },
-        {
-          key: "mortgageAmount",
-          label: "Amount",
-          type: "text",
-          keyboard: "numeric",
-          condition: { key: "hasMortgage", value: "yes" },
-        },
-      ],
-    },
     nextQuestion: 119,
   },
   {
@@ -957,6 +965,7 @@ const questions = [
           label: "Value",
           type: "text",
           keyboard: "numeric",
+          prefix: "$",
         },
         {
           key: "coPlanningSelling",
@@ -981,20 +990,14 @@ const questions = [
           label: "Amount",
           type: "text",
           keyboard: "numeric",
+          prefix: "$",
           condition: { key: "coHasMortgage", value: "yes" },
         },
       ],
     },
-    nextQuestion: 120,
-  },
-  {
-    id: 120,
-    page: 120,
-    text: "Almost done! Do you have any questions for us?",
-    type: "textArea",
-    placeholder: "Your questions or comments (optional)",
     nextQuestion: 121,
   },
+  // === END CO-SIGNER QUESTIONS SECTION ===
   {
     id: 121,
     page: 121,
