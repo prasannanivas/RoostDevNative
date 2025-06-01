@@ -50,9 +50,48 @@ export default function EmailVerificationScreen({ navigation, route }) {
       if (timer) clearInterval(timer);
     };
   }, [countdown]);
-
   const handleDigitChange = (text, index) => {
-    // Only take the first character if user types multiple
+    // Check if multiple characters were pasted
+    if (text.length > 1) {
+      // Handle paste operation - extract only numeric characters
+      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
+
+      // If it's a full 6-digit code, clear all fields and start from beginning
+      if (pastedDigits.length === 6) {
+        const newDigits = pastedDigits.split("");
+        setDigits(newDigits);
+
+        // Focus the last field to indicate completion
+        if (inputRefs.current[5]) {
+          inputRefs.current[5].focus();
+        }
+      } else {
+        // If partial code, fill from current position
+        const updatedDigits = [...digits];
+
+        for (let i = 0; i < pastedDigits.length && index + i < 6; i++) {
+          updatedDigits[index + i] = pastedDigits[i];
+        }
+
+        setDigits(updatedDigits);
+
+        // Focus the next empty field or the last filled field
+        const nextEmptyIndex = updatedDigits.findIndex(
+          (digit, idx) => idx > index && !digit
+        );
+        const targetIndex =
+          nextEmptyIndex !== -1
+            ? nextEmptyIndex
+            : Math.min(index + pastedDigits.length, 5);
+
+        if (targetIndex < inputRefs.current.length) {
+          inputRefs.current[targetIndex].focus();
+        }
+      }
+      return;
+    }
+
+    // Handle single character input
     const newDigit = text.slice(0, 1);
     const updatedDigits = [...digits];
     updatedDigits[index] = newDigit;
@@ -123,48 +162,6 @@ export default function EmailVerificationScreen({ navigation, route }) {
     }
   };
 
-  const registerUser = async () => {
-    try {
-      const endpoint = userData.isRealtor
-        ? "http://44.202.249.124:5000/realtor/signup"
-        : "http://44.202.249.124:5000/client/signup";
-
-      const payload = {
-        name: `${userData.firstName} ${userData.lastName}`,
-        phone: userData.phone || "", // Keep phone in payload if provided
-        email: userData.email,
-        password: userData.password,
-      };
-
-      // Add RECO ID if it exists
-      if (userData.recoId) {
-        payload.recoId = userData.recoId;
-      }
-
-      // Add invite information if available
-      if (userData.inviterId) {
-        payload.inviterId = userData.inviterId;
-      } else if (userData.inviterCode) {
-        payload.inviterCode = userData.inviterCode;
-      }
-
-      const response = await axios.post(endpoint, payload);
-
-      if (response.data) {
-        navigation.navigate("Success");
-      } else {
-        setError("Registration failed. Please try again.");
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error registering user:", error);
-      setError(
-        `Registration failed: ${error.response?.data?.error || "Unknown error"}`
-      );
-      setIsLoading(false);
-    }
-  };
-
   const handleVerify = async () => {
     try {
       setIsLoading(true);
@@ -175,9 +172,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
         setError("Please enter the complete 6-digit verification code");
         setIsLoading(false);
         return;
-      }
-
-      // Verify email OTP
+      } // Verify email OTP
       const verificationSuccess = await verifyEmailOTP(code);
       if (!verificationSuccess) {
         setError("Invalid verification code. Please try again.");
@@ -185,8 +180,10 @@ export default function EmailVerificationScreen({ navigation, route }) {
         return;
       }
 
-      // If verification successful, register the user
-      await registerUser();
+      // If verification successful, navigate to password screen
+      console.log("Email verified successfully, navigating to password screen");
+      navigation.navigate("Password", userData);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error during verification:", error);
       setError("Verification failed. Please try again.");
@@ -198,33 +195,39 @@ export default function EmailVerificationScreen({ navigation, route }) {
     navigation.goBack();
   };
 
+  const clearAllDigits = () => {
+    setDigits(["", "", "", "", "", ""]);
+    if (inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>
-
-        {/* Heading */}
+        <Text style={styles.brandTitle}>Roost</Text> {/* Heading */}
         <Text style={styles.heading}>Verify your email address</Text>
-
         {/* Subheading */}
         <Text style={styles.subheading}>
-          We just sent a verification code to {userData.email}, please enter it
-          below
+          We just sent a verification code to {userData.email}. Please enter it
+          below to continue.
         </Text>
-
+        {/* Paste instruction */}
+        <Text style={styles.pasteInstruction}>
+          Paste your 6-digit code in any field - it will fill all boxes
+          automatically
+        </Text>
         {isLoading && (
           <View style={styles.spinnerContainer}>
             <ActivityIndicator size="large" color="#019B8E" />
           </View>
         )}
-
         {error ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : null}
-
         {/* Code Input Row */}
         <View style={styles.codeRow}>
           {digits.map((digit, index) => (
@@ -237,14 +240,30 @@ export default function EmailVerificationScreen({ navigation, route }) {
               onKeyPress={({ nativeEvent }) =>
                 handleBackspace(nativeEvent.key, index)
               }
+              onFocus={() => {
+                // Select all text when focusing to make paste easier
+                if (digit) {
+                  inputRefs.current[index].setSelection(0, 1);
+                }
+              }}
               keyboardType="number-pad"
-              maxLength={1}
+              maxLength={6} // Allow pasting up to 6 characters
               textAlign="center"
               autoFocus={index === 0}
+              selectTextOnFocus={true}
             />
           ))}
         </View>
-
+        {/* Clear button - only show if there are digits entered */}
+        {digits.some((digit) => digit !== "") && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={clearAllDigits}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.clearButtonText}>Clear all</Text>
+          </TouchableOpacity>
+        )}
         {/* Resend Button */}
         <TouchableOpacity
           style={[
@@ -321,8 +340,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#23231A",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 10,
     lineHeight: 20,
+  },
+  pasteInstruction: {
+    fontSize: 12,
+    color: "#019B8E",
+    textAlign: "center",
+    marginBottom: 20,
+    fontStyle: "italic",
   },
   spinnerContainer: {
     marginVertical: 20,
@@ -358,6 +384,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 18,
     color: "#23231A",
+    textAlign: "center",
+  },
+
+  // Clear button
+  clearButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  clearButtonText: {
+    color: "#666",
+    fontSize: 14,
     textAlign: "center",
   },
 

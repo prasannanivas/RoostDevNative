@@ -403,7 +403,9 @@ export default function ClientProfile({ onClose }) {
       }
     } catch (error) {
       if (error.response?.data?.error) {
-        setEmailError(error.response?.data?.error || "Invalid verification code");
+        setEmailError(
+          error.response?.data?.error || "Invalid verification code"
+        );
       } else {
         setEmailError("Failed to verify code. Please try again.");
       }
@@ -835,8 +837,14 @@ export default function ClientProfile({ onClose }) {
             {/* Step 2: Enter OTP */}
             {emailChangeStep === 2 && (
               <>
+                {" "}
                 <Text style={styles.modalSubtitle}>
-                  We've sent a verification code to {newEmail}. Enter it below to verify your email address.
+                  We've sent a verification code to {newEmail}. Enter it below
+                  to verify your email address.
+                </Text>
+                <Text style={styles.pasteInstruction}>
+                  Paste your 6-digit code in the field - it will handle full
+                  codes automatically
                 </Text>
                 <TextInput
                   ref={otpInputRef}
@@ -844,8 +852,25 @@ export default function ClientProfile({ onClose }) {
                   placeholder="Enter verification code"
                   keyboardType="numeric"
                   value={emailOtp}
-                  onChangeText={(text) => setEmailOtp(text)}
+                  onChangeText={(text) => {
+                    // Handle paste operation for full codes
+                    if (text.length > 1) {
+                      // Extract only numeric characters and limit to 6 digits
+                      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
+                      setEmailOtp(pastedDigits);
+                    } else {
+                      // Handle single character input
+                      setEmailOtp(text.replace(/\D/g, ""));
+                    }
+                  }}
                   maxLength={6}
+                  selectTextOnFocus={true}
+                  onFocus={() => {
+                    // Select all text when focusing to make paste/editing easier
+                    if (emailOtp) {
+                      otpInputRef.current?.setSelection(0, emailOtp.length);
+                    }
+                  }}
                 />
                 <TouchableOpacity
                   style={styles.fullWidthButton}
@@ -853,22 +878,23 @@ export default function ClientProfile({ onClose }) {
                 >
                   <Text style={styles.buttonText}>Verify Email</Text>
                 </TouchableOpacity>
-                
                 {/* Resend button with countdown */}
                 <TouchableOpacity
                   style={[
                     styles.resendButton,
-                    countdown > 0 && styles.resendButtonDisabled
+                    countdown > 0 && styles.resendButtonDisabled,
                   ]}
                   onPress={handleResendOtp}
                   disabled={countdown > 0}
                 >
-                  <Text style={[
-                    styles.resendButtonText,
-                    countdown > 0 && styles.resendButtonTextDisabled
-                  ]}>
-                    {countdown > 0 
-                      ? `Resend code in ${countdown} seconds` 
+                  <Text
+                    style={[
+                      styles.resendButtonText,
+                      countdown > 0 && styles.resendButtonTextDisabled,
+                    ]}
+                  >
+                    {countdown > 0
+                      ? `Resend code in ${countdown} seconds`
                       : "Resend verification code"}
                   </Text>
                 </TouchableOpacity>
@@ -1168,6 +1194,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666666",
     marginBottom: 20,
+  },
+  pasteInstruction: {
+    fontSize: 12,
+    color: "#019B8E",
+    textAlign: "center",
+    marginBottom: 15,
+    fontStyle: "italic",
   },
   modalCloseButton: {
     padding: 5,

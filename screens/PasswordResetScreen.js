@@ -73,9 +73,49 @@ export default function PasswordResetScreen({ navigation }) {
   const validatePassword = (password) => {
     return password.length >= 8;
   };
-
   // Handle OTP digit change
   const handleDigitChange = (text, index) => {
+    // Check if multiple characters were pasted
+    if (text.length > 1) {
+      // Handle paste operation - extract only numeric characters
+      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
+
+      // If it's a full 6-digit code, clear all fields and start from beginning
+      if (pastedDigits.length === 6) {
+        const newDigits = pastedDigits.split("");
+        setOtp(newDigits);
+
+        // Focus the last field to indicate completion
+        if (inputRefs.current[5]) {
+          inputRefs.current[5].focus();
+        }
+      } else {
+        // If partial code, fill from current position
+        const updatedOtp = [...otp];
+
+        for (let i = 0; i < pastedDigits.length && index + i < 6; i++) {
+          updatedOtp[index + i] = pastedDigits[i];
+        }
+
+        setOtp(updatedOtp);
+
+        // Focus the next empty field or the last filled field
+        const nextEmptyIndex = updatedOtp.findIndex(
+          (digit, idx) => idx > index && !digit
+        );
+        const targetIndex =
+          nextEmptyIndex !== -1
+            ? nextEmptyIndex
+            : Math.min(index + pastedDigits.length, 5);
+
+        if (targetIndex < inputRefs.current.length) {
+          inputRefs.current[targetIndex].focus();
+        }
+      }
+      return;
+    }
+
+    // Handle single character input
     const newDigit = text.slice(0, 1);
     const updatedOtp = [...otp];
     updatedOtp[index] = newDigit;
@@ -405,7 +445,6 @@ export default function PasswordResetScreen({ navigation }) {
       <Text style={styles.subheading}>
         We sent a verification code to {email}. Please enter it below.
       </Text>
-
       {/* OTP Input Fields */}
       <View style={styles.codeRow}>
         {otp.map((digit, index) => (
@@ -418,14 +457,20 @@ export default function PasswordResetScreen({ navigation }) {
             onKeyPress={({ nativeEvent }) =>
               handleBackspace(nativeEvent.key, index)
             }
+            onFocus={() => {
+              // Select all text when focusing to make paste easier
+              if (digit) {
+                inputRefs.current[index].setSelection(0, 1);
+              }
+            }}
             keyboardType="number-pad"
-            maxLength={1}
+            maxLength={6} // Allow pasting up to 6 characters
             textAlign="center"
             autoFocus={index === 0}
+            selectTextOnFocus={true}
           />
         ))}
       </View>
-
       {/* Resend OTP Button */}
       <TouchableOpacity
         style={[
@@ -447,13 +492,11 @@ export default function PasswordResetScreen({ navigation }) {
             : "Resend code"}
         </Text>
       </TouchableOpacity>
-
       {error ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
-
       {/* Comment out phone verification note */}
       {/* {contactMethod === "phone" && (
         <Text style={styles.verificationNote}>

@@ -180,14 +180,13 @@ export default function SignUpDetailsScreen({ navigation, route }) {
         setIsLoading(false);
         return;
       }
-
       console.log(
-        "Navigating to password screen with invite info:",
+        "Navigating to email verification screen with invite info:",
         inviteInfo || invitedBy
       );
 
-      // Navigate to next screen with email (required) and phone (optional)
-      navigation.navigate("Password", {
+      // Navigate to email verification screen with email (required) and phone (optional)
+      navigation.navigate("EmailVerification", {
         firstName,
         lastName,
         phone: phone ? formattedPhone : null, // Phone still passed if provided

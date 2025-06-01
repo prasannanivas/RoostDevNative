@@ -25,11 +25,11 @@ export default function SignupStack() {
         component={SignupScreen2}
         initialParams={{ isRealtor: false }} // Default to client
       />
-      <Stack.Screen name="Password" component={PasswordScreen} />
       <Stack.Screen
-        name="PhoneVerification"
+        name="EmailVerification"
         component={SignupScreen3PhoneVerification}
       />
+      <Stack.Screen name="Password" component={PasswordScreen} />
       <Stack.Screen
         name="Success"
         component={SignupSuccess}

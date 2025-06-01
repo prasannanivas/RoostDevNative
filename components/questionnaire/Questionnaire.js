@@ -545,14 +545,13 @@ const Questionnaire = ({ navigation }) => {
       </View>
       <View style={styles.header}>
         <ProgressBar progress={getProgress()} />
-      </View>{" "}
+      </View>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
       >
         <View style={styles.content}>
           <View style={styles.contentWrapper}>
-            {" "}
             {/* Question Header with Initials and Question Text */}
             <View style={styles.questionHeaderRow}>
               {/* Always render the circle, but conditionally style based on type */}
@@ -575,14 +574,13 @@ const Questionnaire = ({ navigation }) => {
                     )}
                   </View>
                 );
-              })()}{" "}
+              })()}
               <Text style={styles.questionTextHeader}>
                 {processDynamicText(currentQuestion.text, responses)}
               </Text>
             </View>
             {/* Question Content */}
             <View style={styles.questionContent}>
-              {" "}
               <QuestionRenderer
                 question={{
                   ...currentQuestion,
@@ -610,7 +608,6 @@ const Questionnaire = ({ navigation }) => {
       </ScrollView>
       <View style={styles.footer}>
         <View style={styles.buttonContainer}>
-          {" "}
           {canGoBack && (
             <Button
               Icon={<Ionicons name="arrow-back" size={24} color="#FFFFFF" />}

@@ -281,30 +281,28 @@ export default function RealtorProfile({ onClose }) {
     try {
       setIsSaving(true);
       // Join firstName and lastName before sending to API
-      const fullName = `${currentFormData.firstName} ${currentFormData.lastName}`.trim();
+      const fullName =
+        `${currentFormData.firstName} ${currentFormData.lastName}`.trim();
 
-      fetch(
-        `http://44.202.249.124:5000/realtor/${realtor._id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: fullName, // Send the combined name to maintain API compatibility
-            rewardsAddress: currentFormData.rewardsAddress,
-            rewardsCity: currentFormData.rewardsCity,
-            rewardsPostalCode: currentFormData.rewardsPostalCode,
-            brokerageInfo: {
-              brokerageName: currentFormData.brokerageName,
-              brokerageAddress: currentFormData.brokerageAddress,
-              brokerageCity: currentFormData.brokerageCity,
-              brokeragePostalCode: currentFormData.brokeragePostalCode,
-              brokeragePhone: currentFormData.brokeragePhone,
-              brokerageEmail: currentFormData.brokerageEmail,
-              licenseNumber: currentFormData.licenseNumber,
-            },
-          }),
-        }
-      )
+      fetch(`http://44.202.249.124:5000/realtor/${realtor._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName, // Send the combined name to maintain API compatibility
+          rewardsAddress: currentFormData.rewardsAddress,
+          rewardsCity: currentFormData.rewardsCity,
+          rewardsPostalCode: currentFormData.rewardsPostalCode,
+          brokerageInfo: {
+            brokerageName: currentFormData.brokerageName,
+            brokerageAddress: currentFormData.brokerageAddress,
+            brokerageCity: currentFormData.brokerageCity,
+            brokeragePostalCode: currentFormData.brokeragePostalCode,
+            brokeragePhone: currentFormData.brokeragePhone,
+            brokerageEmail: currentFormData.brokerageEmail,
+            licenseNumber: currentFormData.licenseNumber,
+          },
+        }),
+      })
         .then((response) => {
           if (response.ok) {
             // Show success notification
@@ -1092,9 +1090,14 @@ export default function RealtorProfile({ onClose }) {
             {/* Step 2: Enter OTP */}
             {emailChangeStep === 2 && (
               <>
+                {" "}
                 <Text style={styles.modalSubtitle}>
                   We've sent a verification code to {newEmail}. Enter it below
                   to verify your email address.
+                </Text>
+                <Text style={styles.pasteInstruction}>
+                  Paste your 6-digit code in the field - it will handle full
+                  codes automatically
                 </Text>
                 <TextInput
                   ref={otpInputRef}
@@ -1102,8 +1105,25 @@ export default function RealtorProfile({ onClose }) {
                   placeholder="Enter verification code"
                   keyboardType="numeric"
                   value={emailOtp}
-                  onChangeText={(text) => setEmailOtp(text)}
+                  onChangeText={(text) => {
+                    // Handle paste operation for full codes
+                    if (text.length > 1) {
+                      // Extract only numeric characters and limit to 6 digits
+                      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
+                      setEmailOtp(pastedDigits);
+                    } else {
+                      // Handle single character input
+                      setEmailOtp(text.replace(/\D/g, ""));
+                    }
+                  }}
                   maxLength={6}
+                  selectTextOnFocus={true}
+                  onFocus={() => {
+                    // Select all text when focusing to make paste/editing easier
+                    if (emailOtp) {
+                      otpInputRef.current?.setSelection(0, emailOtp.length);
+                    }
+                  }}
                 />
                 <TouchableOpacity
                   style={styles.fullWidthButton}
@@ -1111,7 +1131,6 @@ export default function RealtorProfile({ onClose }) {
                 >
                   <Text style={styles.buttonText}>Verify Email</Text>
                 </TouchableOpacity>
-
                 {/* Resend button with countdown */}
                 <TouchableOpacity
                   style={[
@@ -1499,6 +1518,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
+  },
+  pasteInstruction: {
+    fontSize: 12,
+    color: "#019B8E",
+    textAlign: "center",
+    marginBottom: 15,
+    fontStyle: "italic",
   },
   modalCloseButton: {
     position: "absolute",

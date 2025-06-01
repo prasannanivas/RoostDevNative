@@ -27,7 +27,7 @@ const TextInput = ({
           {label}
           {isRequired && <Text style={styles.requiredIndicator}> *</Text>}
         </Text>
-      )}{" "}
+      )}
       <View style={[styles.inputContainer, error && styles.errorContainer]}>
         {prefix && (
           <View style={styles.prefix}>

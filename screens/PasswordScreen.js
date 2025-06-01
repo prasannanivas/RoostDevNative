@@ -14,6 +14,7 @@ import {
   Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 
 export default function PasswordScreen({ navigation, route }) {
   const [password, setPassword] = useState("");
@@ -38,6 +39,48 @@ export default function PasswordScreen({ navigation, route }) {
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
+  };
+
+  const registerUser = async (userData) => {
+    try {
+      const endpoint = userData.isRealtor
+        ? "http://44.202.249.124:5000/realtor/signup"
+        : "http://44.202.249.124:5000/client/signup";
+
+      const payload = {
+        name: `${userData.firstName} ${userData.lastName}`,
+        phone: userData.phone || "", // Keep phone in payload if provided
+        email: userData.email,
+        password: userData.password,
+      };
+
+      // Add RECO ID if it exists
+      if (userData.recoId) {
+        payload.recoId = userData.recoId;
+      }
+
+      // Add invite information if available
+      if (userData.inviterId) {
+        payload.inviterId = userData.inviterId;
+      } else if (userData.inviterCode) {
+        payload.inviterCode = userData.inviterCode;
+      }
+
+      const response = await axios.post(endpoint, payload);
+
+      if (response.data) {
+        navigation.navigate("Success");
+      } else {
+        setPasswordError("Registration failed. Please try again.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error registering user:", error);
+      setPasswordError(
+        `Registration failed: ${error.response?.data?.error || "Unknown error"}`
+      );
+      setIsLoading(false);
+    }
   };
 
   // Create refs for form inputs
@@ -111,20 +154,13 @@ export default function PasswordScreen({ navigation, route }) {
       } else if (invitedBy) {
         finalUserData.inviterId = invitedBy.id;
       }
+      console.log("Password validated, proceeding to register user:", {
+        ...finalUserData,
+        password: "***",
+      });
 
-      console.log(
-        "Password validated, proceeding to verification screen with user data:",
-        { ...finalUserData, password: "***" }
-      );
-
-      // Add a small delay to ensure the loading state is visible
-      setTimeout(() => {
-        // Navigate to phone verification with all user data including password
-        navigation.navigate("PhoneVerification", finalUserData);
-
-        // Reset loading state if navigation fails
-        setIsLoading(false);
-      }, 300);
+      // Register the user after password validation
+      await registerUser(finalUserData);
     } catch (error) {
       console.error("Error in password screen:", error);
       setPasswordError("An error occurred. Please try again.");
