@@ -97,6 +97,7 @@ const questions = [
         label: "How much do you consider spending?",
         type: "numericInput",
         placeholder: "Amount",
+        prefix: "$",
         keyboard: "numeric",
         required: true,
       },
@@ -105,6 +106,7 @@ const questions = [
         label: "What is the amount of downpayment you have?",
         type: "numericInput",
         placeholder: "Amount",
+        prefix: "$",
         keyboard: "numeric",
         required: true,
       },
@@ -446,7 +448,7 @@ const questions = [
       ],
     },
 
-    nextQuestion: 15,
+    nextQuestion: 121,
   },
   {
     id: 100,
