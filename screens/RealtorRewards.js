@@ -25,6 +25,23 @@ import {
 } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 
+// Design System Colors
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#CCCCCC",
+  silver: "#F6F6F6",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  success: "#4CAF50",
+  error: "#F44336",
+  warning: "#FF9800",
+  info: "#2196F3",
+  transparent: "transparent",
+};
+
 /**
  * Props:
  *  realtor: { _id, points, pointsHistory: [{points,reason,date}], ... }
@@ -413,17 +430,17 @@ export default function RealtorRewards({
 
   return (
     <ScrollView contentContainerStyle={styles.container} bounces={false}>
+      {" "}
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Ionicons name="gift-outline" size={24} color="#FFF" />
+          <Ionicons name="gift-outline" size={24} color={COLORS.white} />
           <Text style={styles.headerTxt}>REWARDS</Text>
         </View>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={24} color="#FFF" />
+          <Ionicons name="close" size={24} color={COLORS.white} />
         </TouchableOpacity>
       </View>
-
       {/* Points Display */}
       <View style={styles.pointsContainer}>
         <View style={styles.pointsRow}>
@@ -431,7 +448,6 @@ export default function RealtorRewards({
           <Text style={styles.pointsLbl}>points</Text>
         </View>
       </View>
-
       {/* Referral Program */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Referral program</Text>
@@ -469,18 +485,14 @@ export default function RealtorRewards({
           <Text style={styles.inviteBtnTxt}>Invite Realtors</Text>
         </TouchableOpacity>
       </View>
-
       {/* Rewards Section */}
       <View>
-        <Text style={styles.rewardsTitle}>Rewards</Text>
-
-        {/* Client Rewards */}
+        <Text style={styles.rewardsTitle}>Rewards</Text> {/* Client Rewards */}
         <Text style={styles.rewardsSubTitle}>FOR YOUR CLIENTS</Text>
         <Text style={styles.rewardsDescription}>
           These rewards go straight to you clients as a gift, we include your
           photo, details and a thank you for using you as their realtor.
         </Text>
-
         {fetchingRewards ? (
           <ActivityIndicator />
         ) : (
@@ -506,7 +518,7 @@ export default function RealtorRewards({
                     />
                   ) : (
                     <View style={styles.rewardInitials}>
-                      <Text style={{ color: "#FFF", fontWeight: "600" }}>
+                      <Text style={styles.initialsTxt}>
                         {getInitials(reward.rewardName)}
                       </Text>
                     </View>
@@ -538,8 +550,7 @@ export default function RealtorRewards({
                 </TouchableOpacity>
               ))}
           </View>
-        )}
-
+        )}{" "}
         {/* Realtor Rewards */}
         <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
         {fetchingRewards ? (
@@ -567,7 +578,7 @@ export default function RealtorRewards({
                     />
                   ) : (
                     <View style={styles.rewardInitials}>
-                      <Text style={{ color: "#FFF", fontWeight: "600" }}>
+                      <Text style={styles.initialsTxt}>
                         {getInitials(reward.rewardName)}
                       </Text>
                     </View>
@@ -601,7 +612,6 @@ export default function RealtorRewards({
           </View>
         )}
       </View>
-
       {/* Keep all the other functionality intact */}
       {/* Invite Form Modal */}
       <Modal visible={showInviteForm} transparent animationType="fade">
@@ -672,6 +682,7 @@ export default function RealtorRewards({
                 <View style={styles.contactIcons}>
                   {inviteData.phone && (
                     <>
+                      {" "}
                       <TouchableOpacity
                         style={styles.contactIconBtn}
                         onPress={openWhatsApp}
@@ -679,7 +690,7 @@ export default function RealtorRewards({
                         <MaterialCommunityIcons
                           name="whatsapp"
                           size={32}
-                          color="#25D366"
+                          color={COLORS.success}
                         />
                         <Text style={styles.contactIconText}>WhatsApp</Text>
                       </TouchableOpacity>
@@ -687,7 +698,11 @@ export default function RealtorRewards({
                         style={styles.contactIconBtn}
                         onPress={openSMS}
                       >
-                        <MaterialIcons name="sms" size={32} color="#2196F3" />
+                        <MaterialIcons
+                          name="sms"
+                          size={32}
+                          color={COLORS.info}
+                        />
                         <Text style={styles.contactIconText}>SMS</Text>
                       </TouchableOpacity>
                     </>
@@ -697,7 +712,7 @@ export default function RealtorRewards({
                       style={styles.contactIconBtn}
                       onPress={openEmail}
                     >
-                      <Entypo name="mail" size={32} color="#F44336" />
+                      <Entypo name="mail" size={32} color={COLORS.error} />
                       <Text style={styles.contactIconText}>Email</Text>
                     </TouchableOpacity>
                   )}
@@ -730,7 +745,7 @@ export default function RealtorRewards({
                   onPress={handleInviteRealtor}
                 >
                   {inviteLoading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={COLORS.white} />
                   ) : (
                     <Text style={styles.modalBtnTxt}>Send Invite</Text>
                   )}
@@ -754,11 +769,11 @@ export default function RealtorRewards({
       >
         <Text style={styles.sectionTitle}>
           Points History ({realtor?.pointsHistory?.length || 0})
-        </Text>
+        </Text>{" "}
         <Ionicons
           name={isHistoryCollapsed ? "chevron-down" : "chevron-up"}
           size={24}
-          color="#23231A"
+          color={COLORS.black}
         />
       </TouchableOpacity>
       {!isHistoryCollapsed && (
@@ -766,7 +781,7 @@ export default function RealtorRewards({
           {realtor?.pointsHistory?.map((e, i) => (
             <View key={i} style={styles.historyRow}>
               <View style={styles.historyPts}>
-                <FontAwesome name="star" size={14} color="#F9A602" />
+                <FontAwesome name="star" size={14} color={COLORS.orange} />
                 <Text style={styles.historyPtsTxt}>+{e.points}</Text>
               </View>
               <View style={styles.historyDetails}>
@@ -780,7 +795,6 @@ export default function RealtorRewards({
           )}
         </View>
       )}
-
       {/* Invited Realtors */}
       <TouchableOpacity
         style={styles.collapsibleHeader}
@@ -788,11 +802,11 @@ export default function RealtorRewards({
       >
         <Text style={styles.sectionTitle}>
           Invited Realtors ({invitedRealtors?.length || 0})
-        </Text>
+        </Text>{" "}
         <Ionicons
           name={isRealtorsCollapsed ? "chevron-down" : "chevron-up"}
           size={24}
-          color="#23231A"
+          color={COLORS.black}
         />
       </TouchableOpacity>
       {!isRealtorsCollapsed && (
@@ -832,6 +846,7 @@ export default function RealtorRewards({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.claimModal}>
+            {" "}
             <TouchableOpacity
               style={styles.claimClose}
               onPress={() => {
@@ -839,7 +854,7 @@ export default function RealtorRewards({
                 setSelectedReward(null);
               }}
             >
-              <Ionicons name="close-outline" size={24} color="#333" />
+              <Ionicons name="close-outline" size={24} color={COLORS.black} />
             </TouchableOpacity>
             {selectedReward && (
               <>
@@ -915,7 +930,7 @@ export default function RealtorRewards({
                   onPress={handleClaimReward}
                 >
                   {claimLoading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={COLORS.white} />
                   ) : (
                     <Text style={styles.claimBtnTxt}>
                       {currentPoints <
@@ -930,7 +945,6 @@ export default function RealtorRewards({
           </View>
         </View>
       </Modal>
-
       {/* Address Confirmation Modal */}
       <Modal
         visible={
@@ -944,13 +958,13 @@ export default function RealtorRewards({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.addressModal}>
+            {" "}
             <TouchableOpacity
               style={styles.claimClose}
               onPress={() => setAddressConfirmation(false)}
             >
-              <Ionicons name="close-outline" size={24} color="#333" />
+              <Ionicons name="close-outline" size={24} color={COLORS.black} />
             </TouchableOpacity>
-
             <Text style={styles.addressModalTitle}>
               Confirm Shipping Address
             </Text>
@@ -960,7 +974,6 @@ export default function RealtorRewards({
                 ? selectedClientData?.referenceName
                 : realtor?.name || "yourself"}
             </Text>
-
             <Text style={styles.label}>Address:</Text>
             <TextInput
               style={styles.input}
@@ -969,7 +982,6 @@ export default function RealtorRewards({
                 setAddressToSend((prev) => ({ ...prev, address: text }))
               }
             />
-
             <Text style={styles.label}>City:</Text>
             <TextInput
               style={styles.input}
@@ -978,7 +990,6 @@ export default function RealtorRewards({
                 setAddressToSend((prev) => ({ ...prev, city: text }))
               }
             />
-
             <Text style={styles.label}>Postal Code:</Text>
             <TextInput
               style={styles.input}
@@ -988,7 +999,6 @@ export default function RealtorRewards({
               }
               keyboardType="numeric"
             />
-
             <View style={styles.addressButtonsRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -1014,7 +1024,7 @@ export default function RealtorRewards({
                 disabled={claimLoading}
               >
                 {claimLoading ? (
-                  <ActivityIndicator color="#FFF" size="small" />
+                  <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
                   <Text style={styles.confirmButtonText}>Confirm & Submit</Text>
                 )}
@@ -1030,14 +1040,14 @@ export default function RealtorRewards({
 const styles = StyleSheet.create({
   container: {
     padding: 0,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     flex: 1,
   },
 
   /* Header */
   header: {
-    backgroundColor: "#23231A",
-    padding: 20,
+    backgroundColor: COLORS.black,
+    padding: 24,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -1050,34 +1060,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTxt: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.white,
     textTransform: "uppercase",
+    marginLeft: 8,
   },
   closeButton: {
     position: "absolute",
-    right: 15,
-    padding: 5,
+    right: 16,
+    padding: 8,
   },
 
   /* Points display */
   pointsContainer: {
-    padding: 20,
+    padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: COLORS.lightGray,
     alignItems: "center",
   },
   pointsNum: {
     fontSize: 48,
-    fontWeight: "700",
-    color: "#45665B",
-    marginRight: 10,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.green,
+    marginRight: 8,
   },
   pointsLbl: {
-    fontSize: 36,
-    color: "#333",
-    fontWeight: "400",
+    fontSize: 24,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   pointsRow: {
     flexDirection: "row",
@@ -1086,95 +1100,110 @@ const styles = StyleSheet.create({
 
   /* Referral program section */
   sectionContainer: {
-    padding: 20,
+    padding: 24,
   },
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 20,
-    color: "#23231A",
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    marginBottom: 16,
+    color: COLORS.black,
   },
   rewardItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   rewardPoints: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#45665B",
+    fontSize: 16,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
   rewardText: {
-    fontSize: 16,
-    color: "#333",
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
     textAlign: "right",
   },
 
   /* Bonus section */
   bonusContainer: {
-    backgroundColor: "#E5EFF0",
-    borderRadius: 10,
-    padding: 20,
-    marginTop: 10,
-    marginBottom: 20,
+    backgroundColor: COLORS.silver,
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 16,
   },
   bonusTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 10,
-    color: "#23231A",
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    marginBottom: 8,
+    color: COLORS.black,
   },
   bonusText: {
     fontSize: 14,
-    color: "#45665B",
-    marginBottom: 10,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
+    marginBottom: 8,
     lineHeight: 20,
   },
   bonusExample: {
     fontSize: 14,
-    color: "#45665B",
-    marginTop: 10,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
+    marginTop: 8,
     fontStyle: "italic",
   },
 
   /* Invite button */
   inviteBtn: {
-    backgroundColor: "#45665B",
-    borderRadius: 25,
-    paddingVertical: 14,
-    paddingHorizontal: 30,
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     alignItems: "center",
     alignSelf: "center",
-    marginVertical: 15,
+    marginVertical: 16,
+    height: 48,
   },
   inviteBtnTxt: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
 
   /* Rewards section */
   rewardsTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 10,
-    color: "#23231A",
-    paddingHorizontal: 20,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    marginBottom: 8,
+    color: COLORS.black,
+    paddingHorizontal: 24,
   },
   rewardsSubTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 10,
-    marginBottom: 15,
-    color: "#666",
-    paddingHorizontal: 20,
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    marginTop: 16,
+    marginBottom: 8,
+    color: COLORS.gray,
+    paddingHorizontal: 24,
   },
   rewardsDescription: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
     lineHeight: 20,
-    marginBottom: 20,
-    paddingHorizontal: 20,
+    marginBottom: 16,
+    paddingHorizontal: 24,
   },
 
   /* Rewards grid with new card design */
@@ -1182,14 +1211,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   rewardCard: {
     width: "48%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    marginBottom: 15,
-    shadowColor: "#000",
+    marginBottom: 16,
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1203,37 +1232,68 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 8,
   },
   rewardCardContent: {
-    padding: 12,
+    padding: 16,
   },
   rewardType: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
     marginBottom: 4,
   },
   rewardName: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
     marginBottom: 8,
-    color: "#23231A",
+    color: COLORS.black,
+  },
+  rewardInitials: {
+    width: "100%",
+    height: 150,
+    backgroundColor: COLORS.green,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   /* Progress bar styling to match screenshot */
   progressBar: {
-    height: 10,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 5,
+    height: 8,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 8,
     overflow: "hidden",
     marginBottom: 8,
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#E49455",
-    borderRadius: 5,
+    backgroundColor: COLORS.orange,
+    borderRadius: 8,
+  },
+  progressEligible: {
+    backgroundColor: COLORS.green,
   },
   percentageText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#E49455",
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.orange,
+  },
+  pointsNeededRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  pointsNeeded: {
+    fontSize: 12,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
+  },
+  eligibleTag: {
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
 
   /* Invite Form */
@@ -1245,128 +1305,163 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "90%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 20,
+    padding: 24,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    marginBottom: 16,
     textAlign: "center",
+    color: COLORS.black,
   },
   feedbackMsg: {
     textAlign: "center",
     marginVertical: 8,
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
   },
-  success: { color: "#155724" },
-  error: { color: "#721c24" },
+  success: { color: COLORS.success },
+  error: { color: COLORS.error },
   label: {
     fontSize: 14,
-    marginBottom: 4,
-    color: "#23231A",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    marginBottom: 8,
+    color: COLORS.black,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 12,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    height: 48,
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   toggleRow: {
     flexDirection: "row",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   toggle: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#019B8E",
-    padding: 8,
+    borderColor: COLORS.green,
+    padding: 16,
     alignItems: "center",
+    height: 48,
   },
-  // Add these styles to the StyleSheet
 
   /* Collapsible sections */
   collapsibleHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-    backgroundColor: "#F8F9FA",
+    borderBottomColor: COLORS.lightGray,
+    backgroundColor: COLORS.silver,
   },
   collapsibleContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   noDataText: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
     fontStyle: "italic",
     textAlign: "center",
-    paddingVertical: 15,
+    paddingVertical: 16,
   },
   toggleActive: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
-  toggleTxt: { color: "#019B8E" },
-  toggleTxtActive: { color: "#fff", fontWeight: "600" },
+  toggleTxt: {
+    color: COLORS.green,
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+  },
+  toggleTxtActive: {
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+  },
   modalBtns: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   modalBtn: {
     flex: 1,
-    backgroundColor: "#019B8E",
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: COLORS.green,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
-    marginHorizontal: 4,
+    marginHorizontal: 8,
+    height: 48,
   },
-  modalBtnTxt: { color: "#fff", fontWeight: "600" },
+  modalBtnTxt: {
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
+  },
   modalBtnDisabled: { opacity: 0.6 },
 
   /* Contact options */
   contactOptions: {
     alignItems: "center",
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: COLORS.lightGray,
   },
   contactOptionsTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 15,
-    color: "#23231A",
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    marginBottom: 16,
+    color: COLORS.black,
   },
   contactIcons: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   contactIconBtn: {
     alignItems: "center",
-    marginHorizontal: 15,
-    paddingVertical: 10,
+    marginHorizontal: 16,
+    paddingVertical: 8,
   },
   contactIconText: {
-    marginTop: 5,
+    marginTop: 8,
     fontSize: 12,
-    color: "#23231A",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   closeModalBtn: {
-    backgroundColor: "#019B8E",
-    paddingVertical: 10,
-    paddingHorizontal: 25,
-    borderRadius: 6,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
     alignItems: "center",
+    height: 48,
   },
   closeModalBtnTxt: {
-    color: "#fff",
-    fontWeight: "600",
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
 
   /* History */
@@ -1380,138 +1475,174 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   historyPtsTxt: {
-    marginLeft: 4,
+    marginLeft: 8,
     fontSize: 14,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   historyDetails: {
     flex: 1,
   },
   historyReason: {
     fontSize: 14,
-    color: "#23231A",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   historyDate: {
     fontSize: 12,
-    color: "#666",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
   },
 
   /* Invited Realtors */
   clientCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8F9FA",
-    borderRadius: 6,
-    padding: 10,
+    backgroundColor: COLORS.silver,
+    borderRadius: 8,
+    padding: 16,
     marginBottom: 8,
   },
   initialsCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    marginRight: 16,
   },
-  initialsTxt: { color: "#fff", fontWeight: "600" },
-  clientName: { fontSize: 14, fontWeight: "600", color: "#23231A" },
-  clientStatus: { fontSize: 12, color: "#666" },
+  initialsTxt: {
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
+  },
+  clientName: {
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
+  },
+  clientStatus: {
+    fontSize: 12,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
+  },
 
   /* Claim Modal */
   claimModal: {
     width: "90%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 16,
+    padding: 24,
   },
   claimClose: {
     alignSelf: "flex-end",
   },
-  claimTitle: { fontSize: 18, fontWeight: "600", marginBottom: 8 },
+  claimTitle: {
+    fontSize: 16,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    marginBottom: 16,
+    color: COLORS.black,
+  },
   claimImage: {
     width: "100%",
     height: 100,
-    borderRadius: 6,
-    marginBottom: 8,
+    borderRadius: 8,
+    marginBottom: 16,
   },
-  claimAmt: { fontSize: 16, marginBottom: 8, color: "#23231A" },
+  claimAmt: {
+    fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    marginBottom: 8,
+    color: COLORS.black,
+  },
   claimDescription: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 12,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.gray,
+    marginBottom: 16,
     lineHeight: 20,
   },
   claimPtsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 6,
-    marginBottom: 12,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    marginBottom: 16,
+    height: 48,
   },
   claimBtn: {
-    backgroundColor: "#019B8E",
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: COLORS.green,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
+    height: 48,
   },
   claimBtnDisabled: {
-    backgroundColor: "#aaa",
+    backgroundColor: COLORS.lightGray,
   },
   claimBtnTxt: {
-    color: "#fff",
-    fontWeight: "600",
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
 
   /* Swipe Handle */
   swipeHandle: {
     width: 40,
     height: 5,
-    backgroundColor: "#DDDDDD",
-    borderRadius: 3,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 8,
     alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 8,
   },
   closeButtonContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-  closeButton: {
-    padding: 8,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
+    borderBottomColor: COLORS.lightGray,
   },
 
   /* Address confirmation modal */
   addressModal: {
     width: "90%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 16,
+    padding: 24,
     maxHeight: "80%",
   },
   addressModalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "medium",
+    fontFamily: "Futura",
     marginBottom: 8,
     textAlign: "center",
-    color: "#23231A",
+    color: COLORS.black,
   },
   addressModalSubtitle: {
     fontSize: 14,
+    fontWeight: "medium",
+    fontFamily: "Futura",
     marginBottom: 16,
     textAlign: "center",
-    color: "#666",
+    color: COLORS.gray,
   },
   addressButtonsRow: {
     flexDirection: "row",
@@ -1520,27 +1651,33 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: "#EEEEEE",
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: COLORS.silver,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
     marginRight: 8,
+    height: 48,
   },
   cancelButtonText: {
-    color: "#333",
-    fontWeight: "600",
+    color: COLORS.black,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
   confirmButton: {
     flex: 1,
-    backgroundColor: "#019B8E",
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: COLORS.green,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
     marginLeft: 8,
+    height: 48,
   },
   confirmButtonText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: COLORS.white,
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
   buttonDisabled: {
     opacity: 0.6,

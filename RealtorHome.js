@@ -31,6 +31,23 @@ import RealtorProfile from "./screens/RealtorProfile.js";
 import RealtorRewards from "./screens/RealtorRewards.js";
 import CSVUploadForm from "./screens/AddProfilePic";
 
+// Design System Colors
+const COLORS = {
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070",
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+  noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
+  coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
+};
+
 const RealtorHome = () => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
@@ -486,8 +503,8 @@ Looking forward to working with you!`;
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#019B8E"]} // Android
-            tintColor="#019B8E" // iOS
+            colors={[COLORS.green]} // Android
+            tintColor={COLORS.green} // iOS
           />
         }
       >
@@ -747,7 +764,7 @@ Looking forward to working with you!`;
                   onPress={handleInviteRealtor}
                 >
                   {inviteLoading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={COLORS.white} />
                   ) : (
                     <Text style={styles.modalBtnTxt}>Send Invite</Text>
                   )}
@@ -866,7 +883,7 @@ Looking forward to working with you!`;
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={COLORS.white} />
                     ) : (
                       <Text style={styles.sendInviteButtonText}>
                         Send Invite
@@ -993,7 +1010,7 @@ Looking forward to working with you!`;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F3F3",
+    backgroundColor: COLORS.background,
     position: "relative", // To position absolute elements
   },
   /* ================= TOP HEADER STYLES ================= */
@@ -1001,87 +1018,94 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 15,
-    backgroundColor: "#232427",
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: 16,
+    backgroundColor: COLORS.black,
   },
   userInfoContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    marginRight: 16,
   },
   avatarText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   nameAgencyContainer: {
     flexDirection: "column",
   },
   realtorName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    textTransform: "uppercase",
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    color: COLORS.white,
+    fontFamily: "Futura",
   },
   agencyName: {
-    fontSize: 14,
-    color: "#B0B0B0",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.slate,
+    fontFamily: "Futura",
   },
   menuIconContainer: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: "#2D4D4D",
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
   },
 
   // Invite Banner
   inviteBanner: {
-    backgroundColor: "#FFFFFF",
-    padding: 15,
+    backgroundColor: COLORS.white,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 5,
+    marginVertical: 8,
   },
   inviteRealtorsButton: {
-    backgroundColor: "#40797B",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    marginRight: 15,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginRight: 16,
   },
   inviteRealtorsText: {
-    color: "#FFFFFF",
-    fontWeight: "500",
-    fontSize: 16,
+    color: COLORS.white,
+    fontWeight: "500", // P weight
+    fontSize: 14, // P size
+    fontFamily: "Futura",
   },
   inviteBannerText: {
     flex: 1,
-    fontSize: 14,
-    color: "#40797B",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.green,
     lineHeight: 20,
+    fontFamily: "Futura",
   },
 
   // Clients section
   clientsTitleContainer: {
     alignItems: "center",
-    marginVertical: 10,
+    marginVertical: 16,
   },
   clientsTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#232427",
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   clientsScrollView: {
     flex: 1,
@@ -1091,55 +1115,58 @@ const styles = StyleSheet.create({
   clientCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 15,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 16,
     marginVertical: 8,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
   },
   initialsCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#7D7D7D",
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
   initialsText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   clientDetails: {
     flex: 1,
   },
   clientName: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#232427",
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    color: COLORS.black,
     marginBottom: 8,
+    fontFamily: "Futura",
   },
   clientStatus: {
-    fontSize: 14,
-    color: "#232427",
-    fontWeight: "500",
-    backgroundColor: "#F2E4D4",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 15,
+    fontSize: 12, // H4 size
+    color: COLORS.black,
+    fontWeight: "bold", // H4 weight
+    backgroundColor: COLORS.coloredBackgroundFill,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     alignSelf: "flex-start",
+    fontFamily: "Futura",
   },
 
   // Bottom button
   bottomButtonContainer: {
     alignItems: "center",
-    padding: 20,
-    paddingBottom: 40,
+    padding: 24,
+    paddingBottom: 48,
   },
   fixedBottomButtonContainer: {
     position: "absolute",
@@ -1147,40 +1174,40 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-    padding: 20,
-    paddingBottom: 30,
-    backgroundColor: "#F3F3F3", // Match background color
+    padding: 24,
+    paddingBottom: 32,
+    backgroundColor: COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: COLORS.gray,
   },
   addClientsButton: {
     flexDirection: "row",
-    backgroundColor: "#E49455",
-    borderRadius: 30,
-    paddingVertical: 14,
-    paddingHorizontal: 30,
+    backgroundColor: COLORS.orange,
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     justifyContent: "center",
     alignItems: "center",
     width: "80%",
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 3,
   },
   addClientsButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 10,
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    marginLeft: 8,
+    fontFamily: "Futura",
   },
-
   // Keep all existing styles below this point
   contactInviteContainer: {
-    backgroundColor: "#F3F3F3", // Light gray background
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 20,
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
+    padding: 24,
+    marginTop: 24,
     alignItems: "center",
   },
   /* ================= MODALS & FORMS ================= */
@@ -1197,135 +1224,152 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   formContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 15,
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 8,
     width: "90%",
-    maxHeight: "90%", // Increase height slightly
+    maxHeight: "90%",
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    overflow: "hidden", // Add this to prevent overflow
-    position: "relative", // Add this for absolute positioning of close button
+    overflow: "hidden",
+    position: "relative",
   },
   formTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    marginBottom: 24,
     textAlign: "center",
-    color: "#23231A",
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   formSubtitle: {
     textAlign: "center",
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 25,
-    paddingHorizontal: 20,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.slate,
+    marginBottom: 32,
+    paddingHorizontal: 24,
+    fontFamily: "Futura",
   },
   inputField: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: COLORS.gray,
     borderRadius: 8,
     padding: 16,
-    fontSize: 16,
-    marginBottom: 15,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    marginBottom: 16,
+    height: 48,
+    fontFamily: "Futura",
   },
   label: {
-    marginBottom: 5,
-    fontSize: 14,
-    color: "#23231A",
+    marginBottom: 8,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   toggleContainer: {
     flexDirection: "row",
-    borderRadius: 30,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: COLORS.gray,
     overflow: "hidden",
-    marginBottom: 25,
+    marginBottom: 32,
   },
   toggleOption: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.white,
   },
   toggleOptionActive: {
-    backgroundColor: "#23231A",
+    backgroundColor: COLORS.black,
   },
   toggleText: {
-    color: "#23231A",
-    fontWeight: "600",
-    fontSize: 16,
+    color: COLORS.black,
+    fontWeight: "500", // P weight
+    fontSize: 14, // P size
+    fontFamily: "Futura",
   },
   toggleTextActive: {
-    color: "#FFF",
-    fontWeight: "600",
-    fontSize: 16,
+    color: COLORS.white,
+    fontWeight: "500", // P weight
+    fontSize: 14, // P size
+    fontFamily: "Futura",
   },
   formActions: {
     flexDirection: "column",
-    gap: 10,
+    gap: 16,
   },
   sendInviteButton: {
-    backgroundColor: "#40797B",
-    borderRadius: 30,
-    paddingVertical: 14,
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 16,
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 24,
   },
   loadingButton: {
     opacity: 0.7,
   },
   sendInviteButtonText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   feedbackMessage: {
     textAlign: "center",
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 8,
   },
   successMessage: {
-    backgroundColor: "#d4edda",
-    color: "#155724",
+    backgroundColor: COLORS.noticeContainer,
+    color: COLORS.green,
   },
   errorMessage: {
-    backgroundColor: "#f8d7da",
-    color: "#721c24",
+    backgroundColor: COLORS.noticeContainer,
+    color: COLORS.red,
   },
   modalContent: {
     width: "90%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 20,
+    padding: 24,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    marginBottom: 16,
     textAlign: "center",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   feedbackMsg: {
     textAlign: "center",
     marginVertical: 8,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
-  success: { color: "#155724" },
-  error: { color: "#721c24" },
-  label: {
-    fontSize: 14,
-    marginBottom: 4,
-    color: "#23231A",
-  },
+  success: { color: COLORS.green },
+  error: { color: COLORS.red },
   input: {
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 12,
+    borderColor: COLORS.gray,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    height: 48,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
   modalBtns: {
     flexDirection: "row",
@@ -1333,13 +1377,18 @@ const styles = StyleSheet.create({
   },
   modalBtn: {
     flex: 1,
-    backgroundColor: "#019B8E",
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: COLORS.green,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
-    marginHorizontal: 4,
+    marginHorizontal: 8,
   },
-  modalBtnTxt: { color: "#fff", fontWeight: "600" },
+  modalBtnTxt: {
+    color: COLORS.white,
+    fontWeight: "500",
+    fontSize: 14,
+    fontFamily: "Futura",
+  },
   modalBtnDisabled: { opacity: 0.6 },
   leftSlideModal: {
     position: "absolute",
@@ -1347,19 +1396,19 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: "90%",
-    backgroundColor: "#fff",
-    borderTopRightRadius: 20,
-    borderBottomRightRadius: 20,
+    backgroundColor: COLORS.white,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
     overflow: "hidden",
   },
   modalContentForRealtorInvite: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 15,
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 8,
     width: "90%",
     maxHeight: "90%",
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -1371,156 +1420,167 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: "90%",
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
     overflow: "hidden",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    padding: 15,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  modalContent: {
-    flex: 1,
-    backgroundColor: "#fff",
+    borderBottomColor: COLORS.gray,
   },
   closeButton: {
-    padding: 5,
+    padding: 8,
   },
   contactPickerButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
+    padding: 16,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   contactPickerText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
     marginLeft: 8,
+    fontFamily: "Futura",
   },
   selectedContactContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    padding: 10,
+    backgroundColor: COLORS.silver,
+    padding: 16,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   selectedContactName: {
     flex: 1,
-    fontSize: 14,
-    color: "#333",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   clearContactButton: {
-    padding: 5,
+    padding: 8,
   },
   dividerContainer: {
-    marginVertical: 20,
+    marginVertical: 24,
     alignItems: "center",
   },
   orText: {
     textAlign: "center",
-    color: "#666",
-    fontSize: 16,
-    marginBottom: 20,
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    marginBottom: 24,
+    fontFamily: "Futura",
   },
   contactsButton: {
-    backgroundColor: "#40797B",
-    borderRadius: 30,
-    paddingVertical: 14,
-    paddingHorizontal: 30,
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     alignItems: "center",
     width: "80%",
   },
   contactsButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   uploadFileButton: {
-    backgroundColor: "#E49455",
-    borderRadius: 30,
-    paddingVertical: 14,
+    backgroundColor: COLORS.orange,
+    borderRadius: 8,
+    paddingVertical: 16,
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 24,
   },
   uploadFileText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   orDivider: {
     textAlign: "center",
-    color: "#999",
-    fontSize: 14,
-    marginVertical: 15,
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    marginVertical: 16,
+    fontFamily: "Futura",
   },
   alternativeText: {
     textAlign: "center",
-    color: "#666",
-    fontSize: 14,
-    marginTop: 10,
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    marginTop: 16,
+    fontFamily: "Futura",
   },
   closeFormButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 16,
+    right: 16,
     zIndex: 10,
-    padding: 5,
+    padding: 8,
   },
   contactOptions: {
     alignItems: "center",
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: COLORS.gray,
   },
   contactOptionsTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 15,
-    color: "#23231A",
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    marginBottom: 16,
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   contactIcons: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   contactIconBtn: {
     alignItems: "center",
-    marginHorizontal: 15,
-    paddingVertical: 10,
+    marginHorizontal: 16,
+    paddingVertical: 16,
   },
   contactIconText: {
-    marginTop: 5,
-    fontSize: 12,
-    color: "#23231A",
+    marginTop: 8,
+    fontSize: 12, // H4 size
+    fontWeight: "bold", // H4 weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   doneButton: {
-    backgroundColor: "#40797B",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 30,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
     alignItems: "center",
     width: "80%",
   },
   doneButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   contactInviteContainer: {
-    backgroundColor: "#F3F3F3", // Light gray background matching the image
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 20,
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
+    padding: 24,
+    marginTop: 24,
     alignItems: "center",
   },
 });

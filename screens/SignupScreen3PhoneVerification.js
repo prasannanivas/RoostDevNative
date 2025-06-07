@@ -13,6 +13,30 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+/**
+ * Color palette from UX team design system
+ */
+const COLORS = {
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
+};
+
 export default function EmailVerificationScreen({ navigation, route }) {
   // Get user data from previous screen
   const userData = route.params || {};
@@ -217,10 +241,10 @@ export default function EmailVerificationScreen({ navigation, route }) {
         <Text style={styles.pasteInstruction}>
           Paste your 6-digit code in any field - it will fill all boxes
           automatically
-        </Text>
+        </Text>{" "}
         {isLoading && (
           <View style={styles.spinnerContainer}>
-            <ActivityIndicator size="large" color="#019B8E" />
+            <ActivityIndicator size="large" color={COLORS.green} />
           </View>
         )}
         {error ? (
@@ -315,109 +339,123 @@ export default function EmailVerificationScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 48,
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
   },
   brandTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 30,
-    color: "#23231A",
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    marginBottom: 32,
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   heading: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 10,
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   subheading: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 16,
     lineHeight: 20,
+    fontFamily: "Futura",
   },
   pasteInstruction: {
-    fontSize: 12,
-    color: "#019B8E",
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.green,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
     fontStyle: "italic",
+    fontFamily: "Futura",
   },
   spinnerContainer: {
-    marginVertical: 20,
-    height: 40,
+    marginVertical: 24,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
   },
   errorBox: {
-    width: "80%",
-    backgroundColor: "#FCEED2",
+    width: "100%",
+    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 24,
   },
   errorText: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
     lineHeight: 20,
+    fontFamily: "Futura",
   },
 
   // Code boxes
   codeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "80%",
-    marginBottom: 20,
+    width: "100%",
+    marginBottom: 24,
   },
   codeBox: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    fontSize: 18,
-    color: "#23231A",
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    color: COLORS.black,
     textAlign: "center",
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
 
   // Clear button
   clearButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    marginBottom: 10,
+    marginBottom: 16,
   },
   clearButtonText: {
-    color: "#666",
-    fontSize: 14,
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
     textAlign: "center",
+    fontFamily: "Futura",
   },
 
   // Resend button
   resendButton: {
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
   resendButtonDisabled: {
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
   },
   resendButtonText: {
-    color: "#019B8E",
-    fontWeight: "600",
-    fontSize: 14,
+    color: COLORS.green,
+    fontWeight: "bold", // H4 weight
+    fontSize: 12, // H4 size
+    fontFamily: "Futura",
   },
   resendButtonTextDisabled: {
-    color: "#C4C4C4",
+    color: COLORS.gray,
   },
 
   // Bottom bar
@@ -425,32 +463,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    borderTopColor: COLORS.gray,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   backCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#23231A",
+    width: 48,
+    height: 48,
+    borderRadius: 8, // Updated to match design system
+    backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
   },
   verifyButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
   },
   verifyButtonDisabled: {
     opacity: 0.7,
   },
   verifyButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
 });

@@ -27,6 +27,30 @@ import NotificationComponent from "./NotificationComponent";
 import { QuestionnaireProvider } from "./context/QuestionnaireContext";
 import Questionnaire from "./components/questionnaire/Questionnaire";
 
+/**
+ * Color palette from UX team design system
+ */
+const COLORS = {
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
+};
+
 const ClientHome = ({ questionnaireData }) => {
   const { auth } = useAuth();
   const {
@@ -423,7 +447,7 @@ const ClientHome = ({ questionnaireData }) => {
         style={styles.notificationButton}
         onPress={handleNotifications}
       >
-        <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+        <Ionicons name="notifications-outline" size={24} color={COLORS.white} />
         {unreadCount > 0 && (
           <View style={styles.notificationBadge}>
             <Text style={styles.notificationBadgeText}>
@@ -442,7 +466,7 @@ const ClientHome = ({ questionnaireData }) => {
           style={styles.questionnaireButton}
           onPress={() => setShowQuestionnairePreview(true)}
         >
-          <Ionicons name="document-text" size={24} color="#FFFFFF" />
+          <Ionicons name="document-text" size={24} color={COLORS.white} />
           <Text style={styles.questionnaireButtonText}>Preview</Text>
         </TouchableOpacity>
 
@@ -450,7 +474,7 @@ const ClientHome = ({ questionnaireData }) => {
           style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
           onPress={() => setShowQuestionnaire(true)}
         >
-          <Ionicons name="play" size={24} color="#FFFFFF" />
+          <Ionicons name="play" size={24} color={COLORS.white} />
           <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
         </TouchableOpacity>
       </View>
@@ -472,8 +496,9 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
+          {" "}
           {actionLoading ? (
-            <ActivityIndicator size="small" color="blue" />
+            <ActivityIndicator size="small" color={COLORS.green} />
           ) : (
             <Text style={styles.addPillText}>Add</Text>
           )}
@@ -491,8 +516,9 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
+          {" "}
           {actionLoading ? (
-            <ActivityIndicator size="small" color="blue" />
+            <ActivityIndicator size="small" color={COLORS.blue} />
           ) : (
             <Text style={styles.submittedPillText}>Submitted</Text>
           )}
@@ -510,8 +536,9 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
+          {" "}
           {actionLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
             <Text style={styles.completePillText}>Complete</Text>
           )}
@@ -565,7 +592,7 @@ const ClientHome = ({ questionnaireData }) => {
             <TouchableOpacity
               onPress={() => setShowQuestionnairePreview(false)}
             >
-              <Ionicons name="close-circle" size={24} color="#555" />
+              <Ionicons name="close-circle" size={24} color={COLORS.slate} />
             </TouchableOpacity>
           </View>
           <View style={{ marginBottom: 15 }}>
@@ -665,7 +692,12 @@ const ClientHome = ({ questionnaireData }) => {
       <ScrollView
         style={styles.mainContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.green}
+            colors={[COLORS.green]}
+          />
         }
       >
         <View style={styles.contentContainer}>
@@ -673,12 +705,11 @@ const ClientHome = ({ questionnaireData }) => {
           <Text style={styles.subTitle}>
             We understand we are asking for a lot but it’s what’s needed for all
             mortgages in Ontario
-          </Text>
-
+          </Text>{" "}
           {loadingDocuments ? (
             <ActivityIndicator
               size="large"
-              color="#019B8E"
+              color={COLORS.green}
               style={styles.loadingIndicator}
             />
           ) : (
@@ -818,11 +849,11 @@ const ClientHome = ({ questionnaireData }) => {
               <Text style={styles.fileSelected}>
                 {selectedFile?.name || "File selected"}
               </Text>
-            )}
+            )}{" "}
             {isLoading && (
               <ActivityIndicator
                 size="small"
-                color="#019B8E"
+                color={COLORS.green}
                 style={styles.loadingIndicator}
               />
             )}
@@ -835,8 +866,9 @@ const ClientHome = ({ questionnaireData }) => {
                 onPress={handleUpload}
                 disabled={uploadLoading}
               >
+                {" "}
                 {uploadLoading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
                   <Text style={styles.uploadButtonText}>Upload</Text>
                 )}
@@ -917,8 +949,9 @@ const ClientHome = ({ questionnaireData }) => {
                 onPress={() => handleDeleteDocument(selectedSubmittedDoc)}
                 disabled={deleteLoading}
               >
+                {" "}
                 {deleteLoading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
                   <Text style={styles.modalButtonText}>Delete</Text>
                 )}
@@ -964,13 +997,13 @@ export default ClientHome;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   /* TOP HEADER STYLING */
   topHeader: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#23231A",
+    backgroundColor: COLORS.black,
     paddingHorizontal: 16,
     paddingVertical: 12,
     justifyContent: "space-between",
@@ -988,28 +1021,30 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
     flexShrink: 0,
   },
   initialsText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   welcomeName: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
     flex: 1,
+    fontFamily: "Futura",
   },
   removeButtonText: {
-    backgroundColor: "#019B8E",
-    color: "#FFFFFF",
+    backgroundColor: COLORS.green,
+    color: COLORS.white,
     textAlign: "center",
-    borderRadius: 50,
+    borderRadius: 8,
     marginTop: 5,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -1024,7 +1059,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 0,
-    backgroundColor: "#FF3B30",
+    backgroundColor: COLORS.red,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -1033,145 +1068,162 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   notificationBadgeText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 10,
     fontWeight: "bold",
+    fontFamily: "Futura",
   },
   helpButton: {
-    backgroundColor: "#019B8E",
-    borderRadius: 16,
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
     flexShrink: 0,
   },
   helpButtonText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 12, // H4 size
+    fontWeight: "bold", // H4 weight
+    fontFamily: "Futura",
   },
   /* MAIN CONTENT */
   mainContent: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   contentContainer: {
     flex: 1,
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   bigTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#23231A",
-    marginBottom: 10,
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    color: COLORS.black,
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   subTitle: {
-    fontSize: 14,
-    color: "#666666",
-    marginBottom: 25,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.slate,
+    marginBottom: 32,
+    fontFamily: "Futura",
   },
   sectionHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 10,
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   docsContainer: {
-    marginBottom: 25,
+    marginBottom: 32,
   },
   docItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8F9FA",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
+    backgroundColor: COLORS.white,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    marginBottom: 10,
+    marginBottom: 16,
     justifyContent: "space-between",
     gap: 8,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
   },
   docLabel: {
-    fontSize: 14,
-    color: "#23231A",
-    fontWeight: "500",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
     flex: 1,
     marginRight: 8,
+    fontFamily: "Futura",
   },
   // Pill styles
   addPill: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     minWidth: 85,
     alignItems: "center",
     flexShrink: 0,
+    borderWidth: 2,
+    borderColor: COLORS.green,
   },
   closeModalButton: {
-    color: "#23231A",
-    fontWeight: "600",
+    color: COLORS.black,
+    fontWeight: "bold", // H4 weight
     fontSize: 24,
     padding: 10,
-    borderRadius: 50,
-    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    backgroundColor: COLORS.silver,
   },
   closeModalText: {
-    color: "#23231A",
+    color: COLORS.black,
   },
   addPillText: {
-    color: "blue",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.green,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   submittedPill: {
-    borderColor: "blue",
-    borderWidth: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    borderColor: COLORS.blue,
+    borderWidth: 2,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     minWidth: 85,
     alignItems: "center",
     flexShrink: 0,
   },
   submittedPillText: {
-    color: "blue",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.blue,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   cancelButton: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: COLORS.silver,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   cancelButtonText: {
-    color: "#666",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   completePill: {
-    backgroundColor: "#2E7D32",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     minWidth: 85,
     alignItems: "center",
     flexShrink: 0,
   },
   completePillText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   noDocsText: {
-    fontSize: 14,
-    color: "#666666",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.slate,
     textAlign: "center",
-    marginVertical: 10,
+    marginVertical: 16,
+    fontFamily: "Futura",
   },
   loadingIndicator: {
-    marginTop: 50,
+    marginTop: 48,
   },
   /* FILE UPLOAD MODAL */
   modalOverlay: {
@@ -1181,9 +1233,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 24,
     width: "90%",
     maxWidth: 400,
     position: "relative",
@@ -1193,7 +1245,7 @@ const styles = StyleSheet.create({
     height: "100%",
     maxWidth: "100%",
     borderRadius: 0,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     paddingTop: Platform.OS === "ios" ? 40 : 20, // Add more padding for iOS notch
   },
   modalHeader: {
@@ -1201,14 +1253,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 24,
     paddingRight: 10,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#23231A",
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
     flex: 1,
+    fontFamily: "Futura",
   },
   removeButton: {
     position: "absolute",
@@ -1218,33 +1271,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   removeButtonText: {
-    backgroundColor: "#019B8E",
-    color: "#FFFFFF",
+    backgroundColor: COLORS.green,
+    color: COLORS.white,
     textAlign: "center",
-    borderRadius: 50,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    fontSize: 12,
+    fontSize: 12, // H4 size
+    fontWeight: "bold", // H4 weight
+    fontFamily: "Futura",
   },
   imageScrollView: {
     flex: 1,
     width: "100%",
-    backgroundColor: "#ffffff",
+    backgroundColor: COLORS.white,
   },
   imageGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    padding: 12,
-    backgroundColor: "#ffffff",
+    padding: 16,
+    backgroundColor: COLORS.white,
   },
   gridItem: {
     width: "48%",
     aspectRatio: 0.75,
     marginBottom: 24,
     position: "relative",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 12,
+    backgroundColor: COLORS.silver,
+    borderRadius: 8,
     overflow: "hidden",
     padding: 4,
   },
@@ -1252,61 +1307,66 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 8,
-    backgroundColor: "#000",
+    backgroundColor: COLORS.black,
   },
   bottomButtonContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
-    backgroundColor: "#fff",
+    borderTopColor: COLORS.gray,
+    backgroundColor: COLORS.white,
   },
   backButton: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: COLORS.silver,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 8,
   },
   backButtonText: {
-    color: "#666",
-    fontSize: 14,
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   addMoreButton: {
-    backgroundColor: "#019B8E",
-    paddingHorizontal: 40,
-    paddingVertical: 12,
-    borderRadius: 25,
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 8,
     flex: 1,
-    marginHorizontal: 12,
+    marginHorizontal: 16,
   },
   doneButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 8,
   },
   doneButtonText: {
-    color: "#fff",
-    fontSize: 14,
+    color: COLORS.white,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   buttonGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 10,
-    marginVertical: 15,
+    gap: 16,
+    marginVertical: 16,
   },
   actionButtonText: {
-    backgroundColor: "#019B8E",
-    color: "#fff",
-    fontWeight: "500",
+    backgroundColor: COLORS.green,
+    color: COLORS.white,
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   actionButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     padding: 16,
-    borderRadius: 50,
+    borderRadius: 8,
     alignItems: "center",
   },
   actionButtonHalf: {
@@ -1314,21 +1374,26 @@ const styles = StyleSheet.create({
   },
   fileSelected: {
     textAlign: "center",
-    marginVertical: 15,
-    color: "#666",
+    marginVertical: 16,
+    color: COLORS.slate,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   uploadButton: {
-    backgroundColor: "#019B8E",
-    paddingVertical: 12,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 6,
-    marginTop: 15,
+    borderRadius: 8,
+    marginTop: 16,
     width: "100%",
   },
   uploadButtonText: {
-    color: "#fff",
-    fontWeight: "500",
+    color: COLORS.white,
+    fontWeight: "500", // P weight
     textAlign: "center",
+    fontSize: 16, // H3 size
+    fontFamily: "Futura",
   },
   /* PROFILE MODAL */
   profileModalContainer: {
@@ -1337,11 +1402,11 @@ const styles = StyleSheet.create({
   },
   profileModalContent: {
     flex: 1,
-    backgroundColor: "#fff",
-    marginTop: 50,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    backgroundColor: COLORS.white,
+    marginTop: 48,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    padding: 24,
   },
   closeProfileButton: {
     alignSelf: "flex-end",
@@ -1349,49 +1414,55 @@ const styles = StyleSheet.create({
   },
   closeProfileText: {
     fontSize: 24,
-    color: "#333",
+    color: COLORS.black,
   },
   completeModalText: {
-    fontSize: 16,
-    color: "#23231A",
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    color: COLORS.black,
     textAlign: "center",
-    marginVertical: 20,
+    marginVertical: 24,
+    fontFamily: "Futura",
   },
   closeButton: {
-    backgroundColor: "#019B8E",
-    paddingVertical: 12,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 6,
-    marginTop: 15,
+    borderRadius: 8,
+    marginTop: 16,
     width: "100%",
   },
   closeButtonText: {
-    color: "#fff",
-    fontWeight: "500",
+    color: COLORS.white,
+    fontWeight: "500", // P weight
     textAlign: "center",
+    fontSize: 16, // H3 size
+    fontFamily: "Futura",
   },
   modalButtonGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 10,
-    marginTop: 20,
+    gap: 16,
+    marginTop: 24,
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: "center",
   },
   deleteButton: {
-    backgroundColor: "#DC3545",
+    backgroundColor: COLORS.red,
   },
   nevermindButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   modalButtonText: {
-    color: "#fff",
-    fontWeight: "500",
+    color: COLORS.white,
+    fontWeight: "500", // P weight
+    fontSize: 16, // H3 size
+    fontFamily: "Futura",
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -1404,9 +1475,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   questionnaireButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     padding: 8,
-    borderRadius: 6,
+    borderRadius: 8,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -1414,11 +1485,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   testQuestionnaireButton: {
-    backgroundColor: "#FF6B35",
+    backgroundColor: COLORS.orange,
   },
   questionnaireButtonText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "500",
+    color: COLORS.white,
+    fontSize: 12, // H4 size
+    fontWeight: "bold", // H4 weight
+    fontFamily: "Futura",
   },
 });

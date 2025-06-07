@@ -17,6 +17,30 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 
+/**
+ * Color palette from UX team design system
+ */
+const COLORS = {
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
+};
+
 export default function SignUpDetailsScreen({ navigation, route }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -260,13 +284,13 @@ export default function SignUpDetailsScreen({ navigation, route }) {
           </Text>
           {isLoading && (
             <View style={styles.spinnerContainer}>
-              <ActivityIndicator size="large" color="#019B8E" />
+              <ActivityIndicator size="large" color={COLORS.green} />
             </View>
-          )}
+          )}{" "}
           <TextInput
             style={[styles.input, isLoading && styles.inputDisabled]}
             placeholder="First Name"
-            placeholderTextColor="#999999"
+            placeholderTextColor={COLORS.gray}
             value={firstName}
             onChangeText={setFirstName}
             accessible={true}
@@ -284,12 +308,12 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             >
               <Text style={styles.errorText}>{firstNameError}</Text>
             </View>
-          ) : null}
+          ) : null}{" "}
           <TextInput
             ref={lastNameInputRef}
             style={[styles.input, isLoading && styles.inputDisabled]}
             placeholder="Last Name"
-            placeholderTextColor="#999999"
+            placeholderTextColor={COLORS.gray}
             value={lastName}
             onChangeText={setLastName}
             accessible={true}
@@ -318,7 +342,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
               }}
               style={[styles.phoneInput, isLoading && styles.inputDisabled]}
               placeholder="Phone Number (Optional)" // Updated text
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.gray}
               value={phone}
               onChangeText={(text) => {
                 setPhone(text);
@@ -334,12 +358,12 @@ export default function SignUpDetailsScreen({ navigation, route }) {
               onSubmitEditing={() => focusNextInput(emailInputRef)} // Focus email after phone
               blurOnSubmit={false}
             />
-          </View>
+          </View>{" "}
           <TextInput
             ref={emailInputRef}
             style={[styles.input, isLoading && styles.inputDisabled]}
             placeholder="Email (Required)" // Updated text
-            placeholderTextColor="#999999"
+            placeholderTextColor={COLORS.gray}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
@@ -412,79 +436,88 @@ export default function SignUpDetailsScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 48,
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
   },
   brandTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 30,
-    color: "#23231A",
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    marginBottom: 32,
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   heading: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 10,
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   noteText: {
-    fontSize: 14,
-    color: "#019B8E",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.green,
     textAlign: "center",
-    marginBottom: 20,
-    fontWeight: "600",
+    marginBottom: 24,
+    fontFamily: "Futura",
   },
   input: {
     width: "100%",
-    height: 50,
+    height: 48,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    color: "#23231A",
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
   errorBox: {
     width: "100%",
-    backgroundColor: "#FCEED2",
+    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 24,
   },
   errorText: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
     lineHeight: 20,
+    fontFamily: "Futura",
   },
   boldText: {
-    fontWeight: "700",
+    fontWeight: "bold",
   },
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#23231A",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    backgroundColor: COLORS.black,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   backButton: {},
   loginButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
   },
   loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   loginButtonDisabled: {
     opacity: 0.7,
@@ -495,36 +528,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   spinnerContainer: {
-    marginVertical: 20,
-    height: 40,
+    marginVertical: 24,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
   },
   inputDisabled: {
     opacity: 0.7,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: COLORS.silver,
   },
   phoneContainer: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    marginBottom: 15,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    backgroundColor: "white",
+    backgroundColor: COLORS.white,
   },
   phonePrefix: {
-    paddingLeft: 15,
-    paddingRight: 5,
-    fontSize: 16,
-    color: "#23231A",
+    paddingLeft: 16,
+    paddingRight: 8,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   phoneInput: {
     flex: 1,
-    height: 50,
-    paddingHorizontal: 5,
-    fontSize: 16,
-    color: "#23231A",
+    height: 48,
+    paddingHorizontal: 8,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
 });

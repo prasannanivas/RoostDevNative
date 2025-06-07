@@ -16,6 +16,30 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 
+/**
+ * Color palette from UX team design system
+ */
+const COLORS = {
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
+};
+
 export default function PasswordScreen({ navigation, route }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -196,10 +220,11 @@ export default function PasswordScreen({ navigation, route }) {
             </View>
           ) : null}
           <View style={styles.inputContainer}>
+            {" "}
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.gray}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -223,19 +248,21 @@ export default function PasswordScreen({ navigation, route }) {
               }
               accessibilityRole="button"
             >
+              {" "}
               <Ionicons
                 name={showPassword ? "eye-off" : "eye"}
                 size={24}
-                color="#666"
+                color={COLORS.slate}
               />
             </TouchableOpacity>
           </View>
           <View style={styles.inputContainer}>
+            {" "}
             <TextInput
               ref={confirmPasswordRef}
               style={styles.input}
               placeholder="Confirm Password"
-              placeholderTextColor="#999999"
+              placeholderTextColor={COLORS.gray}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPassword}
@@ -265,10 +292,11 @@ export default function PasswordScreen({ navigation, route }) {
               }
               accessibilityRole="button"
             >
+              {" "}
               <Ionicons
                 name={showConfirmPassword ? "eye-off" : "eye"}
                 size={24}
-                color="#666"
+                color={COLORS.slate}
               />
             </TouchableOpacity>
           </View>
@@ -278,17 +306,18 @@ export default function PasswordScreen({ navigation, route }) {
                 Enter the invite code of your Realtor to continue
               </Text>
               <View style={styles.enhancedInputContainer}>
+                {" "}
                 <Ionicons
                   name="key"
                   size={22}
-                  color="#019B8E"
+                  color={COLORS.green}
                   style={styles.inputIcon}
-                />
+                />{" "}
                 <TextInput
                   ref={inviteCodeRef}
                   style={styles.enhancedInput}
                   placeholder="Enter Invite Code"
-                  placeholderTextColor="#999999"
+                  placeholderTextColor={COLORS.gray}
                   value={inviteCode}
                   onChangeText={setInviteCode}
                   autoCorrect={false}
@@ -347,132 +376,140 @@ export default function PasswordScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     display: "flex",
     justifyContent: "center",
   },
   subHeading: {
-    fontSize: 16,
-    color: "#666666",
-    marginBottom: 10,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    color: COLORS.slate,
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   heading: {
-    fontSize: 24,
+    fontSize: 24, // H1 size
     textAlign: "center",
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 30,
+    fontWeight: "bold", // H1 weight
+    color: COLORS.black,
+    marginBottom: 32,
+    fontFamily: "Futura",
   },
   inviteCodeContainer: {
-    marginTop: 15,
-    marginBottom: 15,
-    padding: 15,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: COLORS.coloredBgFill, // Using colored background fill with 10% opacity
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: COLORS.green,
   },
   inviteCodeHeading: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#019B8E",
-    marginBottom: 10,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    color: COLORS.green,
+    marginBottom: 16,
     textAlign: "center",
+    fontFamily: "Futura",
   },
   enhancedInputContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#019B8E",
-    borderRadius: 10,
-    backgroundColor: "#fff",
-    paddingHorizontal: 10,
-    height: 55,
+    borderColor: COLORS.green,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    height: 48,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 16,
   },
   enhancedInput: {
     flex: 1,
-    height: 50,
-    fontSize: 16,
-    color: "#23231A",
-    fontWeight: "500",
+    height: 48,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 16,
+    backgroundColor: COLORS.white,
   },
   input: {
     flex: 1,
-    height: 50,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: "#23231A",
+    height: 48,
+    paddingHorizontal: 16,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   eyeIcon: {
-    padding: 10,
+    padding: 16,
   },
   errorBox: {
-    backgroundColor: "lightgreen",
+    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
     borderRadius: 8,
-    padding: 10,
-    marginTop: 10,
+    padding: 16,
+    marginTop: 16,
   },
   errorText: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#23231A",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    backgroundColor: COLORS.black,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   backButton: {
-    padding: 5,
+    padding: 8,
   },
   continueButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
   },
   continueButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   inviteBox: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: COLORS.coloredBgFill, // Using colored background fill with 10% opacity
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
+    padding: 16,
+    marginBottom: 16,
   },
   inviteText: {
-    fontSize: 16,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   inviterName: {
-    fontWeight: "600",
-    color: "#019B8E",
+    fontWeight: "bold",
+    color: COLORS.green,
   },
 });

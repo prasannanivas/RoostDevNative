@@ -10,6 +10,30 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+/**
+ * Color palette from UX team design system
+ */
+const COLORS = {
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
+};
+
 export default function AccountTypeScreen({ navigation }) {
   const [accountType, setAccountType] = useState("mortgage"); // Default selection
   const [recoId, setRecoId] = useState("");
@@ -132,10 +156,11 @@ export default function AccountTypeScreen({ navigation }) {
         {/* RECO ID Input & Error - Only show if 'realtor' is selected */}
         {accountType === "realtor" && (
           <View style={{ width: "100%", marginBottom: 20 }}>
+            {" "}
             <TextInput
               style={styles.recoInput}
               placeholder="Your RECO id number"
-              placeholderTextColor="#9999999"
+              placeholderTextColor={COLORS.gray}
               value={recoId}
               onChangeText={(text) =>
                 text.match(/^\d{0,7}$/) ? setRecoId(text) : null
@@ -191,104 +216,118 @@ export default function AccountTypeScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 48,
     alignItems: "center",
   },
   brandTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 30,
-    color: "#23231A",
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    marginBottom: 32,
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   heading: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#23231A",
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 32,
+    fontFamily: "Futura",
   },
 
   /* Pill Buttons */
   pillContainer: {
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   pillButton: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 25, // Large borderRadius for "pill" shape
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 15,
+    borderRadius: 8, // Updated to match design system
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   pillSelected: {
-    backgroundColor: "#019B8E", // Fill color when selected
+    backgroundColor: COLORS.green, // Updated color
   },
   pillUnselected: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
   },
   checkIcon: {
     marginRight: 8,
   },
   pillText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight (medium)
+    fontFamily: "Futura",
   },
   pillTextSelected: {
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
   pillTextUnselected: {
-    color: "#019B8E",
+    color: COLORS.green,
   },
 
   /* RECO ID Input & Error */
   recoInput: {
     width: "100%",
-    height: 50,
+    height: 48,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: "#23231A",
+    paddingHorizontal: 16,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
   recoErrorContainer: {
-    backgroundColor: "#FCEED2", // Light orange background
-    padding: 10,
+    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
+    padding: 16,
     borderRadius: 8,
-    marginTop: 10,
+    marginTop: 16,
   },
   recoErrorText: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
 
   alreadyHaveAccount: {
-    fontSize: 14,
-    color: "#23231A",
-    marginBottom: 20,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    marginBottom: 24,
+    fontFamily: "Futura",
   },
   loginLink: {
-    fontSize: 14,
-    color: "#019B8E",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.green,
     textDecorationLine: "underline",
+    fontFamily: "Futura",
   },
   footerText: {
-    fontSize: 12,
-    color: "#23231A",
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.black,
     textAlign: "center",
     lineHeight: 18,
-    marginHorizontal: 10,
-    marginBottom: 40,
+    marginHorizontal: 16,
+    marginBottom: 48,
+    fontFamily: "Futura",
   },
   linkText: {
-    color: "#019B8E",
+    color: COLORS.green,
     textDecorationLine: "underline",
   },
 
@@ -297,29 +336,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    backgroundColor: "#FFFFFF",
+    borderTopColor: COLORS.gray,
+    backgroundColor: COLORS.white,
   },
   backCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#23231A",
+    width: 48,
+    height: 48,
+    borderRadius: 8, // Updated to match design system
+    backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
   },
   nextButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
   },
   nextButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
 });

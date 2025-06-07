@@ -19,6 +19,23 @@ import { useRealtor } from "../context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 
+// Design System Colors
+const COLORS = {
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070",
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+  noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
+  coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
+};
+
 export default function RealtorProfile({ onClose }) {
   const { realtorInfo, fetchRefreshData } = useRealtor();
   const { logout } = useAuth();
@@ -811,11 +828,11 @@ export default function RealtorProfile({ onClose }) {
               </View>
             )}
           </View>
-        )}
+        )}{" "}
         <View style={styles.formGroup}>
           <Text style={styles.label}>First Name:</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
             value={formData.firstName}
             editable={false}
           />
@@ -823,16 +840,16 @@ export default function RealtorProfile({ onClose }) {
         <View style={styles.formGroup}>
           <Text style={styles.label}>Last Name:</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
             value={formData.lastName}
             editable={false}
           />
         </View>
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Email:</Text>
+          <Text style={styles.label}>Email:</Text>{" "}
           <View style={styles.emailContainer}>
             <TextInput
-              style={[styles.emailInput, { backgroundColor: "#F0F0F0" }]}
+              style={[styles.emailInput, { backgroundColor: COLORS.silver }]}
               value={formData.email}
               editable={false}
             />
@@ -847,7 +864,7 @@ export default function RealtorProfile({ onClose }) {
         <View style={styles.formGroup}>
           <Text style={styles.label}>Phone:</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
             value={formData.phone}
             editable={false}
           />
@@ -934,11 +951,11 @@ export default function RealtorProfile({ onClose }) {
             keyboardType="email-address"
             onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
           />
-        </View>
+        </View>{" "}
         <View style={styles.formGroup}>
           <Text style={styles.label}>RECO ID:</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: "#F0F0F0" }]}
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
             value={formData.licenseNumber}
             editable={false}
           />
@@ -1015,9 +1032,9 @@ export default function RealtorProfile({ onClose }) {
                 onPress={handlePasswordChange}
               >
                 <Text style={styles.modalButtonText}>Change Password</Text>
-              </TouchableOpacity>
+              </TouchableOpacity>{" "}
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#999" }]}
+                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
                 onPress={() => {
                   setIsPasswordModalOpen(false);
                   setError("");
@@ -1184,8 +1201,8 @@ export default function RealtorProfile({ onClose }) {
 const styles = StyleSheet.create({
   /* Container for everything */
   container: {
-    padding: 20,
-    backgroundColor: "#FFFFFF",
+    padding: 24,
+    backgroundColor: COLORS.white,
     width: "90%",
   },
 
@@ -1193,140 +1210,159 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   avatarPlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#999999",
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: COLORS.gray,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
+    marginRight: 16,
   },
   avatarInitial: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 24,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 8,
   },
   headerTextContainer: {
     flex: 1,
   },
   realtorName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#23231A",
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 8,
   },
   infoSubtitle: {
     fontSize: 14,
-    color: "#666666",
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.slate,
   },
 
   /* Feedback box for success/error messages */
   feedbackBox: {
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 15,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
   },
   successBox: {
-    backgroundColor: "#d4edda",
+    backgroundColor: COLORS.noticeContainer,
   },
   errorBox: {
-    backgroundColor: "#f8d7da",
+    backgroundColor: COLORS.coloredBackgroundFill,
   },
   feedbackText: {
     textAlign: "center",
     fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
   },
   successText: {
-    color: "#155724",
+    color: COLORS.green,
   },
   errorText: {
-    color: "#721c24",
+    color: COLORS.red,
   },
 
   /* Section wrapper */
   section: {
-    marginBottom: 25,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 10,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 16,
   },
   sectionSubTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "500",
-    color: "#019B8E",
-    marginBottom: 12,
-    marginTop: 5,
+    fontFamily: "Futura",
+    color: COLORS.green,
+    marginBottom: 16,
+    marginTop: 8,
   },
 
   /* Form groups */
   formGroup: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 14,
-    color: "#23231A",
-    marginBottom: 5,
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 14,
-    color: "#23231A",
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    height: 48,
   },
 
   /* Save changes button */
   saveButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 16,
+    height: 48,
   },
   saveButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 
   /* Password Management */
   changePasswordButton: {
-    backgroundColor: "#F04D4D",
+    backgroundColor: COLORS.red,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
+    height: 48,
   },
   changePasswordButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 
   /* Logout Button */
   logoutButton: {
-    backgroundColor: "#F04D4D",
+    backgroundColor: COLORS.red,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 16,
+    height: 48,
   },
   logoutButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 
   /* Modal overlay */
@@ -1335,63 +1371,66 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     width: "100%",
-    padding: 20,
+    padding: 24,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 15,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 16,
     textAlign: "center",
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginTop: 20,
+    marginTop: 24,
   },
   modalButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    height: 48,
   },
   modalButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 
   /* Swipe handle */
   swipeHandle: {
     width: 40,
     height: 5,
-    backgroundColor: "#DDDDDD",
-    borderRadius: 3,
+    backgroundColor: COLORS.gray,
+    borderRadius: 8,
     alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 16,
+    marginBottom: 16,
   },
 
   /* Close button */
   closeButton: {
     position: "absolute",
-    right: 15,
-    top: 45, // Increased top padding for better accessibility
-    width: 36, // Increased touch target size
-    height: 36, // Increased touch target size
-    borderRadius: 18,
-    backgroundColor: "#EEEEEE",
+    right: 16,
+    top: 48,
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.silver,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
-    elevation: 3, // Add elevation for Android
-    shadowColor: "#000", // Add shadow for iOS
+    elevation: 3,
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1400,10 +1439,11 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   closeButtonText: {
-    fontSize: 18, // Slightly larger text
-    color: "#333333",
-    fontWeight: "600",
-    lineHeight: 36, // Match the height for vertical centering
+    fontSize: 20,
+    color: COLORS.black,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    lineHeight: 48,
   },
 
   /* Loading fallback */
@@ -1411,20 +1451,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  /* Invite Code Section */
+  } /* Invite Code Section */,
   inviteCodeContainer: {
-    backgroundColor: "#F9F9F9",
+    backgroundColor: COLORS.coloredBackgroundFill,
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: COLORS.gray,
   },
   inviteCodeLabel: {
-    fontSize: 14,
-    color: "#23231A",
-    fontWeight: "600",
+    fontSize: 12,
+    color: COLORS.black,
+    fontWeight: "bold",
+    fontFamily: "Futura",
     marginBottom: 8,
   },
   inviteCodeWrapper: {
@@ -1436,37 +1476,45 @@ const styles = StyleSheet.create({
   inviteCode: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#019B8E",
+    fontFamily: "Futura",
+    color: COLORS.green,
     letterSpacing: 1,
   },
   copyButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 8,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
   },
   copyButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: COLORS.white,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
   inviteCodeHint: {
     fontSize: 12,
-    color: "#666666",
+    color: COLORS.slate,
+    fontFamily: "Futura",
     fontStyle: "italic",
-    marginBottom: 15,
+    marginBottom: 16,
   },
 
   /* Shareable Link Section */
   shareableLinkContainer: {
-    marginTop: 15,
-    paddingTop: 15,
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: COLORS.gray,
   },
   shareableLinkLabel: {
-    fontSize: 14,
-    color: "#23231A",
-    fontWeight: "600",
+    fontSize: 12,
+    color: COLORS.black,
+    fontWeight: "bold",
+    fontFamily: "Futura",
     marginBottom: 8,
   },
   shareableLinkWrapper: {
@@ -1478,20 +1526,24 @@ const styles = StyleSheet.create({
   shareableLink: {
     flex: 1,
     fontSize: 14,
-    color: "#019B8E",
-    marginRight: 10,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.green,
+    marginRight: 16,
   },
 
   /* Email Change Modal */
   successMessageContainer: {
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 24,
   },
   successMessage: {
     fontSize: 16,
-    color: "#155724",
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.green,
     textAlign: "center",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   emailContainer: {
     flexDirection: "row",
@@ -1500,128 +1552,149 @@ const styles = StyleSheet.create({
   emailInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 14,
-    color: "#23231A",
-    marginRight: 10,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginRight: 16,
+    height: 48,
   },
   changeEmailButton: {
-    backgroundColor: "#019B8E",
-    borderRadius: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
   },
   changeEmailText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   pasteInstruction: {
     fontSize: 12,
-    color: "#019B8E",
+    color: COLORS.green,
+    fontFamily: "Futura",
     textAlign: "center",
-    marginBottom: 15,
+    marginBottom: 16,
     fontStyle: "italic",
   },
   modalCloseButton: {
     position: "absolute",
-    right: 15,
-    top: 15,
+    right: 16,
+    top: 16,
   },
   modalCloseText: {
     fontSize: 24,
-    color: "#23231A",
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   modalSubtitle: {
     fontSize: 14,
-    color: "#666666",
-    marginBottom: 20,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.slate,
+    marginBottom: 24,
   },
   fullWidthButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
     width: "100%",
-    marginTop: 10,
+    marginTop: 16,
+    height: 48,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   otpInput: {
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 18,
+    fontWeight: "500",
+    fontFamily: "Futura",
     textAlign: "center",
     letterSpacing: 8,
-    marginBottom: 20,
+    marginBottom: 24,
+    height: 48,
   },
   resendButton: {
-    marginTop: 15,
+    marginTop: 16,
     alignSelf: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   resendButtonDisabled: {
     opacity: 0.5,
   },
   resendButtonText: {
-    color: "#019B8E",
-    fontWeight: "600",
+    color: COLORS.green,
+    fontWeight: "bold",
+    fontFamily: "Futura",
     fontSize: 14,
   },
   resendButtonTextDisabled: {
-    color: "#999999",
+    color: COLORS.gray,
   },
   successContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
   successIconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#019B8E",
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   successIconText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 30,
     fontWeight: "bold",
+    fontFamily: "Futura",
   },
   successText: {
-    fontSize: 18,
-    color: "#23231A",
-    fontWeight: "600",
+    fontSize: 20,
+    color: COLORS.black,
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   errorText: {
-    color: "#F04D4D",
+    color: COLORS.red,
     fontSize: 14,
-    marginBottom: 10,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    marginBottom: 16,
   },
 
   autoSaveNotification: {
     position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "#019B8E",
+    bottom: 24,
+    right: 24,
+    backgroundColor: COLORS.green,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 8,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1631,8 +1704,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   autoSaveText: {
-    color: "white",
+    color: COLORS.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 });

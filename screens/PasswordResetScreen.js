@@ -15,6 +15,30 @@ import { Ionicons } from "@expo/vector-icons";
 // Keep the import for future use
 import { TextInputMask } from "react-native-masked-text";
 
+/**
+ * Color palette from UX team design system
+ */
+const COLORS = {
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
+};
+
 export default function PasswordResetScreen({ navigation }) {
   // Screen stages
   const STAGES = {
@@ -361,7 +385,6 @@ export default function PasswordResetScreen({ navigation }) {
       <Text style={styles.subheading}>
         Enter the email address associated with your account
       </Text>
-
       {/* Comment out toggle buttons for contact method */}
       {/* <View style={styles.toggleContainer}>
         <TouchableOpacity
@@ -396,18 +419,16 @@ export default function PasswordResetScreen({ navigation }) {
             Phone
           </Text>
         </TouchableOpacity>
-      </View> */}
-
+      </View> */}{" "}
       <TextInput
         style={styles.input}
         placeholder="Email Address"
-        placeholderTextColor="#999999"
+        placeholderTextColor={COLORS.gray}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
-
       {/* Comment out phone input */}
       {/* {contactMethod === "phone" && (
         <View style={styles.phoneContainer}>
@@ -416,10 +437,9 @@ export default function PasswordResetScreen({ navigation }) {
             type={"custom"}
             options={{
               mask: "(999) 999-9999",
-            }}
-            style={styles.phoneInput}
+            }}            style={styles.phoneInput}
             placeholder="Phone Number"
-            placeholderTextColor="#999999"
+            placeholderTextColor={COLORS.gray}
             value={phone}
             onChangeText={(text) => {
               setPhone(text);
@@ -429,7 +449,6 @@ export default function PasswordResetScreen({ navigation }) {
           />
         </View>
       } */}
-
       {error ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{error}</Text>
@@ -513,32 +532,28 @@ export default function PasswordResetScreen({ navigation }) {
       <Text style={styles.heading}>Create New Password</Text>
       <Text style={styles.subheading}>
         Please enter your new password below
-      </Text>
-
+      </Text>{" "}
       <TextInput
         style={styles.input}
         placeholder="New Password"
-        placeholderTextColor="#999999"
+        placeholderTextColor={COLORS.gray}
         secureTextEntry={true}
         value={newPassword}
         onChangeText={setNewPassword}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Confirm New Password"
-        placeholderTextColor="#999999"
+        placeholderTextColor={COLORS.gray}
         secureTextEntry={true}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-
       {error ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
-
       <Text style={styles.passwordRequirement}>
         Password must be at least 8 characters long
       </Text>
@@ -548,8 +563,9 @@ export default function PasswordResetScreen({ navigation }) {
   // Add new function to render success stage
   const renderSuccessStage = () => (
     <>
+      {" "}
       <View style={styles.successContainer}>
-        <Ionicons name="checkmark-circle" size={80} color="#019B8E" />
+        <Ionicons name="checkmark-circle" size={80} color={COLORS.green} />
         <Text style={styles.heading}>Password Reset Successful</Text>
         <Text style={styles.subheading}>
           Your password has been reset successfully. Please login with your new
@@ -571,14 +587,12 @@ export default function PasswordResetScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>
-
+        <Text style={styles.brandTitle}>Roost</Text>{" "}
         {isLoading && (
           <View style={styles.spinnerContainer}>
-            <ActivityIndicator size="large" color="#019B8E" />
+            <ActivityIndicator size="large" color={COLORS.green} />
           </View>
         )}
-
         {/* Conditional rendering based on stage */}
         {stage === STAGES.CONTACT_INFO && renderContactInfoStage()}
         {stage === STAGES.OTP_VERIFICATION && renderOTPVerificationStage()}
@@ -620,157 +634,180 @@ export default function PasswordResetScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 48,
     alignItems: "center",
     flexGrow: 1,
   },
   brandTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 30,
-    color: "#23231A",
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    marginBottom: 32,
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   heading: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 15,
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
+    marginBottom: 16,
     textAlign: "center",
+    fontFamily: "Futura",
   },
   subheading: {
-    fontSize: 14,
-    color: "#23231A",
-    marginBottom: 30,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    marginBottom: 32,
     textAlign: "center",
     lineHeight: 20,
+    fontFamily: "Futura",
   },
   toggleContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 24,
     width: "100%",
   },
   toggleButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginHorizontal: 5,
-    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginHorizontal: 8,
+    borderRadius: 8,
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
   },
   toggleButtonActive: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   toggleButtonText: {
-    color: "#019B8E",
-    fontWeight: "600",
+    color: COLORS.green,
+    fontWeight: "500", // P weight
+    fontSize: 14, // P size
+    fontFamily: "Futura",
   },
   toggleButtonTextActive: {
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
   input: {
     width: "100%",
-    height: 50,
+    height: 48,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: "#23231A",
-    marginBottom: 20,
+    paddingHorizontal: 16,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    marginBottom: 24,
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
   phoneContainer: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
+    backgroundColor: COLORS.white,
   },
   phonePrefix: {
-    paddingLeft: 15,
-    paddingRight: 5,
-    fontSize: 16,
-    color: "#23231A",
+    paddingLeft: 16,
+    paddingRight: 8,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   phoneInput: {
     flex: 1,
-    height: 50,
-    paddingHorizontal: 5,
-    fontSize: 16,
-    color: "#23231A",
+    height: 48,
+    paddingHorizontal: 8,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    fontFamily: "Futura",
   },
   codeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "85%",
-    marginBottom: 30,
+    width: "100%",
+    marginBottom: 32,
   },
   codeBox: {
-    width: 45,
-    height: 45,
+    width: 48,
+    height: 48,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     textAlign: "center",
-    fontSize: 24,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
     borderRadius: 8,
-    fontSize: 18,
-    color: "#23231A",
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
   resendButton: {
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     alignSelf: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   resendButtonDisabled: {
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
   },
   resendButtonText: {
-    color: "#019B8E",
-    fontWeight: "600",
-    fontSize: 14,
+    color: COLORS.green,
+    fontWeight: "bold", // H4 weight
+    fontSize: 12, // H4 size
+    fontFamily: "Futura",
   },
   resendButtonTextDisabled: {
-    color: "#C4C4C4",
+    color: COLORS.gray,
   },
   errorBox: {
     width: "100%",
-    backgroundColor: "#FCEED2",
+    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 24,
   },
   errorText: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
     lineHeight: 20,
+    fontFamily: "Futura",
   },
   passwordRequirement: {
-    fontSize: 13,
-    color: "#666666",
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.slate,
     alignSelf: "flex-start",
-    marginLeft: 10,
-    marginTop: -10,
+    marginLeft: 16,
+    marginTop: -16,
+    fontFamily: "Futura",
   },
   verificationNote: {
-    fontSize: 12,
-    color: "#888888",
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.slate,
     textAlign: "center",
     fontStyle: "italic",
-    marginTop: 10,
+    marginTop: 16,
+    fontFamily: "Futura",
   },
   spinnerContainer: {
-    marginVertical: 20,
-    height: 40,
+    marginVertical: 24,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -778,53 +815,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    borderTopColor: COLORS.gray,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   backCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#23231A",
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
   },
   continueButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
   },
   continueButtonDisabled: {
     opacity: 0.7,
   },
   continueButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   // Add new styles
   successContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 48,
   },
   loginButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    marginTop: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    marginTop: 32,
     width: "80%",
     alignItems: "center",
   },
   loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
 });

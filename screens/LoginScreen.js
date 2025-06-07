@@ -15,17 +15,27 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 /**
- * Approximated color palette from your screenshot.
- * Replace with exact values from Figma if available.
+ * Color palette from UX team design system
  */
 const COLORS = {
-  background: "#FFFFFF",
-  textDark: "#23231A", // Dark text color (titles, normal text)
-  inputBorder: "#9C9C9C", // Input border color
-  teal: "#019B8E", // Primary button color (Log In)
-  red: "#F04D4D", // Realtor button color
-  footerBackground: "#23231A", // Dark footer background
-  footerText: "#FFFFFF", // Footer text color
+  // Core colors
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070", // dark gray
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+
+  // Accent colors
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+
+  // Opacity variations
+  noticeContainerBg: "#37747340", // Green with 25% opacity
+  coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
 export default function LoginScreen() {
@@ -130,7 +140,6 @@ export default function LoginScreen() {
         >
           {/* Brand Title */}
           <Text style={styles.brandTitle}>Roost</Text>
-
           {/* Error Message */}
           {error && (
             <Text
@@ -141,12 +150,11 @@ export default function LoginScreen() {
               {error}
             </Text>
           )}
-
-          {/* Email Input */}
+          {/* Email Input */}{" "}
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor="#999999"
+            placeholderTextColor={COLORS.gray}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
@@ -160,13 +168,12 @@ export default function LoginScreen() {
             onSubmitEditing={() => focusNextInput(passwordInputRef)}
             blurOnSubmit={false}
           />
-
-          {/* Password Input */}
+          {/* Password Input */}{" "}
           <TextInput
             ref={passwordInputRef}
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor="#999999"
+            placeholderTextColor={COLORS.gray}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -178,7 +185,6 @@ export default function LoginScreen() {
             returnKeyType="done"
             onSubmitEditing={() => dismissKeyboard()}
           />
-
           {/* Reset Password */}
           <TouchableOpacity
             onPress={handleResetPassword}
@@ -188,7 +194,6 @@ export default function LoginScreen() {
           >
             <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
           </TouchableOpacity>
-
           {/* Log In Button */}
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
@@ -202,12 +207,10 @@ export default function LoginScreen() {
               {loading ? "Logging in..." : "Log In"}
             </Text>
           </TouchableOpacity>
-
           {/* Sign Up Prompt */}
           <Text style={styles.signUpPrompt}>
             Don't have an Account? Sign Up for Free
           </Text>
-
           {/* Sign Up Button */}
           <TouchableOpacity
             style={styles.signUpButton}
@@ -243,109 +246,124 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 48,
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
     backgroundColor: COLORS.background,
   },
   brandTitle: {
-    fontSize: 32,
-    fontWeight: "600",
-    marginBottom: 30,
-    color: COLORS.textDark,
-    // For exact match, use a custom font if your Figma uses one.
+    fontSize: 24, // H1 size
+    fontWeight: "bold", // H1 weight
+    marginBottom: 32,
+    color: COLORS.black,
+    fontFamily: "Futura", // Will fallback to system font if Futura not available
   },
   input: {
     width: "100%",
-    height: 50,
+    height: 48,
     borderWidth: 1,
-    borderColor: COLORS.inputBorder,
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-    fontSize: 16,
-    color: COLORS.textDark,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight (medium)
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
+    fontFamily: "Futura",
   },
   resetPasswordText: {
     alignSelf: "flex-end",
-    color: COLORS.textDark,
-    marginBottom: 20,
+    color: COLORS.slate,
+    marginBottom: 24,
     textDecorationLine: "underline",
-    fontWeight: "500",
+    fontSize: 12, // H4 size
+    fontWeight: "bold", // H4 weight
+    fontFamily: "Futura",
   },
   loginButton: {
     width: "100%",
-    height: 50,
-    backgroundColor: COLORS.teal,
+    height: 48,
+    backgroundColor: COLORS.green,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight (medium)
+    fontFamily: "Futura",
   },
   loginButtonDisabled: {
     opacity: 0.7,
   },
   errorText: {
     color: COLORS.red,
-    marginBottom: 10,
+    marginBottom: 16,
     textAlign: "center",
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    fontFamily: "Futura",
   },
   signUpPrompt: {
-    fontSize: 14,
-    color: COLORS.textDark,
-    marginBottom: 10,
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.black,
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   signUpButton: {
     width: "100%",
-    height: 50,
-    borderColor: COLORS.teal,
+    height: 48,
+    borderColor: COLORS.green,
     borderWidth: 2,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 32,
     backgroundColor: "transparent",
   },
   signUpButtonText: {
-    color: COLORS.teal,
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.green,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
   realtorButton: {
     width: "100%",
-    height: 50,
+    height: 48,
     backgroundColor: COLORS.red,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 48,
   },
   realtorButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 12, // H4 size
+    fontWeight: "bold", // H4 weight
+    fontFamily: "Futura",
   },
   footerContainer: {
-    backgroundColor: COLORS.footerBackground,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    backgroundColor: COLORS.black,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   footerText: {
-    fontSize: 12,
-    color: COLORS.footerText,
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.white,
     marginBottom: 8,
     textAlign: "center",
     lineHeight: 18,
+    fontFamily: "Futura",
   },
   linkText: {
-    color: "#A4E3DB", // Lighter teal for links, adjust if needed
+    color: COLORS.green, // Using green for links instead of light teal
     textDecorationLine: "underline",
   },
 });

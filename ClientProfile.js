@@ -18,6 +18,23 @@ import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
 import Ionicons from "react-native-vector-icons/Ionicons"; // Import Ionicons
 
+// Design System Colors
+const COLORS = {
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070",
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+  noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
+  coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
+};
+
 export default function ClientProfile({ onClose }) {
   const { user, logout } = useAuth(); // if needed
   const { clientInfo, fetchRefreshData } = useClient();
@@ -471,22 +488,26 @@ export default function ClientProfile({ onClose }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Personal Info Card */}
         <View style={styles.card}>
+          {" "}
           <View style={styles.formGroup}>
             <TextInput
               style={styles.input}
               placeholder="First Name"
+              placeholderTextColor={COLORS.gray}
               value={formData.firstName}
               onChangeText={(text) => handleChange("firstName", text)}
             />
             <TextInput
               style={styles.input}
               placeholder="Last Name"
+              placeholderTextColor={COLORS.gray}
               value={formData.lastName}
               onChangeText={(text) => handleChange("lastName", text)}
             />
             <TextInput
               style={styles.input}
               placeholder="Phone Number"
+              placeholderTextColor={COLORS.gray}
               keyboardType="phone-pad"
               value={formData.phone}
               onChangeText={(text) => handleChange("phone", text)}
@@ -496,6 +517,7 @@ export default function ClientProfile({ onClose }) {
               <TextInput
                 style={[styles.input, styles.emailInput]}
                 placeholder="Email"
+                placeholderTextColor={COLORS.gray}
                 keyboardType="email-address"
                 value={formData.email}
                 editable={false} // Make it non-editable
@@ -515,29 +537,33 @@ export default function ClientProfile({ onClose }) {
           <Text style={styles.cardTitle}>Send my rewards to</Text>
           <Text style={styles.cardSubtitle}>
             Make sure thing info is complete and up to date.
-          </Text>
+          </Text>{" "}
           <View style={styles.formGroup}>
             <TextInput
               style={styles.input}
               placeholder="Name"
+              placeholderTextColor={COLORS.gray}
               value={formData.firstName + " " + formData.lastName}
               editable={false}
             />
             <TextInput
               style={styles.input}
               placeholder="Address"
+              placeholderTextColor={COLORS.gray}
               value={formData.address}
               onChangeText={(text) => handleChange("address", text)}
             />
             <TextInput
               style={styles.input}
               placeholder="City"
+              placeholderTextColor={COLORS.gray}
               value={formData.city}
               onChangeText={(text) => handleChange("city", text)}
             />
             <TextInput
               style={styles.input}
               placeholder="Postal Code"
+              placeholderTextColor={COLORS.gray}
               value={formData.postalCode}
               onChangeText={(text) => handleChange("postalCode", text)}
             />
@@ -718,11 +744,13 @@ export default function ClientProfile({ onClose }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Change Password</Text>
-            {error ? <Text style={styles.errorMessage}>{error}</Text> : null}
-
+            {error ? (
+              <Text style={styles.errorMessage}>{error}</Text>
+            ) : null}{" "}
             <TextInput
               style={styles.modalInput}
               placeholder="Current Password"
+              placeholderTextColor={COLORS.gray}
               secureTextEntry
               value={passwordData.oldPassword}
               onChangeText={(text) =>
@@ -732,6 +760,7 @@ export default function ClientProfile({ onClose }) {
             <TextInput
               style={styles.modalInput}
               placeholder="New Password"
+              placeholderTextColor={COLORS.gray}
               secureTextEntry
               value={passwordData.newPassword}
               onChangeText={(text) =>
@@ -741,22 +770,22 @@ export default function ClientProfile({ onClose }) {
             <TextInput
               style={styles.modalInput}
               placeholder="Confirm New Password"
+              placeholderTextColor={COLORS.gray}
               secureTextEntry
               value={passwordData.confirmPassword}
               onChangeText={(text) =>
                 handlePasswordInputChange("confirmPassword", text)
               }
             />
-
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
                 style={styles.modalButton}
                 onPress={handlePasswordSubmit}
               >
                 <Text style={styles.modalButtonText}>Update Password</Text>
-              </TouchableOpacity>
+              </TouchableOpacity>{" "}
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "#A9A9A9" }]}
+                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
                 onPress={() => {
                   setShowPasswordModal(false);
                   setError("");
@@ -770,7 +799,6 @@ export default function ClientProfile({ onClose }) {
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
-
             {/* Logout Button */}
           </View>
         </View>
@@ -803,22 +831,21 @@ export default function ClientProfile({ onClose }) {
                 </TouchableOpacity>
               )}
             </View>
-
             {/* Error Message */}
             {emailError ? (
               <Text style={styles.errorMessage}>{emailError}</Text>
             ) : null}
-
             {/* Step 1: Enter New Email */}
             {emailChangeStep === 1 && (
               <>
                 <Text style={styles.modalSubtitle}>
                   Enter your new email address below. We'll send a verification
                   code to this address.
-                </Text>
+                </Text>{" "}
                 <TextInput
                   style={styles.modalInput}
                   placeholder="New Email Address"
+                  placeholderTextColor={COLORS.gray}
                   keyboardType="email-address"
                   value={newEmail}
                   onChangeText={(text) => setNewEmail(text)}
@@ -833,7 +860,6 @@ export default function ClientProfile({ onClose }) {
                 </TouchableOpacity>
               </>
             )}
-
             {/* Step 2: Enter OTP */}
             {emailChangeStep === 2 && (
               <>
@@ -845,11 +871,12 @@ export default function ClientProfile({ onClose }) {
                 <Text style={styles.pasteInstruction}>
                   Paste your 6-digit code in the field - it will handle full
                   codes automatically
-                </Text>
+                </Text>{" "}
                 <TextInput
                   ref={otpInputRef}
                   style={styles.otpInput}
                   placeholder="Enter verification code"
+                  placeholderTextColor={COLORS.gray}
                   keyboardType="numeric"
                   value={emailOtp}
                   onChangeText={(text) => {
@@ -899,12 +926,15 @@ export default function ClientProfile({ onClose }) {
                   </Text>
                 </TouchableOpacity>
               </>
-            )}
-
+            )}{" "}
             {/* Step 3: Success */}
             {emailChangeStep === 3 && (
               <View style={styles.successContainer}>
-                <Ionicons name="checkmark-circle" size={60} color="#019B8E" />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={60}
+                  color={COLORS.green}
+                />
                 <Text style={styles.successText}>
                   Email successfully updated!
                 </Text>
@@ -921,104 +951,106 @@ const styles = StyleSheet.create({
   // Container for everything
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingTop: 40,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.background,
+    paddingTop: 48,
+    paddingHorizontal: 24,
   },
   closeButton: {
     position: "absolute",
-    top: 0,
-    right: 0,
-    padding: 15,
+    top: 16,
+    right: 16,
+    padding: 16,
   },
   closeButtonText: {
     fontSize: 24,
-    color: "#000",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    fontWeight: "bold",
   },
   avatarContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 32,
   },
   avatarCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#019B8E",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 16,
   },
   avatarText: {
-    fontSize: 20,
-    color: "#FFFFFF",
-    fontWeight: "600",
+    fontSize: 24,
+    color: COLORS.white,
+    fontFamily: "Futura",
+    fontWeight: "bold",
   },
-  /* Logout Button */
-  logoutButton: {
-    backgroundColor: "#F04D4D",
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  logoutButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  logoutSection: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-  },
-
   profileTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#23231A",
-    marginBottom: 5,
+    fontSize: 24,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 8,
   },
   profileSubtitle: {
     fontSize: 14,
-    color: "#23231A",
-    marginBottom: 20,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.slate,
+    marginBottom: 24,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
 
   // Card style
   card: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 20,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 5,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 8,
   },
   cardSubtitle: {
-    fontSize: 12,
-    color: "#666666",
-    marginBottom: 10,
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.slate,
+    marginBottom: 16,
   },
 
   // Form
   formGroup: {
-    marginBottom: 10,
+    marginBottom: 16,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 14,
-    color: "#23231A",
-    marginBottom: 10,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 16,
+    height: 48,
   },
 
   // Toggles
@@ -1026,28 +1058,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   switchLabel: {
     fontSize: 14,
-    color: "#23231A",
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   toggleSwitch: {
     width: 48,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#C4C4C4",
+    backgroundColor: COLORS.gray,
     justifyContent: "center",
     padding: 2,
   },
   toggleSwitchOn: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   toggleThumb: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
   },
   toggleThumbOn: {
     marginLeft: 20,
@@ -1057,95 +1091,128 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-around",
+    marginBottom: 24,
   },
   saveButton: {
-    backgroundColor: "#019B8E",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     borderRadius: 8,
   },
   saveButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
+    fontFamily: "Futura",
   },
   passwordButton: {
-    backgroundColor: "#F04D4D",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.red,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     borderRadius: 8,
   },
   passwordButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
+    fontFamily: "Futura",
+  },
+
+  /* Logout Button */
+  logoutButton: {
+    backgroundColor: COLORS.red,
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  logoutButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+  },
+  logoutSection: {
+    marginTop: 24,
+    paddingHorizontal: 24,
   },
 
   // Password Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(29, 35, 39, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
   },
   modalCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     width: "100%",
-    padding: 20,
+    padding: 24,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 15,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 16,
     textAlign: "center",
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 14,
-    color: "#23231A",
-    marginBottom: 10,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 16,
+    height: 48,
   },
   modalButtonRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginTop: 10,
+    marginTop: 16,
   },
   modalButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
   },
   modalButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
+    fontFamily: "Futura",
   },
   errorMessage: {
-    color: "red",
-    marginBottom: 10,
+    color: COLORS.red,
+    marginBottom: 16,
     textAlign: "center",
+    fontSize: 12,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    backgroundColor: COLORS.noticeContainer,
+    padding: 16,
+    borderRadius: 8,
   },
 
   // Success notification
   saveNotification: {
     position: "absolute",
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: "#019B8E",
-    padding: 10,
-    borderRadius: 5,
+    bottom: 24,
+    left: 24,
+    right: 24,
+    backgroundColor: COLORS.green,
+    padding: 16,
+    borderRadius: 8,
     zIndex: 100,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1155,32 +1222,37 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   saveNotificationText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: COLORS.white,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    fontSize: 14,
   },
 
   // Email Field Styles
   emailContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 16,
   },
   emailInput: {
     flex: 1,
     marginBottom: 0,
-    backgroundColor: "#F8F8F8", // Slightly grayed out to indicate non-editable
+    backgroundColor: COLORS.silver,
   },
   changeEmailButton: {
-    backgroundColor: "#019B8E",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    marginLeft: 10,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginLeft: 16,
+    height: 48,
+    justifyContent: "center",
   },
   changeEmailText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 
   // Modal Styles
@@ -1188,90 +1260,105 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: "#666666",
-    marginBottom: 20,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.slate,
+    marginBottom: 24,
   },
   pasteInstruction: {
     fontSize: 12,
-    color: "#019B8E",
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.green,
     textAlign: "center",
-    marginBottom: 15,
+    marginBottom: 16,
     fontStyle: "italic",
   },
   modalCloseButton: {
-    padding: 5,
+    padding: 8,
   },
   modalCloseText: {
     fontSize: 24,
-    color: "#23231A",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    fontWeight: "bold",
   },
   fullWidthButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
     width: "100%",
-    marginTop: 10,
+    marginTop: 16,
+    height: 48,
   },
   buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
   },
   textButton: {
-    marginTop: 15,
+    marginTop: 16,
     alignSelf: "center",
   },
   textButtonLabel: {
-    color: "#019B8E",
+    color: COLORS.green,
     fontSize: 14,
     fontWeight: "500",
+    fontFamily: "Futura",
   },
   otpInput: {
     borderWidth: 1,
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 18,
+    fontWeight: "500",
+    fontFamily: "Futura",
     textAlign: "center",
     letterSpacing: 8,
-    marginBottom: 20,
+    marginBottom: 24,
+    height: 48,
   },
   successContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
   successText: {
-    fontSize: 18,
-    color: "#23231A",
-    fontWeight: "600",
-    marginTop: 15,
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginTop: 16,
   },
   // Resend button styles
   resendButton: {
-    marginTop: 15,
+    marginTop: 16,
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     alignItems: "center",
+    height: 48,
   },
   resendButtonDisabled: {
-    borderColor: "#C4C4C4",
+    borderColor: COLORS.gray,
   },
   resendButtonText: {
-    color: "#019B8E",
-    fontWeight: "600",
+    color: COLORS.green,
+    fontWeight: "500",
+    fontFamily: "Futura",
     fontSize: 14,
   },
   resendButtonTextDisabled: {
-    color: "#C4C4C4",
+    color: COLORS.gray,
   },
 });
