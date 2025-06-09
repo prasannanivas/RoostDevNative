@@ -153,7 +153,6 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
       if (response?.data?.message === "OTP sent successfully") {
         setOtpSent(true);
-        Alert.alert("OTP Sent", `Verification code sent to ${userData.email}`);
       } else {
         setError("Failed to send verification code. Please try again.");
       }

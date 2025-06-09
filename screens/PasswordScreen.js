@@ -16,6 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -201,12 +202,21 @@ export default function PasswordScreen({ navigation, route }) {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
+        {" "}
         <ScrollView
           contentContainerStyle={styles.container}
           bounces={false}
           keyboardShouldPersistTaps="handled"
           accessible={true}
         >
+          {/* Logo */}
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
+
           <Text style={styles.heading}>Secure your account</Text>
           {/* Display invitation message if available */}
           {invitedBy ? (
@@ -404,6 +414,10 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginBottom: 32,
     fontFamily: "Futura",
+  },
+  brandLogo: {
+    alignSelf: "center",
+    marginBottom: 32,
   },
   inviteCodeContainer: {
     marginTop: 16,
