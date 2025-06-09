@@ -309,7 +309,7 @@ const ClientHome = ({ questionnaireData }) => {
 
     try {
       const resp = await fetch(
-        `http://44.202.249.124:5000/documents/${clientId}/documents`,
+        `http://159.203.58.60:5000/documents/${clientId}/documents`,
         {
           method: "POST",
           body: data,
@@ -347,7 +347,7 @@ const ClientHome = ({ questionnaireData }) => {
       }
 
       const response = await fetch(
-        `http://44.202.249.124:5000/documents/${clientId}/documents/${documentDetails._id}`,
+        `http://159.203.58.60:5000/documents/${clientId}/documents/${documentDetails._id}`,
         {
           method: "DELETE",
         }

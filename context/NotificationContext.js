@@ -152,7 +152,7 @@ export const NotificationProvider = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://44.202.249.124:5000/notifications?userId=${userId}`
+        `http://159.203.58.60:5000/notifications?userId=${userId}`
       );
 
       const formattedNotifications = response.data.notifications.map(
@@ -217,7 +217,7 @@ export const NotificationProvider = ({ children }) => {
   const markNotificationAsRead = async (notificationId) => {
     try {
       await axios.put(
-        `http://44.202.249.124:5000/notifications/${notificationId}/read`,
+        `http://159.203.58.60:5000/notifications/${notificationId}/read`,
         {}
       );
       // Decrease unread count by 1
@@ -236,7 +236,7 @@ export const NotificationProvider = ({ children }) => {
 
     try {
       await axios.put(
-        `http://44.202.249.124:5000/notifications/mark-all-read?userId=${userId}`
+        `http://159.203.58.60:5000/notifications/mark-all-read?userId=${userId}`
       );
       setUnreadCount(0);
       updateGlobalUnreadCount(0);

@@ -85,7 +85,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       if (email) {
         try {
           const response = await axios.post(
-            "http://44.202.249.124:5000/presignup/email",
+            "http://159.203.58.60:5000/presignup/email",
             {
               email: email,
             }
@@ -115,7 +115,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
       if (phone) {
         try {
           const response = await axios.post(
-            "http://44.202.249.124:5000/presignup/phone",
+            "http://159.203.58.60:5000/presignup/phone",
             {
               phone: formattedPhone,
             }

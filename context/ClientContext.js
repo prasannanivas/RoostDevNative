@@ -13,9 +13,9 @@ export const ClientProvider = ({ children }) => {
 
   async function fetchDocuments(clientID) {
     try {
-      // Replace 44.202.249.124 with your computer's IP or an accessible URL
+      // Replace 159.203.58.60 with your computer's IP or an accessible URL
       const response = await fetch(
-        `http://44.202.249.124:5000/documents/${clientID}/documents`,
+        `http://159.203.58.60:5000/documents/${clientID}/documents`,
         {
           method: "GET",
           headers: {
@@ -33,9 +33,9 @@ export const ClientProvider = ({ children }) => {
   }
   async function fetchClient(clientID) {
     try {
-      // Replace 44.202.249.124 with your computer's IP or an accessible URL
+      // Replace 159.203.58.60 with your computer's IP or an accessible URL
       const response = await fetch(
-        `http://44.202.249.124:5000/client/${clientID}`,
+        `http://159.203.58.60:5000/client/${clientID}`,
         {
           method: "GET",
           headers: {
@@ -69,25 +69,22 @@ export const ClientProvider = ({ children }) => {
       const [documentsResponse, clientResponse, neededDocsResponse] =
         await Promise.all([
           // Get client uploaded documents
-          fetch(`http://44.202.249.124:5000/documents/${clientID}/documents`, {
+          fetch(`http://159.203.58.60:5000/documents/${clientID}/documents`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           }),
 
           // Get client profile data
-          fetch(`http://44.202.249.124:5000/client/${clientID}`, {
+          fetch(`http://159.203.58.60:5000/client/${clientID}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           }),
 
           // Get needed documents list
-          fetch(
-            `http://44.202.249.124:5000/client/neededdocument/${clientID}`,
-            {
-              method: "GET",
-              headers: { "Content-Type": "application/json" },
-            }
-          ),
+          fetch(`http://159.203.58.60:5000/client/neededdocument/${clientID}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }),
         ]);
 
       // Process responses

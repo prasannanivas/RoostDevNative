@@ -83,7 +83,7 @@ export default function LoginScreen() {
 
     try {
       // Try client login first
-      let response = await fetch("http://44.202.249.124:5000/client/login", {
+      let response = await fetch("http://159.203.58.60:5000/client/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier: email, password }),
@@ -93,7 +93,7 @@ export default function LoginScreen() {
 
       // If client login fails, try realtor login
       if (!data.client) {
-        response = await fetch("http://44.202.249.124:5000/realtor/login", {
+        response = await fetch("http://159.203.58.60:5000/realtor/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ identifier: email, password }),

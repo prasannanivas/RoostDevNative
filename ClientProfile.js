@@ -209,7 +209,7 @@ export default function ClientProfile({ onClose }) {
         },
       };
       const response = await axios.put(
-        `http://44.202.249.124:5000/client/${clientInfo.id}`,
+        `http://159.203.58.60:5000/client/${clientInfo.id}`,
         payload
       );
       if (response.status === 200) {
@@ -277,7 +277,7 @@ export default function ClientProfile({ onClose }) {
     }
     try {
       const response = await axios.post(
-        `http://44.202.249.124:5000/client/${clientInfo.id}/updatepassword`,
+        `http://159.203.58.60:5000/client/${clientInfo.id}/updatepassword`,
         {
           oldPassword: passwordData.oldPassword,
           newPassword: passwordData.newPassword,
@@ -324,14 +324,14 @@ export default function ClientProfile({ onClose }) {
       setEmailError("");
 
       // First check if email already exists
-      await axios.post("http://44.202.249.124:5000/presignup/email", {
+      await axios.post("http://159.203.58.60:5000/presignup/email", {
         email: newEmail,
       });
 
       // If we get here, the email is available (doesn't exist yet)
       // Now send OTP to the new email using the correct endpoint
       const otpResponse = await axios.post(
-        "http://44.202.249.124:5000/otp/email/generate",
+        "http://159.203.58.60:5000/otp/email/generate",
         { email: newEmail }
       );
 
@@ -371,7 +371,7 @@ export default function ClientProfile({ onClose }) {
 
       // First verify the OTP using the correct endpoint
       const verifyResponse = await axios.post(
-        "http://44.202.249.124:5000/otp/email/verify",
+        "http://159.203.58.60:5000/otp/email/verify",
         {
           email: newEmail,
           otp: emailOtp,
@@ -397,7 +397,7 @@ export default function ClientProfile({ onClose }) {
 
         // Use PUT request to update profile
         const updateResponse = await axios.put(
-          `http://44.202.249.124:5000/client/${clientInfo.id}`,
+          `http://159.203.58.60:5000/client/${clientInfo.id}`,
           payload
         );
 
@@ -441,7 +441,7 @@ export default function ClientProfile({ onClose }) {
     try {
       setEmailError("");
       const response = await axios.post(
-        "http://44.202.249.124:5000/otp/email/generate",
+        "http://159.203.58.60:5000/otp/email/generate",
         { email: newEmail }
       );
 

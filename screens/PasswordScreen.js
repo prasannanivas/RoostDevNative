@@ -68,8 +68,8 @@ export default function PasswordScreen({ navigation, route }) {
   const registerUser = async (userData) => {
     try {
       const endpoint = userData.isRealtor
-        ? "http://44.202.249.124:5000/realtor/signup"
-        : "http://44.202.249.124:5000/client/signup";
+        ? "http://159.203.58.60:5000/realtor/signup"
+        : "http://159.203.58.60:5000/client/signup";
 
       const payload = {
         name: `${userData.firstName} ${userData.lastName}`,

@@ -127,7 +127,7 @@ const RealtorHome = () => {
 
       // Send the invite via the API - keep loading indicator showing
       const resp = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor.id}/invite-realtor`,
+        `http://159.203.58.60:5000/realtor/${realtor.id}/invite-realtor`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -197,7 +197,7 @@ const RealtorHome = () => {
       };
 
       const response = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor.id}/invite-client`,
+        `http://159.203.58.60:5000/realtor/${realtor.id}/invite-client`,
         {
           method: "POST",
           headers: {
@@ -360,7 +360,7 @@ const RealtorHome = () => {
   const openWhatsApp = () => {
     // Get realtor invite code if available
     const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink = `http://44.202.249.124:5000/signup.html?realtorCode=${inviteCode}`;
+    const signupLink = `http://159.203.58.60:5000/signup.html?realtorCode=${inviteCode}`;
 
     const whatsappMessage = `Hey ${formData.firstName}, I'm sharing a link to view and share listings with me on Roost. Click here to get started: ${signupLink}`;
     const phone = formData.phone.replace(/[^0-9]/g, "");
@@ -386,7 +386,7 @@ const RealtorHome = () => {
   const openSMS = () => {
     // Get realtor invite code if available
     const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink = `http://44.202.249.124:5000/signup.html?realtorCode=${inviteCode}`;
+    const signupLink = `http://159.203.58.60:5000/signup.html?realtorCode=${inviteCode}`;
 
     const smsMessage = `Hey ${formData.firstName}, I'm sharing a link to view and share listings with me on Roost. Click here to get started: ${signupLink}`;
     const smsUrl = `sms:${formData.phone}?body=${encodeURIComponent(
@@ -401,7 +401,7 @@ const RealtorHome = () => {
   const openEmail = () => {
     // Get realtor invite code if available
     const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink = `http://44.202.249.124:5000/signup.html?realtorCode=${inviteCode}`;
+    const signupLink = `http://159.203.58.60:5000/signup.html?realtorCode=${inviteCode}`;
 
     const emailSubject = "Join Roost";
     const emailBody = `Hey ${formData.firstName},
@@ -435,7 +435,7 @@ Looking forward to working with you!`;
               {!imageLoadError ? (
                 <Image
                   source={{
-                    uri: `http://44.202.249.124:5000/realtor/profilepic/${realtor.id}`,
+                    uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}`,
                   }}
                   style={styles.avatar}
                   onError={() => setImageLoadError(true)}

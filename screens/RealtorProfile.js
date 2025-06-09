@@ -93,7 +93,7 @@ export default function RealtorProfile({ onClose }) {
 
     try {
       const response = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor._id}/shareable-link`
+        `http://159.203.58.60:5000/realtor/${realtor._id}/shareable-link`
       );
 
       if (response.ok) {
@@ -127,7 +127,7 @@ export default function RealtorProfile({ onClose }) {
 
       // First check if email already exists
       const checkResponse = await fetch(
-        "http://44.202.249.124:5000/presignup/email",
+        "http://159.203.58.60:5000/presignup/email",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -148,7 +148,7 @@ export default function RealtorProfile({ onClose }) {
       // If we get here, the email is available (doesn't exist yet)
       // Now send OTP to the new email using the correct endpoint
       const otpResponse = await fetch(
-        "http://44.202.249.124:5000/otp/email/generate",
+        "http://159.203.58.60:5000/otp/email/generate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -187,7 +187,7 @@ export default function RealtorProfile({ onClose }) {
 
       // First verify the OTP using the correct endpoint
       const verifyResponse = await fetch(
-        "http://44.202.249.124:5000/otp/email/verify",
+        "http://159.203.58.60:5000/otp/email/verify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -206,7 +206,7 @@ export default function RealtorProfile({ onClose }) {
         const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
         const updateResponse = await fetch(
-          `http://44.202.249.124:5000/realtor/${realtor._id}`,
+          `http://159.203.58.60:5000/realtor/${realtor._id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -301,7 +301,7 @@ export default function RealtorProfile({ onClose }) {
       const fullName =
         `${currentFormData.firstName} ${currentFormData.lastName}`.trim();
 
-      fetch(`http://44.202.249.124:5000/realtor/${realtor._id}`, {
+      fetch(`http://159.203.58.60:5000/realtor/${realtor._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -364,7 +364,7 @@ export default function RealtorProfile({ onClose }) {
     try {
       setEmailError("");
       const response = await fetch(
-        "http://44.202.249.124:5000/otp/email/generate",
+        "http://159.203.58.60:5000/otp/email/generate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -446,7 +446,7 @@ export default function RealtorProfile({ onClose }) {
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
       const response = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor._id}`,
+        `http://159.203.58.60:5000/realtor/${realtor._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -513,7 +513,7 @@ export default function RealtorProfile({ onClose }) {
 
     try {
       const response = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor._id}/updatepassword`,
+        `http://159.203.58.60:5000/realtor/${realtor._id}/updatepassword`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -606,7 +606,7 @@ export default function RealtorProfile({ onClose }) {
         });
 
         const response = await fetch(
-          `http://44.202.249.124:5000/realtor/profilepic/${realtor._id}`,
+          `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}`,
           {
             method: "POST",
             body: formData,
@@ -732,7 +732,7 @@ export default function RealtorProfile({ onClose }) {
           {realtor.profilePicture ? (
             <Image
               source={{
-                uri: `http://44.202.249.124:5000/realtor/profilepic/${realtor._id}`,
+                uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}`,
               }}
               style={styles.avatar}
             />

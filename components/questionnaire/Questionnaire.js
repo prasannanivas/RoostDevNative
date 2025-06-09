@@ -463,7 +463,7 @@ const Questionnaire = ({ navigation }) => {
     setIsSubmitting(true);
     try {
       await axios.put(
-        `http://44.202.249.124:5000/client/questionnaire/${auth.client.id}`,
+        `http://159.203.58.60:5000/client/questionnaire/${auth.client.id}`,
         { responses }
       );
 

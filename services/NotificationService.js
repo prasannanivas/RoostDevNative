@@ -72,7 +72,7 @@ export async function registerDeviceOnServer(
 ) {
   try {
     const response = await axios.post(
-      "http://44.202.249.124:5000/notifications/register-device",
+      "http://159.203.58.60:5000/notifications/register-device",
       {
         userId,
         token,

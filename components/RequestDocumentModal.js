@@ -8,6 +8,19 @@ import {
   StyleSheet,
 } from "react-native";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const RequestDocumentModal = ({ visible, onClose, onSubmit }) => {
   const [docType, setDocType] = useState("");
   const [description, setDescription] = useState("");
@@ -67,29 +80,35 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: COLORS.overlay,
   },
   modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 8,
     width: "80%",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 20,
+    fontFamily: "Futura",
+    marginBottom: 24,
     textAlign: "center",
+    color: COLORS.black,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
+    borderColor: COLORS.silver,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    height: 48,
+    fontSize: 14,
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   textArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: "top",
   },
   buttonContainer: {
@@ -97,23 +116,29 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   submitButton: {
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: COLORS.green,
+    padding: 16,
+    borderRadius: 8,
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 8,
+    height: 48,
+    justifyContent: "center",
   },
   cancelButton: {
-    backgroundColor: "#FF3B30",
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: COLORS.error,
+    padding: 16,
+    borderRadius: 8,
     flex: 1,
-    marginRight: 5,
+    marginRight: 8,
+    height: 48,
+    justifyContent: "center",
   },
   buttonText: {
-    color: "white",
+    color: COLORS.white,
     textAlign: "center",
     fontWeight: "bold",
+    fontSize: 14,
+    fontFamily: "Futura",
   },
 });
 

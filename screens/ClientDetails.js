@@ -30,7 +30,7 @@ const ClientDetails = () => {
   const fetchClientDetails = async () => {
     try {
       const response = await fetch(
-        `http://44.202.249.124:5000/client/${clientId}`
+        `http://159.203.58.60:5000/client/${clientId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -44,7 +44,7 @@ const ClientDetails = () => {
   const fetchRequestedDocuments = async () => {
     try {
       const response = await fetch(
-        `http://44.202.249.124:5000/realtor/requesteddocument/${realtorId}`,
+        `http://159.203.58.60:5000/realtor/requesteddocument/${realtorId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -74,7 +74,7 @@ const ClientDetails = () => {
   const handleRequestDocument = async ({ docType, description }) => {
     try {
       const response = await fetch(
-        `http://44.202.249.124:5000/realtor/requestdocument/${realtorId}`,
+        `http://159.203.58.60:5000/realtor/requestdocument/${realtorId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -106,7 +106,7 @@ const ClientDetails = () => {
     setIsProcessing(true);
     try {
       const response = await fetch(
-        `http://44.202.249.124:5000/admin/documents/${clientId}/${docId}/review`,
+        `http://159.203.58.60:5000/admin/documents/${clientId}/${docId}/review`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ const ClientDetails = () => {
     console.log("viewing doc", doc);
     if (doc.fileId) {
       Linking.openURL(
-        `http://44.202.249.124:5000/documents/${clientId}/documents/${doc.fileId}`
+        `http://159.203.58.60:5000/documents/${clientId}/documents/${doc.fileId}`
       );
     }
   };

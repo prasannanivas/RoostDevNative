@@ -140,7 +140,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
       setError("");
 
       const response = await axios.post(
-        "http://44.202.249.124:5000/otp/email/generate",
+        "http://159.203.58.60:5000/otp/email/generate",
         {
           email: userData.email,
         }
@@ -172,7 +172,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
   const verifyEmailOTP = async (otp) => {
     try {
       const response = await axios.post(
-        "http://44.202.249.124:5000/otp/email/verify",
+        "http://159.203.58.60:5000/otp/email/verify",
         {
           email: userData.email,
           otp,

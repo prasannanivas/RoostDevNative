@@ -141,7 +141,7 @@ export default function RealtorRewards({
   useEffect(() => {
     (async () => {
       try {
-        const resp = await fetch("http://44.202.249.124:5000/admin/rewards");
+        const resp = await fetch("http://159.203.58.60:5000/admin/rewards");
         console.log("Rewards response", resp);
         const data = await resp.json();
         setRewards(data);
@@ -187,7 +187,7 @@ export default function RealtorRewards({
 
       // Send the invite via the API - keep loading indicator showing
       const resp = await fetch(
-        `http://44.202.249.124:5000/realtor/${realtor._id}/invite-realtor`,
+        `http://159.203.58.60:5000/realtor/${realtor._id}/invite-realtor`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -340,7 +340,7 @@ export default function RealtorRewards({
       }
 
       const resp = await fetch(
-        `http://44.202.249.124:5000/realtor/claimRewards`,
+        `http://159.203.58.60:5000/realtor/claimRewards`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -351,7 +351,7 @@ export default function RealtorRewards({
       if (resp.ok) {
         // Refresh rewards
         const fresh = await fetch(
-          "http://44.202.249.124:5000/admin/rewards"
+          "http://159.203.58.60:5000/admin/rewards"
         ).then((r) => r.json());
         console.log("Claim successful", fresh);
         setRewards(fresh);
@@ -386,7 +386,7 @@ export default function RealtorRewards({
       >
         {reward.imageUrl ? (
           <Image
-            source={{ uri: `http://44.202.249.124:5000${reward.imageUrl}` }}
+            source={{ uri: `http://159.203.58.60:5000${reward.imageUrl}` }}
             style={styles.rewardImage}
           />
         ) : (
@@ -512,7 +512,7 @@ export default function RealtorRewards({
                   {reward.imageUrl ? (
                     <Image
                       source={{
-                        uri: `http://44.202.249.124:5000${reward.imageUrl}`,
+                        uri: `http://159.203.58.60:5000${reward.imageUrl}`,
                       }}
                       style={styles.rewardImage}
                     />
@@ -572,7 +572,7 @@ export default function RealtorRewards({
                   {reward.imageUrl ? (
                     <Image
                       source={{
-                        uri: `http://44.202.249.124:5000${reward.imageUrl}`,
+                        uri: `http://159.203.58.60:5000${reward.imageUrl}`,
                       }}
                       style={styles.rewardImage}
                     />
@@ -864,7 +864,7 @@ export default function RealtorRewards({
                 {selectedReward.imageUrl && (
                   <Image
                     source={{
-                      uri: `http://44.202.249.124:5000${selectedReward.imageUrl}`,
+                      uri: `http://159.203.58.60:5000${selectedReward.imageUrl}`,
                     }}
                     style={styles.claimImage}
                   />

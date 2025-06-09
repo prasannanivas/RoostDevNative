@@ -8,6 +8,19 @@ import {
   StyleSheet,
 } from "react-native";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const RequestDocumentModal = ({ isOpen, onClose, onSubmit }) => {
   const [docType, setDocType] = useState("");
   const [description, setDescription] = useState("");
@@ -75,67 +88,75 @@ const RequestDocumentModal = ({ isOpen, onClose, onSubmit }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: COLORS.overlay,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
   },
   content: {
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 20,
+    padding: 24,
   },
   title: {
     fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 15,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    marginBottom: 24,
     textAlign: "center",
-    color: "#23231A",
+    color: COLORS.black,
   },
   field: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    color: "#23231A",
-    marginBottom: 5,
+    fontFamily: "Futura",
+    fontWeight: "medium",
+    color: COLORS.black,
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderColor: COLORS.silver,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 14,
-    color: "#23231A",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    height: 48,
   },
   textarea: {
-    height: 80,
+    height: 120,
     textAlignVertical: "top",
   },
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
+    marginTop: 16,
   },
   button: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 5,
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: "center",
-    marginHorizontal: 5,
+    marginHorizontal: 8,
+    height: 48,
+    justifyContent: "center",
   },
   cancelButton: {
-    backgroundColor: "#999",
+    backgroundColor: COLORS.gray,
   },
   submitButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 });
 
