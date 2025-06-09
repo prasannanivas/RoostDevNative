@@ -13,7 +13,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 // Keep the import for future use
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInputMask } from "react-native-masked-text";
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -40,6 +42,7 @@ const COLORS = {
 };
 
 export default function PasswordResetScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   // Screen stages
   const STAGES = {
     CONTACT_INFO: 0,
@@ -585,9 +588,15 @@ export default function PasswordResetScreen({ navigation }) {
   // Main return with conditional rendering based on stage
   return (
     <SafeAreaView style={styles.safeArea}>
+      {" "}
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>{" "}
+        <Logo
+          width={120}
+          height={42}
+          variant="black"
+          style={styles.brandLogo}
+        />
         {isLoading && (
           <View style={styles.spinnerContainer}>
             <ActivityIndicator size="large" color={COLORS.green} />
@@ -599,10 +608,14 @@ export default function PasswordResetScreen({ navigation }) {
         {stage === STAGES.NEW_PASSWORD && renderNewPasswordStage()}
         {stage === STAGES.SUCCESS && renderSuccessStage()}
       </ScrollView>
-
       {/* Bottom Bar - Hide on success screen */}
       {stage !== STAGES.SUCCESS && (
-        <View style={styles.bottomBar}>
+        <View
+          style={[
+            styles.bottomBar,
+            { paddingBottom: Math.max(insets.bottom, 24) },
+          ]}
+        >
           {/* Back Arrow */}
           <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
@@ -642,12 +655,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexGrow: 1,
   },
-  brandTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+  brandLogo: {
     marginBottom: 32,
-    color: COLORS.black,
-    fontFamily: "Futura",
   },
   heading: {
     fontSize: 20, // H2 size
@@ -676,7 +685,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     marginHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: 50,
     borderWidth: 2,
     borderColor: COLORS.green,
   },
@@ -755,7 +764,7 @@ const styles = StyleSheet.create({
   resendButton: {
     borderWidth: 2,
     borderColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignSelf: "center",
@@ -815,23 +824,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
+    backgroundColor: COLORS.black,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 24,
+
+    paddingBottom: 24, // Ensure enough space for bottom safe area
+
+    minHeight: 120,
   },
   backCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 50,
     backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   continueButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 32,
   },
@@ -853,7 +866,7 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 32,
     marginTop: 32,

@@ -1,6 +1,19 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const ToggleButtonGroup = ({ question, value, onValueChange }) => {
   const handleSelect = (selectedValue) => {
     onValueChange(selectedValue);
@@ -43,8 +56,9 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     marginBottom: 32,
     lineHeight: 32,
     textAlign: "left", // Left-aligned text
@@ -58,13 +72,15 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderWidth: 2,
-    borderColor: "#019B8E",
-    borderRadius: 25, // More rounded corners for pill-like look
-    paddingVertical: 14, // More vertical padding
+    borderColor: COLORS.green,
+    borderRadius: 8, // Changed from rounded to square-ish
+    paddingVertical: 16, // More vertical padding
     paddingHorizontal: 16,
     alignItems: "center",
+    height: 48,
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -72,15 +88,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   selectedButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: "600", // Slightly bolder
-    color: "#019B8E",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
   selectedText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
 });
 

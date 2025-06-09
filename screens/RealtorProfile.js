@@ -1317,11 +1317,10 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     height: 48,
   },
-
   /* Save changes button */
   saveButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 16,
@@ -1333,11 +1332,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Futura",
   },
-
   /* Password Management */
   changePasswordButton: {
     backgroundColor: COLORS.red,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     alignItems: "center",
     height: 48,
@@ -1348,11 +1346,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Futura",
   },
-
   /* Logout Button */
   logoutButton: {
     backgroundColor: COLORS.red,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 16,
@@ -1394,7 +1391,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 24,
     height: 48,
@@ -1416,7 +1413,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
   },
-
   /* Close button */
   closeButton: {
     position: "absolute",
@@ -1424,7 +1420,7 @@ const styles = StyleSheet.create({
     top: 48,
     width: 48,
     height: 48,
-    borderRadius: 8,
+    borderRadius: 50,
     backgroundColor: COLORS.silver,
     justifyContent: "center",
     alignItems: "center",

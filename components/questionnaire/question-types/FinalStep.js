@@ -1,6 +1,19 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const FinalStep = ({ question }) => {
   return (
     <View style={styles.container}>
@@ -23,7 +36,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   successContainer: {
     alignItems: "center",
@@ -32,26 +45,30 @@ const styles = StyleSheet.create({
   checkmark: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: "#019B8E",
+    borderRadius: 8,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
   },
   checkmarkText: {
     fontSize: 36,
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontWeight: "bold",
+    fontFamily: "Futura",
   },
   successText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     textAlign: "center",
     lineHeight: 32,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666666",
+    fontFamily: "Futura",
+    fontWeight: "medium",
+    color: COLORS.gray,
     textAlign: "center",
     lineHeight: 24,
     maxWidth: 300,

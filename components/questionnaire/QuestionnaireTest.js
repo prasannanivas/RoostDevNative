@@ -5,6 +5,19 @@ import QuestionRenderer from "../components/questionnaire/QuestionRenderer";
 import ProgressBar from "../components/questionnaire/ProgressBar";
 import Button from "../components/common/Button";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 // Test component to verify questionnaire functionality
 const QuestionnaireTest = () => {
   // Sample question for testing
@@ -54,36 +67,39 @@ const QuestionnaireTest = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: COLORS.background,
   },
   title: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     marginBottom: 16,
     textAlign: "center",
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 24,
   },
   footer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    gap: 12,
+    borderTopColor: COLORS.background,
+    gap: 16,
   },
   responseText: {
     fontSize: 14,
-    color: "#666666",
+    fontFamily: "Futura",
+    fontWeight: "medium",
+    color: COLORS.gray,
     textAlign: "center",
   },
 });

@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Logo from "../components/Logo";
 
 export default function ProfilePictureScreen() {
   const [image, setImage] = useState(null);
@@ -65,9 +66,15 @@ export default function ProfilePictureScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {" "}
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>
+        <Logo
+          width={120}
+          height={42}
+          variant="black"
+          style={styles.brandLogo}
+        />
 
         {/* Heading */}
         <Text style={styles.heading}>Add a profile picture</Text>
@@ -93,7 +100,6 @@ export default function ProfilePictureScreen() {
           <Text style={styles.actionButtonText}>Open your camera</Text>
         </TouchableOpacity>
       </ScrollView>
-
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
         {/* Back Arrow */}
@@ -122,11 +128,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexGrow: 1,
   },
-  brandTitle: {
-    fontSize: 32,
-    fontWeight: "700",
+  brandLogo: {
     marginBottom: 30,
-    color: "#23231A",
   },
   heading: {
     fontSize: 18,

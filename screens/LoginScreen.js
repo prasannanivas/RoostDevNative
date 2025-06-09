@@ -13,6 +13,7 @@ import {
   Keyboard,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -138,8 +139,14 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           accessible={true}
         >
-          {/* Brand Title */}
-          <Text style={styles.brandTitle}>Roost</Text>
+          {" "}
+          {/* Brand Logo */}
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
           {/* Error Message */}
           {error && (
             <Text
@@ -154,7 +161,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor={COLORS.gray}
+            placeholderTextColor={COLORS.slate}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
@@ -173,7 +180,7 @@ export default function LoginScreen() {
             ref={passwordInputRef}
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor={COLORS.gray}
+            placeholderTextColor={COLORS.slate}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -191,9 +198,10 @@ export default function LoginScreen() {
             accessible={true}
             accessibilityLabel="Reset password"
             accessibilityRole="button"
+            style={styles.resetPasswordButton}
           >
             <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
-          </TouchableOpacity>
+          </TouchableOpacity>{" "}
           {/* Log In Button */}
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
@@ -207,22 +215,24 @@ export default function LoginScreen() {
               {loading ? "Logging in..." : "Log In"}
             </Text>
           </TouchableOpacity>
-          {/* Sign Up Prompt */}
-          <Text style={styles.signUpPrompt}>
-            Don't have an Account? Sign Up for Free
-          </Text>
-          {/* Sign Up Button */}
-          <TouchableOpacity
-            style={styles.signUpButton}
-            onPress={handleSignUp}
-            accessible={true}
-            accessibilityLabel="Sign up for a new account"
-            accessibilityRole="button"
-          >
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
-          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Sign Up Section moved to bottom above footer */}
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpPrompt}>
+          Don't have An Account? Sign Up for Free
+        </Text>
+        <TouchableOpacity
+          style={styles.signUpButton}
+          onPress={handleSignUp}
+          accessible={true}
+          accessibilityLabel="Sign up for a new account"
+          accessibilityRole="button"
+        >
+          <Text style={styles.signUpButtonText}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
@@ -253,32 +263,32 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: COLORS.background,
   },
-  brandTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+  brandLogo: {
     marginBottom: 32,
-    color: COLORS.black,
-    fontFamily: "Futura", // Will fallback to system font if Futura not available
+    alignSelf: "center",
   },
   input: {
     width: "100%",
     height: 48,
-    borderWidth: 1,
-    borderColor: COLORS.gray,
+    borderWidth: 2,
+    borderColor: COLORS.slate,
     borderRadius: 8,
     paddingHorizontal: 16,
     marginBottom: 16,
     fontSize: 14, // P size
-    fontWeight: "500", // P weight (medium)
+    fontWeight: "bold", // Changed to bold for thick placeholder text
     color: COLORS.black,
     backgroundColor: COLORS.white,
     fontFamily: "Futura",
+  },
+
+  resetPasswordButton: {
+    alignSelf: "flex-end",
   },
   resetPasswordText: {
     alignSelf: "flex-end",
     color: COLORS.slate,
     marginBottom: 24,
-    textDecorationLine: "underline",
     fontSize: 12, // H4 size
     fontWeight: "bold", // H4 weight
     fontFamily: "Futura",
@@ -287,7 +297,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 48,
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
@@ -309,22 +319,27 @@ const styles = StyleSheet.create({
     fontWeight: "500", // P weight
     fontFamily: "Futura",
   },
+  signUpContainer: {
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    alignItems: "center",
+  },
   signUpPrompt: {
     fontSize: 14, // P size
     fontWeight: "500", // P weight
-    color: COLORS.black,
+    color: COLORS.slate,
     marginBottom: 16,
     fontFamily: "Futura",
   },
   signUpButton: {
-    width: "100%",
+    width: "90%",
     height: 48,
     borderColor: COLORS.green,
     borderWidth: 2,
-    borderRadius: 8,
+    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 32,
     backgroundColor: "transparent",
   },
   signUpButtonText: {
@@ -337,7 +352,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 48,
     backgroundColor: COLORS.red,
-    borderRadius: 8,
+    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 48,
@@ -349,6 +364,7 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   footerContainer: {
+    height: 120,
     backgroundColor: COLORS.black,
     paddingHorizontal: 24,
     paddingVertical: 24,
@@ -356,14 +372,14 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12, // Sub-p size
     fontWeight: "500", // Sub-p weight
-    color: COLORS.white,
+    color: COLORS.gray,
     marginBottom: 8,
     textAlign: "center",
     lineHeight: 18,
     fontFamily: "Futura",
   },
   linkText: {
-    color: COLORS.green, // Using green for links instead of light teal
+    color: COLORS.gray,
     textDecorationLine: "underline",
   },
 });

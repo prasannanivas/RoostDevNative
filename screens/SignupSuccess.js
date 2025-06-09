@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 // import ConfettiIcon from "../assets/confetti.png"; // Example if you have a custom asset
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -53,7 +54,12 @@ export default function SignupSuccessScreen({ navigation }) {
           showsVerticalScrollIndicator={true}
         >
           {/* Brand Title */}
-          <Text style={styles.brandTitle}>Roost</Text>
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
           {/* Heading */}
           <Text style={styles.heading}>All signed up!</Text>
           {/* Confetti / Party Popper Icon */}
@@ -119,12 +125,8 @@ const styles = StyleSheet.create({
     paddingBottom: 96, // Added extra padding for bottom button
     alignItems: "center",
   },
-  brandTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
-    color: COLORS.black,
+  brandLogo: {
     marginBottom: 24,
-    fontFamily: "Futura",
   },
   heading: {
     fontSize: 20, // H2 size
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderColor: COLORS.green,
     borderWidth: 2,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     marginBottom: 16,
     alignItems: "center",
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
   },
   getStartedButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     alignItems: "center",
     width: "100%",

@@ -2,6 +2,19 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Select from "../../common/Select";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const Dropdown = ({ question, value, onValueChange }) => {
   return (
     <View style={styles.container}>
@@ -23,8 +36,9 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     marginBottom: 32,
     lineHeight: 32,
   },

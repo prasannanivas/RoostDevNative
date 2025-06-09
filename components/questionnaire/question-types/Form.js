@@ -2,6 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import TextInput from "../../common/TextInput";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const Form = ({ question, value, onValueChange }) => {
   const [formData, setFormData] = useState(value || {});
   const [fieldErrors, setFieldErrors] = useState({});
@@ -89,15 +102,16 @@ const Form = ({ question, value, onValueChange }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 10,
+    paddingTop: 8,
     width: "100%", // Ensure form uses full width
     alignItems: "stretch", // Stretch to fill container width
   },
   questionText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 30,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 32,
     lineHeight: 32,
     textAlign: "left", // Left-aligned text to match design
     width: "100%", // Full width for text
@@ -114,16 +128,18 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   errorField: {
-    borderColor: "#FF3B30", // Red color for error state
+    borderColor: COLORS.error, // Red color for error state
   },
   errorText: {
-    color: "#FF3B30",
+    color: COLORS.error,
     fontSize: 12,
-    marginTop: 4,
+    fontFamily: "Futura",
+    marginTop: 8,
   },
   requiredNote: {
-    color: "#FF3B30",
+    color: COLORS.error,
     fontSize: 12,
+    fontFamily: "Futura",
     marginTop: 16,
     fontStyle: "italic",
   },

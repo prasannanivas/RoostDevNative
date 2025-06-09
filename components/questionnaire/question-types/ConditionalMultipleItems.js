@@ -10,6 +10,19 @@ import TextInput from "../../common/TextInput";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
 import { getProfileInitialsForQuestion } from "../../../data/questionnaireData";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
   const { responses } = useQuestionnaire();
   const [formData, setFormData] = useState(value || {});
@@ -169,8 +182,9 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     marginBottom: 24,
     lineHeight: 32,
   },
@@ -181,56 +195,60 @@ const styles = StyleSheet.create({
   profileCircle: {
     width: 60,
     height: 60,
-    borderRadius: 30,
-    backgroundColor: "#019B8E",
+    borderRadius: 8,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
   },
   profileInitials: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   formContainer: {
     gap: 24,
   },
   fieldContainer: {
-    gap: 12,
+    gap: 16,
   },
   toggleGroup: {
     flexDirection: "row",
-    gap: 12,
+    gap: 16,
   },
   toggleButton: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     alignItems: "center",
+    height: 48,
+    justifyContent: "center",
   },
   selectedButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#019B8E",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
   selectedText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
   conditionalSection: {
-    gap: 20,
+    gap: 24,
   },
   itemContainer: {
-    backgroundColor: "#F8F9FA",
-    borderRadius: 12,
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E9ECEF",
+    borderColor: COLORS.silver,
   },
   itemHeader: {
     flexDirection: "row",
@@ -240,22 +258,26 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   removeButton: {
-    backgroundColor: "#DC3545",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    backgroundColor: COLORS.error,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    height: 32,
+    justifyContent: "center",
   },
   removeButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "medium",
+    fontFamily: "Futura",
   },
   itemFields: {
-    gap: 12,
+    gap: 16,
   },
   field: {
     marginBottom: 0,
@@ -265,17 +287,20 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   addButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderRadius: 8,
     minWidth: 140,
     alignItems: "center",
+    height: 48,
+    justifyContent: "center",
   },
   addButtonText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
 });
 

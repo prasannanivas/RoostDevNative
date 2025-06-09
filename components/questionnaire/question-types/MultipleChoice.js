@@ -1,6 +1,19 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 const MultipleChoice = ({ question, value, onValueChange, onAutoNavigate }) => {
   const handleSelect = (selectedValue) => {
     console.log("MultipleChoice: Option selected:", selectedValue);
@@ -55,9 +68,10 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 36, // More space below question
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginBottom: 32, // More space below question
     lineHeight: 32,
     textAlign: "left", // Left align questions when next to initials
     flex: 1, // Take remaining space in row
@@ -68,15 +82,17 @@ const styles = StyleSheet.create({
     width: "100%", // Full width to match design
   },
   optionButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderWidth: 1.5, // Slightly thicker border
-    borderColor: "#019B8E",
-    borderRadius: 50,
-    paddingVertical: 14, // More vertical padding
+    borderColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 16, // More vertical padding
     paddingHorizontal: 24, // More horizontal padding
     alignItems: "center",
     width: "auto", // Auto width based on content
     alignSelf: "flex-start", // Left align the button
+    height: 48,
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -84,15 +100,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   selectedButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   optionText: {
     fontSize: 16,
-    fontWeight: "600", // Slightly bolder
-    color: "#019B8E",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
   selectedText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
 });
 

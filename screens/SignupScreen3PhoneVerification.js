@@ -12,6 +12,8 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -38,6 +40,7 @@ const COLORS = {
 };
 
 export default function EmailVerificationScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   // Get user data from previous screen
   const userData = route.params || {};
 
@@ -228,9 +231,16 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {" "}
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text> {/* Heading */}
+        <Logo
+          width={120}
+          height={42}
+          variant="black"
+          style={styles.brandLogo}
+        />{" "}
+        {/* Heading */}
         <Text style={styles.heading}>Verify your email address</Text>
         {/* Subheading */}
         <Text style={styles.subheading}>
@@ -310,9 +320,13 @@ export default function EmailVerificationScreen({ navigation, route }) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
+      {/* Bottom Bar */}{" "}
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+      >
         {/* Back Arrow */}
         <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
           <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
@@ -348,12 +362,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexGrow: 1,
   },
-  brandTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+  brandLogo: {
     marginBottom: 32,
-    color: COLORS.black,
-    fontFamily: "Futura",
   },
   heading: {
     fontSize: 20, // H2 size
@@ -435,12 +445,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "Futura",
   },
-
   // Resend button
   resendButton: {
     borderWidth: 2,
     borderColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 24,
     marginBottom: 24,
@@ -457,29 +466,30 @@ const styles = StyleSheet.create({
   resendButtonTextDisabled: {
     color: COLORS.gray,
   },
-
   // Bottom bar
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
+    backgroundColor: COLORS.black,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 24,
+    paddingBottom: 24,
+    minHeight: 120,
   },
   backCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 8, // Updated to match design system
+    width: 36,
+    height: 36,
+    borderRadius: 50, // Made pill-shaped
     backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   verifyButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50, // Made pill-shaped
     paddingVertical: 16,
     paddingHorizontal: 32,
   },

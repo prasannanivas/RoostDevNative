@@ -21,6 +21,20 @@ import {
   isCoSignerQuestion,
 } from "../../utils/initialsUtils";
 import { processDynamicText } from "../../utils/questionnaireUtils";
+import Logo from "../Logo";
+
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
 
 const Questionnaire = ({ navigation }) => {
   const { auth } = useAuth();
@@ -539,12 +553,16 @@ const Questionnaire = ({ navigation }) => {
   }
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>Roost</Text>
-        <View style={styles.logoUnderline} />
-      </View>
       <View style={styles.header}>
         <ProgressBar progress={getProgress()} />
+      </View>
+      <View style={styles.logoContainer}>
+        <Logo
+          width={120}
+          height={42}
+          variant="black"
+          style={styles.brandLogo}
+        />
       </View>
       <ScrollView
         style={styles.scrollView}
@@ -625,33 +643,23 @@ const Questionnaire = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
   },
   scrollView: {
     flex: 1,
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 30, // Add padding at the bottom for better scrolling experience
+    paddingBottom: 32, // Add padding at the bottom for better scrolling experience
   },
   logoContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 50, // Slightly less margin on top
-    marginBottom: 30,
+    marginTop: 48, // 8px increment spacing
+    marginBottom: 32,
   },
-  logoText: {
-    fontSize: 42, // Slightly smaller for better proportion
-    fontWeight: "bold",
-    fontFamily: "serif",
-    color: "#23231A",
-  },
-  logoUnderline: {
-    height: 3, // Slightly thicker underline
-    width: 100,
-    backgroundColor: "#FF3B30",
-    marginTop: -4,
-    alignSelf: "center",
+  brandLogo: {
+    // Logo component will handle its own styling
   },
   header: {
     paddingHorizontal: 24,
@@ -661,7 +669,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingVertical: 24,
     justifyContent: "center", // Center questions vertically
     alignItems: "center", // Center the content wrapper
   },
@@ -675,7 +683,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center", // Align items center vertically
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   initialsCircle: {
     width: 60,
@@ -684,7 +692,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4A7EC0", // Blue color from screenshots for primary applicant
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 15,
+    marginRight: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -692,31 +700,34 @@ const styles = StyleSheet.create({
     elevation: 2, // For Android shadow
   },
   emptyInitialsCircle: {
-    backgroundColor: "#E0E0E0", // Light gray for empty state
+    backgroundColor: COLORS.silver, // Light gray for empty state
   },
   coSignerInitialsCircle: {
     backgroundColor: "#FF3B30", // Red color for co-signer to visually distinguish
   },
   initialsText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   questionTextHeader: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     flex: 1, // Take remaining space in row
     lineHeight: 32,
   },
   questionContent: {
     width: "100%",
     paddingLeft: 0, // No left padding for proper alignment
-    marginTop: 20, // Add spacing between question text and content
+    marginTop: 24, // Add spacing between question text and content
     alignSelf: "stretch", // Stretch to fill container width
   },
   looksGoodButton: {
-    marginTop: 30, // Add space between questions and button
+    backgroundColor: COLORS.green, // Primary button color
+    marginTop: 32, // Add space between questions and button
     alignSelf: "flex-end", // Right align button
     width: 180, // Set a consistent width
     marginRight: 0, // Ensure it's positioned at the right edge
@@ -724,9 +735,9 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    paddingBottom: 34, // Account for safe area on newer devices
+    paddingBottom: 32, // Account for safe area on newer devices
     borderTopWidth: 0,
-    backgroundColor: "#23231A", // Dark blue/black background
+    backgroundColor: COLORS.black, // Dark background
   },
   buttonContainer: {
     flexDirection: "row",
@@ -734,9 +745,9 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: "flex-start", // Left align the back button
     minWidth: 60,
-    paddingHorizontal: 20, // Smaller horizontal padding for back button
+    paddingHorizontal: 24, // Standard padding
     borderWidth: 1,
-    borderColor: "#FFFFFF",
+    borderColor: COLORS.white,
   },
   fullWidthButton: {
     flex: 1,

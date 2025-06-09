@@ -15,7 +15,9 @@ import {
   Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInputMask } from "react-native-masked-text";
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -42,6 +44,7 @@ const COLORS = {
 };
 
 export default function SignUpDetailsScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -276,7 +279,12 @@ export default function SignUpDetailsScreen({ navigation, route }) {
           keyboardShouldPersistTaps="handled"
           accessible={true}
         >
-          <Text style={styles.brandTitle}>Roost</Text>
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
           <Text style={styles.heading}>Let's get started!</Text>
           {/* Update the note text to indicate email is required */}
           <Text style={styles.noteText}>
@@ -400,8 +408,13 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             </View>
           ) : null}
         </ScrollView>
-      </KeyboardAvoidingView>
-      <View style={styles.bottomBar}>
+      </KeyboardAvoidingView>{" "}
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={handleBack}
@@ -445,12 +458,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexGrow: 1,
   },
-  brandTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+  brandLogo: {
     marginBottom: 32,
-    color: COLORS.black,
-    fontFamily: "Futura",
   },
   heading: {
     fontSize: 20, // H2 size
@@ -504,14 +513,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: COLORS.black,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 24,
+    paddingBottom: 24,
+    minHeight: 120,
   },
-  backButton: {},
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 50,
+    backgroundColor: COLORS.black,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
   loginButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50, // Made pill-shaped
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   loginButtonText: {
     color: COLORS.white,

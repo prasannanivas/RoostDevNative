@@ -16,6 +16,19 @@ import {
 } from "../../../utils/questionnaireUtils";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
 import { getProfileInitialsForQuestion } from "../../../data/questionnaireData";
+
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
 const ComplexForm = ({ question, value, onValueChange }) => {
   const { responses } = useQuestionnaire();
   const [formData, setFormData] = useState(value || {});
@@ -148,8 +161,9 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     marginBottom: 24,
     lineHeight: 32,
   },
@@ -160,15 +174,16 @@ const styles = StyleSheet.create({
   profileCircle: {
     width: 60,
     height: 60,
-    borderRadius: 30,
-    backgroundColor: "#019B8E",
+    borderRadius: 8,
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
   },
   profileInitials: {
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontFamily: "Futura",
   },
   formContainer: {
     gap: 24,
@@ -178,42 +193,47 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.black,
     marginBottom: 8,
   },
   fieldContainer: {
-    gap: 12,
+    gap: 16,
   },
   fieldLabel: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.black,
   },
   toggleGroup: {
     flexDirection: "row",
-    gap: 12,
+    gap: 16,
   },
   toggleButton: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     borderWidth: 2,
-    borderColor: "#019B8E",
+    borderColor: COLORS.green,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     alignItems: "center",
+    height: 48,
+    justifyContent: "center",
   },
   selectedButton: {
-    backgroundColor: "#019B8E",
+    backgroundColor: COLORS.green,
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#019B8E",
+    fontWeight: "medium",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
   selectedText: {
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
 });
 

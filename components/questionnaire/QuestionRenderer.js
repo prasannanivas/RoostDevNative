@@ -2,6 +2,19 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { processDynamicText } from "../../utils/questionnaireUtils";
 
+const COLORS = {
+  green: "#377473",
+  orange: "#E49455",
+  black: "#23231A",
+  gray: "#666666",
+  lightGray: "#999999",
+  silver: "#CCC",
+  white: "#FFFFFF",
+  background: "#F6F6F6",
+  error: "#FF3B30",
+  overlay: "rgba(0, 0, 0, 0.5)",
+};
+
 // Import question type components
 import MultipleChoice from "./question-types/MultipleChoice";
 import NumericInput from "./question-types/NumericInput";
@@ -140,17 +153,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
   },
   errorText: {
     fontSize: 18,
-    color: "#FF3B30",
+    fontFamily: "Futura",
+    fontWeight: "bold",
+    color: COLORS.error,
     textAlign: "center",
     marginBottom: 16,
   },
   questionText: {
     fontSize: 16,
-    color: "#666666",
+    fontFamily: "Futura",
+    fontWeight: "medium",
+    color: COLORS.gray,
     textAlign: "center",
   },
 });

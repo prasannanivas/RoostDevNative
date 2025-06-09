@@ -14,6 +14,7 @@ import {
   Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
 
 /**
@@ -41,6 +42,7 @@ const COLORS = {
 };
 
 export default function PasswordScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
@@ -342,9 +344,13 @@ export default function PasswordScreen({ navigation, route }) {
             </View>
           ) : null}
         </ScrollView>
-      </KeyboardAvoidingView>
-
-      <View style={styles.bottomBar}>
+      </KeyboardAvoidingView>{" "}
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={handleBack}
@@ -476,16 +482,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: COLORS.black,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 24,
+    minHeight: 120,
+    paddingBottom: 24, // Ensure enough space for bottom safe area
   },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 50,
+    backgroundColor: COLORS.black,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   continueButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50, // Made pill-shaped
     paddingVertical: 16,
     paddingHorizontal: 24,
+    minHeight: 48,
   },
   continueButtonText: {
     color: COLORS.white,

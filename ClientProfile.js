@@ -1097,7 +1097,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
   },
   saveButtonText: {
     color: COLORS.white,
@@ -1109,7 +1109,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.red,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
   },
   passwordButtonText: {
     color: COLORS.white,
@@ -1117,11 +1117,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontFamily: "Futura",
   },
-
   /* Logout Button */
   logoutButton: {
     backgroundColor: COLORS.red,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 16,
@@ -1179,7 +1178,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 24,
   },
@@ -1243,7 +1242,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 50,
     marginLeft: 16,
     height: 48,
     justifyContent: "center",

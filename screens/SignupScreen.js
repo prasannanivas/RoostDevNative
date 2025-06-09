@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Logo from "../components/Logo";
 
 /**
  * Color palette from UX team design system
@@ -35,6 +37,7 @@ const COLORS = {
 };
 
 export default function AccountTypeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [accountType, setAccountType] = useState("mortgage"); // Default selection
   const [recoId, setRecoId] = useState("");
   const [recoError, setRecoError] = useState(false);
@@ -79,9 +82,15 @@ export default function AccountTypeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {" "}
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
-        <Text style={styles.brandTitle}>Roost</Text>
+        <Logo
+          width={120}
+          height={42}
+          variant="black"
+          style={styles.brandLogo}
+        />
 
         {/* Prompt */}
         <Text style={styles.heading}>
@@ -196,9 +205,13 @@ export default function AccountTypeScreen({ navigation }) {
           Roost. You can opt-out anytime.
         </Text>
       </ScrollView>
-
-      {/* Bottom navigation bar */}
-      <View style={styles.bottomBar}>
+      {/* Bottom navigation bar */}{" "}
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+      >
         {/* Back Arrow */}
         <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
           <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
@@ -223,12 +236,8 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
     alignItems: "center",
   },
-  brandTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+  brandLogo: {
     marginBottom: 32,
-    color: COLORS.black,
-    fontFamily: "Futura",
   },
   heading: {
     fontSize: 20, // H2 size
@@ -247,7 +256,7 @@ const styles = StyleSheet.create({
   pillButton: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 8, // Updated to match design system
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 24,
     marginBottom: 16,
@@ -330,29 +339,31 @@ const styles = StyleSheet.create({
     color: COLORS.green,
     textDecorationLine: "underline",
   },
-
   // Bottom bar
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
-    backgroundColor: COLORS.white,
+    paddingVertical: 24,
+    paddingBottom: 24,
+    backgroundColor: COLORS.black,
+    height: 120,
+    minHeight: 120,
   },
   backCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 8, // Updated to match design system
+    width: 36,
+    height: 36,
+    borderRadius: 50,
     backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   nextButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 32,
   },
