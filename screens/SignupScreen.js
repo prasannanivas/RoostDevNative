@@ -79,11 +79,13 @@ export default function AccountTypeScreen({ navigation }) {
   const handleLogin = () => {
     navigation.navigate("Login");
   };
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      {" "}
-      <ScrollView contentContainerStyle={styles.container} bounces={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        bounces={false}
+      >
         {/* Brand Title */}
         <Logo
           width={120}
@@ -231,9 +233,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  scrollView: {
+    flex: 1,
+  },
   container: {
     paddingHorizontal: 24,
     paddingVertical: 48,
+    paddingBottom: 120, // Add padding to account for fixed footer
     alignItems: "center",
   },
   brandLogo: {
@@ -338,9 +344,12 @@ const styles = StyleSheet.create({
   linkText: {
     color: COLORS.green,
     textDecorationLine: "underline",
-  },
-  // Bottom bar
+  }, // Bottom bar
   bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

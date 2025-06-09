@@ -194,16 +194,15 @@ export default function PasswordScreen({ navigation, route }) {
       setIsLoading(false);
     }
   };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        style={styles.keyboardContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        {" "}
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.container}
           bounces={false}
           keyboardShouldPersistTaps="handled"
@@ -216,7 +215,6 @@ export default function PasswordScreen({ navigation, route }) {
             variant="black"
             style={styles.brandLogo}
           />
-
           <Text style={styles.heading}>Secure your account</Text>
           {/* Display invitation message if available */}
           {invitedBy ? (
@@ -352,9 +350,9 @@ export default function PasswordScreen({ navigation, route }) {
             >
               <Text style={styles.errorText}>{passwordError}</Text>
             </View>
-          ) : null}
+          ) : null}{" "}
         </ScrollView>
-      </KeyboardAvoidingView>{" "}
+      </KeyboardAvoidingView>
       <View
         style={[
           styles.bottomBar,
@@ -394,10 +392,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  container: {
+  keyboardContainer: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     padding: 24,
-    display: "flex",
+    paddingBottom: 120, // Add padding to account for fixed footer
     justifyContent: "center",
   },
   subHeading: {
@@ -491,6 +495,10 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

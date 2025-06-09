@@ -265,15 +265,15 @@ export default function SignUpDetailsScreen({ navigation, route }) {
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        style={styles.keyboardContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
       >
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.container}
           bounces={false}
           keyboardShouldPersistTaps="handled"
@@ -451,9 +451,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
   container: {
     paddingHorizontal: 24,
     paddingVertical: 48,
+    paddingBottom: 120, // Add padding to account for fixed footer
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
@@ -508,6 +515,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
