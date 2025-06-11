@@ -648,7 +648,6 @@ const ClientHome = ({ questionnaireData }) => {
     <SafeAreaView style={styles.safeArea}>
       {/* Apple Logo Area - Top 63px blank space */}
       <View style={styles.appleLogoSpace} />
-
       {/* Main Header - Bottom 63px */}
       <View style={styles.topHeader}>
         {/* Left Section: Profile Circle and Welcome Text */}
@@ -754,6 +753,7 @@ const ClientHome = ({ questionnaireData }) => {
         animationType="slide"
         transparent
         onRequestClose={() => setShowProfile(false)}
+        presentationStyle="overFullScreen"
       >
         <View style={styles.profileModalContainer}>
           <View style={styles.profileModalContent}>
@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: COLORS.green,
+    backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -1436,19 +1436,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16, // H3 size
     fontFamily: "Futura",
-  },
-  /* PROFILE MODAL */
+  } /* PROFILE MODAL */,
   profileModalContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
+    flexDirection: "row",
   },
   profileModalContent: {
     flex: 1,
     backgroundColor: COLORS.white,
-    marginTop: 48,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    padding: 24,
+    width: "100%",
   },
   closeProfileButton: {
     alignSelf: "flex-end",

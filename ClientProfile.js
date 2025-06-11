@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
 import Ionicons from "react-native-vector-icons/Ionicons"; // Import Ionicons
+import Svg, { Circle, Path } from "react-native-svg";
 
 // Design System Colors
 const COLORS = {
@@ -33,6 +34,26 @@ const COLORS = {
   red: "#A20E0E",
   noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
   coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
+};
+
+// Custom Close Button Component using SVG
+const CloseButton = ({ onPress, style }) => {
+  return (
+    <TouchableOpacity
+      style={[style, { zIndex: 9999 }]} // Keep high z-index to ensure it's on top
+      onPress={onPress}
+      activeOpacity={0.7}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    >
+      <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+        <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
+        <Path
+          d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+          fill="#A9A9A9"
+        />
+      </Svg>
+    </TouchableOpacity>
+  );
 };
 
 export default function ClientProfile({ onClose }) {
@@ -249,7 +270,6 @@ export default function ClientProfile({ onClose }) {
       }
     };
   }, []);
-
   // Modify the close button handler to refresh data after closing
   const handleClose = async () => {
     // Clear any pending auto-save
@@ -257,14 +277,15 @@ export default function ClientProfile({ onClose }) {
       clearTimeout(saveTimerRef.current);
     }
 
-    // Save changes before closing
+    // Save changes before closing and wait for completion
     handleSubmit();
 
-    fetchRefreshData(clientInfo.id);
-    // Trigger client data refetch if possible
-    if (onClose) {
-      // Assuming the ClientContext has a method to refresh client data
+    // Refresh data and close
+    if (clientInfo?.id) {
+      fetchRefreshData(clientInfo.id);
+    }
 
+    if (onClose) {
       onClose();
     }
   };
@@ -465,30 +486,24 @@ export default function ClientProfile({ onClose }) {
             Profile updated successfully
           </Text>
         </Animated.View>
-      )}
-
+      )}{" "}
       {/* Close Button in top-right corner - updated to use new handler */}
       {onClose && (
-        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-          <Text style={styles.closeButtonText}>×</Text>
-        </TouchableOpacity>
+        <CloseButton onPress={handleClose} style={styles.closeButton} />
       )}
-
       {/* Avatar & Title */}
       <View style={styles.avatarContainer}>
         <View style={styles.avatarCircle}>
           <Text style={styles.avatarText}>{getInitials()}</Text>
         </View>
         <Text style={styles.profileTitle}>Your Profile</Text>
-        <Text style={styles.profileSubtitle}>
-          Keep your personal info up to date
-        </Text>
       </View>
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Personal Info Card */}
         <View style={styles.card}>
-          {" "}
+          <Text style={styles.profileSubtitle}>
+            Keep your personal info up to date
+          </Text>
           <View style={styles.formGroup}>
             <TextInput
               style={styles.input}
@@ -531,7 +546,6 @@ export default function ClientProfile({ onClose }) {
             </View>
           </View>
         </View>
-
         {/* Address Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Send my rewards to</Text>
@@ -569,27 +583,6 @@ export default function ClientProfile({ onClose }) {
             />
           </View>
         </View>
-
-        {/* Buttons */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.passwordButton}
-            onPress={() => setShowPasswordModal(true)}
-          >
-            <Text style={styles.passwordButtonText}>Change Password</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Section */}
-        <View style={styles.logoutSection}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Notifications Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Notifications</Text>
@@ -671,10 +664,9 @@ export default function ClientProfile({ onClose }) {
             </TouchableOpacity>
           </View>
         </View>
-
         {/* Email Notifications Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Email Notifications</Text>
+          <Text style={styles.cardTitle}>Email</Text>
           <Text style={styles.cardSubtitle}>
             Manage what emails you receive from us
           </Text>
@@ -736,79 +728,23 @@ export default function ClientProfile({ onClose }) {
               />
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-
-      {/* Password Modal */}
-      <Modal visible={showPasswordModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Change Password</Text>
-            {error ? (
-              <Text style={styles.errorMessage}>{error}</Text>
-            ) : null}{" "}
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Current Password"
-              placeholderTextColor={COLORS.gray}
-              secureTextEntry
-              value={passwordData.oldPassword}
-              onChangeText={(text) =>
-                handlePasswordInputChange("oldPassword", text)
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="New Password"
-              placeholderTextColor={COLORS.gray}
-              secureTextEntry
-              value={passwordData.newPassword}
-              onChangeText={(text) =>
-                handlePasswordInputChange("newPassword", text)
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Confirm New Password"
-              placeholderTextColor={COLORS.gray}
-              secureTextEntry
-              value={passwordData.confirmPassword}
-              onChangeText={(text) =>
-                handlePasswordInputChange("confirmPassword", text)
-              }
-            />
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handlePasswordSubmit}
-              >
-                <Text style={styles.modalButtonText}>Update Password</Text>
-              </TouchableOpacity>{" "}
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
-                onPress={() => {
-                  setShowPasswordModal(false);
-                  setError("");
-                  setPasswordData({
-                    oldPassword: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                  });
-                }}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-            {/* Logout Button */}
-          </View>
-        </View>
-        <View style={styles.section}>
+        </View>{" "}
+        {/* Buttons */}
+        <View style={styles.buttonContainer}>
+          {/* <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          </TouchableOpacity> */}
+          <TouchableOpacity
+            style={styles.passwordButton}
+            onPress={() => setShowPasswordModal(true)}
+          >
+            <Text style={styles.passwordButtonText}>Change Password</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
-      </Modal>
-
+      </ScrollView>
       {/* Email Change Modal */}
       <Modal visible={showEmailModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -943,6 +879,75 @@ export default function ClientProfile({ onClose }) {
           </View>
         </View>
       </Modal>
+      {/* Password Modal */}
+      <Modal visible={showPasswordModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Change Password</Text>
+            {error ? (
+              <Text style={styles.errorMessage}>{error}</Text>
+            ) : null}{" "}
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Current Password"
+              placeholderTextColor={COLORS.gray}
+              secureTextEntry
+              value={passwordData.oldPassword}
+              onChangeText={(text) =>
+                handlePasswordInputChange("oldPassword", text)
+              }
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New Password"
+              placeholderTextColor={COLORS.gray}
+              secureTextEntry
+              value={passwordData.newPassword}
+              onChangeText={(text) =>
+                handlePasswordInputChange("newPassword", text)
+              }
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirm New Password"
+              placeholderTextColor={COLORS.gray}
+              secureTextEntry
+              value={passwordData.confirmPassword}
+              onChangeText={(text) =>
+                handlePasswordInputChange("confirmPassword", text)
+              }
+            />
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handlePasswordSubmit}
+              >
+                <Text style={styles.modalButtonText}>Update Password</Text>
+              </TouchableOpacity>{" "}
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
+                onPress={() => {
+                  setShowPasswordModal(false);
+                  setError("");
+                  setPasswordData({
+                    oldPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
+                }}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Logout Button */}
+          </View>
+        </View>
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -952,30 +957,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: 48,
-    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingHorizontal: 12,
   },
   closeButton: {
     position: "absolute",
     top: 16,
     right: 16,
-    padding: 16,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: COLORS.black,
-    fontFamily: "Futura",
-    fontWeight: "bold",
+    width: 37,
+    height: 37,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999, // Ensure it's always on top
   },
   avatarContainer: {
     alignItems: "center",
     marginBottom: 32,
+    zIndex: 1,
   },
   avatarCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.green,
+    backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -995,6 +999,7 @@ const styles = StyleSheet.create({
   },
   profileSubtitle: {
     fontSize: 14,
+    textAlign: "center",
     fontWeight: "500",
     fontFamily: "Futura",
     color: COLORS.slate,
@@ -1002,14 +1007,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 48,
+    zIndex: 10,
   },
-
   // Card style
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 24,
     marginBottom: 24,
+    zIndex: 10,
     shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
@@ -1023,12 +1029,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "Futura",
+    alignSelf: "center",
     color: COLORS.black,
     marginBottom: 8,
   },
   cardSubtitle: {
     fontSize: 14,
     fontWeight: "500",
+    textAlign: "center",
     fontFamily: "Futura",
     color: COLORS.slate,
     marginBottom: 16,
@@ -1085,13 +1093,17 @@ const styles = StyleSheet.create({
   },
   toggleThumbOn: {
     marginLeft: 20,
+  }, // Buttons
+  buttonContainer: {
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
-
-  // Buttons
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     marginBottom: 24,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   saveButton: {
     backgroundColor: COLORS.green,
@@ -1106,34 +1118,37 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   passwordButton: {
-    backgroundColor: COLORS.red,
+    width: "100%",
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: COLORS.green,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 50,
+    alignItems: "center",
+    marginBottom: 16,
   },
   passwordButtonText: {
-    color: COLORS.white,
+    color: COLORS.green,
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
   },
   /* Logout Button */
   logoutButton: {
-    backgroundColor: COLORS.red,
+    width: "100%",
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: COLORS.green,
     borderRadius: 50,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 16,
   },
   logoutButtonText: {
-    color: COLORS.white,
+    color: COLORS.green,
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
-  },
-  logoutSection: {
-    marginTop: 24,
-    paddingHorizontal: 24,
   },
 
   // Password Modal
