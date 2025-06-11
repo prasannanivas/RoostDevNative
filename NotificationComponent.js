@@ -23,6 +23,8 @@ const NotificationComponent = ({ visible, onClose }) => {
     error,
     markNotificationAsRead,
     markAllAsRead,
+    removeNotification,
+    refreshNotifications,
   } = useNotification();
 
   const [unreadCount, setUnreadCount] = useState(0);
@@ -108,9 +110,7 @@ const NotificationComponent = ({ visible, onClose }) => {
               useNativeDriver: true,
             }),
           ]).start(() => {
-            setNotifications(
-              notifications.filter((n) => n.id !== notification.id)
-            );
+            removeNotification(notification.id);
           });
         } else {
           Animated.spring(itemSlide, {
@@ -179,6 +179,7 @@ const NotificationComponent = ({ visible, onClose }) => {
           onPress={handleClose}
           style={styles.overlayTouch}
         >
+          {" "}
           <Animated.View
             style={[
               styles.container,
@@ -187,7 +188,7 @@ const NotificationComponent = ({ visible, onClose }) => {
                   {
                     translateY: slideAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [-50, 0],
+                      outputRange: [Dimensions.get("window").height, 0],
                     }),
                   },
                   { scale: scaleAnim },
@@ -195,9 +196,11 @@ const NotificationComponent = ({ visible, onClose }) => {
               },
             ]}
           >
+            {" "}
             <TouchableOpacity
               activeOpacity={1}
               onPress={(e) => e.stopPropagation()}
+              style={styles.contentContainer}
             >
               <View style={styles.header}>
                 <Text style={styles.headerText}>
@@ -229,10 +232,10 @@ const NotificationComponent = ({ visible, onClose }) => {
                     <View style={styles.emptyStateIconContainer}>
                       <Ionicons name="alert-circle" size={40} color="#DC3545" />
                     </View>
-                    <Text style={styles.emptyStateText}>{error}</Text>
+                    <Text style={styles.emptyStateText}>{error}</Text>{" "}
                     <TouchableOpacity
                       style={styles.retryButton}
-                      onPress={fetchNotifications}
+                      onPress={refreshNotifications}
                     >
                       <Text style={styles.retryButtonText}>Retry</Text>
                     </TouchableOpacity>
@@ -260,8 +263,17 @@ const NotificationComponent = ({ visible, onClose }) => {
                       We'll notify you when something important happens
                     </Text>
                   </View>
-                )}
+                )}{" "}
               </ScrollView>
+
+              {/* Blue Pill Close Button at Bottom */}
+              <TouchableOpacity
+                style={styles.bottomCloseButton}
+                onPress={handleClose}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.bottomCloseButtonText}>Close</Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           </Animated.View>
         </TouchableOpacity>
@@ -283,42 +295,47 @@ const styles = StyleSheet.create({
   },
   overlayTouch: {
     flex: 1,
-    justifyContent: "flex-start",
+    justifyContent: "flex-end",
   },
   container: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 60 + (StatusBar.currentHeight || 0) : 60,
-    right: 16,
-    width: Dimensions.get("window").width * 0.9,
-    maxWidth: 400,
+    width: "100%",
+    height: "100%",
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: -5,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
     elevation: 12,
-    maxHeight: Dimensions.get("window").height * 0.8,
+  },
+  contentContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.06)",
+    paddingTop: 63,
+    position: "relative",
   },
   headerText: {
     fontSize: 20,
     fontWeight: "700",
     color: "#23231A",
     letterSpacing: -0.5,
+    textAlign: "center",
   },
   closeButton: {
-    marginLeft: 8,
+    position: "absolute",
+    right: 20,
+    top: 63 + 20,
   },
   closeButtonInner: {
     width: 32,
@@ -329,7 +346,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   notificationsList: {
-    maxHeight: Dimensions.get("window").height * 0.6,
+    flex: 1,
   },
   notificationItem: {
     borderBottomWidth: 1,
@@ -438,6 +455,35 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
+  },
+  bottomCloseButton: {
+    position: "absolute",
+    bottom: 63,
+    alignSelf: "center",
+    backgroundColor: "#2271B1",
+    width: 82,
+    height: 42,
+    paddingTop: 13,
+    paddingRight: 24,
+    paddingBottom: 13,
+    paddingLeft: 24,
+    borderRadius: 33,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bottomCloseButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 

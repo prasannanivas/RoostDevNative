@@ -262,6 +262,10 @@ export const NotificationProvider = ({ children }) => {
       return false;
     }
   };
+  // Remove a specific notification
+  const removeNotification = (notificationId) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+  };
 
   // Reset when logged out
   const resetNotifications = () => {
@@ -281,6 +285,7 @@ export const NotificationProvider = ({ children }) => {
         markNotificationAsRead,
         markAllAsRead,
         resetNotifications,
+        removeNotification,
         setUnreadCount,
         sendTestNotification, // Include this for testing
         refreshNotifications: fetchNotifications,

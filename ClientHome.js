@@ -26,6 +26,8 @@ import ClientProfile from "./ClientProfile";
 import NotificationComponent from "./NotificationComponent";
 import { QuestionnaireProvider } from "./context/QuestionnaireContext";
 import Questionnaire from "./components/questionnaire/Questionnaire";
+import NotificationBell from "./components/icons/NotificationBell";
+import HelpButton from "./components/icons/HelpButton";
 
 /**
  * Color palette from UX team design system
@@ -439,47 +441,34 @@ const ClientHome = ({ questionnaireData }) => {
   const handleNotifications = () => {
     setShowNotifications(true);
   };
-
   // Render notification button with badge
   const renderNotificationButton = () => {
     return (
-      <TouchableOpacity
-        style={styles.notificationButton}
+      <NotificationBell
+        size={24}
+        bellColor={COLORS.white}
+        badgeColor={COLORS.orange}
+        showBadge={unreadCount > 0}
+        badgeCount={unreadCount}
         onPress={handleNotifications}
-      >
-        <Ionicons name="notifications-outline" size={24} color={COLORS.white} />
-        {unreadCount > 0 && (
-          <View style={styles.notificationBadge}>
-            <Text style={styles.notificationBadgeText}>
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
+        style={styles.notificationButton}
+      />
     );
   };
   // Add this right after the renderNotificationButton function
-  const renderQuestionnaireButton = () => {
-    return (
-      <View style={styles.questionnaireButtonContainer}>
-        <TouchableOpacity
-          style={styles.questionnaireButton}
-          onPress={() => setShowQuestionnairePreview(true)}
-        >
-          <Ionicons name="document-text" size={24} color={COLORS.white} />
-          <Text style={styles.questionnaireButtonText}>Preview</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
-          onPress={() => setShowQuestionnaire(true)}
-        >
-          <Ionicons name="play" size={24} color={COLORS.white} />
-          <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  // const renderQuestionnaireButton = () => {
+  //   return (
+  //     <View style={styles.questionnaireButtonContainer}>
+  //       <TouchableOpacity
+  //         style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
+  //         onPress={() => setShowQuestionnaire(true)}
+  //       >
+  //         <Ionicons name="play" size={24} color={COLORS.white} />
+  //         <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
+  //       </TouchableOpacity>
+  //     </View>
+  //   );
+  // };
 
   // Render row
   const renderDocumentRow = (doc) => {
@@ -540,7 +529,7 @@ const ClientHome = ({ questionnaireData }) => {
           {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
-            <Text style={styles.completePillText}>Complete</Text>
+            <Text style={styles.completePillText}>Approved</Text>
           )}
         </TouchableOpacity>
       );
@@ -655,13 +644,16 @@ const ClientHome = ({ questionnaireData }) => {
       </View>
     </Modal>
   );
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Top Header */}
+      {/* Apple Logo Area - Top 63px blank space */}
+      <View style={styles.appleLogoSpace} />
+
+      {/* Main Header - Bottom 63px */}
       <View style={styles.topHeader}>
+        {/* Left Section: Profile Circle and Welcome Text */}
         <TouchableOpacity
-          style={styles.initials}
+          style={styles.leftSection}
           onPress={() => setShowProfile(true)}
         >
           <View style={styles.initialsCircle}>
@@ -673,21 +665,30 @@ const ClientHome = ({ questionnaireData }) => {
                 .toUpperCase()}
             </Text>
           </View>
-          <Text
-            style={styles.welcomeName}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            Welcome {clientFromContext.name}
-          </Text>
+          <View style={styles.welcomeTextContainer}>
+            <Text style={styles.welcomeText}>Welcome</Text>
+            <Text
+              style={styles.clientName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {clientFromContext.name}
+            </Text>
+          </View>
         </TouchableOpacity>
 
-        {renderQuestionnaireButton()}
-        {renderNotificationButton()}
-
-        <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
-          <Text style={styles.helpButtonText}>HELP</Text>
-        </TouchableOpacity>
+        {/* Right Section: Notification Bell and Help Button */}
+        <View style={styles.rightSection}>
+          {renderNotificationButton()}
+          <HelpButton
+            borderColor={COLORS.white}
+            textColor={COLORS.white}
+            text="HELP"
+            onPress={handleHelpPress}
+            variant="outline"
+            size="medium"
+          />
+        </View>
       </View>
       <ScrollView
         style={styles.mainContent}
@@ -967,7 +968,7 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </Modal>
       {/* Modal for questionnaire preview */}
-      <QuestionnairePreview />
+      {/* <QuestionnairePreview /> */}
       {/* Modal for testing the actual questionnaire */}
       <Modal
         visible={showQuestionnaire}
@@ -997,18 +998,34 @@ export default ClientHome;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#F6F6F6", // Updated to your preferred background color
   },
-  /* TOP HEADER STYLING */
+  /* APPLE LOGO SPACE */
+  appleLogoSpace: {
+    height: 63,
+    backgroundColor: COLORS.black,
+    width: "100%",
+  } /* TOP HEADER STYLING */,
   topHeader: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.black,
     paddingHorizontal: 16,
-    paddingVertical: 12,
     justifyContent: "space-between",
     width: "100%",
-    paddingRight: Platform.OS === "ios" ? 24 : 16, // Add more padding on iOS
+    height: 63, // Exact height as specified
+  },
+  leftSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    maxWidth: "70%",
+  },
+  rightSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
   },
   initials: {
     flexDirection: "row",
@@ -1018,27 +1035,38 @@ const styles = StyleSheet.create({
     maxWidth: "80%", // Limit width to prevent overlap
   },
   initialsCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
+    marginRight: 12,
     flexShrink: 0,
   },
   initialsText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 18, // Larger font for bigger circle
+    fontWeight: "bold",
     fontFamily: "Futura",
   },
-  welcomeName: {
-    color: COLORS.white,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+  welcomeTextContainer: {
+    justifyContent: "center",
     flex: 1,
+  },
+  welcomeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "400",
     fontFamily: "Futura",
+    lineHeight: 14,
+  },
+  clientName: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    lineHeight: 16,
   },
   removeButtonText: {
     backgroundColor: COLORS.green,
@@ -1111,11 +1139,13 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   sectionHeader: {
-    fontSize: 20, // H2 size
-    fontWeight: "bold", // H2 weight
+    fontSize: 20,
+    fontWeight: "700",
     color: COLORS.black,
     marginBottom: 16,
     fontFamily: "Futura",
+    lineHeight: 20,
+    letterSpacing: 0,
   },
   docsContainer: {
     marginBottom: 32,
@@ -1123,15 +1153,13 @@ const styles = StyleSheet.create({
   docItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.white,
+    backgroundColor: "transparent",
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 8,
     justifyContent: "space-between",
     gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.gray,
+    borderWidth: 0,
   },
   docLabel: {
     fontSize: 14, // P size
@@ -1140,17 +1168,20 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
     fontFamily: "Futura",
-  },
-  // Pill styles
+  }, // Pill styles
   addPill: {
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minWidth: 85,
+    backgroundColor: "transparent",
+    borderRadius: 33,
+    paddingTop: 13,
+    paddingRight: 24,
+    paddingBottom: 13,
+    paddingLeft: 24,
+    width: 75,
+    height: 42,
     alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
   },
   closeModalButton: {
@@ -1166,53 +1197,64 @@ const styles = StyleSheet.create({
   },
   addPillText: {
     color: COLORS.green,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
-  },
-  submittedPill: {
-    borderColor: COLORS.blue,
-    borderWidth: 2,
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minWidth: 85,
-    alignItems: "center",
-    flexShrink: 0,
+    lineHeight: 12,
+    textAlign: "center",
+    letterSpacing: 0,
   },
   submittedPillText: {
-    color: COLORS.blue,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    color: COLORS.green,
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
-  },
-  cancelButton: {
-    backgroundColor: COLORS.silver,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  cancelButtonText: {
-    color: COLORS.slate,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
-    fontFamily: "Futura",
-  },
-  completePill: {
-    backgroundColor: COLORS.green,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minWidth: 85,
-    alignItems: "center",
-    flexShrink: 0,
+    lineHeight: 12,
+    textAlign: "center",
+    letterSpacing: 0,
   },
   completePillText: {
     color: COLORS.white,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
+    lineHeight: 12,
+    textAlign: "center",
+    letterSpacing: 0,
+  },
+  submittedPill: {
+    backgroundColor: "transparent",
+    borderRadius: 50,
+    paddingTop: 13,
+    paddingRight: 24,
+    paddingBottom: 13,
+    paddingLeft: 24,
+    width: 114,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    borderWidth: 1,
+    borderColor: COLORS.green,
+  },
+  completePill: {
+    backgroundColor: COLORS.green,
+    borderColor: COLORS.green,
+    borderRadius: 50,
+    paddingTop: 13,
+    paddingRight: 24,
+    paddingBottom: 13,
+    paddingLeft: 24,
+    width: 114,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    minWidth: 100,
+    flexShrink: 0,
   },
   noDocsText: {
     fontSize: 14, // P size
