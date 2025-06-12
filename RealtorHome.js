@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
   Image,
   Animated,
+  Easing,
   RefreshControl,
   Linking,
   Alert,
 } from "react-native";
 import * as Contacts from "expo-contacts";
+import Svg, { Rect, Path } from "react-native-svg";
 import { useAuth } from "./context/AuthContext";
 import { useRealtor } from "./context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
@@ -25,6 +27,11 @@ import {
   MaterialIcons,
   Entypo,
 } from "@expo/vector-icons";
+import {
+  EmptyProgressBar,
+  MidProgressBar,
+  CustomProgressBar,
+} from "./components/progressBars";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -54,6 +61,9 @@ const RealtorHome = () => {
   const realtorFromContext = useRealtor();
 
   const invited = realtorFromContext?.invitedClients || [];
+
+  console.log("Realtor Home invited clients:", invited);
+
   const navigation = useNavigation();
 
   // Local state
@@ -84,21 +94,35 @@ const RealtorHome = () => {
   const [isMultiple, setIsMultiple] = useState(false); // New state for single/multiple toggle
   const [showContactOptions, setShowContactOptions] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
-
   const [showInviteForm, setShowInviteForm] = useState(false);
+  const [selectedClientCard, setSelectedClientCard] = useState(null);
+  const [showClientCardModal, setShowClientCardModal] = useState(false);
 
   // Add animation values
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
   const rightSlideAnim = useRef(new Animated.Value(1000)).current;
-
-  // Animation functions
+  const bottomSlideAnim = useRef(new Animated.Value(1000)).current; // Animation functions
   const slideIn = (direction) => {
-    const animValue = direction === "left" ? leftSlideAnim : rightSlideAnim;
-    Animated.spring(animValue, {
-      toValue: 0,
-      useNativeDriver: true,
-      bounciness: 0,
-    }).start();
+    const animValue =
+      direction === "left"
+        ? leftSlideAnim
+        : direction === "right"
+        ? rightSlideAnim
+        : bottomSlideAnim;
+    if (direction === "bottom") {
+      Animated.timing(animValue, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }).start();
+    } else {
+      Animated.spring(animValue, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 0,
+      }).start();
+    }
   };
 
   const handleInviteRealtor = async () => {
@@ -158,11 +182,17 @@ const RealtorHome = () => {
       setInviteLoading(false);
     }
   };
-
   const slideOut = (direction) => {
-    const animValue = direction === "left" ? leftSlideAnim : rightSlideAnim;
+    const animValue =
+      direction === "left"
+        ? leftSlideAnim
+        : direction === "right"
+        ? rightSlideAnim
+        : bottomSlideAnim;
+    const toValue =
+      direction === "left" ? -1000 : direction === "right" ? 1000 : 1000;
     Animated.timing(animValue, {
-      toValue: direction === "left" ? -1000 : 1000,
+      toValue: toValue,
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -173,11 +203,15 @@ const RealtorHome = () => {
     if (showProfile) slideIn("left");
     else slideOut("left");
   }, [showProfile]);
-
   useEffect(() => {
     if (showRewards) slideIn("right");
     else slideOut("right");
   }, [showRewards]);
+
+  useEffect(() => {
+    if (showClientCardModal) slideIn("bottom");
+    else slideOut("bottom");
+  }, [showClientCardModal]);
 
   const handleInviteClient = async () => {
     setIsLoading(true);
@@ -288,11 +322,10 @@ const RealtorHome = () => {
       .join("")
       .toUpperCase();
   };
-
-  const handleClientClick = (clientId) => {
-    if (clientId) {
-      navigation.navigate("ClientDetails", { clientId });
-    }
+  const handleClientClick = (client) => {
+    console.log("Selected client:", client);
+    setSelectedClientCard(client);
+    setShowClientCardModal(true);
   };
 
   const handleProfileClick = () => {
@@ -524,16 +557,15 @@ Looking forward to working with you!`;
                   client?.clientAddress !== null)
               ? "Signed Up"
               : client.status === "ACCEPTED" && client.documents.length > 0
-              ? `${docCount.approved}/${client.documents.length} Completed`
+              ? `${docCount.approved}/10 Documents`
               : client.clientAddress === null
               ? "Account Deleted"
               : client.status;
-
           return (
             <TouchableOpacity
               key={client._id}
               style={styles.clientCard}
-              onPress={() => handleClientClick(client.inviteeId)}
+              onPress={() => handleClientClick(client)}
               activeOpacity={0.8}
             >
               <View style={styles.initialsCircle}>
@@ -542,27 +574,52 @@ Looking forward to working with you!`;
                 </Text>
               </View>
               <View style={styles.clientDetails}>
-                <Text style={styles.clientName}>{client.referenceName}</Text>
-                <Text style={styles.clientStatus}>{statusText}</Text>
+                <Text style={styles.clientName}>{client.referenceName}</Text>{" "}
+                {client.status === "ACCEPTED" &&
+                client.documents &&
+                client.documents.length > 0 ? (
+                  <MidProgressBar
+                    text={`${docCount.approved}/10 DOCUMENTS`}
+                    progress={(docCount.approved / 10) * 100}
+                    style={styles.statusProgressBar}
+                  />
+                ) : (
+                  <EmptyProgressBar
+                    text={statusText.toUpperCase()}
+                    progress={
+                      client.status === "PENDING"
+                        ? 10
+                        : client.status === "ACCEPTED"
+                        ? 30
+                        : 50
+                    }
+                    style={styles.statusProgressBar}
+                  />
+                )}
               </View>
             </TouchableOpacity>
           );
         })}
-
-        {/* Add spacing at the bottom to prevent content from being hidden behind the button */}
-        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ================= FIXED BOTTOM BUTTON: ADD CLIENTS ================= */}
-      <View style={styles.fixedBottomButtonContainer}>
-        <TouchableOpacity
-          style={styles.addClientsButton}
-          onPress={() => setShowForm(true)}
-        >
-          <Ionicons name="add" size={24} color="#fff" />
-          <Text style={styles.addClientsButtonText}>ADD CLIENTS</Text>
-        </TouchableOpacity>
-      </View>
+      {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
+      <TouchableOpacity
+        style={styles.floatingAddButton}
+        onPress={() => setShowForm(true)}
+        activeOpacity={0.8}
+      >
+        {" "}
+        <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
+          <Rect x="1" y="1" width="54" height="54" rx="27" fill="#F0913A" />
+          <Path
+            d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+            stroke="#FDFDFD"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      </TouchableOpacity>
 
       {/* ================== MODALS ================== */}
 
@@ -797,12 +854,10 @@ Looking forward to working with you!`;
             >
               <Ionicons name="close" size={24} color="#23231A" />
             </TouchableOpacity>
-
             <Text style={styles.formTitle}>ADD A CLIENT</Text>
             <Text style={styles.formSubtitle}>
               Send your client an invite to view and share listing with you.
             </Text>
-
             {/* One/Multiple Toggle */}
             <View style={styles.toggleContainer}>
               <TouchableOpacity
@@ -836,7 +891,6 @@ Looking forward to working with you!`;
                 </Text>
               </TouchableOpacity>
             </View>
-
             {!isMultiple ? (
               /* Single Client Form */
               <>
@@ -999,9 +1053,119 @@ Looking forward to working with you!`;
                   and we can take care of it for you
                 </Text>
               </>
-            )}
+            )}{" "}
           </View>
         </View>
+      </Modal>
+
+      {/* Client Card Detail Modal - Slides from bottom */}
+      <Modal
+        visible={showClientCardModal}
+        animationType="none"
+        transparent={true}
+      >
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            {
+              opacity: bottomSlideAnim.interpolate({
+                inputRange: [0, 1000],
+                outputRange: [1, 0],
+              }),
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.bottomSlideModal,
+              { transform: [{ translateY: bottomSlideAnim }] },
+            ]}
+          >
+            <View style={styles.clientCardModalContent}>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowClientCardModal(false)}
+              >
+                <Ionicons name="close" size={24} color={COLORS.black} />
+              </TouchableOpacity>
+
+              {selectedClientCard && (
+                <View style={styles.clientCardDetails}>
+                  <View style={styles.clientCardHeader}>
+                    <View style={styles.initialsCircle}>
+                      <Text style={styles.initialsText}>
+                        {getInitials(selectedClientCard.referenceName)}
+                      </Text>
+                    </View>{" "}
+                    <View style={styles.clientCardInfo}>
+                      <Text style={styles.clientCardName}>
+                        {selectedClientCard.referenceName}
+                      </Text>
+                      <EmptyProgressBar
+                        text={
+                          selectedClientCard.status === "PENDING"
+                            ? "INVITED"
+                            : selectedClientCard.clientAddress === null
+                            ? "ACCOUNT DELETED"
+                            : selectedClientCard.status === "ACCEPTED" &&
+                              (!selectedClientCard.documents ||
+                                selectedClientCard.documents.length === 0 ||
+                                selectedClientCard?.clientAddress !== null)
+                            ? "SIGNED UP"
+                            : selectedClientCard.status === "ACCEPTED" &&
+                              selectedClientCard.documents &&
+                              selectedClientCard.documents.length > 0
+                            ? `${
+                                getDocumentCounts(selectedClientCard.documents)
+                                  .approved
+                              }/10 DOCUMENTS`
+                            : selectedClientCard.clientAddress === null
+                            ? "ACCOUNT DELETED"
+                            : selectedClientCard.status.toUpperCase()
+                        }
+                        progress={
+                          selectedClientCard.status === "PENDING"
+                            ? 10
+                            : selectedClientCard.status === "ACCEPTED" &&
+                              (!selectedClientCard.documents ||
+                                selectedClientCard.documents.length === 0)
+                            ? 30
+                            : selectedClientCard.status === "ACCEPTED" &&
+                              selectedClientCard.documents
+                            ? Math.min(
+                                (getDocumentCounts(selectedClientCard.documents)
+                                  .approved /
+                                  10) *
+                                  100,
+                                100
+                              )
+                            : 50
+                        }
+                        style={styles.detailStatusProgressBar}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.clientCardActions}>
+                    <TouchableOpacity
+                      style={styles.viewDetailsButton}
+                      onPress={() => {
+                        setShowClientCardModal(false);
+                        navigation.navigate("ClientDetails", {
+                          clientId: selectedClientCard.inviteeId,
+                        });
+                      }}
+                    >
+                      <Text style={styles.viewDetailsButtonText}>
+                        View Details
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+        </Animated.View>
       </Modal>
     </View>
   );
@@ -1109,27 +1273,30 @@ const styles = StyleSheet.create({
   },
   clientsScrollView: {
     flex: 1,
-  },
-
-  // Client cards
+  }, // Client cards
   clientCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 8,
-    padding: 16,
-    marginVertical: 8,
+    padding: 8,
+    marginVertical: 2,
+    width: "95%",
+    minWidth: 358,
+    maxWidth: 528,
+    height: 78,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    gap: 10,
   },
   initialsCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: COLORS.green,
+    width: 49,
+    height: 49,
+    borderRadius: 24.5,
+    backgroundColor: COLORS.slate,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -1144,65 +1311,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   clientName: {
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 18, // Slightly larger
+    fontWeight: "600", // Bolder
     color: COLORS.black,
-    marginBottom: 8,
+    marginBottom: 4,
     fontFamily: "Futura",
   },
   clientStatus: {
     fontSize: 12, // H4 size
     color: COLORS.black,
-    fontWeight: "bold", // H4 weight
+    fontWeight: "500", // Medium weight
     backgroundColor: COLORS.coloredBackgroundFill,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 6,
     alignSelf: "flex-start",
     fontFamily: "Futura",
   },
-
+  statusProgressBar: {
+    marginTop: 4,
+    width: "100%",
+  },
   // Bottom button
   bottomButtonContainer: {
     alignItems: "center",
     padding: 24,
     paddingBottom: 48,
   },
-  fixedBottomButtonContainer: {
+  floatingAddButton: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    padding: 24,
-    paddingBottom: 32,
-    backgroundColor: COLORS.background,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
-  },
-  addClientsButton: {
-    flexDirection: "row",
-    backgroundColor: COLORS.orange,
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "80%",
+    bottom: 24,
+    right: 24,
+    width: 59,
+    height: 58,
+    borderRadius: 29.5,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 1000,
   },
-  addClientsButtonText: {
-    color: COLORS.white,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
-    marginLeft: 8,
-    fontFamily: "Futura",
-  },
-  // Keep all existing styles below this point
   contactInviteContainer: {
     backgroundColor: COLORS.background,
     borderRadius: 8,
@@ -1336,9 +1485,8 @@ const styles = StyleSheet.create({
     color: COLORS.red,
   },
   modalContent: {
-    width: "90%",
+    width: "100%", // Changed from 90% to 100%
     backgroundColor: COLORS.white,
-    borderRadius: 8,
     padding: 24,
   },
   modalTitle: {
@@ -1395,10 +1543,10 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: "90%",
+    width: "100%", // Changed from 90% to 100%
     backgroundColor: COLORS.white,
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
+    borderTopRightRadius: 0, // Remove radius for full width
+    borderBottomRightRadius: 0, // Remove radius for full width
     overflow: "hidden",
   },
   modalContentForRealtorInvite: {
@@ -1582,6 +1730,79 @@ const styles = StyleSheet.create({
     padding: 24,
     marginTop: 24,
     alignItems: "center",
+  },
+  bottomSlideModal: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    overflow: "hidden",
+    maxHeight: "80%",
+  },
+  clientCardModalContent: {
+    padding: 24,
+    paddingTop: 16,
+  },
+  modalCloseButton: {
+    alignSelf: "flex-end",
+    padding: 8,
+    marginBottom: 16,
+  },
+  clientCardDetails: {
+    alignItems: "center",
+  },
+  clientCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 32,
+    paddingHorizontal: 16,
+  },
+  clientCardInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  clientCardName: {
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
+    color: COLORS.black,
+    marginBottom: 8,
+    fontFamily: "Futura",
+  },
+  clientCardStatus: {
+    fontSize: 14, // P size
+    color: COLORS.green,
+    fontWeight: "500", // P weight
+    backgroundColor: COLORS.coloredBackgroundFill,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+    fontFamily: "Futura",
+  },
+  detailStatusProgressBar: {
+    marginTop: 8,
+    width: "100%",
+  },
+  clientCardActions: {
+    width: "100%",
+    alignItems: "center",
+  },
+  viewDetailsButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "80%",
+  },
+  viewDetailsButtonText: {
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
 });
 
