@@ -27,6 +27,7 @@ import {
   MaterialIcons,
   Entypo,
 } from "@expo/vector-icons";
+import GiftIcon from "./components/icons/GiftIcon";
 import {
   EmptyProgressBar,
   MidProgressBar,
@@ -101,7 +102,9 @@ const RealtorHome = () => {
   // Add animation values
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
   const rightSlideAnim = useRef(new Animated.Value(1000)).current;
-  const bottomSlideAnim = useRef(new Animated.Value(1000)).current; // Animation functions
+  const bottomSlideAnim = useRef(new Animated.Value(1000)).current;
+
+  // Animation functions
   const slideIn = (direction) => {
     const animValue =
       direction === "left"
@@ -109,7 +112,7 @@ const RealtorHome = () => {
         : direction === "right"
         ? rightSlideAnim
         : bottomSlideAnim;
-    if (direction === "bottom") {
+    if (direction === "bottom" || direction === "right") {
       Animated.timing(animValue, {
         toValue: 0,
         duration: 300,
@@ -189,23 +192,23 @@ const RealtorHome = () => {
         : direction === "right"
         ? rightSlideAnim
         : bottomSlideAnim;
-    const toValue =
-      direction === "left" ? -1000 : direction === "right" ? 1000 : 1000;
+    const toValue = direction === "left" ? -1000 : 1000;
     Animated.timing(animValue, {
       toValue: toValue,
       duration: 300,
       useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
     }).start();
   };
-
   // Effect hooks for animations
   useEffect(() => {
     if (showProfile) slideIn("left");
     else slideOut("left");
   }, [showProfile]);
+
   useEffect(() => {
-    if (showRewards) slideIn("right");
-    else slideOut("right");
+    if (showRewards) slideIn("bottom");
+    else slideOut("bottom");
   }, [showRewards]);
 
   useEffect(() => {
@@ -495,15 +498,15 @@ Looking forward to working with you!`;
             <Text style={styles.realtorName}>{realtor.name}</Text>
             <Text style={styles.agencyName}>ABC Realty</Text>
           </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuIconContainer}
+        </TouchableOpacity>{" "}
+        <GiftIcon
           onPress={handleRewardsClick}
-          activeOpacity={0.7}
-        >
-          <FontAwesome name="gift" size={24} color="#F99942" />
-        </TouchableOpacity>
+          width={46}
+          height={46}
+          backgroundColor="#1D2327"
+          strokeColor="#377473"
+          pathColor="#FDFDFD"
+        />
       </View>
 
       {/* ================= INVITE REALTORS BANNER ================= */}
@@ -541,11 +544,13 @@ Looking forward to working with you!`;
           />
         }
       >
-        {/* List of Clients */}
+        {" "}
+        {/* List of Clients */}{" "}
         {invited.map((client) => {
           const docCount = client.documents
             ? getDocumentCounts(client.documents)
-            : null;
+            : { approved: 0, pending: 0 };
+
           const statusText =
             client.status === "PENDING"
               ? "Invited"
@@ -561,6 +566,7 @@ Looking forward to working with you!`;
               : client.clientAddress === null
               ? "Account Deleted"
               : client.status;
+
           return (
             <TouchableOpacity
               key={client._id}
@@ -574,7 +580,7 @@ Looking forward to working with you!`;
                 </Text>
               </View>
               <View style={styles.clientDetails}>
-                <Text style={styles.clientName}>{client.referenceName}</Text>{" "}
+                <Text style={styles.clientName}>{client.referenceName}</Text>
                 {client.status === "ACCEPTED" &&
                 client.documents &&
                 client.documents.length > 0 ? (
@@ -652,13 +658,13 @@ Looking forward to working with you!`;
         </Animated.View>
       </Modal>
 
-      {/* Rewards Modal - Slides from right */}
+      {/* Rewards Modal - Slides from bottom */}
       <Modal visible={showRewards} animationType="none" transparent={true}>
         <Animated.View
           style={[
             styles.modalOverlay,
             {
-              opacity: rightSlideAnim.interpolate({
+              opacity: bottomSlideAnim.interpolate({
                 inputRange: [0, 1000],
                 outputRange: [1, 0],
               }),
@@ -667,8 +673,8 @@ Looking forward to working with you!`;
         >
           <Animated.View
             style={[
-              styles.rightSlideModal,
-              { transform: [{ translateX: rightSlideAnim }] },
+              styles.bottomSlideModal,
+              { transform: [{ translateY: bottomSlideAnim }] },
             ]}
           >
             <ScrollView style={styles.modalContent}>
@@ -1219,12 +1225,16 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   menuIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: COLORS.green,
+    width: 46,
+    height: 46,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: COLORS.green,
+    backgroundColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
+    padding: 8,
+    gap: 10,
   },
 
   // Invite Banner
@@ -1234,23 +1244,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 8,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    shadowColor: "#1D2327",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 2,
+    elevation: 4,
   },
   inviteRealtorsButton: {
     backgroundColor: COLORS.green,
-    paddingVertical: 16,
+    paddingVertical: 13,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 33,
     marginRight: 16,
+    gap: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    height: 42,
+    width: 146, // Slightly increased width to prevent potential text wrapping
+    flexDirection: "row", // Ensures text flows horizontally
   },
   inviteRealtorsText: {
     color: COLORS.white,
-    fontWeight: "500", // P weight
-    fontSize: 14, // P size
+    fontWeight: "600",
+    fontSize: 16,
     fontFamily: "Futura",
+    textAlign: "center", // Ensure text is centered
+    flexShrink: 1, // Allow text to shrink if needed
   },
   inviteBannerText: {
     flex: 1,
-    fontSize: 14, // P size
+    fontSize: 14,
     fontWeight: "500", // P weight
     color: COLORS.green,
     lineHeight: 20,
@@ -1270,27 +1297,30 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
+    paddingVertical: 16, // Increased vertical padding to add more space
+    gap: 16, // Gap between items in the scroll view
   },
   clientsScrollView: {
     flex: 1,
-  }, // Client cards
+  },
   clientCard: {
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 8,
+    marginVertical: 2, // Increased vertical margin for more space between cards
     padding: 8,
-    marginVertical: 2,
     width: "95%",
     minWidth: 358,
     maxWidth: 528,
     height: 78,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 2 }, // Added slight vertical offset for better shadow effect
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
-    gap: 10,
+    gap: 2,
   },
   initialsCircle: {
     width: 49,
@@ -1741,6 +1771,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     overflow: "hidden",
     maxHeight: "80%",
+    // Animation styles
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
   clientCardModalContent: {
     padding: 24,
