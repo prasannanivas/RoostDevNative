@@ -294,7 +294,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             <View style={styles.spinnerContainer}>
               <ActivityIndicator size="large" color={COLORS.green} />
             </View>
-          )}{" "}
+          )}
           <TextInput
             style={[styles.input, isLoading && styles.inputDisabled]}
             placeholder="First Name"
@@ -316,7 +316,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             >
               <Text style={styles.errorText}>{firstNameError}</Text>
             </View>
-          ) : null}{" "}
+          ) : null}
           <TextInput
             ref={lastNameInputRef}
             style={[styles.input, isLoading && styles.inputDisabled]}
@@ -366,7 +366,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
               onSubmitEditing={() => focusNextInput(emailInputRef)} // Focus email after phone
               blurOnSubmit={false}
             />
-          </View>{" "}
+          </View>
           <TextInput
             ref={emailInputRef}
             style={[styles.input, isLoading && styles.inputDisabled]}
@@ -408,7 +408,7 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             </View>
           ) : null}
         </ScrollView>
-      </KeyboardAvoidingView>{" "}
+      </KeyboardAvoidingView>
       <View
         style={[
           styles.bottomBar,

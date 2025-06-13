@@ -422,7 +422,7 @@ export default function PasswordResetScreen({ navigation }) {
             Phone
           </Text>
         </TouchableOpacity>
-      </View> */}{" "}
+      </View> */}
       <TextInput
         style={styles.input}
         placeholder="Email Address"
@@ -535,7 +535,7 @@ export default function PasswordResetScreen({ navigation }) {
       <Text style={styles.heading}>Create New Password</Text>
       <Text style={styles.subheading}>
         Please enter your new password below
-      </Text>{" "}
+      </Text>
       <TextInput
         style={styles.input}
         placeholder="New Password"
@@ -566,7 +566,6 @@ export default function PasswordResetScreen({ navigation }) {
   // Add new function to render success stage
   const renderSuccessStage = () => (
     <>
-      {" "}
       <View style={styles.successContainer}>
         <Ionicons name="checkmark-circle" size={80} color={COLORS.green} />
         <Text style={styles.heading}>Password Reset Successful</Text>
@@ -588,7 +587,6 @@ export default function PasswordResetScreen({ navigation }) {
   // Main return with conditional rendering based on stage
   return (
     <SafeAreaView style={styles.safeArea}>
-      {" "}
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
         <Logo

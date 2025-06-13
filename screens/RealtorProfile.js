@@ -18,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useRealtor } from "../context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Design System Colors
 const COLORS = {
@@ -81,11 +82,65 @@ export default function RealtorProfile({ onClose }) {
   const [countdown, setCountdown] = useState(0);
   const otpInputRef = useRef(null);
 
+  // Notification preferences - stored locally
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    // Push notifications
+    clientAccept: false,
+    clientPreApproval: false,
+    marketingNotifications: false,
+
+    // Email notifications
+    termsOfServiceEmails: false,
+    clientPreApprovalEmails: false,
+    marketingEmails: false,
+  });
+
   // Add these state variables at the top of your component with the other state declarations
   const saveTimerRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Load notification preferences when component mounts
+  useEffect(() => {
+    loadNotificationPreferences();
+  }, []);
+
+  // Load notification preferences from AsyncStorage
+  const loadNotificationPreferences = async () => {
+    try {
+      const savedPrefs = await AsyncStorage.getItem(
+        "realtorNotificationPreferences"
+      );
+      if (savedPrefs) {
+        setNotificationPrefs(JSON.parse(savedPrefs));
+      }
+    } catch (error) {
+      console.log("Error loading notification preferences:", error);
+    }
+  };
+
+  // Save notification preferences to AsyncStorage
+  const saveNotificationPreferences = async (newPrefs) => {
+    try {
+      await AsyncStorage.setItem(
+        "realtorNotificationPreferences",
+        JSON.stringify(newPrefs)
+      );
+    } catch (error) {
+      console.log("Error saving notification preferences:", error);
+    }
+  };
+
+  // Toggle notification preferences
+  const toggleNotificationPref = (key) => {
+    const newPrefs = {
+      ...notificationPrefs,
+      [key]: !notificationPrefs[key],
+    };
+    setNotificationPrefs(newPrefs);
+    saveNotificationPreferences(newPrefs);
+  };
 
   // Fetch shareable link
   const fetchShareableLink = async () => {
@@ -720,13 +775,11 @@ export default function RealtorProfile({ onClose }) {
       <View {...panResponder.panHandlers}>
         <View style={styles.swipeHandle} />
       </View>
-
       {/* Close button */}
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeButtonText}>✕</Text>
       </TouchableOpacity>
-
-      {/* Header: Avatar, Name, Info */}
+      {/* Header: Avatar, Name, Info - Updated to match Figma Android design */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfilePicture}>
           {realtor.profilePicture ? (
@@ -750,12 +803,8 @@ export default function RealtorProfile({ onClose }) {
           <Text style={styles.realtorName}>
             {formData.firstName} {formData.lastName}
           </Text>
-          <Text style={styles.infoSubtitle}>
-            Keep your personal info up to date
-          </Text>
         </View>
       </View>
-
       {/* Feedback Messages */}
       {feedback.message ? (
         <View
@@ -776,10 +825,280 @@ export default function RealtorProfile({ onClose }) {
           </Text>
         </View>
       ) : null}
-
       {/* Personal Info (Disabled fields for name, email, phone, location) */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Personal Information</Text>
+        <Text style={styles.sectionSubTitle}>
+          Keep your personal info up-to-date
+        </Text>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
+            value={formData.firstName}
+            placeholder="First Name"
+            editable={false}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
+            value={formData.lastName}
+            editable={false}
+            placeholder="Last Name"
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <View style={styles.emailContainer}>
+            <TextInput
+              placeholder="Email"
+              style={[styles.emailInput, { backgroundColor: COLORS.silver }]}
+              value={formData.email}
+              editable={false}
+            />
+            <TouchableOpacity
+              style={styles.changeEmailButton}
+              onPress={handleEmailChangeStart}
+            >
+              <Text style={styles.changeEmailText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={[styles.input, { backgroundColor: COLORS.silver }]}
+            value={formData.phone}
+            editable={false}
+            placeholder="Phone"
+          />
+        </View>
+        <Text style={styles.sectionSubTitle}>Send my rewards to:</Text>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.rewardsAddress}
+            placeholder="Address"
+            onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.rewardsCity}
+            placeholder="City"
+            onChangeText={(text) => handleFieldChange("rewardsCity", text)}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.rewardsPostalCode}
+            placeholder="Postal Code"
+            onChangeText={(text) =>
+              handleFieldChange("rewardsPostalCode", text)
+            }
+          />
+        </View>
+      </View>
+      {/* Brokerage Info (Editable) */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Brokerage Information</Text>
+        <Text style={styles.sectionSubTitle}>
+          Make sure thing info is complete and up to date
+        </Text>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: "#E4E4E4", borderColor: "#707070" },
+            ]}
+            value={"RECO ID - " + formData.licenseNumber}
+            editable={false}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.brokerageName}
+            placeholder="Brokerage Name"
+            onChangeText={(text) => handleFieldChange("brokerageName", text)}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            placeholder="Brokerage Address"
+            value={formData.brokerageAddress}
+            onChangeText={(text) => handleFieldChange("brokerageAddress", text)}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.brokerageCity}
+            placeholder="Brokerage City"
+            onChangeText={(text) => handleFieldChange("brokerageCity", text)}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            placeholder="Brokerage Postal Code"
+            style={styles.input}
+            value={formData.brokeragePostalCode}
+            onChangeText={(text) =>
+              handleFieldChange("brokeragePostalCode", text)
+            }
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.brokeragePhone}
+            placeholder="Brokerage Phone"
+            onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
+          />
+        </View>
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            value={formData.brokerageEmail}
+            placeholder="Brokerage Email"
+            keyboardType="email-address"
+            onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
+          />
+        </View>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+          <Text style={styles.saveButtonText}>Save Changes</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Notification Preferences (Push Notifications) */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Notifications</Text>
+
+        {/* Client Accept */}
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Client Accept</Text>
+          <TouchableOpacity
+            onPress={() => toggleNotificationPref("clientAccept")}
+            style={[
+              styles.toggleSwitch,
+              notificationPrefs.clientAccept && styles.toggleSwitchOn,
+            ]}
+          >
+            <View
+              style={[
+                styles.toggleThumb,
+                notificationPrefs.clientAccept && styles.toggleThumbOn,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Client Pre-approval */}
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Client Pre-approval</Text>
+          <TouchableOpacity
+            onPress={() => toggleNotificationPref("clientPreApproval")}
+            style={[
+              styles.toggleSwitch,
+              notificationPrefs.clientPreApproval && styles.toggleSwitchOn,
+            ]}
+          >
+            <View
+              style={[
+                styles.toggleThumb,
+                notificationPrefs.clientPreApproval && styles.toggleThumbOn,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Marketing Notifications */}
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Marketing Notifications</Text>
+          <TouchableOpacity
+            onPress={() => toggleNotificationPref("marketingNotifications")}
+            style={[
+              styles.toggleSwitch,
+              notificationPrefs.marketingNotifications && styles.toggleSwitchOn,
+            ]}
+          >
+            <View
+              style={[
+                styles.toggleThumb,
+                notificationPrefs.marketingNotifications &&
+                  styles.toggleThumbOn,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* Email Notifications Card */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Email</Text>
+        <Text style={styles.sectionSubTitle}>
+          Manage what emails you receive from us
+        </Text>
+
+        {/* Terms of Service Updates */}
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Terms of Service Updates</Text>
+          <TouchableOpacity
+            onPress={() => toggleNotificationPref("termsOfServiceEmails")}
+            style={[
+              styles.toggleSwitch,
+              notificationPrefs.termsOfServiceEmails && styles.toggleSwitchOn,
+            ]}
+          >
+            <View
+              style={[
+                styles.toggleThumb,
+                notificationPrefs.termsOfServiceEmails && styles.toggleThumbOn,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Client Pre-approval Emails */}
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Client Pre-approval</Text>
+          <TouchableOpacity
+            onPress={() => toggleNotificationPref("clientPreApprovalEmails")}
+            style={[
+              styles.toggleSwitch,
+              notificationPrefs.clientPreApprovalEmails &&
+                styles.toggleSwitchOn,
+            ]}
+          >
+            <View
+              style={[
+                styles.toggleThumb,
+                notificationPrefs.clientPreApprovalEmails &&
+                  styles.toggleThumbOn,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Marketing Emails */}
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Marketing Emails</Text>
+          <TouchableOpacity
+            onPress={() => toggleNotificationPref("marketingEmails")}
+            style={[
+              styles.toggleSwitch,
+              notificationPrefs.marketingEmails && styles.toggleSwitchOn,
+            ]}
+          >
+            <View
+              style={[
+                styles.toggleThumb,
+                notificationPrefs.marketingEmails && styles.toggleThumbOn,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Invite Code</Text>
         {/* Invite Code Section - Added for realtor invites */}
         {realtor?.inviteCode && (
           <View style={styles.inviteCodeContainer}>
@@ -828,161 +1147,21 @@ export default function RealtorProfile({ onClose }) {
               </View>
             )}
           </View>
-        )}{" "}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>First Name:</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.firstName}
-            editable={false}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Last Name:</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.lastName}
-            editable={false}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Email:</Text>{" "}
-          <View style={styles.emailContainer}>
-            <TextInput
-              style={[styles.emailInput, { backgroundColor: COLORS.silver }]}
-              value={formData.email}
-              editable={false}
-            />
-            <TouchableOpacity
-              style={styles.changeEmailButton}
-              onPress={handleEmailChangeStart}
-            >
-              <Text style={styles.changeEmailText}>Change</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Phone:</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.phone}
-            editable={false}
-          />
-        </View>
-        <Text style={styles.sectionSubTitle}>Send my rewards to:</Text>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Address:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.rewardsAddress}
-            onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>City:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.rewardsCity}
-            onChangeText={(text) => handleFieldChange("rewardsCity", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Postal Code:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.rewardsPostalCode}
-            onChangeText={(text) =>
-              handleFieldChange("rewardsPostalCode", text)
-            }
-          />
-        </View>
+        )}
       </View>
-
-      {/* Brokerage Info (Editable) */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Brokerage Information</Text>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Brokerage Name:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageName}
-            onChangeText={(text) => handleFieldChange("brokerageName", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Brokerage Address:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageAddress}
-            onChangeText={(text) => handleFieldChange("brokerageAddress", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Brokerage City:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageCity}
-            onChangeText={(text) => handleFieldChange("brokerageCity", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Brokerage Postal Code:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.brokeragePostalCode}
-            onChangeText={(text) =>
-              handleFieldChange("brokeragePostalCode", text)
-            }
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Brokerage Phone:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.brokeragePhone}
-            onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Brokerage Email:</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageEmail}
-            keyboardType="email-address"
-            onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
-          />
-        </View>{" "}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>RECO ID:</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.licenseNumber}
-            editable={false}
-          />
-        </View>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Password Management */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Password Management</Text>
+      <View>
         <TouchableOpacity
           style={styles.changePasswordButton}
           onPress={() => setIsPasswordModalOpen(true)}
         >
           <Text style={styles.changePasswordButtonText}>Change Password</Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Logout Button */}
-      <View style={styles.section}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
-
       {/* Password Modal */}
       <Modal visible={isPasswordModalOpen} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -1032,7 +1211,7 @@ export default function RealtorProfile({ onClose }) {
                 onPress={handlePasswordChange}
               >
                 <Text style={styles.modalButtonText}>Change Password</Text>
-              </TouchableOpacity>{" "}
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
                 onPress={() => {
@@ -1051,7 +1230,6 @@ export default function RealtorProfile({ onClose }) {
           </View>
         </View>
       </Modal>
-
       {/* Email Change Modal - New addition */}
       <Modal visible={showEmailModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -1107,7 +1285,6 @@ export default function RealtorProfile({ onClose }) {
             {/* Step 2: Enter OTP */}
             {emailChangeStep === 2 && (
               <>
-                {" "}
                 <Text style={styles.modalSubtitle}>
                   We've sent a verification code to {newEmail}. Enter it below
                   to verify your email address.
@@ -1185,7 +1362,6 @@ export default function RealtorProfile({ onClose }) {
           </View>
         </View>
       </Modal>
-
       {/* Auto-save Success Notification */}
       {saveSuccess && (
         <Animated.View
@@ -1201,42 +1377,48 @@ export default function RealtorProfile({ onClose }) {
 const styles = StyleSheet.create({
   /* Container for everything */
   container: {
-    padding: 24,
-    backgroundColor: COLORS.white,
-    width: "90%",
+    backgroundColor: "#F6F6F6",
+    flex: 1, // Changed from width: "100%" to flex: 1
+    paddingVertical: 100,
   },
 
   /* Header area with avatar and name */
   header: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     marginBottom: 24,
+    flex: 1,
+    paddingHorizontal: 16,
+    height: 172,
   },
   avatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 8,
-    backgroundColor: COLORS.gray,
+    width: 120,
+    height: 120,
+    borderRadius: 50, // Make it circular per design
+    backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 20,
   },
   avatarInitial: {
     color: COLORS.white,
-    fontSize: 24,
+    fontSize: 32,
+    borderRadius: 50,
     fontWeight: "bold",
     fontFamily: "Futura",
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 8,
+    width: 120,
+    height: 120,
+    borderRadius: 50, // Make it circular per design
+    marginRight: 20,
   },
   headerTextContainer: {
     flex: 1,
+    justifyContent: "center",
   },
   realtorName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     fontFamily: "Futura",
     color: COLORS.black,
@@ -1272,13 +1454,21 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: COLORS.red,
-  },
-
-  /* Section wrapper */
+  } /* Section wrapper */,
   section: {
     marginBottom: 32,
+    backgroundColor: COLORS.white,
+    padding: 16,
+    gap: 8,
+    borderRadius: 8,
+    shadowColor: "#000000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 2, height: 0 }, // Center shadow for all 4 sides
+    shadowRadius: 4,
+    elevation: 4, // For Android
   },
   sectionTitle: {
+    alignSelf: "center",
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "Futura",
@@ -1286,17 +1476,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionSubTitle: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "500", // Adding quotes around the fontWeight value
+    lineHeight: 14, // Changed from "100%" to a numeric value
+    alignSelf: "center",
     fontFamily: "Futura",
-    color: COLORS.green,
+    color: "#1D2327",
     marginBottom: 16,
     marginTop: 8,
   },
 
   /* Form groups */
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   label: {
     fontSize: 12,
@@ -1324,7 +1516,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 16,
-    height: 48,
   },
   saveButtonText: {
     color: COLORS.white,
@@ -1334,29 +1525,29 @@ const styles = StyleSheet.create({
   },
   /* Password Management */
   changePasswordButton: {
-    backgroundColor: COLORS.red,
     borderRadius: 50,
+    borderColor: COLORS.green,
+    borderWidth: 2,
     paddingVertical: 16,
     alignItems: "center",
-    height: 48,
   },
   changePasswordButtonText: {
-    color: COLORS.white,
+    color: COLORS.green,
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Futura",
   },
   /* Logout Button */
   logoutButton: {
-    backgroundColor: COLORS.red,
+    marginTop: 16,
     borderRadius: 50,
+    borderColor: COLORS.green,
+    borderWidth: 2,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 16,
-    height: 48,
   },
   logoutButtonText: {
-    color: COLORS.white,
+    color: COLORS.green,
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Futura",
@@ -1373,7 +1564,7 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: COLORS.white,
     borderRadius: 8,
-    width: "100%",
+    alignSelf: "stretch", // Changed from width: "100%" to alignSelf: "stretch"
     padding: 24,
   },
   modalTitle: {
@@ -1394,7 +1585,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    height: 48,
   },
   modalButtonText: {
     color: COLORS.white,
@@ -1419,7 +1609,6 @@ const styles = StyleSheet.create({
     right: 16,
     top: 48,
     width: 48,
-    height: 48,
     borderRadius: 50,
     backgroundColor: COLORS.silver,
     justifyContent: "center",
@@ -1481,7 +1670,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    height: 48,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1560,16 +1748,17 @@ const styles = StyleSheet.create({
     height: 48,
   },
   changeEmailButton: {
-    backgroundColor: COLORS.green,
-    borderRadius: 8,
-    paddingVertical: 16,
+    borderColor: COLORS.green,
+    borderWidth: 2,
+    borderRadius: 44,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    height: 48,
+
     justifyContent: "center",
     alignItems: "center",
   },
   changeEmailText: {
-    color: COLORS.white,
+    color: COLORS.green,
     fontSize: 14,
     fontWeight: "bold",
     fontFamily: "Futura",
@@ -1604,9 +1793,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: "center",
-    width: "100%",
+    alignSelf: "stretch", // Changed from width: "100%" to alignSelf: "stretch"
     marginTop: 16,
-    height: 48,
   },
   buttonText: {
     color: COLORS.white,
@@ -1671,6 +1859,39 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontWeight: "bold",
     fontFamily: "Futura",
+  },
+  /* Notification Toggle Styles */
+  switchRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  switchLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.black,
+  },
+  toggleSwitch: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.gray,
+    justifyContent: "center",
+    padding: 2,
+  },
+  toggleSwitchOn: {
+    backgroundColor: COLORS.green,
+  },
+  toggleThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+  },
+  toggleThumbOn: {
+    marginLeft: 20,
   },
   errorText: {
     color: COLORS.red,

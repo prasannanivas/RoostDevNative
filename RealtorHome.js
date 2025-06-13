@@ -14,7 +14,9 @@ import {
   RefreshControl,
   Linking,
   Alert,
+  Platform,
 } from "react-native";
+import ReactNativeModal from "react-native-modal";
 import * as Contacts from "expo-contacts";
 import Svg, { Rect, Path } from "react-native-svg";
 import { useAuth } from "./context/AuthContext";
@@ -97,13 +99,20 @@ const RealtorHome = () => {
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [selectedClientCard, setSelectedClientCard] = useState(null);
-  const [showClientCardModal, setShowClientCardModal] = useState(false);
-
-  // Add animation values
+  const [showClientCardModal, setShowClientCardModal] = useState(false); // Animation values - initial positions for different slide directions
+  // For left slide (profile), start at -1000 (off-screen to the left)
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
+  // For right slide (rewards), start at 1000 (off-screen to the right)
   const rightSlideAnim = useRef(new Animated.Value(1000)).current;
+  // For bottom slide (client card), start at 1000 (off-screen to the bottom)
   const bottomSlideAnim = useRef(new Animated.Value(1000)).current;
 
+  // Track whether we're in the middle of animations
+  const isAnimating = useRef({
+    profile: false,
+    rewards: false,
+    clientCard: false,
+  }).current;
   // Animation functions
   const slideIn = (direction) => {
     const animValue =
@@ -112,20 +121,35 @@ const RealtorHome = () => {
         : direction === "right"
         ? rightSlideAnim
         : bottomSlideAnim;
-    if (direction === "bottom" || direction === "right") {
-      Animated.timing(animValue, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.ease),
-      }).start();
+
+    // Ensure we start from the correct position
+    if (direction === "left") {
+      leftSlideAnim.setValue(-1000);
+      // Mark animation as in progress
+      isAnimating.profile = true;
+    } else if (direction === "right") {
+      rightSlideAnim.setValue(1000);
+      isAnimating.rewards = true;
     } else {
-      Animated.spring(animValue, {
-        toValue: 0,
-        useNativeDriver: true,
-        bounciness: 0,
-      }).start();
+      bottomSlideAnim.setValue(1000);
+      isAnimating.clientCard = true;
     }
+
+    // Use consistent animation with platform-specific settings
+    Animated.timing(animValue, {
+      toValue: 0,
+      // Slightly faster on iOS for better response
+      duration: Platform.OS === "ios" ? 250 : 300,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.ease),
+    }).start(({ finished }) => {
+      if (finished) {
+        // Reset animation state
+        if (direction === "left") isAnimating.profile = false;
+        else if (direction === "right") isAnimating.rewards = false;
+        else isAnimating.clientCard = false;
+      }
+    });
   };
 
   const handleInviteRealtor = async () => {
@@ -185,35 +209,65 @@ const RealtorHome = () => {
       setInviteLoading(false);
     }
   };
-  const slideOut = (direction) => {
+  const slideOut = (direction, callback) => {
     const animValue =
       direction === "left"
         ? leftSlideAnim
         : direction === "right"
         ? rightSlideAnim
         : bottomSlideAnim;
+
+    // For "left" direction, exit to left (-1000) on both iOS and Android
+    // For "right" direction, exit to right (1000)
+    // For "bottom" direction, exit to bottom (1000)
     const toValue = direction === "left" ? -1000 : 1000;
+
+    // Mark the appropriate animation as in-progress
+    if (direction === "left") isAnimating.profile = true;
+    else if (direction === "right") isAnimating.rewards = true;
+    else isAnimating.clientCard = true;
+
+    // Run animation with callback to reset state when done
     Animated.timing(animValue, {
       toValue: toValue,
       duration: 300,
       useNativeDriver: true,
       easing: Easing.out(Easing.ease),
-    }).start();
-  };
-  // Effect hooks for animations
+    }).start(({ finished }) => {
+      // Only execute callback if animation completed and wasn't interrupted
+      if (finished) {
+        if (direction === "left") isAnimating.profile = false;
+        else if (direction === "right") isAnimating.rewards = false;
+        else isAnimating.clientCard = false;
+
+        // If there's a callback, execute it
+        if (callback) callback();
+      }
+    });
+  }; // Effect hooks for animations
   useEffect(() => {
-    if (showProfile) slideIn("left");
-    else slideOut("left");
+    if (showProfile) {
+      slideIn("left");
+    } else if (!isAnimating.profile) {
+      // Only trigger slideOut if we're not already animating
+      slideOut("left");
+    }
   }, [showProfile]);
 
   useEffect(() => {
-    if (showRewards) slideIn("bottom");
-    else slideOut("bottom");
+    if (showRewards) {
+      slideIn("right");
+    } else if (!isAnimating.rewards) {
+      slideOut("right");
+    }
   }, [showRewards]);
 
   useEffect(() => {
-    if (showClientCardModal) slideIn("bottom");
-    else slideOut("bottom");
+    if (showClientCardModal) {
+      slideIn("bottom");
+    } else if (!isAnimating.clientCard) {
+      slideOut("bottom");
+    }
   }, [showClientCardModal]);
 
   const handleInviteClient = async () => {
@@ -498,7 +552,7 @@ Looking forward to working with you!`;
             <Text style={styles.realtorName}>{realtor.name}</Text>
             <Text style={styles.agencyName}>ABC Realty</Text>
           </View>
-        </TouchableOpacity>{" "}
+        </TouchableOpacity>
         <GiftIcon
           onPress={handleRewardsClick}
           width={46}
@@ -508,7 +562,6 @@ Looking forward to working with you!`;
           pathColor="#FDFDFD"
         />
       </View>
-
       {/* ================= INVITE REALTORS BANNER ================= */}
       <View style={styles.inviteBanner}>
         <TouchableOpacity
@@ -522,7 +575,6 @@ Looking forward to working with you!`;
           referrals*
         </Text>
       </View>
-
       {/* ================= TITLE: CLIENTS ================= */}
       <View style={styles.clientsTitleContainer}>
         <Text style={styles.clientsTitle}>Clients</Text>
@@ -530,7 +582,6 @@ Looking forward to working with you!`;
           ACTIVE
         </Text>
       </View>
-
       {/* ================= SCROLLABLE CLIENT LIST ================= */}
       <ScrollView
         style={styles.clientsScrollView}
@@ -544,8 +595,7 @@ Looking forward to working with you!`;
           />
         }
       >
-        {" "}
-        {/* List of Clients */}{" "}
+        {/* List of Clients */}
         {invited.map((client) => {
           const docCount = client.documents
             ? getDocumentCounts(client.documents)
@@ -607,89 +657,83 @@ Looking forward to working with you!`;
           );
         })}
       </ScrollView>
-
       {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
       <TouchableOpacity
         style={styles.floatingAddButton}
         onPress={() => setShowForm(true)}
         activeOpacity={0.8}
       >
-        {" "}
-        <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
-          <Rect x="1" y="1" width="54" height="54" rx="27" fill="#F0913A" />
-          <Path
-            d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
-            stroke="#FDFDFD"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <View style={styles.addButtonContent}>
+          <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
+            <Rect x="1" y="1" width="54" height="54" rx="27" fill="#F0913A" />
+            <Path
+              d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+              stroke="#FDFDFD"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+          <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
+        </View>
       </TouchableOpacity>
-
       {/* ================== MODALS ================== */}
-
-      {/* Profile Modal - Slides from left */}
-      <Modal visible={showProfile} animationType="none" transparent={true}>
-        <Animated.View
-          style={[
-            styles.modalOverlay,
-            {
-              opacity: leftSlideAnim.interpolate({
-                inputRange: [-1000, 0],
-                outputRange: [0, 1],
-              }),
-            },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.leftSlideModal,
-              { transform: [{ translateX: leftSlideAnim }] },
-            ]}
+      {/* Profile Modal - Slides from left using react-native-modal */}
+      <ReactNativeModal
+        isVisible={showProfile}
+        animationIn="slideInLeft"
+        animationOut="slideOutLeft"
+        animationInTiming={400}
+        animationOutTiming={400}
+        backdropOpacity={0.7}
+        onBackButtonPress={() => setShowProfile(false)}
+        onBackdropPress={() => setShowProfile(false)}
+        onSwipeComplete={() => setShowProfile(false)}
+        swipeDirection={["left"]}
+        useNativeDriver={false}
+        statusBarTranslucent
+        style={styles.sideModal}
+      >
+        <View style={styles.modalContainer}>
+          <ScrollView style={styles.modalContent} bounces={false}>
+            <RealtorProfile
+              realtor={realtorFromContext.realtorInfo || {}}
+              onClose={() => setShowProfile(false)}
+            />
+          </ScrollView>
+        </View>
+      </ReactNativeModal>
+      {/* Rewards Modal - Slides from right */}
+      <ReactNativeModal
+        isVisible={showRewards}
+        animationIn="slideInRight"
+        animationOut="slideOutRight"
+        animationInTiming={400}
+        animationOutTiming={400}
+        backdropOpacity={0.7}
+        onBackButtonPress={() => setShowRewards(false)}
+        onBackdropPress={() => setShowRewards(false)}
+        onSwipeComplete={() => setShowRewards(false)}
+        swipeDirection={["right"]}
+        useNativeDriver={false}
+        statusBarTranslucent
+        style={[styles.sideModal, styles.rightSideModal]}
+      >
+        <View style={styles.modalContainer}>
+          <ScrollView
+            style={styles.modalContent}
+            contentContainerStyle={{ paddingBottom: 40 }}
           >
-            <ScrollView style={styles.modalContent}>
-              <RealtorProfile
-                realtor={realtorFromContext.realtorInfo || {}}
-                onClose={() => setShowProfile(false)}
-              />
-            </ScrollView>
-          </Animated.View>
-        </Animated.View>
-      </Modal>
-
-      {/* Rewards Modal - Slides from bottom */}
-      <Modal visible={showRewards} animationType="none" transparent={true}>
-        <Animated.View
-          style={[
-            styles.modalOverlay,
-            {
-              opacity: bottomSlideAnim.interpolate({
-                inputRange: [0, 1000],
-                outputRange: [1, 0],
-              }),
-            },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.bottomSlideModal,
-              { transform: [{ translateY: bottomSlideAnim }] },
-            ]}
-          >
-            <ScrollView style={styles.modalContent}>
-              <RealtorRewards
-                realtor={realtorFromContext.realtorInfo || {}}
-                invitedRealtors={realtorFromContext.invitedRealtors || []}
-                invitedClients={realtorFromContext.invitedClients || []}
-                getInitials={getInitials}
-                onClose={() => setShowRewards(false)}
-              />
-            </ScrollView>
-          </Animated.View>
-        </Animated.View>
-      </Modal>
-
+            <RealtorRewards
+              realtor={realtorFromContext.realtorInfo || {}}
+              invitedRealtors={realtorFromContext.invitedRealtors || []}
+              invitedClients={realtorFromContext.invitedClients || []}
+              getInitials={getInitials}
+              onClose={() => setShowRewards(false)}
+            />
+          </ScrollView>
+        </View>
+      </ReactNativeModal>
       {/* CSV Upload Modal */}
       <Modal
         visible={showCSVUploadForm}
@@ -1054,16 +1098,15 @@ Looking forward to working with you!`;
                 <Text style={styles.orDivider}>OR</Text>
 
                 <Text style={styles.alternativeText}>
-                  You can always email a file (Excel or .CSV) to us at{" "}
+                  You can always email a file (Excel or .CSV) to us at
                   <Text style={{ fontWeight: "bold" }}>files@roostapp.io</Text>
                   and we can take care of it for you
                 </Text>
               </>
-            )}{" "}
+            )}
           </View>
         </View>
       </Modal>
-
       {/* Client Card Detail Modal - Slides from bottom */}
       <Modal
         visible={showClientCardModal}
@@ -1102,7 +1145,7 @@ Looking forward to working with you!`;
                       <Text style={styles.initialsText}>
                         {getInitials(selectedClientCard.referenceName)}
                       </Text>
-                    </View>{" "}
+                    </View>
                     <View style={styles.clientCardInfo}>
                       <Text style={styles.clientCardName}>
                         {selectedClientCard.referenceName}
@@ -1185,13 +1228,16 @@ const styles = StyleSheet.create({
   },
   /* ================= TOP HEADER STYLES ================= */
   headerContainer: {
+    width: "100%",
+    height: 126,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 16,
+    paddingHorizontal: 32,
+    paddingTop: 60, // Reserve 68px for mobile status bar
+    paddingBottom: 8,
     backgroundColor: COLORS.black,
+    // Content area is 64px high starting at top: 68px
   },
   userInfoContainer: {
     flexDirection: "row",
@@ -1200,7 +1246,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 48,
     height: 48,
-    borderRadius: 8,
+    borderRadius: 50,
     marginRight: 16,
   },
   avatarText: {
@@ -1257,14 +1303,13 @@ const styles = StyleSheet.create({
   inviteRealtorsButton: {
     backgroundColor: COLORS.green,
     paddingVertical: 13,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 33,
     marginRight: 16,
     gap: 10,
     justifyContent: "center",
     alignItems: "center",
-    height: 42,
-    width: 146, // Slightly increased width to prevent potential text wrapping
+    // Slightly increased width to prevent potential text wrapping
     flexDirection: "row", // Ensures text flows horizontally
   },
   inviteRealtorsText: {
@@ -1372,15 +1417,32 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 24,
     right: 24,
-    width: 59,
-    height: 58,
-    borderRadius: 29.5,
+    width: 271,
+    height: 56,
+    borderRadius: 30,
+    backgroundColor: "#F0913A", // Orange color
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
     zIndex: 1000,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    gap: 10, // Space between icon and text
+  },
+  addClientButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    marginLeft: 6,
   },
   contactInviteContainer: {
     backgroundColor: COLORS.background,
@@ -1516,8 +1578,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%", // Changed from 90% to 100%
-    backgroundColor: COLORS.white,
-    padding: 24,
+    backgroundColor: "#F6F6F6",
   },
   modalTitle: {
     fontSize: 20, // H2 size
@@ -1568,16 +1629,24 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   modalBtnDisabled: { opacity: 0.6 },
-  leftSlideModal: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: "100%", // Changed from 90% to 100%
+  // New modal styles for react-native-modal
+  sideModal: {
+    margin: 0, // Remove default margin to make it full width
+    justifyContent: "flex-start", // Align to the side
+    flex: 1,
+  },
+  rightSideModal: {
+    alignItems: "flex-end", // Align to the right side
+  },
+  modalContainer: {
     backgroundColor: COLORS.white,
-    borderTopRightRadius: 0, // Remove radius for full width
-    borderBottomRightRadius: 0, // Remove radius for full width
-    overflow: "hidden",
+    height: "100%",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
   modalContentForRealtorInvite: {
     backgroundColor: COLORS.white,
@@ -1775,7 +1844,23 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  rewardsSideModal: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: "100%", // Takes full width of the screen
+    backgroundColor: COLORS.white,
+    overflow: "hidden",
+    height: "100%",
+    // Animation styles
+    shadowColor: "#000",
+    shadowOffset: { width: -3, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 5,
   },
   clientCardModalContent: {
@@ -1839,6 +1924,53 @@ const styles = StyleSheet.create({
     fontSize: 16, // H3 size
     fontWeight: "500", // H3 weight
     fontFamily: "Futura",
+  },
+  addClientButton: {
+    position: "absolute",
+    top: 0, // Based on the Swift code positioning
+    right: 3, // Based on the Swift code positioning
+    width: 271,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  addClientButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    gap: 10, // Space between icon and text
+  },
+  addClientButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    marginLeft: 6,
+  },
+  closeButtonContainer: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    zIndex: 100,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 100,
   },
 });
 

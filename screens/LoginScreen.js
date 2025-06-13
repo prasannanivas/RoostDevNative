@@ -139,7 +139,6 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           accessible={true}
         >
-          {" "}
           {/* Brand Logo */}
           <Logo
             width={120}
@@ -157,7 +156,7 @@ export default function LoginScreen() {
               {error}
             </Text>
           )}
-          {/* Email Input */}{" "}
+          {/* Email Input */}
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -175,7 +174,7 @@ export default function LoginScreen() {
             onSubmitEditing={() => focusNextInput(passwordInputRef)}
             blurOnSubmit={false}
           />
-          {/* Password Input */}{" "}
+          {/* Password Input */}
           <TextInput
             ref={passwordInputRef}
             style={styles.input}
@@ -201,7 +200,7 @@ export default function LoginScreen() {
             style={styles.resetPasswordButton}
           >
             <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
-          </TouchableOpacity>{" "}
+          </TouchableOpacity>
           {/* Log In Button */}
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
@@ -237,8 +236,8 @@ export default function LoginScreen() {
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
         <Text style={styles.footerText}>
-          By logging in, you agree to Roost's{" "}
-          <Text style={styles.linkText}>Terms of Use</Text> and{" "}
+          By logging in, you agree to Roost's
+          <Text style={styles.linkText}>Terms of Use</Text> and
           <Text style={styles.linkText}>Privacy Policy</Text>.
         </Text>
         <Text style={styles.footerText}>

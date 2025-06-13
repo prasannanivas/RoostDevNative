@@ -15,7 +15,10 @@ import {
   Animated,
   Dimensions,
   Linking,
+  StatusBar,
+  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   FontAwesome,
   Ionicons,
@@ -23,13 +26,14 @@ import {
   MaterialIcons,
   Entypo,
 } from "@expo/vector-icons";
+import Svg, { Circle, Path } from "react-native-svg";
 import { Picker } from "@react-native-picker/picker";
 
 // Design System Colors
 const COLORS = {
   green: "#377473",
   orange: "#E49455",
-  black: "#23231A",
+  black: "#1D2327",
   gray: "#666666",
   lightGray: "#CCCCCC",
   silver: "#F6F6F6",
@@ -427,22 +431,40 @@ export default function RealtorRewards({
       month: "short",
       day: "numeric",
     });
-
   return (
     <ScrollView contentContainerStyle={styles.container} bounces={false}>
-      {" "}
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Ionicons name="gift-outline" size={24} color={COLORS.white} />
+          <Svg
+            width="25"
+            height="24"
+            viewBox="0 0 25 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <Path
+              d="M12.5 5.5V8M12.5 5.5C12.5 4.11929 13.6193 3 15 3C16.3807 3 17.5 4.11929 17.5 5.5C17.5 6.88071 16.3807 8 15 8M12.5 5.5C12.5 4.11929 11.3807 3 10 3C8.61929 3 7.5 4.11929 7.5 5.5C7.5 6.88071 8.61929 8 10 8M12.5 8H15M12.5 8H10M12.5 8V14M15 8H18.3002C19.4203 8 19.9796 8 20.4074 8.21799C20.7837 8.40973 21.0905 8.71547 21.2822 9.0918C21.5 9.5192 21.5 10.079 21.5 11.1969V14M10 8H6.7002C5.58009 8 5.01962 8 4.5918 8.21799C4.21547 8.40973 3.90973 8.71547 3.71799 9.0918C3.5 9.51962 3.5 10.0801 3.5 11.2002V14M3.5 14V16.8002C3.5 17.9203 3.5 18.4801 3.71799 18.9079C3.90973 19.2842 4.21547 19.5905 4.5918 19.7822C5.0192 20 5.57899 20 6.69691 20H12.5M3.5 14H12.5M12.5 14V20M12.5 14H21.5M12.5 20H18.3031C19.421 20 19.98 20 20.4074 19.7822C20.7837 19.5905 21.0905 19.2842 21.2822 18.9079C21.5 18.4805 21.5 17.9215 21.5 16.8036V14"
+              stroke="#FDFDFD"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </Svg>
           <Text style={styles.headerTxt}>REWARDS</Text>
         </View>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={24} color={COLORS.white} />
-        </TouchableOpacity>
       </View>
       {/* Points Display */}
       <View style={styles.pointsContainer}>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+            <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
+            <Path
+              d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+              fill="#A9A9A9"
+            />
+          </Svg>
+        </TouchableOpacity>
         <View style={styles.pointsRow}>
           <Text style={styles.pointsNum}>{currentPoints}</Text>
           <Text style={styles.pointsLbl}>points</Text>
@@ -550,7 +572,7 @@ export default function RealtorRewards({
                 </TouchableOpacity>
               ))}
           </View>
-        )}{" "}
+        )}
         {/* Realtor Rewards */}
         <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
         {fetchingRewards ? (
@@ -682,7 +704,6 @@ export default function RealtorRewards({
                 <View style={styles.contactIcons}>
                   {inviteData.phone && (
                     <>
-                      {" "}
                       <TouchableOpacity
                         style={styles.contactIconBtn}
                         onPress={openWhatsApp}
@@ -769,7 +790,7 @@ export default function RealtorRewards({
       >
         <Text style={styles.sectionTitle}>
           Points History ({realtor?.pointsHistory?.length || 0})
-        </Text>{" "}
+        </Text>
         <Ionicons
           name={isHistoryCollapsed ? "chevron-down" : "chevron-up"}
           size={24}
@@ -802,7 +823,7 @@ export default function RealtorRewards({
       >
         <Text style={styles.sectionTitle}>
           Invited Realtors ({invitedRealtors?.length || 0})
-        </Text>{" "}
+        </Text>
         <Ionicons
           name={isRealtorsCollapsed ? "chevron-down" : "chevron-up"}
           size={24}
@@ -846,7 +867,6 @@ export default function RealtorRewards({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.claimModal}>
-            {" "}
             <TouchableOpacity
               style={styles.claimClose}
               onPress={() => {
@@ -879,7 +899,7 @@ export default function RealtorRewards({
                 )}
                 <View style={styles.claimPtsRow}>
                   <Text>
-                    Required Points:{" "}
+                    Required Points:
                     {Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS)}
                   </Text>
                   <Text>Your Points: {currentPoints}</Text>
@@ -958,7 +978,6 @@ export default function RealtorRewards({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.addressModal}>
-            {" "}
             <TouchableOpacity
               style={styles.claimClose}
               onPress={() => setAddressConfirmation(false)}
@@ -969,7 +988,7 @@ export default function RealtorRewards({
               Confirm Shipping Address
             </Text>
             <Text style={styles.addressModalSubtitle}>
-              Please confirm or edit the address for{" "}
+              Please confirm or edit the address for
               {selectedReward?.rewardFor === "Clients"
                 ? selectedClientData?.referenceName
                 : realtor?.name || "yourself"}
@@ -1040,13 +1059,14 @@ export default function RealtorRewards({
 const styles = StyleSheet.create({
   container: {
     padding: 0,
-    backgroundColor: COLORS.white,
+    backgroundColor: "#F6F6F6",
     flex: 1,
   },
 
   /* Header */
   header: {
     backgroundColor: COLORS.black,
+    paddingTop: 64,
     padding: 24,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1169,7 +1189,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "center",
     marginVertical: 16,
-    height: 48,
   },
   inviteBtnTxt: {
     color: COLORS.white,
@@ -1671,7 +1690,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: "center",
     marginLeft: 8,
-    height: 48,
   },
   confirmButtonText: {
     color: COLORS.white,

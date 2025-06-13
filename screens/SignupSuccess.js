@@ -65,7 +65,7 @@ export default function SignupSuccessScreen({ navigation }) {
           {/* Confetti / Party Popper Icon */}
           {/* Replace Ionicons with a custom image if you have one: 
               <Image source={ConfettiIcon} style={styles.confettiIcon} />
-          */}{" "}
+          */}
           <Ionicons
             name="wine"
             size={100} // reduced from 164

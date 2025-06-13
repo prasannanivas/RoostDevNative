@@ -167,7 +167,6 @@ export default function AccountTypeScreen({ navigation }) {
         {/* RECO ID Input & Error - Only show if 'realtor' is selected */}
         {accountType === "realtor" && (
           <View style={{ width: "100%", marginBottom: 20 }}>
-            {" "}
             <TextInput
               style={styles.recoInput}
               placeholder="Your RECO id number"
@@ -192,7 +191,7 @@ export default function AccountTypeScreen({ navigation }) {
 
         {/* Already have an account? Log in here */}
         <Text style={styles.alreadyHaveAccount}>
-          Already have an account?{" "}
+          Already have an account?
           <Text style={styles.loginLink} onPress={handleLogin}>
             Log in here
           </Text>
@@ -200,14 +199,14 @@ export default function AccountTypeScreen({ navigation }) {
 
         {/* Footer Text */}
         <Text style={styles.footerText}>
-          By signing up, you agree to Roost’s{" "}
-          <Text style={styles.linkText}>Terms of Use</Text> and{" "}
+          By signing up, you agree to Roost’s
+          <Text style={styles.linkText}>Terms of Use</Text> and
           <Text style={styles.linkText}>Privacy Policy</Text>. By providing your
           email & phone number, you consent to receive communications from
           Roost. You can opt-out anytime.
         </Text>
       </ScrollView>
-      {/* Bottom navigation bar */}{" "}
+      {/* Bottom navigation bar */}
       <View
         style={[
           styles.bottomBar,

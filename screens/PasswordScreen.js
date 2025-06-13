@@ -224,13 +224,12 @@ export default function PasswordScreen({ navigation, route }) {
               accessibilityLabel="Invitation details"
             >
               <Text style={styles.inviteText}>
-                You have been invited by{" "}
+                You have been invited by
                 <Text style={styles.inviterName}>{invitedBy.name}</Text>
               </Text>
             </View>
           ) : null}
           <View style={styles.inputContainer}>
-            {" "}
             <TextInput
               style={styles.input}
               placeholder="Password"
@@ -258,7 +257,6 @@ export default function PasswordScreen({ navigation, route }) {
               }
               accessibilityRole="button"
             >
-              {" "}
               <Ionicons
                 name={showPassword ? "eye-off" : "eye"}
                 size={24}
@@ -267,7 +265,6 @@ export default function PasswordScreen({ navigation, route }) {
             </TouchableOpacity>
           </View>
           <View style={styles.inputContainer}>
-            {" "}
             <TextInput
               ref={confirmPasswordRef}
               style={styles.input}
@@ -302,7 +299,6 @@ export default function PasswordScreen({ navigation, route }) {
               }
               accessibilityRole="button"
             >
-              {" "}
               <Ionicons
                 name={showConfirmPassword ? "eye-off" : "eye"}
                 size={24}
@@ -316,13 +312,12 @@ export default function PasswordScreen({ navigation, route }) {
                 Enter the invite code of your Realtor to continue
               </Text>
               <View style={styles.enhancedInputContainer}>
-                {" "}
                 <Ionicons
                   name="key"
                   size={22}
                   color={COLORS.green}
                   style={styles.inputIcon}
-                />{" "}
+                />
                 <TextInput
                   ref={inviteCodeRef}
                   style={styles.enhancedInput}
@@ -350,7 +345,7 @@ export default function PasswordScreen({ navigation, route }) {
             >
               <Text style={styles.errorText}>{passwordError}</Text>
             </View>
-          ) : null}{" "}
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
       <View

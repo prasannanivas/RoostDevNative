@@ -179,7 +179,6 @@ const NotificationComponent = ({ visible, onClose }) => {
           onPress={handleClose}
           style={styles.overlayTouch}
         >
-          {" "}
           <Animated.View
             style={[
               styles.container,
@@ -196,7 +195,6 @@ const NotificationComponent = ({ visible, onClose }) => {
               },
             ]}
           >
-            {" "}
             <TouchableOpacity
               activeOpacity={1}
               onPress={(e) => e.stopPropagation()}
@@ -232,7 +230,7 @@ const NotificationComponent = ({ visible, onClose }) => {
                     <View style={styles.emptyStateIconContainer}>
                       <Ionicons name="alert-circle" size={40} color="#DC3545" />
                     </View>
-                    <Text style={styles.emptyStateText}>{error}</Text>{" "}
+                    <Text style={styles.emptyStateText}>{error}</Text>
                     <TouchableOpacity
                       style={styles.retryButton}
                       onPress={refreshNotifications}
@@ -263,7 +261,7 @@ const NotificationComponent = ({ visible, onClose }) => {
                       We'll notify you when something important happens
                     </Text>
                   </View>
-                )}{" "}
+                )}
               </ScrollView>
 
               {/* Blue Pill Close Button at Bottom */}

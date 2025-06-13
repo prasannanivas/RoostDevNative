@@ -486,7 +486,7 @@ export default function ClientProfile({ onClose }) {
             Profile updated successfully
           </Text>
         </Animated.View>
-      )}{" "}
+      )}
       {/* Close Button in top-right corner - updated to use new handler */}
       {onClose && (
         <CloseButton onPress={handleClose} style={styles.closeButton} />
@@ -551,7 +551,7 @@ export default function ClientProfile({ onClose }) {
           <Text style={styles.cardTitle}>Send my rewards to</Text>
           <Text style={styles.cardSubtitle}>
             Make sure thing info is complete and up to date.
-          </Text>{" "}
+          </Text>
           <View style={styles.formGroup}>
             <TextInput
               style={styles.input}
@@ -728,7 +728,7 @@ export default function ClientProfile({ onClose }) {
               />
             </TouchableOpacity>
           </View>
-        </View>{" "}
+        </View>
         {/* Buttons */}
         <View style={styles.buttonContainer}>
           {/* <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
@@ -777,7 +777,7 @@ export default function ClientProfile({ onClose }) {
                 <Text style={styles.modalSubtitle}>
                   Enter your new email address below. We'll send a verification
                   code to this address.
-                </Text>{" "}
+                </Text>
                 <TextInput
                   style={styles.modalInput}
                   placeholder="New Email Address"
@@ -799,7 +799,6 @@ export default function ClientProfile({ onClose }) {
             {/* Step 2: Enter OTP */}
             {emailChangeStep === 2 && (
               <>
-                {" "}
                 <Text style={styles.modalSubtitle}>
                   We've sent a verification code to {newEmail}. Enter it below
                   to verify your email address.
@@ -807,7 +806,7 @@ export default function ClientProfile({ onClose }) {
                 <Text style={styles.pasteInstruction}>
                   Paste your 6-digit code in the field - it will handle full
                   codes automatically
-                </Text>{" "}
+                </Text>
                 <TextInput
                   ref={otpInputRef}
                   style={styles.otpInput}
@@ -862,7 +861,7 @@ export default function ClientProfile({ onClose }) {
                   </Text>
                 </TouchableOpacity>
               </>
-            )}{" "}
+            )}
             {/* Step 3: Success */}
             {emailChangeStep === 3 && (
               <View style={styles.successContainer}>
@@ -884,9 +883,7 @@ export default function ClientProfile({ onClose }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Change Password</Text>
-            {error ? (
-              <Text style={styles.errorMessage}>{error}</Text>
-            ) : null}{" "}
+            {error ? <Text style={styles.errorMessage}>{error}</Text> : null}
             <TextInput
               style={styles.modalInput}
               placeholder="Current Password"
@@ -923,7 +920,7 @@ export default function ClientProfile({ onClose }) {
                 onPress={handlePasswordSubmit}
               >
                 <Text style={styles.modalButtonText}>Update Password</Text>
-              </TouchableOpacity>{" "}
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
                 onPress={() => {

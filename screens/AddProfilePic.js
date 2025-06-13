@@ -66,7 +66,6 @@ export default function ProfilePictureScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {" "}
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Title */}
         <Logo

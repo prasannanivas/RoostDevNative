@@ -240,7 +240,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
           height={42}
           variant="black"
           style={styles.brandLogo}
-        />{" "}
+        />
         {/* Heading */}
         <Text style={styles.heading}>Verify your email address</Text>
         {/* Subheading */}
@@ -252,7 +252,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
         <Text style={styles.pasteInstruction}>
           Paste your 6-digit code in any field - it will fill all boxes
           automatically
-        </Text>{" "}
+        </Text>
         {isLoading && (
           <View style={styles.spinnerContainer}>
             <ActivityIndicator size="large" color={COLORS.green} />
@@ -321,7 +321,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-      {/* Bottom Bar */}{" "}
+      {/* Bottom Bar */}
       <View
         style={[
           styles.bottomBar,

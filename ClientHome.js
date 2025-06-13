@@ -485,7 +485,6 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
-          {" "}
           {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.green} />
           ) : (
@@ -505,7 +504,6 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
-          {" "}
           {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.blue} />
           ) : (
@@ -525,7 +523,6 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
-          {" "}
           {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
@@ -705,7 +702,7 @@ const ClientHome = ({ questionnaireData }) => {
           <Text style={styles.subTitle}>
             We understand we are asking for a lot but it’s what’s needed for all
             mortgages in Ontario
-          </Text>{" "}
+          </Text>
           {loadingDocuments ? (
             <ActivityIndicator
               size="large"
@@ -850,7 +847,7 @@ const ClientHome = ({ questionnaireData }) => {
               <Text style={styles.fileSelected}>
                 {selectedFile?.name || "File selected"}
               </Text>
-            )}{" "}
+            )}
             {isLoading && (
               <ActivityIndicator
                 size="small"
@@ -867,7 +864,6 @@ const ClientHome = ({ questionnaireData }) => {
                 onPress={handleUpload}
                 disabled={uploadLoading}
               >
-                {" "}
                 {uploadLoading ? (
                   <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
@@ -950,7 +946,6 @@ const ClientHome = ({ questionnaireData }) => {
                 onPress={() => handleDeleteDocument(selectedSubmittedDoc)}
                 disabled={deleteLoading}
               >
-                {" "}
                 {deleteLoading ? (
                   <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
