@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   Image,
   Alert,
-  PanResponder,
   Animated,
   Dimensions,
   Linking,
@@ -28,6 +27,7 @@ import {
 } from "@expo/vector-icons";
 import Svg, { Circle, Path } from "react-native-svg";
 import { Picker } from "@react-native-picker/picker";
+import { OrangeProgressBar } from "../components/progressBars";
 
 // Design System Colors
 const COLORS = {
@@ -60,6 +60,7 @@ export default function RealtorRewards({
   invitedClients,
   getInitials,
   onClose,
+  useFixedHeader = false,
 }) {
   console.log("invitedClients", invitedClients);
   console.log("invitedRealtors", invitedRealtors);
@@ -117,29 +118,6 @@ export default function RealtorRewards({
     duration: 200,
     useNativeDriver: true,
   });
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (event, gesture) => {
-        if (gesture.dy > 0) {
-          // Only allow downward swipe
-          translateY.setValue(gesture.dy);
-        }
-      },
-      onPanResponderRelease: (event, gesture) => {
-        if (gesture.dy > 50) {
-          // If dragged down more than 50px
-          closeAnim.start(() => {
-            if (onClose) onClose();
-          });
-        } else {
-          resetPositionAnim.start();
-        }
-      },
-    })
-  ).current;
 
   // Fetch rewards on mount
   useEffect(() => {
@@ -404,16 +382,12 @@ export default function RealtorRewards({
             {reward.description}
           </Text>
         ) : null}
-        {/* <Text style={styles.rewardAmt}>${reward.rewardAmount.toFixed(2)}</Text> */}
-        <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              isEligible && styles.progressEligible,
-              { width: `${progress}%` },
-            ]}
-          />
-        </View>
+        {/* <Text style={styles.rewardAmt}>${reward.rewardAmount.toFixed(2)}</Text> */}{" "}
+        <OrangeProgressBar
+          progress={progress}
+          showPercentage={false}
+          style={isEligible ? { borderColor: COLORS.green } : {}}
+        />
         <View style={styles.pointsNeededRow}>
           <Text style={styles.pointsNeeded}>
             {currentPoints}/{pointsNeeded} pts
@@ -432,627 +406,692 @@ export default function RealtorRewards({
       day: "numeric",
     });
   return (
-    <ScrollView contentContainerStyle={styles.container} bounces={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Svg
-            width="25"
-            height="24"
-            viewBox="0 0 25 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+    <View style={styles.container}>
+      {/* Fixed Header Section */}
+      <View style={styles.fixedHeaderSection}>
+        {/* Header with REWARDS text */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Svg
+              width="25"
+              height="24"
+              viewBox="0 0 25 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <Path
+                d="M12.5 5.5V8M12.5 5.5C12.5 4.11929 13.6193 3 15 3C16.3807 3 17.5 4.11929 17.5 5.5C17.5 6.88071 16.3807 8 15 8M12.5 5.5C12.5 4.11929 11.3807 3 10 3C8.61929 3 7.5 4.11929 7.5 5.5C7.5 6.88071 8.61929 8 10 8M12.5 8H15M12.5 8H10M12.5 8V14M15 8H18.3002C19.4203 8 19.9796 8 20.4074 8.21799C20.7837 8.40973 21.0905 8.71547 21.2822 9.0918C21.5 9.5192 21.5 10.079 21.5 11.1969V14M10 8H6.7002C5.58009 8 5.01962 8 4.5918 8.21799C4.21547 8.40973 3.90973 8.71547 3.71799 9.0918C3.5 9.51962 3.5 10.0801 3.5 11.2002V14M3.5 14V16.8002C3.5 17.9203 3.5 18.4801 3.71799 18.9079C3.90973 19.2842 4.21547 19.5905 4.5918 19.7822C5.0192 20 5.57899 20 6.69691 20H12.5M3.5 14H12.5M12.5 14V20M12.5 14H21.5M12.5 20H18.3031C19.421 20 19.98 20 20.4074 19.7822C20.7837 19.5905 21.0905 19.2842 21.2822 18.9079C21.5 18.4805 21.5 17.9215 21.5 16.8036V14"
+                stroke="#FDFDFD"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </Svg>
+            <Text style={styles.headerTxt}>REWARDS</Text>
+          </View>
+        </View>
+
+        {/* Fixed Points Display */}
+        <View style={styles.pointsContainer}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+              <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
+              <Path
+                d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                fill="#A9A9A9"
+              />
+            </Svg>
+          </TouchableOpacity>
+          <View style={styles.pointsRow}>
+            <Text style={styles.pointsNum}>{currentPoints}</Text>
+            <Text style={styles.pointsLbl}>points</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Scrollable Content Section */}
+      <ScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        <View>
+          <Text style={styles.sectionTitle}>Referral program</Text>
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <View style={styles.rewardItem}>
+            <Text style={styles.rewardPoints}>
+              1 <Text style={styles.rewardPointsText}>PT</Text>
+            </Text>
+
+            <Text style={styles.rewardText}>for every client invited</Text>
+          </View>
+
+          <View style={styles.rewardItem}>
+            <Text style={styles.rewardPoints}>
+              10 <Text style={styles.rewardPointsText}>PTS</Text>
+            </Text>
+
+            <Text style={styles.rewardText}>
+              for every fellow realtor invited
+            </Text>
+          </View>
+
+          {/* Bonus Section */}
+          <View style={styles.bonusContainer}>
+            <Text style={styles.bonusTitle}>BONUS</Text>
+            <Text style={styles.bonusText}>
+              Earn an additional 5% pts from any activity from your fellow
+              realtor referrals*
+            </Text>
+            <Text style={styles.bonusExample}>
+              Example - Realtor B completes a deal they get 300pts, Realtor A
+              would earn 15pts automatically.
+            </Text>
+          </View>
+
+          {/* Invite Button */}
+          <TouchableOpacity
+            style={styles.inviteBtn}
+            onPress={() => setShowInviteForm(true)}
           >
-            <Path
-              d="M12.5 5.5V8M12.5 5.5C12.5 4.11929 13.6193 3 15 3C16.3807 3 17.5 4.11929 17.5 5.5C17.5 6.88071 16.3807 8 15 8M12.5 5.5C12.5 4.11929 11.3807 3 10 3C8.61929 3 7.5 4.11929 7.5 5.5C7.5 6.88071 8.61929 8 10 8M12.5 8H15M12.5 8H10M12.5 8V14M15 8H18.3002C19.4203 8 19.9796 8 20.4074 8.21799C20.7837 8.40973 21.0905 8.71547 21.2822 9.0918C21.5 9.5192 21.5 10.079 21.5 11.1969V14M10 8H6.7002C5.58009 8 5.01962 8 4.5918 8.21799C4.21547 8.40973 3.90973 8.71547 3.71799 9.0918C3.5 9.51962 3.5 10.0801 3.5 11.2002V14M3.5 14V16.8002C3.5 17.9203 3.5 18.4801 3.71799 18.9079C3.90973 19.2842 4.21547 19.5905 4.5918 19.7822C5.0192 20 5.57899 20 6.69691 20H12.5M3.5 14H12.5M12.5 14V20M12.5 14H21.5M12.5 20H18.3031C19.421 20 19.98 20 20.4074 19.7822C20.7837 19.5905 21.0905 19.2842 21.2822 18.9079C21.5 18.4805 21.5 17.9215 21.5 16.8036V14"
-              stroke="#FDFDFD"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </Svg>
-          <Text style={styles.headerTxt}>REWARDS</Text>
+            <Text style={styles.inviteBtnTxt}>Invite Realtors</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-      {/* Points Display */}
-      <View style={styles.pointsContainer}>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-            <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
-            <Path
-              d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-              fill="#A9A9A9"
-            />
-          </Svg>
-        </TouchableOpacity>
-        <View style={styles.pointsRow}>
-          <Text style={styles.pointsNum}>{currentPoints}</Text>
-          <Text style={styles.pointsLbl}>points</Text>
-        </View>
-      </View>
-      {/* Referral Program */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Referral program</Text>
-
-        <View style={styles.rewardItem}>
-          <Text style={styles.rewardPoints}>1 PT</Text>
-          <Text style={styles.rewardText}>for every client invited</Text>
-        </View>
-
-        <View style={styles.rewardItem}>
-          <Text style={styles.rewardPoints}>10 PTS</Text>
-          <Text style={styles.rewardText}>
-            for every fellow realtor invited
+        {/* Rewards Section */}
+        <View style={styles.rewardsContainer}>
+          <Text style={styles.rewardsTitle}>Rewards</Text>
+          {/* Client Rewards */}
+          <Text style={styles.rewardsSubTitle}>FOR YOUR CLIENTS</Text>
+          <Text style={styles.rewardsDescription}>
+            These rewards go straight to you clients as a gift, we include your
+            photo, details and a thank you for using you as their realtor.
           </Text>
-        </View>
-
-        {/* Bonus Section */}
-        <View style={styles.bonusContainer}>
-          <Text style={styles.bonusTitle}>BONUS</Text>
-          <Text style={styles.bonusText}>
-            Earn an additional 5% pts from any activity from your fellow realtor
-            referrals*
-          </Text>
-          <Text style={styles.bonusExample}>
-            Example - Realtor B completes a deal they get 300pts, Realtor A
-            would earn 15pts automatically.
-          </Text>
-        </View>
-
-        {/* Invite Button */}
-        <TouchableOpacity
-          style={styles.inviteBtn}
-          onPress={() => setShowInviteForm(true)}
-        >
-          <Text style={styles.inviteBtnTxt}>Invite Realtors</Text>
-        </TouchableOpacity>
-      </View>
-      {/* Rewards Section */}
-      <View>
-        <Text style={styles.rewardsTitle}>Rewards</Text> {/* Client Rewards */}
-        <Text style={styles.rewardsSubTitle}>FOR YOUR CLIENTS</Text>
-        <Text style={styles.rewardsDescription}>
-          These rewards go straight to you clients as a gift, we include your
-          photo, details and a thank you for using you as their realtor.
-        </Text>
-        {fetchingRewards ? (
-          <ActivityIndicator />
-        ) : (
-          <View style={styles.rewardsGrid}>
-            {rewards
-              .filter((r) => r?.rewardFor === "Clients" && r?.isVisible)
-              .map((reward) => (
-                <TouchableOpacity
-                  key={reward._id}
-                  style={styles.rewardCard}
-                  onPress={() => {
-                    setSelectedReward(reward);
-                    setClaimModal(true);
-                    setSelectedClient("");
-                  }}
-                >
-                  {reward.imageUrl ? (
-                    <Image
-                      source={{
-                        uri: `http://159.203.58.60:5000${reward.imageUrl}`,
-                      }}
-                      style={styles.rewardImage}
-                    />
-                  ) : (
-                    <View style={styles.rewardInitials}>
-                      <Text style={styles.initialsTxt}>
-                        {getInitials(reward.rewardName)}
+          {fetchingRewards ? (
+            <ActivityIndicator />
+          ) : (
+            <View style={styles.rewardsGrid}>
+              {rewards
+                .filter((r) => r?.rewardFor === "Clients" && r?.isVisible)
+                .map((reward) => (
+                  <TouchableOpacity
+                    key={reward._id}
+                    style={styles.rewardCard}
+                    onPress={() => {
+                      setSelectedReward(reward);
+                      setClaimModal(true);
+                      setSelectedClient("");
+                    }}
+                  >
+                    {reward.imageUrl ? (
+                      <Image
+                        source={{
+                          uri: `http://159.203.58.60:5000${reward.imageUrl}`,
+                        }}
+                        style={styles.rewardImage}
+                      />
+                    ) : (
+                      <View style={styles.rewardInitials}>
+                        <Text style={styles.initialsTxt}>
+                          {getInitials(reward.rewardName)}
+                        </Text>
+                      </View>
+                    )}
+                    <View style={styles.rewardCardContent}>
+                      {" "}
+                      <Text style={styles.rewardType}>{reward.rewardName}</Text>
+                      <Text style={styles.rewardName}>
+                        ${reward.rewardAmount}
                       </Text>
-                    </View>
-                  )}
-                  <View style={styles.rewardCardContent}>
-                    <Text style={styles.rewardType}>Cash</Text>
-                    <Text style={styles.rewardName}>
-                      ${reward.rewardAmount}
-                    </Text>
-                    <View style={styles.progressBar}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          {
-                            width: `${
-                              getRewardProgress(reward.rewardAmount).progress
-                            }%`,
-                          },
-                        ]}
+                      <OrangeProgressBar
+                        progress={
+                          getRewardProgress(reward.rewardAmount).progress
+                        }
+                        style={{ marginBottom: 4 }}
                       />
                     </View>
-                    <Text style={styles.percentageText}>
-                      {Math.floor(
-                        getRewardProgress(reward.rewardAmount).progress
-                      )}
-                      %
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-          </View>
-        )}
-        {/* Realtor Rewards */}
-        <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
-        {fetchingRewards ? (
-          <ActivityIndicator />
-        ) : (
-          <View style={styles.rewardsGrid}>
-            {rewards
-              .filter((r) => r?.rewardFor === "Realtors" && r?.isVisible)
-              .map((reward) => (
-                <TouchableOpacity
-                  key={reward._id}
-                  style={styles.rewardCard}
-                  onPress={() => {
-                    setSelectedReward(reward);
-                    setClaimModal(true);
-                    setSelectedClient("");
-                  }}
-                >
-                  {reward.imageUrl ? (
-                    <Image
-                      source={{
-                        uri: `http://159.203.58.60:5000${reward.imageUrl}`,
-                      }}
-                      style={styles.rewardImage}
-                    />
-                  ) : (
-                    <View style={styles.rewardInitials}>
-                      <Text style={styles.initialsTxt}>
-                        {getInitials(reward.rewardName)}
+                  </TouchableOpacity>
+                ))}
+            </View>
+          )}
+          {/* Realtor Rewards */}
+          <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
+          <Text style={styles.rewardsDescription}>
+            We will mail you all rewards to Address that is in your Profile
+            section. Make sure it is up to date. As we will send you a referral
+            document for your record and RECO
+          </Text>
+          {fetchingRewards ? (
+            <ActivityIndicator />
+          ) : (
+            <View style={styles.rewardsGrid}>
+              {rewards
+                .filter((r) => r?.rewardFor === "Realtors" && r?.isVisible)
+                .map((reward) => (
+                  <TouchableOpacity
+                    key={reward._id}
+                    style={styles.rewardCard}
+                    onPress={() => {
+                      setSelectedReward(reward);
+                      setClaimModal(true);
+                      setSelectedClient("");
+                    }}
+                  >
+                    {reward.imageUrl ? (
+                      <Image
+                        source={{
+                          uri: `http://159.203.58.60:5000${reward.imageUrl}`,
+                        }}
+                        style={styles.rewardImage}
+                      />
+                    ) : (
+                      <View style={styles.rewardInitials}>
+                        <Text style={styles.initialsTxt}>
+                          {getInitials(reward.rewardName)}
+                        </Text>
+                      </View>
+                    )}
+                    <View style={styles.rewardCardContent}>
+                      {" "}
+                      <Text style={styles.rewardType}>Cash</Text>
+                      <Text style={styles.rewardName}>
+                        ${reward.rewardAmount}
                       </Text>
-                    </View>
-                  )}
-                  <View style={styles.rewardCardContent}>
-                    <Text style={styles.rewardType}>Cash</Text>
-                    <Text style={styles.rewardName}>
-                      ${reward.rewardAmount}
-                    </Text>
-                    <View style={styles.progressBar}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          {
-                            width: `${
-                              getRewardProgress(reward.rewardAmount).progress
-                            }%`,
-                          },
-                        ]}
+                      <OrangeProgressBar
+                        progress={
+                          getRewardProgress(reward.rewardAmount).progress
+                        }
+                        style={{ marginBottom: 4 }}
                       />
                     </View>
-                    <Text style={styles.percentageText}>
-                      {Math.floor(
-                        getRewardProgress(reward.rewardAmount).progress
-                      )}
-                      %
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-          </View>
-        )}
-      </View>
-      {/* Keep all the other functionality intact */}
-      {/* Invite Form Modal */}
-      <Modal visible={showInviteForm} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Invite New Realtor</Text>
-            {inviteFeedback.msg ? (
-              <Text
-                style={[
-                  styles.feedbackMsg,
-                  inviteFeedback.type === "success"
-                    ? styles.success
-                    : styles.error,
-                ]}
-              >
-                {inviteFeedback.msg}
-              </Text>
-            ) : null}
-            <Text style={styles.label}>First Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={inviteData.firstName}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  firstName: t,
-                }))
-              }
-            />
-            <Text style={styles.label}>Last Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={inviteData.lastName}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  lastName: t,
-                }))
-              }
-            />
-            <Text style={styles.label}>Email:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="email-address"
-              value={inviteData.email}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  email: t,
-                }))
-              }
-            />
-            <Text style={styles.label}>Phone:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="phone-pad"
-              value={inviteData.phone}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  phone: t,
-                }))
-              }
-            />
-            {showContactOptions && inviteFeedback.type === "success" ? (
-              <View style={styles.contactOptions}>
-                <Text style={styles.contactOptionsTitle}>Contact via:</Text>
-                <View style={styles.contactIcons}>
-                  {inviteData.phone && (
-                    <>
-                      <TouchableOpacity
-                        style={styles.contactIconBtn}
-                        onPress={openWhatsApp}
-                      >
-                        <MaterialCommunityIcons
-                          name="whatsapp"
-                          size={32}
-                          color={COLORS.success}
-                        />
-                        <Text style={styles.contactIconText}>WhatsApp</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.contactIconBtn}
-                        onPress={openSMS}
-                      >
-                        <MaterialIcons
-                          name="sms"
-                          size={32}
-                          color={COLORS.info}
-                        />
-                        <Text style={styles.contactIconText}>SMS</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                  {inviteData.email && (
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openEmail}
-                    >
-                      <Entypo name="mail" size={32} color={COLORS.error} />
-                      <Text style={styles.contactIconText}>Email</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                <TouchableOpacity
-                  style={styles.closeModalBtn}
-                  onPress={() => {
-                    setShowInviteForm(false);
-                    setShowContactOptions(false);
-                    setInviteData({
-                      firstName: "",
-                      lastName: "",
-                      email: "",
-                      phone: "",
-                    });
-                    setInviteFeedback({ msg: "", type: "" });
-                  }}
-                >
-                  <Text style={styles.closeModalBtnTxt}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.modalBtns}>
-                <TouchableOpacity
+                  </TouchableOpacity>
+                ))}
+            </View>
+          )}
+
+          <Text style={styles.rewardsSubTitle}>FOR CHARITY</Text>
+          <Text style={styles.rewardsDescription}>
+            These rewards are considered charitable donations, you will receive
+            a receipt for your taxes.
+          </Text>
+          {fetchingRewards ? (
+            <ActivityIndicator />
+          ) : (
+            <View style={styles.rewardsGrid}>
+              {rewards
+                .filter((r) => r?.rewardFor === "Charity" && r?.isVisible)
+                .map((reward) => (
+                  <TouchableOpacity
+                    key={reward._id}
+                    style={styles.rewardCard}
+                    onPress={() => {
+                      setSelectedReward(reward);
+                      setClaimModal(true);
+                      setSelectedClient("");
+                    }}
+                  >
+                    {reward.imageUrl ? (
+                      <Image
+                        source={{
+                          uri: `http://159.203.58.60:5000${reward.imageUrl}`,
+                        }}
+                        style={styles.rewardImage}
+                      />
+                    ) : (
+                      <View style={styles.rewardInitials}>
+                        <Text style={styles.initialsTxt}>
+                          {getInitials(reward.rewardName)}
+                        </Text>
+                      </View>
+                    )}
+                    <View style={styles.rewardCardContent}>
+                      <Text style={styles.rewardType}>Cash</Text>
+                      <Text style={styles.rewardName}>
+                        ${reward.rewardAmount}
+                      </Text>
+                      <OrangeProgressBar
+                        progress={
+                          getRewardProgress(reward.rewardAmount).progress
+                        }
+                        style={{ marginBottom: 4 }}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+            </View>
+          )}
+        </View>
+        {/* Keep all the other functionality intact */}
+        {/* Invite Form Modal */}
+        <Modal visible={showInviteForm} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Invite New Realtor</Text>
+              {inviteFeedback.msg ? (
+                <Text
                   style={[
-                    styles.modalBtn,
-                    inviteLoading && styles.modalBtnDisabled,
+                    styles.feedbackMsg,
+                    inviteFeedback.type === "success"
+                      ? styles.success
+                      : styles.error,
                   ]}
-                  disabled={inviteLoading}
-                  onPress={handleInviteRealtor}
                 >
-                  {inviteLoading ? (
-                    <ActivityIndicator color={COLORS.white} />
-                  ) : (
-                    <Text style={styles.modalBtnTxt}>Send Invite</Text>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalBtn}
-                  onPress={() => setShowInviteForm(false)}
-                  disabled={inviteLoading}
-                >
-                  <Text style={styles.modalBtnTxt}>Cancel</Text>
-                </TouchableOpacity>
+                  {inviteFeedback.msg}
+                </Text>
+              ) : null}
+              <Text style={styles.label}>First Name:</Text>
+              <TextInput
+                style={styles.input}
+                value={inviteData.firstName}
+                onChangeText={(t) =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    firstName: t,
+                  }))
+                }
+              />
+              <Text style={styles.label}>Last Name:</Text>
+              <TextInput
+                style={styles.input}
+                value={inviteData.lastName}
+                onChangeText={(t) =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    lastName: t,
+                  }))
+                }
+              />
+              <Text style={styles.label}>Email:</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="email-address"
+                value={inviteData.email}
+                onChangeText={(t) =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    email: t,
+                  }))
+                }
+              />
+              <Text style={styles.label}>Phone:</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="phone-pad"
+                value={inviteData.phone}
+                onChangeText={(t) =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    phone: t,
+                  }))
+                }
+              />
+              {showContactOptions && inviteFeedback.type === "success" ? (
+                <View style={styles.contactOptions}>
+                  <Text style={styles.contactOptionsTitle}>Contact via:</Text>
+                  <View style={styles.contactIcons}>
+                    {inviteData.phone && (
+                      <>
+                        <TouchableOpacity
+                          style={styles.contactIconBtn}
+                          onPress={openWhatsApp}
+                        >
+                          <MaterialCommunityIcons
+                            name="whatsapp"
+                            size={32}
+                            color={COLORS.success}
+                          />
+                          <Text style={styles.contactIconText}>WhatsApp</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.contactIconBtn}
+                          onPress={openSMS}
+                        >
+                          <MaterialIcons
+                            name="sms"
+                            size={32}
+                            color={COLORS.info}
+                          />
+                          <Text style={styles.contactIconText}>SMS</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                    {inviteData.email && (
+                      <TouchableOpacity
+                        style={styles.contactIconBtn}
+                        onPress={openEmail}
+                      >
+                        <Entypo name="mail" size={32} color={COLORS.error} />
+                        <Text style={styles.contactIconText}>Email</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.closeModalBtn}
+                    onPress={() => {
+                      setShowInviteForm(false);
+                      setShowContactOptions(false);
+                      setInviteData({
+                        firstName: "",
+                        lastName: "",
+                        email: "",
+                        phone: "",
+                      });
+                      setInviteFeedback({ msg: "", type: "" });
+                    }}
+                  >
+                    <Text style={styles.closeModalBtnTxt}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.modalBtns}>
+                  <TouchableOpacity
+                    style={[
+                      styles.modalBtn,
+                      inviteLoading && styles.modalBtnDisabled,
+                    ]}
+                    disabled={inviteLoading}
+                    onPress={handleInviteRealtor}
+                  >
+                    {inviteLoading ? (
+                      <ActivityIndicator color={COLORS.white} />
+                    ) : (
+                      <Text style={styles.modalBtnTxt}>Send Invite</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalBtn}
+                    onPress={() => setShowInviteForm(false)}
+                    disabled={inviteLoading}
+                  >
+                    <Text style={styles.modalBtnTxt}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
+        {/* Points History */}
+        <TouchableOpacity
+          style={styles.collapsibleHeader}
+          onPress={() => setIsHistoryCollapsed(!isHistoryCollapsed)}
+        >
+          <Text style={styles.sectionTitle}>
+            Points History ({realtor?.pointsHistory?.length || 0})
+          </Text>
+          <Ionicons
+            name={isHistoryCollapsed ? "chevron-down" : "chevron-up"}
+            size={24}
+            color={COLORS.black}
+          />
+        </TouchableOpacity>
+        {!isHistoryCollapsed && (
+          <View style={styles.collapsibleContent}>
+            {realtor?.pointsHistory?.map((e, i) => (
+              <View key={i} style={styles.historyRow}>
+                <View style={styles.historyPts}>
+                  <FontAwesome name="star" size={14} color={COLORS.orange} />
+                  <Text style={styles.historyPtsTxt}>+{e.points}</Text>
+                </View>
+                <View style={styles.historyDetails}>
+                  <Text style={styles.historyReason}>{e.reason}</Text>
+                  <Text style={styles.historyDate}>{formatDate(e.date)}</Text>
+                </View>
               </View>
+            ))}
+            {(!realtor?.pointsHistory ||
+              realtor.pointsHistory.length === 0) && (
+              <Text style={styles.noDataText}>No points history available</Text>
             )}
           </View>
-        </View>
-      </Modal>
-      {/* Points History */}
-      <TouchableOpacity
-        style={styles.collapsibleHeader}
-        onPress={() => setIsHistoryCollapsed(!isHistoryCollapsed)}
-      >
-        <Text style={styles.sectionTitle}>
-          Points History ({realtor?.pointsHistory?.length || 0})
-        </Text>
-        <Ionicons
-          name={isHistoryCollapsed ? "chevron-down" : "chevron-up"}
-          size={24}
-          color={COLORS.black}
-        />
-      </TouchableOpacity>
-      {!isHistoryCollapsed && (
-        <View style={styles.collapsibleContent}>
-          {realtor?.pointsHistory?.map((e, i) => (
-            <View key={i} style={styles.historyRow}>
-              <View style={styles.historyPts}>
-                <FontAwesome name="star" size={14} color={COLORS.orange} />
-                <Text style={styles.historyPtsTxt}>+{e.points}</Text>
-              </View>
-              <View style={styles.historyDetails}>
-                <Text style={styles.historyReason}>{e.reason}</Text>
-                <Text style={styles.historyDate}>{formatDate(e.date)}</Text>
-              </View>
-            </View>
-          ))}
-          {(!realtor?.pointsHistory || realtor.pointsHistory.length === 0) && (
-            <Text style={styles.noDataText}>No points history available</Text>
-          )}
-        </View>
-      )}
-      {/* Invited Realtors */}
-      <TouchableOpacity
-        style={styles.collapsibleHeader}
-        onPress={() => setIsRealtorsCollapsed(!isRealtorsCollapsed)}
-      >
-        <Text style={styles.sectionTitle}>
-          Invited Realtors ({invitedRealtors?.length || 0})
-        </Text>
-        <Ionicons
-          name={isRealtorsCollapsed ? "chevron-down" : "chevron-up"}
-          size={24}
-          color={COLORS.black}
-        />
-      </TouchableOpacity>
-      {!isRealtorsCollapsed && (
-        <View style={styles.collapsibleContent}>
-          {invitedRealtors && invitedRealtors.length > 0 ? (
-            invitedRealtors.map((c) => (
-              <View key={c._id} style={styles.clientCard}>
-                <View style={styles.initialsCircle}>
-                  <Text style={styles.initialsTxt}>
-                    {getInitials(c.referenceName)}
-                  </Text>
+        )}
+        {/* Invited Realtors */}
+        <TouchableOpacity
+          style={styles.collapsibleHeader}
+          onPress={() => setIsRealtorsCollapsed(!isRealtorsCollapsed)}
+        >
+          <Text style={styles.sectionTitle}>
+            Invited Realtors ({invitedRealtors?.length || 0})
+          </Text>
+          <Ionicons
+            name={isRealtorsCollapsed ? "chevron-down" : "chevron-up"}
+            size={24}
+            color={COLORS.black}
+          />
+        </TouchableOpacity>
+        {!isRealtorsCollapsed && (
+          <View style={styles.collapsibleContent}>
+            {invitedRealtors && invitedRealtors.length > 0 ? (
+              invitedRealtors.map((c) => (
+                <View key={c._id} style={styles.clientCard}>
+                  <View style={styles.initialsCircle}>
+                    <Text style={styles.initialsTxt}>
+                      {getInitials(c.referenceName)}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={styles.clientName}>{c.referenceName}</Text>
+                    <Text style={styles.clientStatus}>
+                      {c.status === "PENDING"
+                        ? "Invited"
+                        : c.status === "ACCEPTED" &&
+                          (!c.documents || c.documents.length === 0)
+                        ? "Signed Up"
+                        : c.status}
+                    </Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={styles.clientName}>{c.referenceName}</Text>
-                  <Text style={styles.clientStatus}>
-                    {c.status === "PENDING"
-                      ? "Invited"
-                      : c.status === "ACCEPTED" &&
-                        (!c.documents || c.documents.length === 0)
-                      ? "Signed Up"
-                      : c.status}
+              ))
+            ) : (
+              <Text style={styles.noDataText}>No invited realtors</Text>
+            )}
+          </View>
+        )}
+        {/* Claim Reward Modal */}
+        <Modal
+          visible={claimModal && selectedReward !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setClaimModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.claimModal}>
+              <TouchableOpacity
+                style={styles.claimClose}
+                onPress={() => {
+                  setClaimModal(false);
+                  setSelectedReward(null);
+                }}
+              >
+                <Ionicons name="close-outline" size={24} color={COLORS.black} />
+              </TouchableOpacity>
+              {selectedReward && (
+                <>
+                  <Text style={styles.claimTitle}>
+                    {selectedReward.rewardName}
                   </Text>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noDataText}>No invited realtors</Text>
-          )}
-        </View>
-      )}
-      {/* Claim Reward Modal */}
-      <Modal
-        visible={claimModal && selectedReward !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setClaimModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.claimModal}>
-            <TouchableOpacity
-              style={styles.claimClose}
-              onPress={() => {
-                setClaimModal(false);
-                setSelectedReward(null);
-              }}
-            >
-              <Ionicons name="close-outline" size={24} color={COLORS.black} />
-            </TouchableOpacity>
-            {selectedReward && (
-              <>
-                <Text style={styles.claimTitle}>
-                  {selectedReward.rewardName}
-                </Text>
-                {selectedReward.imageUrl && (
-                  <Image
-                    source={{
-                      uri: `http://159.203.58.60:5000${selectedReward.imageUrl}`,
-                    }}
-                    style={styles.claimImage}
-                  />
-                )}
-                {/* <Text style={styles.claimAmt}>
+                  {selectedReward.imageUrl && (
+                    <Image
+                      source={{
+                        uri: `http://159.203.58.60:5000${selectedReward.imageUrl}`,
+                      }}
+                      style={styles.claimImage}
+                    />
+                  )}
+                  {/* <Text style={styles.claimAmt}>
                   ${selectedReward.rewardAmount.toFixed(2)}
                 </Text> */}
-                {selectedReward.description && (
-                  <Text style={styles.claimDescription}>
-                    {selectedReward.description}
-                  </Text>
-                )}
-                <View style={styles.claimPtsRow}>
-                  <Text>
-                    Required Points:
-                    {Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS)}
-                  </Text>
-                  <Text>Your Points: {currentPoints}</Text>
-                </View>
-                {selectedReward.rewardFor === "Clients" && (
-                  <>
-                    <Text style={styles.label}>Select Client:</Text>
-                    <View style={styles.pickerWrapper}>
-                      <Picker
-                        selectedValue={selectedClient}
-                        onValueChange={(v) => setSelectedClient(v)}
-                      >
-                        <Picker.Item label="Choose a client" value="" />
-                        {(invitedClients || [])
-                          .filter(
-                            (c) =>
-                              c.status === "ACCEPTED" &&
-                              c.clientAddress !== null
-                          )
-                          .map((c) => (
-                            <Picker.Item
-                              key={c._id}
-                              label={c.referenceName}
-                              value={c._id}
-                            />
-                          ))}
-                      </Picker>
-                    </View>
-                  </>
-                )}
+                  {selectedReward.description && (
+                    <Text style={styles.claimDescription}>
+                      {selectedReward.description}
+                    </Text>
+                  )}
+                  <View style={styles.claimPtsRow}>
+                    <Text>
+                      Required Points:
+                      {Math.ceil(
+                        selectedReward.rewardAmount / POINTS_TO_DOLLARS
+                      )}
+                    </Text>
+                    <Text>Your Points: {currentPoints}</Text>
+                  </View>
+                  {selectedReward.rewardFor === "Clients" && (
+                    <>
+                      <Text style={styles.label}>Select Client:</Text>
+                      <View style={styles.pickerWrapper}>
+                        <Picker
+                          selectedValue={selectedClient}
+                          onValueChange={(v) => setSelectedClient(v)}
+                        >
+                          <Picker.Item label="Choose a client" value="" />
+                          {(invitedClients || [])
+                            .filter(
+                              (c) =>
+                                c.status === "ACCEPTED" &&
+                                c.clientAddress !== null
+                            )
+                            .map((c) => (
+                              <Picker.Item
+                                key={c._id}
+                                label={c.referenceName}
+                                value={c._id}
+                              />
+                            ))}
+                        </Picker>
+                      </View>
+                    </>
+                  )}
+                  <TouchableOpacity
+                    style={[
+                      styles.claimBtn,
+                      (!selectedClient &&
+                        selectedReward.rewardFor === "Clients") ||
+                      currentPoints <
+                        Math.ceil(
+                          selectedReward.rewardAmount / POINTS_TO_DOLLARS
+                        )
+                        ? styles.claimBtnDisabled
+                        : {},
+                    ]}
+                    disabled={
+                      claimLoading ||
+                      (selectedReward.rewardFor === "Clients" &&
+                        !selectedClient) ||
+                      currentPoints <
+                        Math.ceil(
+                          selectedReward.rewardAmount / POINTS_TO_DOLLARS
+                        )
+                    }
+                    onPress={handleClaimReward}
+                  >
+                    {claimLoading ? (
+                      <ActivityIndicator color={COLORS.white} />
+                    ) : (
+                      <Text style={styles.claimBtnTxt}>
+                        {currentPoints <
+                        Math.ceil(
+                          selectedReward.rewardAmount / POINTS_TO_DOLLARS
+                        )
+                          ? "Insufficient Points"
+                          : "Claim Reward"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+        {/* Address Confirmation Modal */}
+        <Modal
+          visible={
+            addressConfirmation &&
+            (selectedClientData !== null ||
+              selectedReward?.rewardFor === "Realtors")
+          }
+          transparent
+          animationType="fade"
+          onRequestClose={() => setAddressConfirmation(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.addressModal}>
+              <TouchableOpacity
+                style={styles.claimClose}
+                onPress={() => setAddressConfirmation(false)}
+              >
+                <Ionicons name="close-outline" size={24} color={COLORS.black} />
+              </TouchableOpacity>
+              <Text style={styles.addressModalTitle}>
+                Confirm Shipping Address
+              </Text>
+              <Text style={styles.addressModalSubtitle}>
+                Please confirm or edit the address for
+                {selectedReward?.rewardFor === "Clients"
+                  ? selectedClientData?.referenceName
+                  : realtor?.name || "yourself"}
+              </Text>
+              <Text style={styles.label}>Address:</Text>
+              <TextInput
+                style={styles.input}
+                value={addressToSend.address}
+                onChangeText={(text) =>
+                  setAddressToSend((prev) => ({ ...prev, address: text }))
+                }
+              />
+              <Text style={styles.label}>City:</Text>
+              <TextInput
+                style={styles.input}
+                value={addressToSend.city}
+                onChangeText={(text) =>
+                  setAddressToSend((prev) => ({ ...prev, city: text }))
+                }
+              />
+              <Text style={styles.label}>Postal Code:</Text>
+              <TextInput
+                style={styles.input}
+                value={addressToSend.postalCode}
+                onChangeText={(text) =>
+                  setAddressToSend((prev) => ({ ...prev, postalCode: text }))
+                }
+                keyboardType="numeric"
+              />
+              <View style={styles.addressButtonsRow}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setAddressConfirmation(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   style={[
-                    styles.claimBtn,
-                    (!selectedClient &&
-                      selectedReward.rewardFor === "Clients") ||
-                    currentPoints <
-                      Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS)
-                      ? styles.claimBtnDisabled
-                      : {},
+                    styles.confirmButton,
+                    claimLoading && styles.buttonDisabled,
                   ]}
-                  disabled={
-                    claimLoading ||
-                    (selectedReward.rewardFor === "Clients" &&
-                      !selectedClient) ||
-                    currentPoints <
-                      Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS)
-                  }
-                  onPress={handleClaimReward}
+                  onPress={async () => {
+                    setClaimLoading(true);
+                    try {
+                      await submitRewardClaim();
+                    } catch (e) {
+                      console.error(e);
+                    }
+                    setClaimLoading(false);
+                  }}
+                  disabled={claimLoading}
                 >
                   {claimLoading ? (
-                    <ActivityIndicator color={COLORS.white} />
+                    <ActivityIndicator color={COLORS.white} size="small" />
                   ) : (
-                    <Text style={styles.claimBtnTxt}>
-                      {currentPoints <
-                      Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS)
-                        ? "Insufficient Points"
-                        : "Claim Reward"}
+                    <Text style={styles.confirmButtonText}>
+                      Confirm & Submit
                     </Text>
                   )}
                 </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
-      {/* Address Confirmation Modal */}
-      <Modal
-        visible={
-          addressConfirmation &&
-          (selectedClientData !== null ||
-            selectedReward?.rewardFor === "Realtors")
-        }
-        transparent
-        animationType="fade"
-        onRequestClose={() => setAddressConfirmation(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.addressModal}>
-            <TouchableOpacity
-              style={styles.claimClose}
-              onPress={() => setAddressConfirmation(false)}
-            >
-              <Ionicons name="close-outline" size={24} color={COLORS.black} />
-            </TouchableOpacity>
-            <Text style={styles.addressModalTitle}>
-              Confirm Shipping Address
-            </Text>
-            <Text style={styles.addressModalSubtitle}>
-              Please confirm or edit the address for
-              {selectedReward?.rewardFor === "Clients"
-                ? selectedClientData?.referenceName
-                : realtor?.name || "yourself"}
-            </Text>
-            <Text style={styles.label}>Address:</Text>
-            <TextInput
-              style={styles.input}
-              value={addressToSend.address}
-              onChangeText={(text) =>
-                setAddressToSend((prev) => ({ ...prev, address: text }))
-              }
-            />
-            <Text style={styles.label}>City:</Text>
-            <TextInput
-              style={styles.input}
-              value={addressToSend.city}
-              onChangeText={(text) =>
-                setAddressToSend((prev) => ({ ...prev, city: text }))
-              }
-            />
-            <Text style={styles.label}>Postal Code:</Text>
-            <TextInput
-              style={styles.input}
-              value={addressToSend.postalCode}
-              onChangeText={(text) =>
-                setAddressToSend((prev) => ({ ...prev, postalCode: text }))
-              }
-              keyboardType="numeric"
-            />
-            <View style={styles.addressButtonsRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setAddressConfirmation(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.confirmButton,
-                  claimLoading && styles.buttonDisabled,
-                ]}
-                onPress={async () => {
-                  setClaimLoading(true);
-                  try {
-                    await submitRewardClaim();
-                  } catch (e) {
-                    console.error(e);
-                  }
-                  setClaimLoading(false);
-                }}
-                disabled={claimLoading}
-              >
-                {claimLoading ? (
-                  <ActivityIndicator color={COLORS.white} size="small" />
-                ) : (
-                  <Text style={styles.confirmButtonText}>Confirm & Submit</Text>
-                )}
-              </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -1060,6 +1099,13 @@ const styles = StyleSheet.create({
   container: {
     padding: 0,
     backgroundColor: "#F6F6F6",
+    flex: 1,
+  },
+  fixedHeaderSection: {
+    backgroundColor: "#F6F6F6",
+    zIndex: 2,
+  },
+  scrollContent: {
     flex: 1,
   },
 
@@ -1096,9 +1142,10 @@ const styles = StyleSheet.create({
   /* Points display */
   pointsContainer: {
     padding: 24,
+    paddingLeft: 32,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
-    alignItems: "center",
+    alignItems: "left",
   },
   pointsNum: {
     fontSize: 48,
@@ -1117,16 +1164,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
   },
-
   /* Referral program section */
   sectionContainer: {
-    padding: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: COLORS.white,
+    // iOS shadow
+    shadowColor: "rgba(0, 0, 0, 0.5)",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    // Android shadow
+    elevation: 4,
   },
   sectionTitle: {
     fontSize: 20,
+    paddingHorizontal: 24,
     fontWeight: "bold",
     fontFamily: "Futura",
-    marginBottom: 16,
+    marginVertical: 16,
     color: COLORS.black,
   },
   rewardItem: {
@@ -1136,13 +1195,20 @@ const styles = StyleSheet.create({
   },
   rewardPoints: {
     fontSize: 16,
-    fontWeight: "medium",
+    fontWeight: 700,
     fontFamily: "Futura",
     color: COLORS.green,
   },
+  rewardPointsText: {
+    fontSize: 16,
+    fontWeight: 700,
+    fontFamily: "Futura",
+    color: COLORS.black,
+    marginLeft: 4,
+  },
   rewardText: {
-    fontSize: 14,
-    fontWeight: "medium",
+    fontSize: 12,
+    fontWeight: 500,
     fontFamily: "Futura",
     color: COLORS.black,
     textAlign: "right",
@@ -1150,12 +1216,13 @@ const styles = StyleSheet.create({
 
   /* Bonus section */
   bonusContainer: {
-    backgroundColor: COLORS.silver,
+    backgroundColor: "background: rgba(55, 116, 115, 0.25)",
     borderRadius: 8,
     padding: 16,
     marginTop: 16,
     marginBottom: 16,
   },
+
   bonusTitle: {
     fontSize: 12,
     fontWeight: "bold",
@@ -1164,31 +1231,30 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   bonusText: {
-    fontSize: 14,
-    fontWeight: "medium",
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
-    color: COLORS.gray,
+    color: COLORS.green,
     marginBottom: 8,
     lineHeight: 20,
   },
   bonusExample: {
-    fontSize: 14,
-    fontWeight: "medium",
+    fontSize: 12,
+    fontWeight: 500,
     fontFamily: "Futura",
-    color: COLORS.gray,
+    color: COLORS.green,
     marginTop: 8,
-    fontStyle: "italic",
   },
 
   /* Invite button */
   inviteBtn: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    borderRadius: 33,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
     alignItems: "center",
     alignSelf: "center",
-    marginVertical: 16,
+    gap: 10,
   },
   inviteBtnTxt: {
     color: COLORS.white,
@@ -1197,29 +1263,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  rewardsContainer: {
+    marginVertical: 16,
+  },
   /* Rewards section */
   rewardsTitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 700,
     fontFamily: "Futura",
     marginBottom: 8,
     color: COLORS.black,
     paddingHorizontal: 24,
   },
   rewardsSubTitle: {
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: 700,
     fontFamily: "Futura",
     marginTop: 16,
     marginBottom: 8,
-    color: COLORS.gray,
+    color: "#707070",
     paddingHorizontal: 24,
   },
   rewardsDescription: {
-    fontSize: 14,
-    fontWeight: "medium",
+    fontSize: 12,
+    fontWeight: 500,
     fontFamily: "Futura",
-    color: COLORS.gray,
+    color: "#707070",
     lineHeight: 20,
     marginBottom: 16,
     paddingHorizontal: 24,
@@ -1234,6 +1303,7 @@ const styles = StyleSheet.create({
   },
   rewardCard: {
     width: "48%",
+    height: 184,
     backgroundColor: COLORS.white,
     borderRadius: 8,
     marginBottom: 16,
@@ -1246,30 +1316,30 @@ const styles = StyleSheet.create({
   },
   rewardImage: {
     width: "100%",
-    height: 150,
+    height: 92,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },
   rewardCardContent: {
-    padding: 16,
+    padding: 8,
+    flex: 1,
   },
   rewardType: {
     fontSize: 14,
-    fontWeight: "medium",
+    fontWeight: 500,
     fontFamily: "Futura",
-    color: COLORS.gray,
-    marginBottom: 4,
+    color: "#707070",
+    marginBottom: 2,
   },
   rewardName: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 700,
     fontFamily: "Futura",
-    marginBottom: 8,
     color: COLORS.black,
   },
   rewardInitials: {
     width: "100%",
-    height: 150,
+    height: 92,
     backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
@@ -1279,14 +1349,15 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 8,
     backgroundColor: COLORS.lightGray,
-    borderRadius: 8,
+    borderRadius: 50,
+    borderWidth: 2,
     overflow: "hidden",
     marginBottom: 8,
   },
   progressFill: {
     height: "100%",
     backgroundColor: COLORS.orange,
-    borderRadius: 8,
+    borderRadius: 50,
   },
   progressEligible: {
     backgroundColor: COLORS.green,

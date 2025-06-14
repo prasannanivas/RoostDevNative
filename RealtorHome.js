@@ -685,11 +685,11 @@ Looking forward to working with you!`;
         animationOut="slideOutLeft"
         animationInTiming={400}
         animationOutTiming={400}
-        backdropOpacity={0.7}
-        onBackButtonPress={() => setShowProfile(false)}
-        onBackdropPress={() => setShowProfile(false)}
-        onSwipeComplete={() => setShowProfile(false)}
-        swipeDirection={["left"]}
+        // backdropOpacity={0.7}
+        // onBackButtonPress={() => setShowProfile(false)}
+        // onBackdropPress={() => setShowProfile(false)}
+        // onSwipeComplete={() => setShowProfile(false)}
+        //swipeDirection={["left"]}
         useNativeDriver={false}
         statusBarTranslucent
         style={styles.sideModal}
@@ -710,28 +710,25 @@ Looking forward to working with you!`;
         animationOut="slideOutRight"
         animationInTiming={400}
         animationOutTiming={400}
-        backdropOpacity={0.7}
-        onBackButtonPress={() => setShowRewards(false)}
-        onBackdropPress={() => setShowRewards(false)}
-        onSwipeComplete={() => setShowRewards(false)}
-        swipeDirection={["right"]}
+        // backdropOpacity={0.7}
+        // onBackButtonPress={() => setShowRewards(false)}
+        // onBackdropPress={() => setShowRewards(false)}
+        // onSwipeComplete={() => setShowRewards(false)}
+        // swipeDirection={["right"]}
         useNativeDriver={false}
         statusBarTranslucent
         style={[styles.sideModal, styles.rightSideModal]}
       >
         <View style={styles.modalContainer}>
-          <ScrollView
-            style={styles.modalContent}
-            contentContainerStyle={{ paddingBottom: 40 }}
-          >
-            <RealtorRewards
-              realtor={realtorFromContext.realtorInfo || {}}
-              invitedRealtors={realtorFromContext.invitedRealtors || []}
-              invitedClients={realtorFromContext.invitedClients || []}
-              getInitials={getInitials}
-              onClose={() => setShowRewards(false)}
-            />
-          </ScrollView>
+          {/* Rewards Component with Split Structure */}
+          <RealtorRewards
+            realtor={realtorFromContext.realtorInfo || {}}
+            invitedRealtors={realtorFromContext.invitedRealtors || []}
+            invitedClients={realtorFromContext.invitedClients || []}
+            getInitials={getInitials}
+            onClose={() => setShowRewards(false)}
+            useFixedHeader={true}
+          />
         </View>
       </ReactNativeModal>
       {/* CSV Upload Modal */}

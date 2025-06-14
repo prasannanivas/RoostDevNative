@@ -4,6 +4,7 @@ import MidProgressBar from "./MidProgressBar";
 import CompleteProgressBar from "./CompleteProgressBar";
 import SuccessProgressBar from "./SuccessProgressBar";
 import CustomProgressBar from "./CustomProgressBar";
+import OrangeProgressBar from "./OrangeProgressBar";
 
 export {
   EmptyProgressBar,
@@ -12,4 +13,5 @@ export {
   CompleteProgressBar,
   SuccessProgressBar,
   CustomProgressBar,
+  OrangeProgressBar,
 };

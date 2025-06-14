@@ -9,7 +9,6 @@ import {
   Alert,
   StyleSheet,
   Image,
-  PanResponder,
   Animated,
   Dimensions,
   Clipboard,
@@ -739,27 +738,6 @@ export default function RealtorProfile({ onClose }) {
     useNativeDriver: true,
   });
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (event, gesture) => {
-        if (gesture.dy > 0) {
-          translateY.setValue(gesture.dy);
-        }
-      },
-      onPanResponderRelease: (event, gesture) => {
-        if (gesture.dy > 50) {
-          closeAnim.start(() => {
-            handleClose(); // Use handleClose instead of onClose
-          });
-        } else {
-          resetPositionAnim.start();
-        }
-      },
-    })
-  ).current;
-
   // If no realtor data yet
   if (!realtor) {
     return (
@@ -771,10 +749,6 @@ export default function RealtorProfile({ onClose }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container} bounces={false}>
-      {/* Add swipe handle at the top */}
-      <View {...panResponder.panHandlers}>
-        <View style={styles.swipeHandle} />
-      </View>
       {/* Close button */}
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeButtonText}>✕</Text>
