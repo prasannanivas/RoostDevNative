@@ -29,7 +29,7 @@ const EmptyProgressBar = ({ text = "LIVING", progress = 10, style = {} }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    paddingVertical: 2,
   },
   background: {
     height: 21,

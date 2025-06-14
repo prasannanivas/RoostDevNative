@@ -33,7 +33,7 @@ const MidProgressBar = ({ text = "SUBMITTED", progress = 62, style = {} }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
+    paddingVertical: 2,
   },
   background: {
     height: 21,

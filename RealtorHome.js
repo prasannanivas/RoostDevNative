@@ -1389,7 +1389,7 @@ const styles = StyleSheet.create({
     fontSize: 18, // Slightly larger
     fontWeight: "600", // Bolder
     color: COLORS.black,
-    marginBottom: 4,
+    marginBottom: 0,
     fontFamily: "Futura",
   },
   clientStatus: {
@@ -1889,7 +1889,6 @@ const styles = StyleSheet.create({
     fontSize: 20, // H2 size
     fontWeight: "bold", // H2 weight
     color: COLORS.black,
-    marginBottom: 8,
     fontFamily: "Futura",
   },
   clientCardStatus: {
@@ -1897,7 +1896,6 @@ const styles = StyleSheet.create({
     color: COLORS.green,
     fontWeight: "500", // P weight
     backgroundColor: COLORS.coloredBackgroundFill,
-    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
     alignSelf: "flex-start",
