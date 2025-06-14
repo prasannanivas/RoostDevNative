@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import ReactNativeModal from "react-native-modal";
 import * as Contacts from "expo-contacts";
-import Svg, { Rect, Path } from "react-native-svg";
+import Svg, { Rect, Path, Circle } from "react-native-svg";
 import { useAuth } from "./context/AuthContext";
 import { useRealtor } from "./context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
@@ -35,6 +35,7 @@ import {
   MidProgressBar,
   CustomProgressBar,
 } from "./components/progressBars";
+import InviteRealtorModal from "./components/modals/InviteRealtorModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -74,14 +75,6 @@ const RealtorHome = () => {
   const [showCSVUploadForm, setShowCSVUploadForm] = useState(false);
   const [isEmail, setIsEmail] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [feedback, setFeedback] = useState({ message: "", type: "" });
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteData, setInviteData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -96,7 +89,6 @@ const RealtorHome = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [isMultiple, setIsMultiple] = useState(false); // New state for single/multiple toggle
   const [showContactOptions, setShowContactOptions] = useState(false);
-  const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [selectedClientCard, setSelectedClientCard] = useState(null);
   const [showClientCardModal, setShowClientCardModal] = useState(false); // Animation values - initial positions for different slide directions
@@ -152,63 +144,6 @@ const RealtorHome = () => {
     });
   };
 
-  const handleInviteRealtor = async () => {
-    setInviteLoading(true);
-    setInviteFeedback({ msg: "", type: "" });
-    setShowContactOptions(false);
-
-    // Validate that either email or phone is provided
-    if (!inviteData.email && !inviteData.phone) {
-      setInviteFeedback({ msg: "Phone or Email required", type: "error" });
-      setInviteLoading(false);
-      return;
-    }
-
-    try {
-      // Build the message text
-      const inviteMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
-
-      // Construct the API payload - keep the format the same by combining first and last name
-      const payload = {
-        referenceName: `${inviteData.firstName} ${inviteData.lastName}`.trim(),
-        email: inviteData.email,
-        phone: inviteData.phone,
-        type: "Realtor",
-      };
-
-      // Send the invite via the API - keep loading indicator showing
-      const resp = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor.id}/invite-realtor`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      // Handle the response and set feedback
-      if (resp.ok) {
-        setInviteFeedback({ msg: "Realtor invited!", type: "success" });
-
-        // Instead of automatically opening apps, show contact option icons
-        setShowContactOptions(true);
-
-        // Don't automatically close the form so the user can use the contact options
-        // The user can manually close the form when they're done
-      } else {
-        setInviteFeedback({
-          msg: "Failed – try again",
-          type: "error",
-        });
-      }
-    } catch (e) {
-      console.error(e);
-      setInviteFeedback({ msg: "Error occurred", type: "error" });
-    } finally {
-      // Always ensure the loading indicator is removed when complete
-      setInviteLoading(false);
-    }
-  };
   const slideOut = (direction, callback) => {
     const animValue =
       direction === "left"
@@ -742,149 +677,12 @@ Looking forward to working with you!`;
           setShowCSVUploadForm={setShowCSVUploadForm}
         />
       </Modal>
-      <Modal visible={showInviteForm} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContentForRealtorInvite}>
-            <Text style={styles.modalTitle}>Invite New Realtor</Text>
-            {inviteFeedback.msg ? (
-              <Text
-                style={[
-                  styles.feedbackMsg,
-                  inviteFeedback.type === "success"
-                    ? styles.success
-                    : styles.error,
-                ]}
-              >
-                {inviteFeedback.msg}
-              </Text>
-            ) : null}
-            <Text style={styles.label}>First Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={inviteData.firstName}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  firstName: t,
-                }))
-              }
-            />
-            <Text style={styles.label}>Last Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={inviteData.lastName}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  lastName: t,
-                }))
-              }
-            />
-            <Text style={styles.label}>Email:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="email-address"
-              value={inviteData.email}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  email: t,
-                }))
-              }
-            />
-            <Text style={styles.label}>Phone:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="phone-pad"
-              value={inviteData.phone}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  phone: t,
-                }))
-              }
-            />
-            {showContactOptions && inviteFeedback.type === "success" ? (
-              <View style={styles.contactOptions}>
-                <Text style={styles.contactOptionsTitle}>Contact via:</Text>
-                <View style={styles.contactIcons}>
-                  {inviteData.phone && (
-                    <>
-                      <TouchableOpacity
-                        style={styles.contactIconBtn}
-                        onPress={openWhatsApp}
-                      >
-                        <MaterialCommunityIcons
-                          name="whatsapp"
-                          size={32}
-                          color="#25D366"
-                        />
-                        <Text style={styles.contactIconText}>WhatsApp</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.contactIconBtn}
-                        onPress={openSMS}
-                      >
-                        <MaterialIcons name="sms" size={32} color="#2196F3" />
-                        <Text style={styles.contactIconText}>SMS</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                  {inviteData.email && (
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openEmail}
-                    >
-                      <Entypo name="mail" size={32} color="#F44336" />
-                      <Text style={styles.contactIconText}>Email</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                <TouchableOpacity
-                  style={styles.closeModalBtn}
-                  onPress={() => {
-                    setShowInviteForm(false);
-                    setShowContactOptions(false);
-                    setInviteData({
-                      firstName: "",
-                      lastName: "",
-                      email: "",
-                      phone: "",
-                    });
-                    setInviteFeedback({ msg: "", type: "" });
-                  }}
-                >
-                  <Text style={styles.closeModalBtnTxt}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.modalBtns}>
-                <TouchableOpacity
-                  style={[
-                    styles.modalBtn,
-                    inviteLoading && styles.modalBtnDisabled,
-                  ]}
-                  disabled={inviteLoading}
-                  onPress={handleInviteRealtor}
-                >
-                  {inviteLoading ? (
-                    <ActivityIndicator color={COLORS.white} />
-                  ) : (
-                    <Text style={styles.modalBtnTxt}>Send Invite</Text>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalBtn}
-                  onPress={() => setShowInviteForm(false)}
-                  disabled={inviteLoading}
-                >
-                  <Text style={styles.modalBtnTxt}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
+      <InviteRealtorModal
+        visible={showInviteForm}
+        onClose={() => setShowInviteForm(false)}
+        realtorInfo={realtorFromContext?.realtorInfo}
+        realtorId={realtor.id}
+      />
       {/* Invite Form Modal (Overlay) */}
       <Modal
         visible={showForm}
@@ -899,7 +697,14 @@ Looking forward to working with you!`;
               style={styles.closeFormButton}
               onPress={() => setShowForm(false)}
             >
-              <Ionicons name="close" size={24} color="#23231A" />
+              <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
+                <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                <Path
+                  d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                  fill="#A9A9A9"
+                />
+              </Svg>
             </TouchableOpacity>
             <Text style={styles.formTitle}>ADD A CLIENT</Text>
             <Text style={styles.formSubtitle}>
@@ -1470,23 +1275,25 @@ const styles = StyleSheet.create({
     elevation: 5,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
+    marginTop: 18.5, // Add top margin to account for close button overlay
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    overflow: "hidden",
+    overflow: "visible",
     position: "relative",
   },
   formTitle: {
-    fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+    fontSize: 14, // H1 size
+    fontWeight: 700, // H1 weight
     marginBottom: 24,
     textAlign: "center",
+    letterSpacing: 0,
     color: COLORS.black,
     fontFamily: "Futura",
   },
   formSubtitle: {
     textAlign: "center",
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12, // P size
+    fontWeight: 700, // P weight
     color: COLORS.slate,
     marginBottom: 32,
     paddingHorizontal: 24,
@@ -1512,7 +1319,7 @@ const styles = StyleSheet.create({
   },
   toggleContainer: {
     flexDirection: "row",
-    borderRadius: 8,
+    borderRadius: 60,
     borderWidth: 1,
     borderColor: COLORS.gray,
     overflow: "hidden",
@@ -1522,6 +1329,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 16,
     alignItems: "center",
+    borderRadius: 60,
     backgroundColor: COLORS.white,
   },
   toggleOptionActive: {
@@ -1545,9 +1353,11 @@ const styles = StyleSheet.create({
   },
   sendInviteButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
+    alignSelf: "center",
     alignItems: "center",
+    width: 120,
     marginVertical: 24,
   },
   loadingButton: {
@@ -1556,7 +1366,8 @@ const styles = StyleSheet.create({
   sendInviteButtonText: {
     color: COLORS.white,
     fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    borderRadius: 50,
+    fontWeight: 700, // H3 weight
     fontFamily: "Futura",
   },
   feedbackMessage: {
@@ -1727,7 +1538,7 @@ const styles = StyleSheet.create({
   },
   contactsButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 16,
     paddingHorizontal: 32,
     alignItems: "center",
@@ -1736,7 +1547,7 @@ const styles = StyleSheet.create({
   contactsButtonText: {
     color: COLORS.white,
     fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontWeight: 700, // P weight
     fontFamily: "Futura",
   },
   uploadFileButton: {
@@ -1770,10 +1581,9 @@ const styles = StyleSheet.create({
   },
   closeFormButton: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: -20, // Half of the circle height (37/2) to position it 50% outside
+    right: -20, // Half of the circle width (37/2) to position it 50% outside
     zIndex: 10,
-    padding: 8,
   },
   contactOptions: {
     alignItems: "center",
@@ -1816,6 +1626,7 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     color: COLORS.white,
+    borderRadius: 50,
     fontSize: 16, // H3 size
     fontWeight: "500", // H3 weight
     fontFamily: "Futura",

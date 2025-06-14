@@ -28,6 +28,7 @@ import { QuestionnaireProvider } from "./context/QuestionnaireContext";
 import Questionnaire from "./components/questionnaire/Questionnaire";
 import NotificationBell from "./components/icons/NotificationBell";
 import HelpButton from "./components/icons/HelpButton";
+import ReactNativeModal from "react-native-modal";
 
 /**
  * Color palette from UX team design system
@@ -745,19 +746,23 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </ScrollView>
       {/* Profile Panel */}
-      <Modal
-        visible={showProfile}
-        animationType="slide"
-        transparent
+      <ReactNativeModal
+        isVisible={showProfile}
+        animationIn="slideInLeft"
+        animationOut="slideOutLeft"
+        animationInTiming={400}
+        animationOutTiming={400}
         onRequestClose={() => setShowProfile(false)}
-        presentationStyle="overFullScreen"
+        useNativeDriver={false}
+        statusBarTranslucent
+        style={styles.sideModal}
       >
         <View style={styles.profileModalContainer}>
           <View style={styles.profileModalContent}>
             <ClientProfile onClose={() => setShowProfile(false)} />
           </View>
         </View>
-      </Modal>
+      </ReactNativeModal>
       {/* Upload Modal */}
       <Modal
         visible={showModal}
@@ -995,20 +1000,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F6F6F6", // Updated to your preferred background color
   },
-  /* APPLE LOGO SPACE */
-  appleLogoSpace: {
-    height: 63,
-    backgroundColor: COLORS.black,
-    width: "100%",
-  } /* TOP HEADER STYLING */,
   topHeader: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.black,
-    paddingHorizontal: 16,
+    paddingHorizontal: 32,
+    paddingTop: 60, // Reserve 68px for mobile status bar
+    paddingBottom: 8,
     justifyContent: "space-between",
     width: "100%",
-    height: 63, // Exact height as specified
+    height: 126, // Exact height as specified
   },
   leftSection: {
     flexDirection: "row",
@@ -1038,6 +1039,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
     flexShrink: 0,
+  },
+
+  sideModal: {
+    margin: 0, // Remove default margin to make it full width
+    justifyContent: "flex-start", // Align to the side
+    flex: 1,
   },
   initialsText: {
     color: COLORS.white,
