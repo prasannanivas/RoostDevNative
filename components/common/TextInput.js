@@ -25,7 +25,7 @@ const TextInput = ({
       {label && (
         <Text style={styles.label}>
           {label}
-          {isRequired && <Text style={styles.requiredIndicator}> *</Text>}
+          {isRequired && <Text style={styles.requiredIndicator}> * </Text>}
         </Text>
       )}
       <View style={[styles.inputContainer, error && styles.errorContainer]}>
@@ -48,7 +48,7 @@ const TextInput = ({
           keyboardType={keyboardType}
           multiline={multiline}
           numberOfLines={numberOfLines}
-          placeholderTextColor="#999999"
+          placeholderTextColor="#707070"
         />
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -61,9 +61,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
+    fontSize: 20,
+    fontFamily: "Futura",
+    fontWeight: 700,
+    color: "#1D2327",
+    letterSpacing: 0,
     marginBottom: 8,
   },
   requiredIndicator: {
@@ -74,9 +76,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "stretch",
     borderWidth: 1,
-    borderColor: "#D0D0D0",
-    borderRadius: 25, // More rounded corners to match design
-    backgroundColor: "#FFFFFF",
+    borderColor: "#707070",
+    borderRadius: 8, // More rounded corners to match design
+    backgroundColor: "#FDFDFD",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -88,28 +90,32 @@ const styles = StyleSheet.create({
     borderColor: "#FF3B30",
   },
   prefix: {
-    fontSize: 16,
-    color: "#666666",
+    color: "#707070",
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontWeight: "500",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F6F6F6",
     borderRightWidth: 1,
-    borderRightColor: "#D0D0D0",
+    borderRightColor: "#1D2327",
     justifyContent: "center",
     alignItems: "center",
     minWidth: 50,
   },
   prefixText: {
-    fontSize: 16,
-    color: "#666666",
-    fontWeight: "500",
+    fontSize: 14,
+    color: "#707070",
+    fontFamily: "Futura",
+    fontWeight: 500,
   },
   input: {
     flex: 1,
-    paddingVertical: 14, // Slightly larger for better tap targets
-    paddingHorizontal: 20,
-    fontSize: 16,
+    paddingVertical: 13, // Slightly larger for better tap targets
+    paddingHorizontal: 24,
+    borderRadius: 6,
+    borderColor: "#707070",
+    fontSize: 14,
+    fontFamily: "Futura",
+    fontWeight: 500,
     color: "#23231A",
   },
   inputWithPrefix: {

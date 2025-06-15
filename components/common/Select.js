@@ -17,6 +17,7 @@ const Select = ({
   placeholder = "Select an option",
   style,
   error,
+  accommodateWidth,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -47,21 +48,27 @@ const Select = ({
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TouchableOpacity
-        style={[styles.selector, error && styles.errorSelector]}
+        style={[
+          styles.selector,
+          error && styles.errorSelector,
+          accommodateWidth && styles.accommodateWidthSelector,
+        ]}
         onPress={() => setIsVisible(true)}
       >
         <Text
           style={[
             styles.selectorText,
             !selectedOption && styles.placeholderText,
+            accommodateWidth && styles.accommodateWidthText,
           ]}
         >
           {selectedOption ? selectedOption.label : placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={20} color="#666666" />
+        {!accommodateWidth && (
+          <Ionicons name="chevron-down" size={20} color="#666666" />
+        )}
       </TouchableOpacity>
       {error && <Text style={styles.errorText}>{error}</Text>}
-
       <Modal
         visible={isVisible}
         transparent
@@ -104,22 +111,30 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
+    fontSize: 20,
+    fontFamily: "Futura",
+    fontWeight: 700,
+    color: "#1D2327",
+    letterSpacing: 0,
     marginBottom: 8,
   },
   selector: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
     borderWidth: 1,
-    borderColor: "#D0D0D0",
+    borderColor: "#707070",
     borderRadius: 8,
+    backgroundColor: "#FDFDFD",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
     backgroundColor: "#FFFFFF",
-    minHeight: 48,
+    height: 48,
   },
   errorSelector: {
     borderColor: "#FF3B30",
@@ -128,14 +143,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#23231A",
     flex: 1,
+    fontFamily: "Futura",
   },
-  placeholderText: {
-    color: "#999999",
+  placeholderText: { color: "#707070" },
+  accommodateWidthSelector: {
+    paddingHorizontal: 5, // Reduce horizontal padding for more space
+    justifyContent: "center", // Center content when no arrow is shown
+  },
+  accommodateWidthText: {
+    textAlign: "center", // Center the text when taking full width
+    flex: 1, // Make sure text takes all available space
   },
   errorText: {
     fontSize: 14,
     color: "#FF3B30",
     marginTop: 4,
+    fontFamily: "Futura",
   },
   overlay: {
     flex: 1,
@@ -161,8 +184,9 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#23231A",
+    fontWeight: 700,
+    fontFamily: "Futura",
+    color: "#1D2327",
     flex: 1,
   },
   closeButton: {
@@ -172,7 +196,7 @@ const styles = StyleSheet.create({
     maxHeight: 300,
   },
   option: {
-    paddingVertical: 16,
+    paddingVertical: 13,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
@@ -181,12 +205,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#E8F6F5",
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: "Futura",
     color: "#23231A",
   },
   selectedOptionText: {
-    color: "#019B8E",
-    fontWeight: "600",
+    color: "#377473", // Using the green color defined in ComplexForm.js
+    fontWeight: 700,
   },
 });
 

@@ -29,12 +29,13 @@ export const RealtorProvider = ({ children }) => {
         setRealtorInfo(realtorData);
       } catch (error) {
         console.error("Error fetching realtor:", error);
-      } finally {
         setLoadingRealtor(false);
+      } finally {
       }
 
       // Fetch invited data
       try {
+        setLoadingRealtor(true);
         const invitedResponse = await fetch(
           `http://159.203.58.60:5000/realtor/invited/${realtor.id}`,
           {
@@ -54,6 +55,8 @@ export const RealtorProvider = ({ children }) => {
         );
       } catch (error) {
         console.error("Error fetching invited clients:", error);
+      } finally {
+        setLoadingRealtor(false);
       }
     }
   };
@@ -102,3 +105,6 @@ export const useRealtor = () => {
   }
   return context;
 };
+
+// Export the context directly
+export { RealtorContext };

@@ -76,6 +76,7 @@ const Form = ({ question, value, onValueChange }) => {
           <View key={field.key} style={styles.fieldContainer}>
             <TextInput
               label={getLabelWithRequired(field)}
+              prefix={field.prefix}
               value={formData[field.key] || ""}
               onChangeText={(text) => handleFieldChange(field.key, text)}
               placeholder={field.placeholder}

@@ -89,7 +89,7 @@ const questions = [
   {
     id: 2,
     page: 2,
-    text: "Let's talk about your budget",
+    text: "",
     type: "form",
     fields: [
       {
@@ -151,14 +151,20 @@ const questions = [
     text: "What are your details?",
     type: "form",
     fields: [
-      { key: "firstName", label: "First Name", required: true },
-      { key: "lastName", label: "Last Name", required: true },
+      {
+        key: "firstName",
+        label: "",
+        required: true,
+        placeholder: "First Name",
+      },
+      { key: "lastName", label: "", required: true, placeholder: "Last Name" },
       {
         key: "email",
-        label: "Email",
+        label: "",
+        placeholder: "Email",
         keyboard: "email-address",
       },
-      { key: "phone", label: "Phone", keyboard: "phone-pad" },
+      { key: "phone", label: "", keyboard: "phone-pad", placeholder: "Phone" },
     ],
 
     nextQuestion: 7,
@@ -172,18 +178,38 @@ const questions = [
     sections: [
       {
         title: "Date of birth",
+        accommodateAllInOneLine: true,
         fields: [
-          { key: "birthMonth", label: "Month", type: "select" },
-          { key: "birthDay", label: "Day", type: "select" },
-          { key: "birthYear", label: "Year", type: "select" },
+          {
+            key: "birthMonth",
+            label: "",
+            type: "select",
+            placeholder: "Month",
+            accommodateWidth: 3,
+          },
+          {
+            key: "birthDay",
+            label: "",
+            type: "select",
+            placeholder: "Day",
+            accommodateWidth: 3,
+          },
+          {
+            key: "birthYear",
+            label: "",
+            type: "select",
+            placeholder: "Year",
+            accommodateWidth: 3,
+          },
         ],
       },
       {
         fields: [
-          { key: "sinNumber", label: "SIN Number" },
+          { key: "sinNumber", label: "", placeholder: "SIN Number" },
           {
             key: "dependents",
-            label: "Number of Dependents",
+            label: "",
+            placeholder: "Number of Dependents",
             type: "select",
 
             options: [
@@ -209,10 +235,11 @@ const questions = [
     sections: [
       {
         fields: [
-          { key: "address", label: "Address", type: "text" },
+          { key: "address", label: "", type: "text", placeholder: "Address" },
           {
             key: "livingStatus",
-            label: "Living Status",
+            placeholder: "Living Status",
+            label: "",
             type: "select",
             options: [
               { value: "own", label: "I Own" },
@@ -224,9 +251,22 @@ const questions = [
       },
       {
         title: "How long have you lived here?",
+        accommodateAllInOneLine: true,
         fields: [
-          { key: "months", label: "Month", type: "select" },
-          { key: "years", label: "Year", type: "select" },
+          {
+            key: "months",
+            label: "",
+            type: "select",
+            placeholder: "Month",
+            accommodateWidth: 2,
+          },
+          {
+            key: "years",
+            label: "",
+            type: "select",
+            placeholder: "Year",
+            accommodateWidth: 2,
+          },
         ],
       },
     ],
@@ -258,36 +298,63 @@ const questions = [
     page: 9,
     text: "Where do you work?",
     type: "complexForm",
-    fields: [
+    sections: [
       {
-        key: "companyName",
-        label: "Company Name",
-        type: "text",
+        fields: [
+          {
+            key: "companyName",
+            label: "",
+            placeholder: "Company Name",
+            type: "text",
+          },
+          {
+            key: "companyAddress",
+            placeholder: "Company Address",
+            label: "",
+            type: "text",
+          },
+          {
+            key: "jobTitle",
+            placeholder: "Your Job Title",
+            label: "",
+            type: "text",
+          },
+          {
+            key: "employmentType",
+            label: "Employment Type",
+            placeholder: "Employment Type",
+            type: "buttonGroup",
+            options: [
+              { value: "full_time", label: "Full Time" },
+              { value: "part_time", label: "Part time" },
+              { value: "seasonal", label: "Seasonal" },
+            ],
+          },
+        ],
       },
       {
-        key: "companyAddress",
-        label: "Company Address",
-        type: "text",
-      },
-      {
-        key: "jobTitle",
-        label: "Your Job Title",
-        type: "text",
-      },
-      {
-        key: "employmentType",
-        label: "Employment Type",
-        type: "buttonGroup",
-
-        options: [
-          { value: "full_time", label: "Full Time" },
-          { value: "part_time", label: "Part time" },
-          { value: "seasonal", label: "Seasonal" },
+        title: "When did you start here?",
+        accommodateAllInOneLine: true,
+        fields: [
+          {
+            key: "months",
+            label: "",
+            type: "select",
+            placeholder: "Month",
+            accommodateWidth: 2,
+          },
+          {
+            key: "years",
+            label: "",
+            type: "select",
+            placeholder: "Year",
+            accommodateWidth: 2,
+          },
         ],
       },
     ],
 
-    nextQuestion: 12,
+    nextQuestion: 11,
   },
 
   {
@@ -298,18 +365,19 @@ const questions = [
     fields: [
       {
         key: "income",
-        label: "Income",
+        placeholder: "Income",
+        label: "",
         type: "text",
         keyboard: "numeric",
       },
       {
         key: "companyAddress",
-        label: "Company Address",
+        placeholder: "Company Address",
         type: "text",
       },
       {
         key: "jobTitle",
-        label: "Your Job Title",
+        placeholder: "Your Job Title",
         type: "text",
       },
       {
@@ -380,10 +448,10 @@ const questions = [
       ],
     },
     itemFields: [
-      { key: "item", label: "Item", type: "text" },
+      { key: "item", placeholder: "Item", type: "text" },
       {
         key: "value",
-        label: "Value",
+        placeholder: "Value",
         type: "text",
         keyboard: "numeric",
         prefix: "$",
@@ -409,10 +477,10 @@ const questions = [
     },
     conditionalFields: {
       yes: [
-        { key: "address", label: "Address", type: "text" },
+        { key: "address", placeholder: "Address", type: "text" },
         {
           key: "value",
-          label: "Value",
+          placeholder: "Value",
           type: "text",
           keyboard: "numeric",
           prefix: "$",
@@ -439,7 +507,7 @@ const questions = [
         },
         {
           key: "mortgageAmount",
-          label: "Amount",
+          placeholder: "Amount",
           type: "text",
           keyboard: "numeric",
           prefix: "$",
@@ -456,10 +524,20 @@ const questions = [
     text: "What are your details?",
     type: "form",
     fields: [
-      { key: "firstName", label: "First Name", required: true },
-      { key: "lastName", label: "Last Name", required: true },
-      { key: "email", label: "Email", keyboard: "email-address" },
-      { key: "phone", label: "Phone", keyboard: "phone-pad" },
+      {
+        key: "firstName",
+        label: "",
+        placeholder: "First Name",
+        required: true,
+      },
+      { key: "lastName", label: "", placeholder: "Last Name", required: true },
+      {
+        key: "email",
+        label: "",
+        placeholder: "Email",
+        keyboard: "email-address",
+      },
+      { key: "phone", label: "", placeholder: "Phone", keyboard: "phone-pad" },
     ],
     nextQuestion: 102,
   },
@@ -471,19 +549,35 @@ const questions = [
     profileInitials: "",
     sections: [
       {
+        accommodateAllInOneLine: true,
         title: "Date of birth",
         fields: [
-          { key: "birthMonth", label: "Month", type: "select" },
-          { key: "birthDay", label: "Day", type: "select" },
-          { key: "birthYear", label: "Year", type: "select" },
+          {
+            key: "birthMonth",
+            placeholder: "Month",
+            type: "select",
+            accommodateWidth: 3,
+          },
+          {
+            key: "birthDay",
+            placeholder: "Day",
+            type: "select",
+            accommodateWidth: 3,
+          },
+          {
+            key: "birthYear",
+            placeholder: "Year",
+            type: "select",
+            accommodateWidth: 3,
+          },
         ],
       },
       {
         fields: [
-          { key: "sinNumber", label: "SIN Number" },
+          { key: "sinNumber", placeholder: "SIN Number" },
           {
             key: "dependents",
-            label: "Number of Dependents",
+            placeholder: "Number of Dependents",
             type: "select",
             options: [
               { value: "0", label: "0" },
@@ -507,10 +601,10 @@ const questions = [
     sections: [
       {
         fields: [
-          { key: "address", label: "Address", type: "text" },
+          { key: "address", placeholder: "Address", type: "text" },
           {
             key: "livingStatus",
-            label: "Living Status",
+            placeholder: "Living Status",
             type: "select",
             options: [
               { value: "own", label: "I Own" },
@@ -522,9 +616,20 @@ const questions = [
       },
       {
         title: "How long have you lived here?",
+        accommodateAllInOneLine: true,
         fields: [
-          { key: "months", label: "Month", type: "select" },
-          { key: "years", label: "Year", type: "select" },
+          {
+            key: "months",
+            placeholder: "Month",
+            type: "select",
+            accommodateWidth: 2,
+          },
+          {
+            key: "years",
+            placeholder: "Year",
+            type: "select",
+            accommodateWidth: 2,
+          },
         ],
       },
     ],
@@ -555,18 +660,46 @@ const questions = [
     text: "Where do you work?",
     type: "complexForm",
     profileInitials: "",
-    fields: [
-      { key: "companyName", label: "Company Name", type: "text" },
-      { key: "companyAddress", label: "Company Address", type: "text" },
-      { key: "jobTitle", label: "Your Job Title", type: "text" },
+    sections: [
       {
-        key: "employmentType",
-        label: "Employment Type",
-        type: "buttonGroup",
-        options: [
-          { value: "full_time", label: "Full Time" },
-          { value: "part_time", label: "Part time" },
-          { value: "seasonal", label: "Seasonal" },
+        fields: [
+          { key: "companyName", placeholder: "Company Name", type: "text" },
+          {
+            key: "companyAddress",
+            placeholder: "Company Address",
+            type: "text",
+          },
+          { key: "jobTitle", placeholder: "Your Job Title", type: "text" },
+          {
+            key: "employmentType",
+            label: "Employment Type",
+            type: "buttonGroup",
+            options: [
+              { value: "full_time", label: "Full Time" },
+              { value: "part_time", label: "Part time" },
+              { value: "seasonal", label: "Seasonal" },
+            ],
+          },
+        ],
+      },
+      {
+        title: "When did you start here?",
+        accommodateAllInOneLine: true,
+        fields: [
+          {
+            key: "months",
+            label: "",
+            type: "select",
+            placeholder: "Month",
+            accommodateWidth: 2,
+          },
+          {
+            key: "years",
+            label: "",
+            type: "select",
+            placeholder: "Year",
+            accommodateWidth: 2,
+          },
         ],
       },
     ],
@@ -579,9 +712,14 @@ const questions = [
     type: "complexForm",
     profileInitials: "",
     fields: [
-      { key: "income", label: "Income", type: "text", keyboard: "numeric" },
-      { key: "companyAddress", label: "Company Address", type: "text" },
-      { key: "jobTitle", label: "Your Job Title", type: "text" },
+      {
+        key: "income",
+        placeholder: "Income",
+        type: "text",
+        keyboard: "numeric",
+      },
+      { key: "companyAddress", placeholder: "Company Address", type: "text" },
+      { key: "jobTitle", placeholder: "Your Job Title", type: "text" },
       {
         key: "bonuses",
         label: "Bonuses or Commissions?",
@@ -657,10 +795,10 @@ const questions = [
       ],
     },
     itemFields: [
-      { key: "item", label: "Item", type: "text" },
+      { key: "item", placeholder: "Item", type: "text" },
       {
         key: "value",
-        label: "Value",
+        placeholder: "Value",
         type: "text",
         keyboard: "numeric",
         prefix: "$",
@@ -685,10 +823,10 @@ const questions = [
     },
     conditionalFields: {
       yes: [
-        { key: "address", label: "Address", type: "text" },
+        { key: "address", placeholder: "Address", type: "text" },
         {
           key: "value",
-          label: "Value",
+          placeholder: "Value",
           type: "text",
           keyboard: "numeric",
           prefix: "$",
@@ -713,7 +851,7 @@ const questions = [
         },
         {
           key: "mortgageAmount",
-          label: "Amount",
+          placeholder: "Amount",
           type: "text",
           keyboard: "numeric",
           prefix: "$",
@@ -731,10 +869,30 @@ const questions = [
     text: "What are your co-signer's details?",
     type: "form",
     fields: [
-      { key: "coFirstName", label: "First Name", required: true },
-      { key: "coLastName", label: "Last Name", required: true },
-      { key: "coEmail", label: "Email", keyboard: "email-address" },
-      { key: "coPhone", label: "Phone", keyboard: "phone-pad" },
+      {
+        key: "coFirstName",
+        label: "",
+        placeholder: "First Name",
+        required: true,
+      },
+      {
+        key: "coLastName",
+        label: "",
+        placeholder: "Last Name",
+        required: true,
+      },
+      {
+        key: "coEmail",
+        label: "",
+        placeholder: "Email",
+        keyboard: "email-address",
+      },
+      {
+        key: "coPhone",
+        label: "",
+        placeholder: "Phone",
+        keyboard: "phone-pad",
+      },
     ],
     nextQuestion: 103,
   },
@@ -747,18 +905,35 @@ const questions = [
     sections: [
       {
         title: "Date of birth",
+        accommodateAllInOneLine: true,
         fields: [
-          { key: "coBirthMonth", label: "Month", type: "select" },
-          { key: "coBirthDay", label: "Day", type: "select" },
-          { key: "coBirthYear", label: "Year", type: "select" },
+          {
+            key: "coBirthMonth",
+            placeholder: "Month",
+
+            type: "select",
+            accommodateWidth: 3,
+          },
+          {
+            key: "coBirthDay",
+            placeholder: "Day",
+            type: "select",
+            accommodateWidth: 3,
+          },
+          {
+            key: "coBirthYear",
+            placeholder: "Year",
+            type: "select",
+            accommodateWidth: 3,
+          },
         ],
       },
       {
         fields: [
-          { key: "coSinNumber", label: "SIN Number" },
+          { key: "coSinNumber", placeholder: "SIN Number" },
           {
             key: "coDependents",
-            label: "Number of Dependents",
+            placeholder: "Number of Dependents",
             type: "select",
             options: [
               { value: "0", label: "0" },
@@ -782,10 +957,10 @@ const questions = [
     sections: [
       {
         fields: [
-          { key: "coAddress", label: "Address", type: "text" },
+          { key: "coAddress", placeholder: "Address", type: "text" },
           {
             key: "coLivingStatus",
-            label: "Living Status",
+            placeholder: "Living Status",
             type: "select",
             options: [
               { value: "own", label: "I Own" },
@@ -797,9 +972,20 @@ const questions = [
       },
       {
         title: "How long have they lived here?",
+        accommodateAllInOneLine: true,
         fields: [
-          { key: "coMonths", label: "Month", type: "select" },
-          { key: "coYears", label: "Year", type: "select" },
+          {
+            key: "coMonths",
+            placeholder: "Month",
+            type: "select",
+            accommodateWidth: 2,
+          },
+          {
+            key: "coYears",
+            placeholder: "Year",
+            type: "select",
+            accommodateWidth: 2,
+          },
         ],
       },
     ],
@@ -830,18 +1016,46 @@ const questions = [
     text: "Where does [coFirstName] work?",
     type: "complexForm",
     profileInitials: "",
-    fields: [
-      { key: "coCompanyName", label: "Company Name", type: "text" },
-      { key: "coCompanyAddress", label: "Company Address", type: "text" },
-      { key: "coJobTitle", label: "Job Title", type: "text" },
+    sections: [
       {
-        key: "coEmploymentType",
-        label: "Employment Type",
-        type: "buttonGroup",
-        options: [
-          { value: "full_time", label: "Full Time" },
-          { value: "part_time", label: "Part time" },
-          { value: "seasonal", label: "Seasonal" },
+        fields: [
+          { key: "coCompanyName", placeholder: "Company Name", type: "text" },
+          {
+            key: "coCompanyAddress",
+            placeholder: "Company Address",
+            type: "text",
+          },
+          { key: "coJobTitle", placeholder: "Job Title", type: "text" },
+          {
+            key: "coEmploymentType",
+            label: "Employment Type",
+            type: "buttonGroup",
+            options: [
+              { value: "full_time", label: "Full Time" },
+              { value: "part_time", label: "Part time" },
+              { value: "seasonal", label: "Seasonal" },
+            ],
+          },
+        ],
+      },
+      {
+        title: "When did you start here?",
+        accommodateAllInOneLine: true,
+        fields: [
+          {
+            key: "months",
+            label: "",
+            type: "select",
+            placeholder: "Month",
+            accommodateWidth: 2,
+          },
+          {
+            key: "years",
+            label: "",
+            type: "select",
+            placeholder: "Year",
+            accommodateWidth: 2,
+          },
         ],
       },
     ],
@@ -854,9 +1068,14 @@ const questions = [
     type: "complexForm",
     profileInitials: "",
     fields: [
-      { key: "coIncome", label: "Income", type: "text", keyboard: "numeric" },
-      { key: "coCompanyAddress", label: "Company Address", type: "text" },
-      { key: "coJobTitle", label: "Job Title", type: "text" },
+      {
+        key: "coIncome",
+        placeholder: "Income",
+        type: "text",
+        keyboard: "numeric",
+      },
+      { key: "coCompanyAddress", placeholder: "Company Address", type: "text" },
+      { key: "coJobTitle", placeholder: "Job Title", type: "text" },
       {
         key: "coBonuses",
         label: "Bonuses or Commissions?",
@@ -933,10 +1152,10 @@ const questions = [
       ],
     },
     itemFields: [
-      { key: "coItem", label: "Item", type: "text" },
+      { key: "coItem", placeholder: "Item", type: "text" },
       {
         key: "coValue",
-        label: "Value",
+        placeholder: "Value",
         type: "text",
         keyboard: "numeric",
         prefix: "$",
@@ -961,10 +1180,10 @@ const questions = [
     },
     conditionalFields: {
       yes: [
-        { key: "coAddress", label: "Address", type: "text" },
+        { key: "coAddress", placeholder: "Address", type: "text" },
         {
           key: "coValue",
-          label: "Value",
+          placeholder: "Value",
           type: "text",
           keyboard: "numeric",
           prefix: "$",
@@ -989,7 +1208,7 @@ const questions = [
         },
         {
           key: "coMortgageAmount",
-          label: "Amount",
+          placeholder: "Amount",
           type: "text",
           keyboard: "numeric",
           prefix: "$",

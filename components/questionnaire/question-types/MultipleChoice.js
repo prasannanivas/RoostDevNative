@@ -67,14 +67,16 @@ const styles = StyleSheet.create({
     width: "100%", // Full width
   },
   questionText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    fontFamily: "Futura",
     color: COLORS.black,
     marginBottom: 32, // More space below question
     lineHeight: 32,
     textAlign: "left", // Left align questions when next to initials
     flex: 1, // Take remaining space in row
+    fontSize: 24,
+    fontWeight: 700,
+    lineHeight: "100%",
+    letterSpacing: 0,
+    fontFamily: "Futura",
   },
   optionsContainer: {
     gap: 16, // Slightly more space between options
@@ -82,16 +84,15 @@ const styles = StyleSheet.create({
     width: "100%", // Full width to match design
   },
   optionButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1.5, // Slightly thicker border
+    borderWidth: 1, // Slightly thicker border
     borderColor: COLORS.green,
-    borderRadius: 8,
-    paddingVertical: 16, // More vertical padding
+    borderRadius: 33,
+    paddingVertical: 13, // More vertical padding
     paddingHorizontal: 24, // More horizontal padding
+    gap: 10,
     alignItems: "center",
     width: "auto", // Auto width based on content
     alignSelf: "flex-start", // Left align the button
-    height: 48,
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -103,8 +104,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
   },
   optionText: {
-    fontSize: 16,
-    fontWeight: "medium",
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
     color: COLORS.green,
   },

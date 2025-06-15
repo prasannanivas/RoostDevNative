@@ -1,14 +1,17 @@
 import React, { useEffect, useState, useTransition } from "react";
 import { useAuth } from "./context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 import ClientHome from "./ClientHome.js";
 import RealtorHome from "./RealtorHome.js";
 import LoginScreen from "./screens/LoginScreen.js";
 import ClientQuestionaire from "./ClientQuestionaire.js";
 import { ClientProvider } from "./context/ClientContext.js";
 import { RealtorProvider } from "./context/RealtorContext.js";
+import RealtorOnboardingCheck from "./components/RealtorOnboardingCheck.js";
 
 const Home = () => {
   const { auth } = useAuth();
+  const navigation = useNavigation();
   const [isPending, startTransition] = useTransition();
   const [clientQuestionaire, setClientQuestionaire] = useState({});
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -53,7 +56,6 @@ const Home = () => {
   if (!auth) {
     return <LoginScreen />;
   }
-
   return (
     <>
       {auth.client ? (
@@ -66,6 +68,8 @@ const Home = () => {
         </ClientProvider>
       ) : auth.realtor ? (
         <RealtorProvider>
+          {/* RealtorOnboardingCheck will handle navigation if needed */}
+          <RealtorOnboardingCheck />
           <RealtorHome />
         </RealtorProvider>
       ) : (

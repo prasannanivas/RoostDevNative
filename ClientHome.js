@@ -457,19 +457,19 @@ const ClientHome = ({ questionnaireData }) => {
     );
   };
   // Add this right after the renderNotificationButton function
-  // const renderQuestionnaireButton = () => {
-  //   return (
-  //     <View style={styles.questionnaireButtonContainer}>
-  //       <TouchableOpacity
-  //         style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
-  //         onPress={() => setShowQuestionnaire(true)}
-  //       >
-  //         <Ionicons name="play" size={24} color={COLORS.white} />
-  //         <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
-  //       </TouchableOpacity>
-  //     </View>
-  //   );
-  // };
+  const renderQuestionnaireButton = () => {
+    return (
+      <View style={styles.questionnaireButtonContainer}>
+        <TouchableOpacity
+          style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
+          onPress={() => setShowQuestionnaire(true)}
+        >
+          <Ionicons name="play" size={24} color={COLORS.white} />
+          <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   // Render row
   const renderDocumentRow = (doc) => {
@@ -673,6 +673,7 @@ const ClientHome = ({ questionnaireData }) => {
             </Text>
           </View>
         </TouchableOpacity>
+        {renderQuestionnaireButton()}
 
         {/* Right Section: Notification Bell and Help Button */}
         <View style={styles.rightSection}>

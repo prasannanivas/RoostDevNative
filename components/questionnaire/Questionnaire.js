@@ -13,6 +13,7 @@ import { questions } from "../../data/questionnaireData";
 import QuestionRenderer from "./QuestionRenderer";
 import ProgressBar from "./ProgressBar";
 import Button from "../common/Button";
+import BackButton from "../icons/BackButton";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,7 +27,7 @@ import Logo from "../Logo";
 const COLORS = {
   green: "#377473",
   orange: "#E49455",
-  black: "#23231A",
+  black: "#1D2327",
   gray: "#666666",
   lightGray: "#999999",
   silver: "#CCC",
@@ -577,7 +578,7 @@ const Questionnaire = ({ navigation }) => {
                 const userInfo = getUserInitials();
                 const hasInitials =
                   userInfo.initials && userInfo.initials.trim() !== "";
-                return (
+                return hasInitials ? (
                   <View
                     style={[
                       styles.initialsCircle,
@@ -591,6 +592,8 @@ const Questionnaire = ({ navigation }) => {
                       </Text>
                     )}
                   </View>
+                ) : (
+                  <></>
                 );
               })()}
               <Text style={styles.questionTextHeader}>
@@ -616,7 +619,7 @@ const Questionnaire = ({ navigation }) => {
               <Button
                 title="Looks Good"
                 onPress={handleNext}
-                variant="primary"
+                variant="secondary"
                 loading={isSubmitting}
                 style={styles.looksGoodButton}
               />
@@ -628,7 +631,7 @@ const Questionnaire = ({ navigation }) => {
         <View style={styles.buttonContainer}>
           {canGoBack && (
             <Button
-              Icon={<Ionicons name="arrow-back" size={24} color="#FFFFFF" />}
+              Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
               onPress={goToPreviousQuestion}
               variant="outline"
               style={styles.backButton}
@@ -643,7 +646,7 @@ const Questionnaire = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: "#F6F6F6",
   },
   scrollView: {
     flex: 1,
@@ -667,14 +670,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 24,
+    minHeight: "70%", // Ensure content takes up most of the screen
+    paddingHorizontal: 48, // 8px increment spacing
     paddingVertical: 24,
+    paddingBottom: 120, // No bottom padding to align with footer
     justifyContent: "center", // Center questions vertically
-    alignItems: "center", // Center the content wrapper
   },
   contentWrapper: {
-    width: "100%",
     maxWidth: 500, // Consistent maximum width
     alignItems: "stretch", // Stretch items to fill container width
     justifyContent: "space-between", // Space between vertically
@@ -682,7 +684,6 @@ const styles = StyleSheet.create({
   questionHeaderRow: {
     flexDirection: "row",
     alignItems: "center", // Align items center vertically
-    width: "100%",
     marginBottom: 24,
   },
   initialsCircle: {
@@ -713,47 +714,50 @@ const styles = StyleSheet.create({
   },
   questionTextHeader: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 700,
+    letterSpacing: 0,
     fontFamily: "Futura",
     color: COLORS.black,
     flex: 1, // Take remaining space in row
-    lineHeight: 32,
   },
   questionContent: {
-    width: "100%",
-    paddingLeft: 0, // No left padding for proper alignment
-    marginTop: 24, // Add spacing between question text and content
-    alignSelf: "stretch", // Stretch to fill container width
+    fontSize: 24,
+    fontWeight: 700,
+    letterSpacing: 0,
+    fontFamily: "Futura",
+    color: COLORS.black,
+    flex: 1, // Take remaining space in row
   },
   looksGoodButton: {
-    backgroundColor: COLORS.green, // Primary button color
+    backgroundColor: "#F6F6F6",
+    color: COLORS.green,
+    borderColor: COLORS.green,
+    borderWidth: 1,
     marginTop: 32, // Add space between questions and button
     alignSelf: "flex-end", // Right align button
-    width: 180, // Set a consistent width
     marginRight: 0, // Ensure it's positioned at the right edge
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    paddingBottom: 32, // Account for safe area on newer devices
-    borderTopWidth: 0,
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: "15%",
+    justifyContent: "center",
     backgroundColor: COLORS.black, // Dark background
   },
   buttonContainer: {
     flexDirection: "row",
   },
   backButton: {
-    alignSelf: "flex-start", // Left align the back button
-    minWidth: 60,
-    paddingHorizontal: 24, // Standard padding
-    borderWidth: 1,
-    borderColor: COLORS.white,
+    borderWidth: 0,
+    marginLeft: 24, // 8px increment spacing
   },
   fullWidthButton: {
     flex: 1,
   },
   errorContainer: {
     flex: 1,
+    justifyContent: "center",
     justifyContent: "center",
     alignItems: "center",
   },

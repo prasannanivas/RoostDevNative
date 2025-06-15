@@ -689,7 +689,6 @@ export default function RealtorProfile({ onClose }) {
       console.error("Profile pic upload error:", error);
     }
   };
-
   const handleLogout = async () => {
     console.log("Logging out...");
     setFeedback({ message: "", type: "" });
@@ -697,7 +696,7 @@ export default function RealtorProfile({ onClose }) {
       await logout();
       navigation.reset({
         index: 0,
-        routes: [{ name: "Login" }],
+        routes: [{ name: "Home" }],
       });
     } catch (error) {
       setFeedback({

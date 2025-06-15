@@ -34,7 +34,7 @@ const Button = ({
         <View style={styles.loadingContainer}>
           <ActivityIndicator
             size="small"
-            color={variant === "primary" ? "#FFFFFF" : "#019B8E"}
+            color={variant === "primary" ? "#FFFFFF" : "#377473"}
           />
           {title && (
             <Text
@@ -67,8 +67,8 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 14,
-    paddingHorizontal: 30,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
     borderRadius: 50, // Fully rounded for pill shape
     alignItems: "center",
     justifyContent: "center",
@@ -80,12 +80,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   primary: {
-    backgroundColor: "#019B8E",
+    backgroundColor: "#377473",
   },
   secondary: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#019B8E",
+    borderColor: "#377473",
   },
   outline: {
     backgroundColor: "transparent",
@@ -93,14 +93,15 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
   },
   text: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: "Futura",
   },
   primaryText: {
     color: "#FFFFFF",
   },
   secondaryText: {
-    color: "#019B8E",
+    color: "#377473",
   },
   outlineText: {
     color: "#FFFFFF",

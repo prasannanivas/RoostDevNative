@@ -18,7 +18,6 @@ const COLORS = {
 const Dropdown = ({ question, value, onValueChange }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.questionText}>{question.text}</Text>
       <Select
         value={value}
         onValueChange={onValueChange}
@@ -33,14 +32,6 @@ const Dropdown = ({ question, value, onValueChange }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  questionText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    fontFamily: "Futura",
-    color: COLORS.black,
-    marginBottom: 32,
-    lineHeight: 32,
   },
   dropdown: {
     marginBottom: 0,
