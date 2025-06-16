@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   pillText: {
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight (medium)
+    fontSize: 12, // H3 size
+    fontWeight: 700, // H3 weight (medium)
     fontFamily: "Futura",
   },
   pillTextSelected: {
@@ -304,35 +304,35 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   recoErrorContainer: {
-    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
+    backgroundColor: "#F0913A80", // Using notice container background with 25% opacity
     padding: 16,
     borderRadius: 8,
     marginTop: 16,
   },
   recoErrorText: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
-    color: COLORS.black,
+    fontSize: 12, // P size
+    fontWeight: "700", // P weight
+    color: "#707070",
     fontFamily: "Futura",
   },
 
   alreadyHaveAccount: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
-    color: COLORS.black,
+    fontSize: 12, // P size
+    fontWeight: 500, // P weight
+    color: "#1D2327",
     marginBottom: 24,
     fontFamily: "Futura",
   },
   loginLink: {
-    fontSize: 14, // P size
+    fontSize: 12, // P size
     fontWeight: "500", // P weight
-    color: COLORS.green,
+    color: COLORS.black,
     textDecorationLine: "underline",
     fontFamily: "Futura",
   },
   footerText: {
     fontSize: 12, // Sub-p size
-    fontWeight: "500", // Sub-p weight
+    fontWeight: 500, // Sub-p weight
     color: COLORS.black,
     textAlign: "center",
     lineHeight: 18,
@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 12, // H3 size
+    fontWeight: 700, // H3 weight
     fontFamily: "Futura",
   },
 });

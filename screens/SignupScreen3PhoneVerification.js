@@ -403,14 +403,15 @@ const styles = StyleSheet.create({
   },
   errorBox: {
     width: "100%",
-    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
+    backgroundColor: "#F0913A80", // Using notice container background with 25% opacity
     borderRadius: 8,
     padding: 16,
     marginBottom: 24,
+    textAlign: "center",
   },
   errorText: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12, // P size
+    fontWeight: "700", // P weight
     color: COLORS.black,
     lineHeight: 20,
     fontFamily: "Futura",
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
   },
   resendButtonText: {
     color: COLORS.green,
-    fontWeight: "bold", // H4 weight
+    fontWeight: 700, // H4 weight
     fontSize: 12, // H4 size
     fontFamily: "Futura",
   },
@@ -506,8 +507,8 @@ const styles = StyleSheet.create({
   },
   verifyButtonText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 12, // H3 size
+    fontWeight: 700, // H3 weight
     fontFamily: "Futura",
   },
 });

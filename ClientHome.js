@@ -13,11 +13,7 @@ import {
   Platform,
   RefreshControl,
   Linking,
-  Image,
 } from "react-native";
-import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
-import * as Print from "expo-print";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
@@ -29,6 +25,10 @@ import Questionnaire from "./components/questionnaire/Questionnaire";
 import NotificationBell from "./components/icons/NotificationBell";
 import HelpButton from "./components/icons/HelpButton";
 import ReactNativeModal from "react-native-modal";
+// Import modal components
+import UploadModal from "./components/modals/UploadModal";
+import SubmittedDocumentModal from "./components/modals/SubmittedDocumentModal";
+import CompleteDocumentModal from "./components/modals/CompleteDocumentModal";
 
 /**
  * Color palette from UX team design system
@@ -73,20 +73,15 @@ const ClientHome = ({ questionnaireData }) => {
   const clientFromContext = clientInfo || auth.client;
 
   const clientId = clientFromContext.id;
-
   const [documentsFromApi, setDocumentsFromApi] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [clientDocs, setClientDocs] = useState(contextDocuments || []);
+
   // Upload modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [capturedImages, setCapturedImages] = useState([]);
 
   // Button loading states
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Complete modal state
@@ -143,241 +138,15 @@ const ClientHome = ({ questionnaireData }) => {
   // Sections
   const docsNeeded = merged.filter((d) => d.type === "Needed");
   const docsRequested = merged.filter((d) => d.type === "Needed-other");
-
   // Open upload modal
   const handleAdd = (docType) => {
     setSelectedDocType(docType);
-    setSelectedFile(null);
     setShowModal(true);
   };
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedDocType(null);
-    setSelectedFile(null);
-    setCapturedImages([]);
-  };
-
-  // Pick PDF
-  const pickDocumentFile = async () => {
-    try {
-      setIsLoading(true);
-      const res = await DocumentPicker.getDocumentAsync({
-        type: "application/pdf",
-      });
-
-      console.log("Document picker result:", res);
-
-      if (!res.canceled && res.assets && res.assets[0]) {
-        const file = res.assets[0];
-        // Verify file is actually a PDF
-        if (
-          !file.mimeType?.includes("pdf") &&
-          !file.name?.toLowerCase().endsWith(".pdf")
-        ) {
-          Alert.alert("Invalid File", "Please select a PDF file");
-          return;
-        }
-
-        // Verify file size (limit to 10MB)
-        if (file.size && file.size > 10 * 1024 * 1024) {
-          Alert.alert(
-            "File Too Large",
-            "Please select a file smaller than 10MB"
-          );
-          return;
-        }
-
-        setSelectedFile({
-          uri: file.uri,
-          name: file.name,
-          type: file.mimeType,
-        });
-        Alert.alert("Success", "File selected successfully");
-      } else {
-        Alert.alert("Cancelled", "No file was selected");
-      }
-    } catch (e) {
-      console.error("File pick error:", e);
-      Alert.alert("Error", "Could not pick file. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Scan & PDF
-  const pickCameraFile = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        return Alert.alert(
-          "Camera Permission Required",
-          "Please enable camera access in your device settings to scan documents.",
-          [
-            { text: "OK" },
-            {
-              text: "Open Settings",
-              onPress: () => Linking.openSettings(),
-            },
-          ]
-        );
-      }
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        quality: 0.8,
-        aspect: [4, 3], // Set a fixed aspect ratio
-        allowsMultipleSelection: false,
-        exif: false, // Don't include EXIF data to reduce file size
-      });
-
-      if (!result.canceled && result.assets?.length) {
-        setCapturedImages((prev) => [...prev, result.assets[0].uri]);
-      }
-    } catch (error) {
-      console.error("Camera error:", error);
-      Alert.alert(
-        "Scanner Error",
-        "An unexpected error occurred while accessing the camera.",
-        [{ text: "OK" }]
-      );
-    }
-  };
-
-  // Remove image from gallery
-  const removeImage = (index) => {
-    setCapturedImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Convert images to PDF
-  const convertImagesToPDF = async () => {
-    if (capturedImages.length === 0) return;
-    const html = await Promise.all(
-      capturedImages.map(async (u) => {
-        const blob = await (await fetch(u)).blob();
-        const b64 = await new Promise((res) => {
-          const r = new FileReader();
-          r.onloadend = () => res(r.result);
-          r.readAsDataURL(blob);
-        });
-        return `<img src="${b64}" style="page-break-after: always;" />`;
-      })
-    ).then(
-      (arr) => `<html><body style="margin:0">${arr.join("")}</body></html>`
-    );
-
-    const { uri: pdfUri } = await Print.printToFileAsync({ html });
-    setSelectedFile({
-      uri: pdfUri,
-      name: `scan-${Date.now()}.pdf`,
-      type: "application/pdf",
-    });
-    setCapturedImages([]);
-  };
-
-  // Choose method
-  const handleFileSelection = () =>
-    Alert.alert("Attach document", "", [
-      {
-        text: "Upload PDF",
-        onPress: pickDocumentFile,
-        disabled: isLoading,
-      },
-      {
-        text: "Scan Document",
-        onPress: pickCameraFile,
-        disabled: isLoading,
-      },
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-    ]); // Upload
-  const handleUpload = async () => {
-    if (!selectedFile || !selectedDocType) {
-      return Alert.alert("Select file/type");
-    }
-
-    setUploadLoading(true);
-
-    const data = new FormData();
-    data.append("docType", selectedDocType);
-    data.append("pdfFile", {
-      uri:
-        Platform.OS === "android"
-          ? selectedFile.uri
-          : selectedFile.uri.replace("file://", ""),
-      name: selectedFile.name || "file.pdf",
-      type: "application/pdf",
-    });
-
-    try {
-      const resp = await fetch(
-        `http://159.203.58.60:5000/documents/${clientId}/documents`,
-        {
-          method: "POST",
-          body: data,
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      if (!resp.ok) throw new Error("upload failed");
-
-      // Sync with backend after successful upload
-      const refreshResult = await fetchRefreshData(clientId);
-
-      // Update needed documents if available
-      if (refreshResult?.neededDocsResponse?.documents_needed) {
-        setDocumentsFromApi(refreshResult.neededDocsResponse.documents_needed);
-      }
-
-      Alert.alert("Success", "Document uploaded successfully");
-      closeModal();
-    } catch (e) {
-      console.error("Upload error:", e);
-      Alert.alert("Error", "Upload failed");
-    } finally {
-      setUploadLoading(false);
-    }
-  }; // Delete document
-  const handleDeleteDocument = async (documentDetails) => {
-    console.log("Deleting document:", documentDetails);
-    setDeleteLoading(true);
-
-    try {
-      if (!documentDetails || !documentDetails._id) {
-        Alert.alert("Error", "Document ID is missing");
-        console.error("Document ID is missing:", documentDetails);
-        return;
-      }
-
-      const response = await fetch(
-        `http://159.203.58.60:5000/documents/${clientId}/documents/${documentDetails._id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      // Clone the response before consuming the body
-      const responseClone = response.clone();
-      const responseData = await responseClone.json().catch(() => ({}));
-      console.log("Delete response:", responseData);
-      if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
-
-      // Sync with backend after successful deletion
-      const refreshResult = await fetchRefreshData(clientId);
-
-      // Update needed documents if available
-      if (refreshResult?.neededDocsResponse?.documents_needed) {
-        setDocumentsFromApi(refreshResult.neededDocsResponse.documents_needed);
-      }
-
-      setShowSubmittedModal(false);
-      Alert.alert("Success", "Document deleted successfully");
-    } catch (error) {
-      Alert.alert("Error", "Failed to delete document");
-      console.error(error);
-    } finally {
-      setDeleteLoading(false);
-    }
   }; // Centralized refresh logic
   const onRefresh = React.useCallback(async () => {
     if (refreshing) return; // Prevent multiple simultaneous refreshes
@@ -465,7 +234,7 @@ const ClientHome = ({ questionnaireData }) => {
           onPress={() => setShowQuestionnaire(true)}
         >
           <Ionicons name="play" size={24} color={COLORS.white} />
-          <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text>
+          {/* <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text> */}
         </TouchableOpacity>
       </View>
     );
@@ -643,9 +412,7 @@ const ClientHome = ({ questionnaireData }) => {
     </Modal>
   );
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Apple Logo Area - Top 63px blank space */}
-      <View style={styles.appleLogoSpace} />
+    <View style={styles.safeArea}>
       {/* Main Header - Bottom 63px */}
       <View style={styles.topHeader}>
         {/* Left Section: Profile Circle and Welcome Text */}
@@ -681,6 +448,8 @@ const ClientHome = ({ questionnaireData }) => {
           <HelpButton
             borderColor={COLORS.white}
             textColor={COLORS.white}
+            width={46}
+            height={46}
             text="HELP"
             onPress={handleHelpPress}
             variant="outline"
@@ -765,209 +534,39 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </ReactNativeModal>
       {/* Upload Modal */}
-      <Modal
+      <UploadModal
         visible={showModal}
-        animationType="fade"
-        transparent
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalContent,
-              capturedImages.length > 0 && styles.modalContentFullscreen,
-            ]}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{selectedDocType}</Text>
-              <TouchableOpacity
-                style={styles.closeModalButton}
-                onPress={closeModal}
-              >
-                <Text style={styles.closeModalText}>X</Text>
-              </TouchableOpacity>
-            </View>
-            {capturedImages.length > 0 ? (
-              <>
-                <ScrollView style={styles.imageScrollView}>
-                  <View style={styles.imageGrid}>
-                    {capturedImages.map((uri, index) => (
-                      <View key={index} style={styles.gridItem}>
-                        <Image
-                          source={{ uri }}
-                          style={styles.gridImage}
-                          resizeMode="cover"
-                        />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImage(index)}
-                        >
-                          <Text style={styles.removeButtonText}>Remove</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-                <View style={styles.bottomButtonContainer}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.backButton]}
-                    onPress={() => setCapturedImages([])}
-                  >
-                    <Text style={styles.backButtonText}>{"<-"}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.addMoreButton]}
-                    onPress={pickCameraFile}
-                  >
-                    <Text style={styles.actionButtonText}>
-                      Add Another Photo
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.doneButton]}
-                    onPress={convertImagesToPDF}
-                  >
-                    <Text style={styles.doneButtonText}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : !selectedFile ? (
-              <View style={styles.buttonGroup}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.actionButtonHalf]}
-                  onPress={pickCameraFile}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.actionButtonText}>Take Picture</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.actionButtonHalf]}
-                  onPress={pickDocumentFile}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.actionButtonText}>Upload from files</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <Text style={styles.fileSelected}>
-                {selectedFile?.name || "File selected"}
-              </Text>
-            )}
-            {isLoading && (
-              <ActivityIndicator
-                size="small"
-                color={COLORS.green}
-                style={styles.loadingIndicator}
-              />
-            )}
-            {selectedFile && (
-              <TouchableOpacity
-                style={[
-                  styles.uploadButton,
-                  uploadLoading && styles.buttonDisabled,
-                ]}
-                onPress={handleUpload}
-                disabled={uploadLoading}
-              >
-                {uploadLoading ? (
-                  <ActivityIndicator color={COLORS.white} size="small" />
-                ) : (
-                  <Text style={styles.uploadButtonText}>Upload</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </Modal>
+        onClose={closeModal}
+        selectedDocType={selectedDocType}
+        clientId={clientId}
+        onUploadSuccess={() =>
+          fetchRefreshData(clientId).then((result) => {
+            if (result?.neededDocsResponse?.documents_needed) {
+              setDocumentsFromApi(result.neededDocsResponse.documents_needed);
+            }
+          })
+        }
+      />
       {/* Complete Document Modal */}
-      <Modal
+      <CompleteDocumentModal
         visible={showCompleteModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowCompleteModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {selectedCompleteDoc?.displayName ||
-                  selectedCompleteDoc?.docType}
-              </Text>
-              <TouchableOpacity
-                style={styles.closeModalButton}
-                onPress={() => setShowCompleteModal(false)}
-              >
-                <Text style={styles.closeModalText}>X</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.completeModalText}>
-              You have already submitted this document and accepted as valid
-            </Text>
-
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowCompleteModal(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowCompleteModal(false)}
+        document={selectedCompleteDoc}
+      />
       {/* Submitted Document Modal */}
-      <Modal
+      <SubmittedDocumentModal
         visible={showSubmittedModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowSubmittedModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {selectedSubmittedDoc?.displayName ||
-                  selectedSubmittedDoc?.docType}
-              </Text>
-              <TouchableOpacity
-                style={styles.closeModalButton}
-                onPress={() => setShowSubmittedModal(false)}
-              >
-                <Text style={styles.closeModalText}>X</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.completeModalText}>
-              You have already submitted this document. If you wish to reupload
-              it, delete the existing doc and try again.
-            </Text>
-
-            <View style={styles.modalButtonGroup}>
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  styles.deleteButton,
-                  deleteLoading && styles.buttonDisabled,
-                ]}
-                onPress={() => handleDeleteDocument(selectedSubmittedDoc)}
-                disabled={deleteLoading}
-              >
-                {deleteLoading ? (
-                  <ActivityIndicator color={COLORS.white} size="small" />
-                ) : (
-                  <Text style={styles.modalButtonText}>Delete</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.nevermindButton]}
-                onPress={() => setShowSubmittedModal(false)}
-              >
-                <Text style={styles.modalButtonText}>Never Mind</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowSubmittedModal(false)}
+        document={selectedSubmittedDoc}
+        clientId={clientId}
+        onDeleteSuccess={() =>
+          fetchRefreshData(clientId).then((result) => {
+            if (result?.neededDocsResponse?.documents_needed) {
+              setDocumentsFromApi(result.neededDocsResponse.documents_needed);
+            }
+          })
+        }
+      />
       {/* Modal for questionnaire preview */}
       {/* <QuestionnairePreview /> */}
       {/* Modal for testing the actual questionnaire */}
@@ -990,7 +589,7 @@ const ClientHome = ({ questionnaireData }) => {
         onClose={() => setShowNotifications(false)}
         userId={clientFromContext.id}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -999,24 +598,25 @@ export default ClientHome;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F6F6F6", // Updated to your preferred background color
+    backgroundColor: COLORS.background,
+    position: "relative", // To position absolute elements
   },
+
   topHeader: {
+    width: "100%",
+    height: 126, // Exact height as specified
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.black,
+    justifyContent: "space-between",
     paddingHorizontal: 32,
     paddingTop: 60, // Reserve 68px for mobile status bar
     paddingBottom: 8,
-    justifyContent: "space-between",
-    width: "100%",
-    height: 126, // Exact height as specified
+    backgroundColor: COLORS.black,
   },
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    maxWidth: "70%",
   },
   rightSection: {
     flexDirection: "row",
@@ -1032,14 +632,13 @@ const styles = StyleSheet.create({
     maxWidth: "80%", // Limit width to prevent overlap
   },
   initialsCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 50,
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
-    flexShrink: 0,
+    marginRight: 16,
   },
 
   sideModal: {
@@ -1058,16 +657,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   welcomeText: {
-    color: COLORS.white,
+    color: "#A9A9A9",
     fontSize: 12,
-    fontWeight: "400",
+    fontWeight: 700,
     fontFamily: "Futura",
-    lineHeight: 14,
+    lineHeight: 25,
   },
   clientName: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: 500,
     fontFamily: "Futura",
     lineHeight: 16,
   },
@@ -1083,7 +682,6 @@ const styles = StyleSheet.create({
   },
   notificationButton: {
     padding: 8,
-    marginRight: 8,
     position: "relative",
   },
   notificationBadge: {
@@ -1179,10 +777,9 @@ const styles = StyleSheet.create({
     paddingRight: 24,
     paddingBottom: 13,
     paddingLeft: 24,
-    width: 75,
-    height: 42,
     alignItems: "center",
     justifyContent: "center",
+    textAlign: "center",
     flexShrink: 0,
     borderWidth: 1,
     borderColor: COLORS.green,
@@ -1231,9 +828,8 @@ const styles = StyleSheet.create({
     paddingTop: 13,
     paddingRight: 24,
     paddingBottom: 13,
+    textAlign: "center",
     paddingLeft: 24,
-    width: 114,
-    height: 42,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -1248,8 +844,7 @@ const styles = StyleSheet.create({
     paddingRight: 24,
     paddingBottom: 13,
     paddingLeft: 24,
-    width: 114,
-    height: 42,
+    textAlign: "center",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,

@@ -106,8 +106,13 @@ export default function SignUpDetailsScreen({ navigation, route }) {
           // If we get an error response, the email already exists
           if (error.response?.data?.error) {
             setEmailError(
-              error.response.data.error ||
-                "This email is already registered. Please use a different email."
+              error.response.data.error &&
+                error.response.data.error?.startsWith(
+                  "Email already registered"
+                )
+                ? "This email address is already registered, please try and login. If you forgot your password click RESET PASSWORD or use a different email"
+                : error.response.data.error ||
+                    "This email address is already registered, please try and login. If you forgot your password click RESET PASSWORD or use a different email."
             );
             existingAccount = true;
           }
@@ -499,7 +504,7 @@ const styles = StyleSheet.create({
   },
   errorBox: {
     width: "100%",
-    backgroundColor: COLORS.noticeContainerBg, // Using notice container background with 25% opacity
+    backgroundColor: "#F0DE3A40", // Using notice container background with 25% opacity
     borderRadius: 8,
     padding: 16,
     marginBottom: 24,
@@ -507,7 +512,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14, // P size
     fontWeight: "500", // P weight
-    color: COLORS.black,
+    color: "#707070",
     lineHeight: 20,
     fontFamily: "Futura",
   },
@@ -546,8 +551,8 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 12, // H3 size
+    fontWeight: 700, // H3 weight
     fontFamily: "Futura",
   },
   loginButtonDisabled: {

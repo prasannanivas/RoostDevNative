@@ -30,8 +30,8 @@ const HelpButton = ({
         };
       default: // medium
         return {
-          width: 50,
-          height: 50,
+          width: 46,
+          height: 46,
           fontSize: 12,
           borderRadius: 25,
         };

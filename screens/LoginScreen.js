@@ -214,34 +214,34 @@ export default function LoginScreen() {
               {loading ? "Logging in..." : "Log In"}
             </Text>
           </TouchableOpacity>
+
+          {/* Sign Up Section moved to bottom above footer */}
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUpPrompt}>
+              Don't have An Account? Sign Up for Free
+            </Text>
+            <TouchableOpacity
+              style={styles.signUpButton}
+              onPress={handleSignUp}
+              accessible={true}
+              accessibilityLabel="Sign up for a new account"
+              accessibilityRole="button"
+            >
+              <Text style={styles.signUpButtonText}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* Sign Up Section moved to bottom above footer */}
-      <View style={styles.signUpContainer}>
-        <Text style={styles.signUpPrompt}>
-          Don't have An Account? Sign Up for Free
-        </Text>
-        <TouchableOpacity
-          style={styles.signUpButton}
-          onPress={handleSignUp}
-          accessible={true}
-          accessibilityLabel="Sign up for a new account"
-          accessibilityRole="button"
-        >
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
         <Text style={styles.footerText}>
           By logging in, you agree to Roost's
           <Text style={styles.linkText}>Terms of Use</Text> and
-          <Text style={styles.linkText}>Privacy Policy</Text>.
+          <Text style={styles.linkText}> Privacy Policy</Text>.
         </Text>
         <Text style={styles.footerText}>
-          By entering your email & phone number, you consent to receive
+          By providing your email & phone number, you consent to receive
           communications from Roost. You can opt-out anytime.
         </Text>
       </View>
@@ -252,9 +252,10 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "F6F6F6",
   },
   container: {
+    height: "85%",
     paddingHorizontal: 24,
     paddingVertical: 48,
     alignItems: "center",
@@ -303,8 +304,8 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight (medium)
+    fontSize: 12, // H3 size
+    fontWeight: 700, // H3 weight (medium)
     fontFamily: "Futura",
   },
   loginButtonDisabled: {
@@ -319,22 +320,24 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   signUpContainer: {
+    marginTop: 48,
     backgroundColor: COLORS.background,
     paddingHorizontal: 24,
     paddingVertical: 24,
     alignItems: "center",
   },
   signUpPrompt: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12, // P size
+    fontWeight: 700, // P weight
     color: COLORS.slate,
     marginBottom: 16,
     fontFamily: "Futura",
   },
   signUpButton: {
-    width: "90%",
-    height: 48,
     borderColor: COLORS.green,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
+    width: 334,
     borderWidth: 2,
     borderRadius: 50,
     justifyContent: "center",
@@ -343,8 +346,8 @@ const styles = StyleSheet.create({
   },
   signUpButtonText: {
     color: COLORS.green,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 12, // H3 size
+    fontWeight: 700, // H3 weight
     fontFamily: "Futura",
   },
   realtorButton: {
@@ -364,17 +367,21 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     height: 120,
+    position: "absolute",
+    alignItems: "center",
+    width: "100%",
+    bottom: 0,
     backgroundColor: COLORS.black,
     paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingVertical: 16,
   },
   footerText: {
     fontSize: 12, // Sub-p size
-    fontWeight: "500", // Sub-p weight
+    fontWeight: 500, // Sub-p weight
     color: COLORS.gray,
-    marginBottom: 8,
+    marginBottom: 4,
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 15,
     fontFamily: "Futura",
   },
   linkText: {

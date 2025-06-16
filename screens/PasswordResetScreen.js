@@ -819,6 +819,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    height: "20%",
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
