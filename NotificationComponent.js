@@ -19,41 +19,23 @@ import { useNotification } from "./context/NotificationContext";
 import { CloseButton } from "./components/icons";
 
 // Warning icon SVG for orange notification
-const warningSvgXml = `
-<svg width="62" height="63" viewBox="0 0 62 63" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<rect x="16" y="16.5" width="30" height="30" fill="url(#pattern0_500_8083)"/>
-<circle cx="41" cy="21.5" r="5" fill="#F0913A"/>
-<defs>
-<pattern id="pattern0_500_8083" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_500_8083" transform="scale(0.0333333)"/>
-</pattern>
-<image id="image0_500_8083" width="30" height="30" preserveAspectRatio="none" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABQklEQVR4nO2Vu0oDQRiFP0QRBLGwtBRsBBsrC2u10ELxAfQJ7M0TpNY38Am0s7C3sDBCgprGFRWFFBoLjWJk4B8Yktm5mJ0QJAdOs/+Z8+1lhoWhBlwbwKN4vV/QaaABtMUNuZZchwZU+yA1dB74soC/gYWU4FMLVPssFXTLAdXeLBo6DtwGgO+AiSLBpQCo9n5R0Bmg2VFeB7bF9Y7Zu6zpWUeWp7o05hXLXK3pSUvAj6X42sjcWOZqzfJfoSPAuWMTaWU5mQvpiNauYwM9G7kXR24nFjopP4C8wlcj++a5wakYcNlzZFrAorjlyaquIM0CHxHn1udPYC4EfBxY+CQOyZ74oCuBReocjwJjwFXgmtU8qCqpBpZUJB8Drkm+S3uR3y7mVbfFitEl1/Epyg828H0fwJkNvJYYnrk22FD/T7//yEweBhd1sgAAAABJRU5ErkJggg=="/>
-</defs>
+const approvedBlueSvgXml = `<svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
+  <path d="M12.6961 1.08673C13.0958 0.54636 13.9042 0.54636 14.3039 1.08673L15.6823 2.94997C15.9593 3.32437 16.458 3.45801 16.8851 3.27225L19.0104 2.34783C19.6268 2.07973 20.3269 2.48391 20.4029 3.15176L20.6649 5.45455C20.7176 5.91728 21.0827 6.28239 21.5454 6.33506L23.8482 6.59714C24.5161 6.67315 24.9203 7.37321 24.6522 7.98959L23.7277 10.1149C23.542 10.542 23.6756 11.0407 24.05 11.3177L25.9133 12.6961C26.4536 13.0958 26.4536 13.9042 25.9133 14.3039L24.05 15.6823C23.6756 15.9593 23.542 16.458 23.7277 16.8851L24.6522 19.0104C24.9203 19.6268 24.5161 20.3269 23.8482 20.4029L21.5454 20.6649C21.0827 20.7176 20.7176 21.0827 20.6649 21.5454L20.4029 23.8482C20.3269 24.5161 19.6268 24.9203 19.0104 24.6522L16.8851 23.7277C16.458 23.542 15.9593 23.6756 15.6823 24.05L14.3039 25.9133C13.9042 26.4536 13.0958 26.4536 12.6961 25.9133L11.3177 24.05C11.0407 23.6756 10.542 23.542 10.1149 23.7277L7.98959 24.6522C7.37321 24.9203 6.67315 24.5161 6.59714 23.8482L6.33506 21.5454C6.28239 21.0827 5.91728 20.7176 5.45455 20.6649L3.15176 20.4029C2.48391 20.3269 2.07973 19.6268 2.34783 19.0104L3.27225 16.8851C3.45801 16.458 3.32437 15.9593 2.94997 15.6823L1.08673 14.3039C0.54636 13.9042 0.54636 13.0958 1.08673 12.6961L2.94997 11.3177C3.32437 11.0407 3.45801 10.542 3.27225 10.1149L2.34783 7.98959C2.07973 7.37321 2.48391 6.67315 3.15176 6.59714L5.45455 6.33506C5.91728 6.28239 6.28239 5.91728 6.33506 5.45455L6.59714 3.15176C6.67315 2.48391 7.37321 2.07973 7.98959 2.34783L10.1149 3.27225C10.542 3.45801 11.0407 3.32437 11.3177 2.94997L12.6961 1.08673Z" fill="#1D2327"/>
+  <path d="M8 13L12 16.5L18.5 10" stroke="#FDFDFD" stroke-width="2" stroke-linecap="round"/>
 </svg>`;
 
 // Approved icon SVG for green notification
-const approvedGreenSvgXml = `
-<svg width="62" height="62" viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<rect x="16" y="16" width="30" height="30" fill="url(#pattern0_500_8086)"/>
-<circle cx="41" cy="21" r="5" fill="#F0913A"/>
-<defs>
-<pattern id="pattern0_500_8086" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_500_8086" transform="scale(0.0333333)"/>
-</pattern>
-<image id="image0_500_8086" width="30" height="30" preserveAspectRatio="none" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABdUlEQVR4nO2WwUrDQBCGPyyeerc9CA147cU2IIrgKwgetfVVfI1WfQ+bJ2g9a3sQPDbVs9B6iixMYSnZzWY3AQ/9YQ67mewHk5k/C3u5qQMsgDkQUZNiYAA0Zd0AEiCTSGQPyVG5/VBoG/gVQAo8AzMNug219yQ5ar0BWiHgixyIa6h3vTUMAKuSly7vGXAPrALAKzkjdil7rH3TKmMD9GzgQQ3QbdzZwGocljVAU20cjXr0PPxL5vcy59m4CKqM4NUT2tX6JG/OGyZotONIPtCurPPyEpO9LiyH3wDXwI8nNJN4zwPPLS+cSM6VBi8LzUzgjqXUH8CxBv/0gE6EYWyumQP8sCR0amsul3HS4a5QFaMiqIuBqDI/AN8lOn9ZZCB1WuatDdwXQ68augZOi8rdEvcZBv4WU6mgOuuI/3wRqOrqc06A2to3T2UspoY5HWmXvbVPeXfVk47Ur7cTDfoCHMizpvzwCxvJV5F4+5vNBvdC0x8IKqDqCCnz5gAAAABJRU5ErkJggg=="/>
-</defs>
+const warningSvgXml = `<svg xmlns="http://www.w3.org/2000/svg" width="29" height="25" viewBox="0 0 29 25" fill="none">
+  <path d="M13.634 1.5C14.0189 0.833332 14.9811 0.833333 15.366 1.5L27.4904 22.5C27.8753 23.1667 27.3942 24 26.6244 24H2.37564C1.60584 24 1.12472 23.1667 1.50962 22.5L13.634 1.5Z" fill="#1D2327"/>
+  <rect x="13.5" y="9" width="2" height="7" rx="1" fill="#FDFDFD"/>
+  <rect x="13.5" y="18" width="2" height="2" rx="1" fill="#FDFDFD"/>
 </svg>`;
 
 // Approved icon SVG for blue notification
-const approvedBlueSvgXml = `
-<svg width="62" height="62" viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<rect x="16" y="16" width="30" height="30" fill="url(#pattern0_500_8088)"/>
-<defs>
-<pattern id="pattern0_500_8088" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_500_8088" transform="scale(0.0333333)"/>
-</pattern>
-<image id="image0_500_8088" width="30" height="30" preserveAspectRatio="none" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABdUlEQVR4nO2WwUrDQBCGPyyeerc9CA147cU2IIrgKwgetfVVfI1WfQ+bJ2g9a3sQPDbVs9B6iixMYSnZzWY3AQ/9YQ67mewHk5k/C3u5qQMsgDkQUZNiYAA0Zd0AEiCTSGQPyVG5/VBoG/gVQAo8AzMNug219yQ5ar0BWiHgixyIa6h3vTUMAKuSly7vGXAPrALAKzkjdil7rH3TKmMD9GzgQQ3QbdzZwGocljVAU20cjXr0PPxL5vcy59m4CKqM4NUT2tX6JG/OGyZotONIPtCurPPyEpO9LiyH3wDXwI8nNJN4zwPPLS+cSM6VBi8LzUzgjqXUH8CxBv/0gE6EYWyumQP8sCR0amsul3HS4a5QFaMiqIuBqDI/AN8lOn9ZZCB1WuatDdwXQ68augZOi8rdEvcZBv4WU6mgOuuI/3wRqOrqc06A2to3T2UspoY5HWmXvbVPeXfVk47Ur7cTDfoCHMizpvzwCxvJV5F4+5vNBvdC0x8IKqDqCCnz5gAAAABJRU5ErkJggg=="/>
-</defs>
+const approvedGreenSvgXml = `<svg xmlns="http://www.w3.org/2000/svg" width="29" height="25" viewBox="0 0 29 25" fill="none">
+  <path d="M13.634 1.5C14.0189 0.833332 14.9811 0.833333 15.366 1.5L27.4904 22.5C27.8753 23.1667 27.3942 24 26.6244 24H2.37564C1.60584 24 1.12472 23.1667 1.50962 22.5L13.634 1.5Z" fill="#1D2327"/>
+  <rect x="13.5" y="9" width="2" height="7" rx="1" fill="#FDFDFD"/>
+  <rect x="13.5" y="18" width="2" height="2" rx="1" fill="#FDFDFD"/>
 </svg>`;
 
 // NotificationMessage component with different variants
@@ -106,7 +88,7 @@ export const NotificationMessage = ({
       activeOpacity={0.9}
     >
       <View style={styles.notificationMessageIcon}>
-        <SvgXml xml={iconSvg} width={42} height={42} />
+        <SvgXml xml={iconSvg} width={21} height={21} />
       </View>
       <View style={styles.notificationMessageContent}>
         <Text style={styles.notificationMessageDate}>{date}</Text>
@@ -311,20 +293,17 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
   );
 };
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 const styles = StyleSheet.create({
   notificationsBlurView: {
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
   },
   notificationsContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    marginTop: Platform.OS === "ios" ? 60 : StatusBar.currentHeight || 60,
-    width: SCREEN_WIDTH,
-    maxHeight: SCREEN_HEIGHT,
+    marginTop: 60,
+    width: "100%",
+    height: "100%",
     paddingBottom: 100,
     shadowColor: "#000",
     shadowOffset: {
@@ -388,6 +367,7 @@ const styles = StyleSheet.create({
   },
   notificationMessageContainer: {
     flexDirection: "row",
+    height: 105,
     borderRadius: 12,
     marginVertical: 8,
     marginHorizontal: 16,
@@ -435,10 +415,11 @@ const styles = StyleSheet.create({
     color: "#23231A",
   },
   notificationMessageIcon: {
-    width: 54,
+    width: 50,
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "visible",
   },
   unreadDotMessage: {
     width: 8,

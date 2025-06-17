@@ -54,6 +54,9 @@ const UploadModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [capturedImages, setCapturedImages] = useState([]);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [previewImageUri, setPreviewImageUri] = useState(null);
+  const [previewImageIndex, setPreviewImageIndex] = useState(null);
 
   // Pick PDF
   const pickDocumentFile = async () => {
@@ -121,10 +124,10 @@ const UploadModal = ({
       }
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: "images",
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 0.8,
-        aspect: [4, 3], // Set a fixed aspect ratio
-        allowsMultipleSelection: false,
+        aspect: [3, 4], // Remove fixed aspect ratio to allow free rectangular cropping
+        allowsMultipleSelection: true,
         exif: false, // Don't include EXIF data to reduce file size
       });
 
@@ -140,12 +143,112 @@ const UploadModal = ({
       );
     }
   };
-
   // Remove image from gallery
   const removeImage = (index) => {
     setCapturedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Open image preview modal
+  const openImagePreview = (uri, index) => {
+    setPreviewImageUri(uri);
+    setPreviewImageIndex(index);
+    setPreviewModalVisible(true);
+  };
+
+  // Close image preview modal
+  const closeImagePreview = () => {
+    setPreviewModalVisible(false);
+    setPreviewImageUri(null);
+    setPreviewImageIndex(null);
+  };
+
+  // Re-crop existing image
+  const recropImage = async (imageUri, imageIndex) => {
+    try {
+      Alert.alert("Edit Image", "How would you like to edit this image?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Crop Again",
+          onPress: () => replaceWithCroppedImage(imageIndex),
+        },
+        {
+          text: "Replace with New",
+          onPress: () => replaceWithNewImage(imageIndex),
+        },
+      ]);
+    } catch (error) {
+      console.error("Recrop error:", error);
+      Alert.alert("Error", "Failed to edit image.");
+    }
+  };
+  // Replace image with newly cropped version
+  const replaceWithCroppedImage = async (imageIndex) => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        quality: 0.8,
+        // aspect: [3, 4], // Remove fixed aspect ratio to allow free rectangular cropping
+        allowsMultipleSelection: false,
+        exif: false,
+      });
+
+      if (!result.canceled && result.assets?.length) {
+        setCapturedImages((prev) => {
+          const newImages = [...prev];
+          newImages[imageIndex] = result.assets[0].uri;
+          return newImages;
+        });
+        closeImagePreview();
+        Alert.alert("Success", "Image replaced successfully!");
+      }
+    } catch (error) {
+      console.error("Replace image error:", error);
+      Alert.alert("Error", "Failed to replace image.");
+    }
+  };
+  // Replace with new image from camera
+  const replaceWithNewImage = (imageIndex) => {
+    Alert.alert("Replace Image", "Take a new photo to replace this image?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Take Photo",
+        onPress: () => replaceFromCamera(imageIndex),
+      },
+    ]);
+  };
+
+  // Replace from camera
+  const replaceFromCamera = async (imageIndex) => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission denied", "Camera access is required");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        quality: 0.8,
+        // aspect: [3, 4], // Remove fixed aspect ratio to allow free rectangular cropping
+        allowsMultipleSelection: false,
+        exif: false,
+      });
+
+      if (!result.canceled && result.assets?.length) {
+        setCapturedImages((prev) => {
+          const newImages = [...prev];
+          newImages[imageIndex] = result.assets[0].uri;
+          return newImages;
+        });
+        closeImagePreview();
+        Alert.alert("Success", "Image replaced successfully!");
+      }
+    } catch (error) {
+      console.error("Replace from camera error:", error);
+      Alert.alert("Error", "Failed to capture new image.");
+    }
+  };
   // Convert images to PDF
   const convertImagesToPDF = async () => {
     if (capturedImages.length === 0) return;
@@ -257,11 +360,16 @@ const UploadModal = ({
                 <View style={styles.imageGrid}>
                   {capturedImages.map((uri, index) => (
                     <View key={index} style={styles.gridItem}>
-                      <Image
-                        source={{ uri }}
-                        style={styles.gridImage}
-                        resizeMode="cover"
-                      />
+                      <TouchableOpacity
+                        onPress={() => openImagePreview(uri, index)}
+                        style={styles.imageContainer}
+                      >
+                        <Image
+                          source={{ uri }}
+                          style={styles.gridImage}
+                          resizeMode="cover"
+                        />
+                      </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.removeButton}
                         onPress={() => removeImage(index)}
@@ -310,7 +418,7 @@ const UploadModal = ({
                 onPress={pickDocumentFile}
                 disabled={isLoading}
               >
-                <Text style={styles.actionButtonText}>Upload from files</Text>
+                <Text style={styles.actionButtonText}>Upload PDF</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -340,6 +448,68 @@ const UploadModal = ({
                 <Text style={styles.uploadButtonText}>Upload</Text>
               )}
             </TouchableOpacity>
+          )}
+          {/* Preview Modal */}
+          {previewModalVisible && (
+            <Modal
+              visible={previewModalVisible}
+              animationType="slide"
+              transparent={false}
+              onRequestClose={closeImagePreview}
+            >
+              <View style={styles.previewModal}>
+                <View style={styles.previewHeader}>
+                  <Text style={styles.previewTitle}>Image Preview</Text>
+                  <TouchableOpacity
+                    style={styles.closePreviewButton}
+                    onPress={closeImagePreview}
+                  >
+                    <CloseIconSvg />
+                  </TouchableOpacity>
+                </View>
+
+                {previewImageUri && (
+                  <View style={styles.previewImageContainer}>
+                    <Image
+                      source={{ uri: previewImageUri }}
+                      style={styles.previewImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
+
+                <View style={styles.previewActions}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.editButton]}
+                    onPress={() =>
+                      recropImage(previewImageUri, previewImageIndex)
+                    }
+                  >
+                    <Text style={styles.actionButtonText}>Edit</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.removePreviewButton]}
+                    onPress={() => {
+                      removeImage(previewImageIndex);
+                      closeImagePreview();
+                    }}
+                  >
+                    <Text style={styles.actionButtonText}>Remove</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.actionButton,
+                      styles.closePreviewActionButton,
+                    ]}
+                    onPress={closeImagePreview}
+                  >
+                    <Text style={styles.actionButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           )}
         </View>
       </View>
@@ -402,7 +572,9 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: "absolute",
-    bottom: -20,
+    overflow: "scroll",
+    borderRadius: 33,
+    bottom: -30,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -411,11 +583,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
     color: COLORS.white,
     textAlign: "center",
-    borderRadius: 8,
+    borderRadius: 33,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 12, // H4 size
-    fontWeight: "bold", // H4 weight
+    fontWeight: 700, // H4 weight
     fontFamily: "Futura",
   },
   imageScrollView: {
@@ -427,17 +599,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    padding: 16,
+    padding: 4,
+
     backgroundColor: COLORS.white,
   },
   gridItem: {
     width: "48%",
-    aspectRatio: 0.75,
+    aspectRatio: 0.75, // 3:4 ratio to match document cropping
     marginBottom: 24,
     position: "relative",
     backgroundColor: COLORS.silver,
     borderRadius: 8,
-    overflow: "hidden",
+    overflow: "visible",
+    marginVertical: 32,
     padding: 4,
   },
   gridImage: {
@@ -445,6 +619,11 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 8,
     backgroundColor: COLORS.black,
+  },
+  imageContainer: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
   },
   bottomButtonContainer: {
     flexDirection: "row",
@@ -496,7 +675,7 @@ const styles = StyleSheet.create({
   },
   buttonGroup: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
     gap: 16,
     marginVertical: 16,
   },
@@ -516,13 +695,11 @@ const styles = StyleSheet.create({
   },
   actionButtonHalf: {
     flex: 1,
-    minWidth: 160,
     minHeight: 42,
   },
   actionButtonTakePicture: {
     backgroundColor: COLORS.green,
     flex: 1,
-    minWidth: 127,
     minHeight: 42,
   },
   fileSelected: {
@@ -553,6 +730,63 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+
+  // Preview modal styles
+  previewModal: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    paddingTop: Platform.OS === "ios" ? 50 : 30,
+  },
+  previewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray,
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.black,
+    fontFamily: "Futura",
+  },
+  closePreviewButton: {
+    padding: 5,
+  },
+  previewImageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.black,
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+  },
+  previewActions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray,
+  },
+  editButton: {
+    backgroundColor: COLORS.blue,
+    minWidth: 80,
+  },
+  removePreviewButton: {
+    backgroundColor: COLORS.red,
+    minWidth: 80,
+  },
+  closePreviewActionButton: {
+    backgroundColor: COLORS.slate,
+    minWidth: 80,
   },
 });
 
