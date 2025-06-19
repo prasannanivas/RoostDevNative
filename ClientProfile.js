@@ -492,13 +492,18 @@ export default function ClientProfile({ onClose }) {
         <CloseButton onPress={handleClose} style={styles.closeButton} />
       )}
       {/* Avatar & Title */}
+      <View style={styles.topMargin}></View>
       <View style={styles.avatarContainer}>
         <View style={styles.avatarCircle}>
           <Text style={styles.avatarText}>{getInitials()}</Text>
         </View>
         <Text style={styles.profileTitle}>Your Profile</Text>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={{ zIndex: 20 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Personal Info Card */}
         <View style={styles.card}>
           <Text style={styles.profileSubtitle}>
@@ -957,9 +962,17 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 12,
   },
+
+  topMargin: {
+    width: "110%",
+    height: 60, // Space for avatar and title
+    backgroundColor: COLORS.black,
+    position: "absolute",
+    top: 0,
+  },
   closeButton: {
     position: "absolute",
-    top: 64,
+    top: 66,
     right: 16,
     width: 37,
     height: 37,
@@ -968,8 +981,12 @@ const styles = StyleSheet.create({
     zIndex: 9999, // Ensure it's always on top
   },
   avatarContainer: {
+    position: "absolute",
+    top: 66,
+    left: 0,
+    right: 0,
     alignItems: "center",
-    marginBottom: 32,
+    backgroundColor: COLORS.background,
     zIndex: 1,
   },
   avatarCircle: {
@@ -1003,8 +1020,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   scrollContent: {
+    marginTop: 160 /* Add padding to account for the avatar container height */,
     paddingBottom: 48,
     zIndex: 10,
+    backgroundColor: COLORS.background,
   },
   // Card style
   card: {
@@ -1093,7 +1112,7 @@ const styles = StyleSheet.create({
   }, // Buttons
   buttonContainer: {
     marginBottom: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
   },
   buttonRow: {
     flexDirection: "row",
@@ -1127,8 +1146,8 @@ const styles = StyleSheet.create({
   },
   passwordButtonText: {
     color: COLORS.green,
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
   /* Logout Button */
@@ -1143,8 +1162,8 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: COLORS.green,
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
 

@@ -418,7 +418,7 @@ const UploadModal = ({
                 onPress={pickDocumentFile}
                 disabled={isLoading}
               >
-                <Text style={styles.actionButtonText}>Upload PDF</Text>
+                <Text style={styles.actionButtonText}>Upload from files</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 24,
     width: "90%",
     maxWidth: 400,
@@ -694,12 +694,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionButtonHalf: {
-    flex: 1,
+    flex: 160,
     minHeight: 42,
   },
   actionButtonTakePicture: {
     backgroundColor: COLORS.green,
-    flex: 1,
+    flex: 127,
     minHeight: 42,
   },
   fileSelected: {

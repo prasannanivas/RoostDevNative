@@ -220,6 +220,7 @@ const ClientHome = ({ questionnaireData }) => {
         badgeColor={COLORS.orange}
         showBadge={unreadCount > 0}
         badgeCount={unreadCount}
+        variant="filled"
         onPress={handleNotifications}
         style={styles.notificationButton}
       />
@@ -527,10 +528,8 @@ const ClientHome = ({ questionnaireData }) => {
         statusBarTranslucent
         style={styles.sideModal}
       >
-        <View style={styles.profileModalContainer}>
-          <View style={styles.profileModalContent}>
-            <ClientProfile onClose={() => setShowProfile(false)} />
-          </View>
+        <View style={styles.profileModalContent}>
+          <ClientProfile onClose={() => setShowProfile(false)} />
         </View>
       </ReactNativeModal>
       {/* Upload Modal */}
@@ -1042,7 +1041,7 @@ const styles = StyleSheet.create({
   },
   profileModalContent: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: "transparent",
     width: "100%",
   },
   closeProfileButton: {
