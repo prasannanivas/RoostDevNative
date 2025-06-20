@@ -18,6 +18,7 @@ import { useRealtor } from "../context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Svg, { Circle, Path } from "react-native-svg";
 
 // Design System Colors
 const COLORS = {
@@ -104,6 +105,25 @@ export default function RealtorProfile({ onClose }) {
   useEffect(() => {
     loadNotificationPreferences();
   }, []);
+
+  const CloseButton = ({ onPress, style }) => {
+    return (
+      <TouchableOpacity
+        style={[style, { zIndex: 9999 }]} // Keep high z-index to ensure it's on top
+        onPress={onPress}
+        activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+          <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
+          <Path
+            d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+            fill="#A9A9A9"
+          />
+        </Svg>
+      </TouchableOpacity>
+    );
+  };
 
   // Load notification preferences from AsyncStorage
   const loadNotificationPreferences = async () => {
@@ -747,11 +767,14 @@ export default function RealtorProfile({ onClose }) {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} bounces={false}>
+    <View style={styles.container}>
       {/* Close button */}
-      <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-        <Text style={styles.closeButtonText}>✕</Text>
-      </TouchableOpacity>
+
+      {onClose && (
+        <CloseButton onPress={handleClose} style={styles.closeButton} />
+      )}
+
+      <View style={styles.topMargin}></View>
       {/* Header: Avatar, Name, Info - Updated to match Figma Android design */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfilePicture}>
@@ -766,7 +789,8 @@ export default function RealtorProfile({ onClose }) {
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarInitial}>
                 {formData.firstName
-                  ? formData.firstName.charAt(0).toUpperCase()
+                  ? formData.firstName.charAt(0).toUpperCase() +
+                    formData.lastName.charAt(0).toUpperCase()
                   : "R"}
               </Text>
             </View>
@@ -799,342 +823,354 @@ export default function RealtorProfile({ onClose }) {
         </View>
       ) : null}
       {/* Personal Info (Disabled fields for name, email, phone, location) */}
-      <View style={styles.section}>
-        <Text style={styles.sectionSubTitle}>
-          Keep your personal info up-to-date
-        </Text>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.firstName}
-            placeholder="First Name"
-            editable={false}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.lastName}
-            editable={false}
-            placeholder="Last Name"
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <View style={styles.emailContainer}>
+
+      <ScrollView
+        style={{ zIndex: 20 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.section}>
+          <Text style={styles.sectionSubTitle}>
+            Keep your personal info up-to-date
+          </Text>
+          <View style={styles.formGroup}>
             <TextInput
-              placeholder="Email"
-              style={[styles.emailInput, { backgroundColor: COLORS.silver }]}
-              value={formData.email}
+              style={[styles.input, { backgroundColor: COLORS.silver }]}
+              value={formData.firstName}
+              placeholder="First Name"
               editable={false}
             />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={[styles.input, { backgroundColor: COLORS.silver }]}
+              value={formData.lastName}
+              editable={false}
+              placeholder="Last Name"
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <View style={styles.emailContainer}>
+              <TextInput
+                placeholder="Email"
+                style={[styles.emailInput, { backgroundColor: COLORS.silver }]}
+                value={formData.email}
+                editable={false}
+              />
+              <TouchableOpacity
+                style={styles.changeEmailButton}
+                onPress={handleEmailChangeStart}
+              >
+                <Text style={styles.changeEmailText}>Change</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={[styles.input, { backgroundColor: COLORS.silver }]}
+              value={formData.phone}
+              editable={false}
+              placeholder="Phone"
+            />
+          </View>
+          <Text style={styles.sectionSubTitle}>Send my rewards to:</Text>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.rewardsAddress}
+              placeholder="Address"
+              onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.rewardsCity}
+              placeholder="City"
+              onChangeText={(text) => handleFieldChange("rewardsCity", text)}
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.rewardsPostalCode}
+              placeholder="Postal Code"
+              onChangeText={(text) =>
+                handleFieldChange("rewardsPostalCode", text)
+              }
+            />
+          </View>
+        </View>
+        {/* Brokerage Info (Editable) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Brokerage Information</Text>
+          <Text style={styles.sectionSubTitle}>
+            Make sure thing info is complete and up to date
+          </Text>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={[
+                styles.input,
+                { backgroundColor: "#E4E4E4", borderColor: "#707070" },
+              ]}
+              value={"RECO ID - " + formData.licenseNumber}
+              editable={false}
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.brokerageName}
+              placeholder="Brokerage Name"
+              onChangeText={(text) => handleFieldChange("brokerageName", text)}
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              placeholder="Brokerage Address"
+              value={formData.brokerageAddress}
+              onChangeText={(text) =>
+                handleFieldChange("brokerageAddress", text)
+              }
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.brokerageCity}
+              placeholder="Brokerage City"
+              onChangeText={(text) => handleFieldChange("brokerageCity", text)}
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              placeholder="Brokerage Postal Code"
+              style={styles.input}
+              value={formData.brokeragePostalCode}
+              onChangeText={(text) =>
+                handleFieldChange("brokeragePostalCode", text)
+              }
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.brokeragePhone}
+              placeholder="Brokerage Phone"
+              onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
+            />
+          </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              style={styles.input}
+              value={formData.brokerageEmail}
+              placeholder="Brokerage Email"
+              keyboardType="email-address"
+              onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
+            />
+          </View>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Notification Preferences (Push Notifications) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+
+          {/* Client Accept */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Accept</Text>
             <TouchableOpacity
-              style={styles.changeEmailButton}
-              onPress={handleEmailChangeStart}
+              onPress={() => toggleNotificationPref("clientAccept")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.clientAccept && styles.toggleSwitchOn,
+              ]}
             >
-              <Text style={styles.changeEmailText}>Change</Text>
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.clientAccept && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Client Pre-approval */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Pre-approval</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("clientPreApproval")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.clientPreApproval && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.clientPreApproval && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Marketing Notifications */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Marketing Notifications</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("marketingNotifications")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.marketingNotifications &&
+                  styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.marketingNotifications &&
+                    styles.toggleThumbOn,
+                ]}
+              />
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={[styles.input, { backgroundColor: COLORS.silver }]}
-            value={formData.phone}
-            editable={false}
-            placeholder="Phone"
-          />
-        </View>
-        <Text style={styles.sectionSubTitle}>Send my rewards to:</Text>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.rewardsAddress}
-            placeholder="Address"
-            onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.rewardsCity}
-            placeholder="City"
-            onChangeText={(text) => handleFieldChange("rewardsCity", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.rewardsPostalCode}
-            placeholder="Postal Code"
-            onChangeText={(text) =>
-              handleFieldChange("rewardsPostalCode", text)
-            }
-          />
-        </View>
-      </View>
-      {/* Brokerage Info (Editable) */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Brokerage Information</Text>
-        <Text style={styles.sectionSubTitle}>
-          Make sure thing info is complete and up to date
-        </Text>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={[
-              styles.input,
-              { backgroundColor: "#E4E4E4", borderColor: "#707070" },
-            ]}
-            value={"RECO ID - " + formData.licenseNumber}
-            editable={false}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageName}
-            placeholder="Brokerage Name"
-            onChangeText={(text) => handleFieldChange("brokerageName", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            placeholder="Brokerage Address"
-            value={formData.brokerageAddress}
-            onChangeText={(text) => handleFieldChange("brokerageAddress", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageCity}
-            placeholder="Brokerage City"
-            onChangeText={(text) => handleFieldChange("brokerageCity", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            placeholder="Brokerage Postal Code"
-            style={styles.input}
-            value={formData.brokeragePostalCode}
-            onChangeText={(text) =>
-              handleFieldChange("brokeragePostalCode", text)
-            }
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.brokeragePhone}
-            placeholder="Brokerage Phone"
-            onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
-          />
-        </View>
-        <View style={styles.formGroup}>
-          <TextInput
-            style={styles.input}
-            value={formData.brokerageEmail}
-            placeholder="Brokerage Email"
-            keyboardType="email-address"
-            onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
-          />
-        </View>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </View>
-      {/* Notification Preferences (Push Notifications) */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifications</Text>
+        {/* Email Notifications Card */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Email</Text>
+          <Text style={styles.sectionSubTitle}>
+            Manage what emails you receive from us
+          </Text>
 
-        {/* Client Accept */}
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Client Accept</Text>
-          <TouchableOpacity
-            onPress={() => toggleNotificationPref("clientAccept")}
-            style={[
-              styles.toggleSwitch,
-              notificationPrefs.clientAccept && styles.toggleSwitchOn,
-            ]}
-          >
-            <View
+          {/* Terms of Service Updates */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Terms of Service Updates</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("termsOfServiceEmails")}
               style={[
-                styles.toggleThumb,
-                notificationPrefs.clientAccept && styles.toggleThumbOn,
+                styles.toggleSwitch,
+                notificationPrefs.termsOfServiceEmails && styles.toggleSwitchOn,
               ]}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Client Pre-approval */}
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Client Pre-approval</Text>
-          <TouchableOpacity
-            onPress={() => toggleNotificationPref("clientPreApproval")}
-            style={[
-              styles.toggleSwitch,
-              notificationPrefs.clientPreApproval && styles.toggleSwitchOn,
-            ]}
-          >
-            <View
-              style={[
-                styles.toggleThumb,
-                notificationPrefs.clientPreApproval && styles.toggleThumbOn,
-              ]}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Marketing Notifications */}
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Marketing Notifications</Text>
-          <TouchableOpacity
-            onPress={() => toggleNotificationPref("marketingNotifications")}
-            style={[
-              styles.toggleSwitch,
-              notificationPrefs.marketingNotifications && styles.toggleSwitchOn,
-            ]}
-          >
-            <View
-              style={[
-                styles.toggleThumb,
-                notificationPrefs.marketingNotifications &&
-                  styles.toggleThumbOn,
-              ]}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-      {/* Email Notifications Card */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Email</Text>
-        <Text style={styles.sectionSubTitle}>
-          Manage what emails you receive from us
-        </Text>
-
-        {/* Terms of Service Updates */}
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Terms of Service Updates</Text>
-          <TouchableOpacity
-            onPress={() => toggleNotificationPref("termsOfServiceEmails")}
-            style={[
-              styles.toggleSwitch,
-              notificationPrefs.termsOfServiceEmails && styles.toggleSwitchOn,
-            ]}
-          >
-            <View
-              style={[
-                styles.toggleThumb,
-                notificationPrefs.termsOfServiceEmails && styles.toggleThumbOn,
-              ]}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Client Pre-approval Emails */}
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Client Pre-approval</Text>
-          <TouchableOpacity
-            onPress={() => toggleNotificationPref("clientPreApprovalEmails")}
-            style={[
-              styles.toggleSwitch,
-              notificationPrefs.clientPreApprovalEmails &&
-                styles.toggleSwitchOn,
-            ]}
-          >
-            <View
-              style={[
-                styles.toggleThumb,
-                notificationPrefs.clientPreApprovalEmails &&
-                  styles.toggleThumbOn,
-              ]}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Marketing Emails */}
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Marketing Emails</Text>
-          <TouchableOpacity
-            onPress={() => toggleNotificationPref("marketingEmails")}
-            style={[
-              styles.toggleSwitch,
-              notificationPrefs.marketingEmails && styles.toggleSwitchOn,
-            ]}
-          >
-            <View
-              style={[
-                styles.toggleThumb,
-                notificationPrefs.marketingEmails && styles.toggleThumbOn,
-              ]}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Invite Code</Text>
-        {/* Invite Code Section - Added for realtor invites */}
-        {realtor?.inviteCode && (
-          <View style={styles.inviteCodeContainer}>
-            <Text style={styles.inviteCodeLabel}>Your Invite Code:</Text>
-            <View style={styles.inviteCodeWrapper}>
-              <Text style={styles.inviteCode}>{realtor.inviteCode}</Text>
-              <TouchableOpacity
-                style={styles.copyButton}
-                onPress={copyInviteCode}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.copyButtonText}>
-                  {codeCopied ? "Copied!" : "Copy"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.inviteCodeHint}>
-              Share this code with clients and realtors to earn rewards
-            </Text>
-            {shareableLink && (
-              <View style={styles.shareableLinkContainer}>
-                <Text style={styles.shareableLinkLabel}>
-                  Shareable Referral Link:
-                </Text>
-                <View style={styles.shareableLinkWrapper}>
-                  <Text
-                    style={styles.shareableLink}
-                    numberOfLines={1}
-                    ellipsizeMode="middle"
-                  >
-                    {shareableLink}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.copyButton}
-                    onPress={copyShareableLink}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.copyButtonText}>
-                      {linkCopied ? "Copied!" : "Copy"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.inviteCodeHint}>
-                  Share this link with potential clients for easy referrals
-                </Text>
-              </View>
-            )}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.termsOfServiceEmails &&
+                    styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
           </View>
-        )}
-      </View>
-      {/* Password Management */}
-      <View>
-        <TouchableOpacity
-          style={styles.changePasswordButton}
-          onPress={() => setIsPasswordModalOpen(true)}
-        >
-          <Text style={styles.changePasswordButtonText}>Change Password</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Client Pre-approval Emails */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Pre-approval</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("clientPreApprovalEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.clientPreApprovalEmails &&
+                  styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.clientPreApprovalEmails &&
+                    styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Marketing Emails */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Marketing Emails</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("marketingEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.marketingEmails && styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.marketingEmails && styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Invite Code</Text>
+          {/* Invite Code Section - Added for realtor invites */}
+          {realtor?.inviteCode && (
+            <View style={styles.inviteCodeContainer}>
+              <Text style={styles.inviteCodeLabel}>Your Invite Code:</Text>
+              <View style={styles.inviteCodeWrapper}>
+                <Text style={styles.inviteCode}>{realtor.inviteCode}</Text>
+                <TouchableOpacity
+                  style={styles.copyButton}
+                  onPress={copyInviteCode}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.copyButtonText}>
+                    {codeCopied ? "Copied!" : "Copy"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.inviteCodeHint}>
+                Share this code with clients and realtors to earn rewards
+              </Text>
+              {shareableLink && (
+                <View style={styles.shareableLinkContainer}>
+                  <Text style={styles.shareableLinkLabel}>
+                    Shareable Referral Link:
+                  </Text>
+                  <View style={styles.shareableLinkWrapper}>
+                    <Text
+                      style={styles.shareableLink}
+                      numberOfLines={1}
+                      ellipsizeMode="middle"
+                    >
+                      {shareableLink}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.copyButton}
+                      onPress={copyShareableLink}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.copyButtonText}>
+                        {linkCopied ? "Copied!" : "Copy"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.inviteCodeHint}>
+                    Share this link with potential clients for easy referrals
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+        {/* Password Management */}
+        <View>
+          <TouchableOpacity
+            style={styles.changePasswordButton}
+            onPress={() => setIsPasswordModalOpen(true)}
+          >
+            <Text style={styles.changePasswordButtonText}>Change Password</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
       {/* Password Modal */}
       <Modal visible={isPasswordModalOpen} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -1343,52 +1379,80 @@ export default function RealtorProfile({ onClose }) {
           <Text style={styles.autoSaveText}>Changes saved!</Text>
         </Animated.View>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   /* Container for everything */
   container: {
-    backgroundColor: "#F6F6F6",
+    backgroundColor: COLORS.background,
     flex: 1, // Changed from width: "100%" to flex: 1
-    paddingVertical: 100,
+    paddingTop: 60,
+    paddingHorizontal: 12,
+  },
+
+  topMargin: {
+    width: "110%",
+    height: 60, // Space for avatar and title
+    backgroundColor: COLORS.black,
+    position: "absolute",
+    top: 0,
+  },
+
+  closeButton: {
+    position: "absolute",
+    top: 66,
+    right: 16,
+    width: 37,
+    height: 37,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999, // Ensure it's always on top
   },
 
   /* Header area with avatar and name */
   header: {
-    flexDirection: "column",
+    position: "absolute",
+    top: 66,
+    left: 0,
+    right: 0,
     alignItems: "center",
-    marginBottom: 24,
-    flex: 1,
-    paddingHorizontal: 16,
-    height: 172,
+    backgroundColor: COLORS.background,
+    zIndex: 1,
+    minHeight: 172,
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 50, // Make it circular per design
-    backgroundColor: COLORS.green,
+    marginTop: 16,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 20,
+    marginBottom: 16,
   },
   avatarInitial: {
     color: COLORS.white,
-    fontSize: 32,
-    borderRadius: 50,
+    fontSize: 24,
     fontWeight: "bold",
     fontFamily: "Futura",
   },
   avatar: {
     width: 120,
     height: 120,
-    borderRadius: 50, // Make it circular per design
-    marginRight: 20,
+    borderRadius: 100, // Make it circular per design
+    marginTop: 16,
   },
   headerTextContainer: {
     flex: 1,
     justifyContent: "center",
+  },
+  scrollContent: {
+    marginTop: 186 /* Add padding to account for the avatar container height */,
+    paddingBottom: 48,
+    zIndex: 10,
+    backgroundColor: COLORS.background,
   },
   realtorName: {
     fontSize: 24,
@@ -1432,11 +1496,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     backgroundColor: COLORS.white,
     padding: 16,
+    marginHorizontal: 4,
     gap: 8,
     borderRadius: 8,
     shadowColor: "#000000",
     shadowOpacity: 0.25,
-    shadowOffset: { width: 2, height: 0 }, // Center shadow for all 4 sides
+    shadowOffset: { width: 0, height: 0 }, // 0px 0px offset
     shadowRadius: 4,
     elevation: 4, // For Android
   },
@@ -1575,33 +1640,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginTop: 16,
     marginBottom: 16,
-  },
-  /* Close button */
-  closeButton: {
-    position: "absolute",
-    right: 16,
-    top: 48,
-    width: 48,
-    borderRadius: 50,
-    backgroundColor: COLORS.silver,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-    elevation: 3,
-    shadowColor: COLORS.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: COLORS.black,
-    fontWeight: "bold",
-    fontFamily: "Futura",
-    lineHeight: 48,
   },
 
   /* Loading fallback */

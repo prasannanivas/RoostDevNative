@@ -449,6 +449,7 @@ Looking forward to working with you!`;
   return (
     <View style={styles.container}>
       {/* ================= TOP HEADER ================= */}
+
       <View style={styles.headerContainer}>
         <TouchableOpacity
           style={styles.userInfoContainer}
@@ -498,101 +499,101 @@ Looking forward to working with you!`;
         />
       </View>
       {/* ================= INVITE REALTORS BANNER ================= */}
-      <View style={styles.inviteBanner}>
-        <TouchableOpacity
-          style={styles.inviteRealtorsButton}
-          onPress={() => setShowInviteForm(true)}
+      <ScrollView>
+        <View style={styles.inviteBanner}>
+          <TouchableOpacity
+            style={styles.inviteRealtorsButton}
+            onPress={() => setShowInviteForm(true)}
+          >
+            <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
+          </TouchableOpacity>
+          <Text style={styles.inviteBannerText}>
+            Earn an additional 5% pts from any activity from your fellow realtor
+            referrals*
+          </Text>
+        </View>
+        {/* ================= TITLE: CLIENTS ================= */}
+        <View style={styles.clientsTitleContainer}>
+          <Text style={styles.clientsTitle}>Clients</Text>
+          <Text style={styles.ActiveText}>ACTIVE</Text>
+        </View>
+        {/* ================= SCROLLABLE CLIENT LIST ================= */}
+        <ScrollView
+          style={styles.clientsScrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.green]} // Android
+              tintColor={COLORS.green} // iOS
+            />
+          }
         >
-          <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
-        </TouchableOpacity>
-        <Text style={styles.inviteBannerText}>
-          Earn an additional 5% pts from any activity from your fellow realtor
-          referrals*
-        </Text>
-      </View>
-      {/* ================= TITLE: CLIENTS ================= */}
-      <View style={styles.clientsTitleContainer}>
-        <Text style={styles.clientsTitle}>Clients</Text>
-        <Text style={{ color: "#666666", marginTop: 5, fontSize: 16 }}>
-          ACTIVE
-        </Text>
-      </View>
-      {/* ================= SCROLLABLE CLIENT LIST ================= */}
-      <ScrollView
-        style={styles.clientsScrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.green]} // Android
-            tintColor={COLORS.green} // iOS
-          />
-        }
-      >
-        {/* List of Clients */}
-        {invited.map((client) => {
-          const docCount = client.documents
-            ? getDocumentCounts(client.documents)
-            : { approved: 0, pending: 0 };
+          {/* List of Clients */}
+          {invited.map((client) => {
+            const docCount = client.documents
+              ? getDocumentCounts(client.documents)
+              : { approved: 0, pending: 0 };
 
-          const statusText =
-            client.status === "PENDING"
-              ? "Invited"
-              : client.clientAddress === null
-              ? "Account Deleted"
-              : client.status === "ACCEPTED" &&
-                (!client.documents ||
-                  client.documents.length === 0 ||
-                  client?.clientAddress !== null)
-              ? "Signed Up"
-              : client.status === "ACCEPTED" && client.documents.length > 0
-              ? `${docCount.approved}/10 Documents`
-              : client.clientAddress === null
-              ? "Account Deleted"
-              : client.status;
+            const statusText =
+              client.status === "PENDING"
+                ? "Invited"
+                : client.clientAddress === null
+                ? "Account Deleted"
+                : client.status === "ACCEPTED" &&
+                  (!client.documents ||
+                    client.documents.length === 0 ||
+                    client?.clientAddress !== null)
+                ? "Signed Up"
+                : client.status === "ACCEPTED" && client.documents.length > 0
+                ? `${docCount.approved}/10 Documents`
+                : client.clientAddress === null
+                ? "Account Deleted"
+                : client.status;
 
-          return (
-            <TouchableOpacity
-              key={client._id}
-              style={styles.clientCard}
-              onPress={() => handleClientClick(client)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.initialsCircle}>
-                <Text style={styles.initialsText}>
-                  {getInitials(client.referenceName)}
-                </Text>
-              </View>
-              <View style={styles.clientDetails}>
-                <Text style={styles.clientName}>{client.referenceName}</Text>
-                {client.status === "ACCEPTED" &&
-                client.documents &&
-                client.documents.length > 0 ? (
-                  <MidProgressBar
-                    text={`${docCount.approved}/10 DOCUMENTS`}
-                    progress={(docCount.approved / 10) * 100}
-                    style={styles.statusProgressBar}
-                  />
-                ) : (
-                  <EmptyProgressBar
-                    text={statusText.toUpperCase()}
-                    progress={
-                      client.status === "PENDING"
-                        ? 10
-                        : client.status === "ACCEPTED"
-                        ? 30
-                        : 50
-                    }
-                    style={styles.statusProgressBar}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+            return (
+              <TouchableOpacity
+                key={client._id}
+                style={styles.clientCard}
+                onPress={() => handleClientClick(client)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.initialsCircle}>
+                  <Text style={styles.initialsText}>
+                    {getInitials(client.referenceName)}
+                  </Text>
+                </View>
+                <View style={styles.clientDetails}>
+                  <Text style={styles.clientName}>{client.referenceName}</Text>
+                  {client.status === "ACCEPTED" &&
+                  client.documents &&
+                  client.documents.length > 0 ? (
+                    <MidProgressBar
+                      text={`${docCount.approved}/10 DOCUMENTS`}
+                      progress={(docCount.approved / 10) * 100}
+                      style={styles.statusProgressBar}
+                    />
+                  ) : (
+                    <EmptyProgressBar
+                      text={statusText.toUpperCase()}
+                      progress={
+                        client.status === "PENDING"
+                          ? 10
+                          : client.status === "ACCEPTED"
+                          ? 30
+                          : 50
+                      }
+                      style={styles.statusProgressBar}
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
       </ScrollView>
-      {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
       <TouchableOpacity
         style={styles.floatingAddButton}
         onPress={() => setShowForm(true)}
@@ -612,6 +613,7 @@ Looking forward to working with you!`;
           <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
         </View>
       </TouchableOpacity>
+
       {/* ================== MODALS ================== */}
       {/* Profile Modal - Slides from left using react-native-modal */}
       <ReactNativeModal
@@ -630,12 +632,10 @@ Looking forward to working with you!`;
         style={styles.sideModal}
       >
         <View style={styles.modalContainer}>
-          <ScrollView style={styles.modalContent} bounces={false}>
-            <RealtorProfile
-              realtor={realtorFromContext.realtorInfo || {}}
-              onClose={() => setShowProfile(false)}
-            />
-          </ScrollView>
+          <RealtorProfile
+            realtor={realtorFromContext.realtorInfo || {}}
+            onClose={() => setShowProfile(false)}
+          />
         </View>
       </ReactNativeModal>
       {/* Rewards Modal - Slides from right */}
@@ -1088,10 +1088,10 @@ const styles = StyleSheet.create({
   // Invite Banner
   inviteBanner: {
     backgroundColor: COLORS.white,
+    minHeight: 80,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
     borderBottomLeftRadius: 4,
@@ -1099,13 +1099,13 @@ const styles = StyleSheet.create({
     shadowColor: "#1D2327",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
-    shadowRadius: 2,
+    shadowRadius: 4,
     elevation: 4,
   },
   inviteRealtorsButton: {
     backgroundColor: COLORS.green,
     paddingVertical: 13,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     borderRadius: 33,
     marginRight: 16,
     gap: 10,
@@ -1116,16 +1116,16 @@ const styles = StyleSheet.create({
   },
   inviteRealtorsText: {
     color: COLORS.white,
-    fontWeight: "600",
-    fontSize: 16,
+    fontWeight: "700",
+    fontSize: 12,
     fontFamily: "Futura",
     textAlign: "center", // Ensure text is centered
     flexShrink: 1, // Allow text to shrink if needed
   },
   inviteBannerText: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: "500", // P weight
+    fontSize: 12,
+    fontWeight: 500, // P weight
     color: COLORS.green,
     lineHeight: 20,
     fontFamily: "Futura",
@@ -1138,17 +1138,26 @@ const styles = StyleSheet.create({
   },
   clientsTitle: {
     fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+    fontWeight: 700, // H1 weight
     color: COLORS.black,
     fontFamily: "Futura",
   },
+  ActiveText: {
+    fontSize: 14, // P size
+    fontWeight: 700, // P weight
+    color: COLORS.slate,
+    fontFamily: "Futura",
+    marginTop: 24,
+  },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingVertical: 16, // Increased vertical padding to add more space
+    paddingBottom: 64, // Increased vertical padding to add more space
     gap: 16, // Gap between items in the scroll view
   },
   clientsScrollView: {
     flex: 1,
+    paddingBottom: 16, // Padding at the bottom of the scroll view
+    marginBottom: 64, // Space for the floating button
   },
   clientCard: {
     alignSelf: "center",
@@ -1217,9 +1226,9 @@ const styles = StyleSheet.create({
   },
   floatingAddButton: {
     position: "absolute",
-    bottom: 24,
+    bottom: 34,
     right: 24,
-    width: 271,
+    minWidth: 271,
     height: 56,
     borderRadius: 30,
     backgroundColor: "#F0913A", // Orange color
