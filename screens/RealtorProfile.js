@@ -970,9 +970,9 @@ export default function RealtorProfile({ onClose }) {
               onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
             />
           </View>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+          {/* <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         {/* Notification Preferences (Push Notifications) */}
         <View style={styles.section}>
@@ -1769,14 +1769,13 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     paddingVertical: 12,
     paddingHorizontal: 16,
-
     justifyContent: "center",
     alignItems: "center",
   },
   changeEmailText: {
     color: COLORS.green,
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
   pasteInstruction: {
