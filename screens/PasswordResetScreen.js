@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInputMask } from "react-native-masked-text";
 import Logo from "../components/Logo";
+import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
 /**
  * Color palette from UX team design system
@@ -449,14 +450,22 @@ export default function PasswordResetScreen({ navigation }) {
               setFormattedPhone("+1" + text.replace(/\D/g, ""));
             }}
             keyboardType="phone-pad"
-          />
-        </View>
+          />        </View>
       } */}
-      {error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
+      <AnimatedDropdown
+        visible={!!error}
+        style={!!error ? styles.errorBox : {}}
+        maxHeight={100}
+        contentKey={error}
+      >
+        <Text
+          style={styles.errorText}
+          accessible={true}
+          accessibilityLabel="Password reset error"
+        >
+          {error}
+        </Text>
+      </AnimatedDropdown>
     </>
   );
 
@@ -514,11 +523,20 @@ export default function PasswordResetScreen({ navigation }) {
             : "Resend code"}
         </Text>
       </TouchableOpacity>
-      {error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
+      <AnimatedDropdown
+        visible={!!error}
+        style={!!error ? styles.errorBox : {}}
+        maxHeight={100}
+        contentKey={error}
+      >
+        <Text
+          style={styles.errorText}
+          accessible={true}
+          accessibilityLabel="Password reset error"
+        >
+          {error}
+        </Text>
+      </AnimatedDropdown>
       {/* Comment out phone verification note */}
       {/* {contactMethod === "phone" && (
         <Text style={styles.verificationNote}>
@@ -552,11 +570,20 @@ export default function PasswordResetScreen({ navigation }) {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      {error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
+      <AnimatedDropdown
+        visible={!!error}
+        style={!!error ? styles.errorBox : {}}
+        maxHeight={100}
+        contentKey={error}
+      >
+        <Text
+          style={styles.errorText}
+          accessible={true}
+          accessibilityLabel="Password reset error"
+        >
+          {error}
+        </Text>
+      </AnimatedDropdown>
       <Text style={styles.passwordRequirement}>
         Password must be at least 8 characters long
       </Text>

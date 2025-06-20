@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInputMask } from "react-native-masked-text";
 import Logo from "../components/Logo";
+import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
 /**
  * Color palette from UX team design system
@@ -313,15 +314,19 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             onSubmitEditing={() => focusNextInput(lastNameInputRef)}
             blurOnSubmit={false}
           />
-          {firstNameError ? (
-            <View
-              style={styles.errorBox}
+          <AnimatedDropdown
+            visible={!!firstNameError}
+            style={!!firstNameError ? styles.errorBox : {}}
+            maxHeight={100}
+          >
+            <Text
+              style={styles.errorText}
               accessible={true}
               accessibilityLabel="First name error"
             >
-              <Text style={styles.errorText}>{firstNameError}</Text>
-            </View>
-          ) : null}
+              {firstNameError}
+            </Text>
+          </AnimatedDropdown>
           <TextInput
             ref={lastNameInputRef}
             style={[styles.input, isLoading && styles.inputDisabled]}
@@ -336,15 +341,19 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             onSubmitEditing={() => focusNextInput(phoneInputRef)}
             blurOnSubmit={false}
           />
-          {lastNameError ? (
-            <View
-              style={styles.errorBox}
+          <AnimatedDropdown
+            visible={!!lastNameError}
+            style={!!lastNameError ? styles.errorBox : {}}
+            maxHeight={100}
+          >
+            <Text
+              style={styles.errorText}
               accessible={true}
               accessibilityLabel="Last name error"
             >
-              <Text style={styles.errorText}>{lastNameError}</Text>
-            </View>
-          ) : null}
+              {lastNameError}
+            </Text>
+          </AnimatedDropdown>
           <View style={styles.phoneContainer}>
             <Text style={styles.phonePrefix}>+1</Text>
             <TextInputMask
@@ -394,24 +403,32 @@ export default function SignUpDetailsScreen({ navigation, route }) {
             returnKeyType="done"
             onSubmitEditing={dismissKeyboard}
           />
-          {emailError ? (
-            <View
-              style={styles.errorBox}
+          <AnimatedDropdown
+            visible={!!emailError}
+            style={!!emailError ? styles.errorBox : {}}
+            maxHeight={100}
+          >
+            <Text
+              style={styles.errorText}
               accessible={true}
               accessibilityLabel="Email error"
             >
-              <Text style={styles.errorText}>{emailError}</Text>
-            </View>
-          ) : null}
-          {phoneError ? (
-            <View
-              style={styles.errorBox}
+              {emailError}
+            </Text>
+          </AnimatedDropdown>
+          <AnimatedDropdown
+            visible={!!phoneError}
+            style={!!phoneError ? styles.errorBox : {}}
+            maxHeight={100}
+          >
+            <Text
+              style={styles.errorText}
               accessible={true}
               accessibilityLabel="Phone error"
             >
-              <Text style={styles.errorText}>{phoneError}</Text>
-            </View>
-          ) : null}
+              {phoneError}
+            </Text>
+          </AnimatedDropdown>
         </ScrollView>
       </KeyboardAvoidingView>
       <View

@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
 import Logo from "../components/Logo";
+import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
 /**
  * Color palette from UX team design system
@@ -98,14 +99,20 @@ export default function PasswordScreen({ navigation, route }) {
       if (response.data) {
         navigation.navigate("Success");
       } else {
+        setPasswordError("");
         setPasswordError("Registration failed. Please try again.");
+
         setIsLoading(false);
       }
     } catch (error) {
       console.error("Error registering user:", error);
+
+      setPasswordError("");
+      // Clear previous error before setting new one
       setPasswordError(
         `Registration failed: ${error.response?.data?.error || "Unknown error"}`
       );
+
       setIsLoading(false);
     }
   };
@@ -146,21 +153,30 @@ export default function PasswordScreen({ navigation, route }) {
       const hasUpperCase = /[A-Z]/.test(password);
 
       if (password.length < 8) {
+        setPasswordError("");
+        // Clear previous error before setting new one
         setPasswordError(
           "The Password should be at 8 characters long including a number and an uppercase letter"
         );
+
         return;
       }
 
       if (!hasNumber || !hasUpperCase) {
+        setPasswordError("");
+        // Clear previous error before setting new one
         setPasswordError(
           "The Password should be at 8 characters long including a number and an uppercase letter"
         );
+
         return;
       }
 
       if (password !== confirmPassword) {
+        setPasswordError("");
+        // Clear previous error before setting new one
         setPasswordError("Passwords do not match");
+
         return;
       }
 
@@ -337,15 +353,20 @@ export default function PasswordScreen({ navigation, route }) {
               </View>
             </View>
           )}
-          {passwordError ? (
-            <View
-              style={styles.errorBox}
+          <AnimatedDropdown
+            visible={!!passwordError}
+            style={!!passwordError ? styles.errorBox : {}}
+            maxHeight={100}
+            contentKey={passwordError}
+          >
+            <Text
+              style={styles.errorText}
               accessible={true}
-              accessibilityLabel="Error message"
+              accessibilityLabel="Password error message"
             >
-              <Text style={styles.errorText}>{passwordError}</Text>
-            </View>
-          ) : null}
+              {passwordError}
+            </Text>
+          </AnimatedDropdown>
         </ScrollView>
       </KeyboardAvoidingView>
       <View

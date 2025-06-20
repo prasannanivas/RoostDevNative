@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Logo from "../components/Logo";
+import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
 /**
  * Color palette from UX team design system
@@ -178,14 +179,15 @@ export default function AccountTypeScreen({ navigation }) {
               keyboardType="numeric"
               maxLength={7}
             />
-            {recoError && (
-              <View style={styles.recoErrorContainer}>
-                <Text style={styles.recoErrorText}>
-                  You have not entered a valid RECO ID, each new account is
-                  verified to make sure that the agent is valid
-                </Text>
-              </View>
-            )}
+            <AnimatedDropdown
+              visible={recoError}
+              style={styles.recoErrorContainer}
+            >
+              <Text style={styles.recoErrorText}>
+                You have not entered a valid RECO ID, each new account is
+                verified to make sure that the agent is valid
+              </Text>
+            </AnimatedDropdown>
           </View>
         )}
 

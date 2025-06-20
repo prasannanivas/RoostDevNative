@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Logo from "../components/Logo";
+import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
 /**
  * Color palette from UX team design system
@@ -258,11 +259,20 @@ export default function EmailVerificationScreen({ navigation, route }) {
             <ActivityIndicator size="large" color={COLORS.green} />
           </View>
         )}
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
+        <AnimatedDropdown
+          visible={!!error}
+          style={!!error ? styles.errorBox : {}}
+          maxHeight={100}
+          contentKey={error}
+        >
+          <Text
+            style={styles.errorText}
+            accessible={true}
+            accessibilityLabel="Verification error"
+          >
+            {error}
+          </Text>
+        </AnimatedDropdown>
         {/* Code Input Row */}
         <View style={styles.codeRow}>
           {digits.map((digit, index) => (
