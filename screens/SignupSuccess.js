@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -6,9 +6,13 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
+  Linking,
+  Image,
+  ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-// import ConfettiIcon from "../assets/confetti.png"; // Example if you have a custom asset
+// import { Ionicons } from "@expo/vector-icons"; // No longer needed
+import { Asset } from "expo-asset";
 import Logo from "../components/Logo";
 
 /**
@@ -36,6 +40,68 @@ const COLORS = {
 };
 
 export default function SignupSuccessScreen({ navigation }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Preload image and track ActiveCampaign conversion
+  useEffect(() => {
+    // Preload the celebration image
+    const preloadImages = async () => {
+      try {
+        // Create asset object from the image
+        const asset = Asset.fromModule(require("../assets/signupSuccess.png"));
+        // Download/load the image if it's not already cached
+        await asset.downloadAsync();
+        setImageLoaded(true);
+      } catch (error) {
+        console.error("Failed to preload image:", error);
+        // Set loaded to true anyway so UI isn't blocked
+        setImageLoaded(true);
+      }
+    };
+
+    preloadImages();
+    trackActiveCampaignConversion();
+  }, []);
+
+  // Function to track ActiveCampaign conversion
+  const trackActiveCampaignConversion = async () => {
+    try {
+      // Set to false if opt-in required
+      const trackConversionByDefault = true;
+
+      // We can't directly use cookies in React Native, so we'll make a direct tracking call
+      const trackcmp_email = "";
+      const trackcmp_conversion = "%CONVERSION_ID%";
+      const trackcmp_conversion_value = "";
+
+      // Create the tracking URL
+      const trackingUrl = `https://trackcmp.net/convert?actid=652720765&e=${encodeURIComponent(
+        trackcmp_email
+      )}&c=${trackcmp_conversion}&v=${trackcmp_conversion_value}&r=&u=${encodeURIComponent(
+        "app://roost-realtor-signup-success"
+      )}`;
+
+      // For web (if this app can run on web)
+      if (Platform.OS === "web") {
+        // Create and append script element (similar to the original script)
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = trackingUrl;
+        document.head.appendChild(script);
+      } else {
+        // For native platforms, make a background network request
+        // This doesn't actually open the URL in a browser, just makes the request
+        fetch(trackingUrl).catch((err) =>
+          console.log("ActiveCampaign tracking error:", err)
+        );
+      }
+
+      console.log("ActiveCampaign conversion tracked");
+    } catch (error) {
+      console.error("Failed to track ActiveCampaign conversion:", error);
+    }
+  };
+
   const handleTutorial = (topic) => {
     console.log("Navigate to tutorial topic:", topic);
     // TODO: Implement actual navigation or linking logic
@@ -62,19 +128,22 @@ export default function SignupSuccessScreen({ navigation }) {
           />
           {/* Heading */}
           <Text style={styles.heading}>All signed up!</Text>
-          {/* Confetti / Party Popper Icon */}
-          {/* Replace Ionicons with a custom image if you have one: 
-              <Image source={ConfettiIcon} style={styles.confettiIcon} />
-          */}
-          <Ionicons
-            name="wine"
-            size={100} // reduced from 164
-            color={COLORS.green}
-            style={styles.confettiIcon}
-          />
+          {/* Celebration Image with loading state */}
+          {imageLoaded ? (
+            <Image
+              source={require("../assets/signupSuccess.png")}
+              style={styles.confettiIcon}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={COLORS.green} />
+            </View>
+          )}
           {/* Subheading */}
-          <Text style={styles.subheading}>
-            Before you start{"\n"}You can watch a few tutorials
+          <Text style={styles.subheading}>Before you start</Text>
+          <Text style={styles.subheadingsub}>
+            You can watch a few tutorials
           </Text>
           {/* Tutorial Buttons */}
           <TouchableOpacity
@@ -96,15 +165,6 @@ export default function SignupSuccessScreen({ navigation }) {
             <Text style={styles.tutorialButtonText}>What if I need help?</Text>
           </TouchableOpacity>
         </ScrollView>
-
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={handleGetStarted}
-          >
-            <Text style={styles.getStartedButtonText}>Let me get started!</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -129,25 +189,44 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   heading: {
-    fontSize: 20, // H2 size
-    fontWeight: "bold", // H2 weight
+    fontSize: 24, // H2 size
+    fontWeight: 700, // H2 weight
     color: COLORS.black,
     marginBottom: 16,
     fontFamily: "Futura",
   },
   confettiIcon: {
     marginBottom: 16,
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+  },
+  loaderContainer: {
+    marginBottom: 16,
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   subheading: {
+    fontSize: 20, // P size
+    fontWeight: 700, // P weight
+    color: COLORS.black,
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 4,
+    marginTop: 16,
+    fontFamily: "Futura",
+  },
+
+  subheadingsub: {
     fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontWeight: 500, // P weight
     color: COLORS.black,
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 24,
-    marginTop: 16,
     fontFamily: "Futura",
   },
   // Tutorial Buttons
@@ -162,8 +241,8 @@ const styles = StyleSheet.create({
   },
   tutorialButtonText: {
     color: COLORS.green,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12, // P size
+    fontWeight: "700", // P weight
     fontFamily: "Futura",
   },
   // Bottom Container & Button

@@ -1,18 +1,18 @@
 import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import {
-  SafeAreaView,
+  View,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Logo from "../components/Logo";
 import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
@@ -40,345 +40,456 @@ const COLORS = {
   coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
-export default function EmailVerificationScreen({ navigation, route }) {
-  const insets = useSafeAreaInsets();
-  // Get user data from previous screen
-  const userData = route.params || {};
+const EmailVerificationScreen = React.forwardRef(
+  ({ navigation, route, setBottomBarLoading }, ref) => {
+    // Get user data from previous screen
+    const userData = route.params || {};
 
-  // Store each digit in a separate array element - 6 digits for email verification
-  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [countdown, setCountdown] = useState(60);
-  const [otpSent, setOtpSent] = useState(false);
+    // Debug userData to make sure we have email
+    useEffect(() => {
+      console.log(
+        "EmailVerificationScreen userData:",
+        JSON.stringify(userData)
+      );
+      if (!userData.email) {
+        console.warn("WARNING: No email in userData - verification will fail!");
+      }
+    }, [userData]);
 
-  // Refs to each TextInput so we can focus the next one automatically
-  const inputRefs = useRef([]);
+    // Store each digit in a separate array element - 6 digits for email verification
+    const [digits, setDigits] = useState(["", "", "", "", "", ""]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [countdown, setCountdown] = useState(60);
+    const [otpSent, setOtpSent] = useState(false);
 
-  // First useEffect for sending OTP - runs only once on component mount
-  useEffect(() => {
-    // Send OTP email once when the component first loads
-    if (!otpSent) {
-      generateEmailOTP();
-    }
-  }, []); // Empty dependency array to run only once
-
-  // Second useEffect for countdown timer - depends on countdown value
-  useEffect(() => {
-    // Set up countdown timer
-    let timer;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prevCount) => prevCount - 1);
-      }, 1000);
-    }
-
-    // Cleanup function
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [countdown]);
-  const handleDigitChange = (text, index) => {
-    // Check if multiple characters were pasted
-    if (text.length > 1) {
-      // Handle paste operation - extract only numeric characters
-      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
-
-      // If it's a full 6-digit code, clear all fields and start from beginning
-      if (pastedDigits.length === 6) {
-        const newDigits = pastedDigits.split("");
-        setDigits(newDigits);
-
-        // Focus the last field to indicate completion
-        if (inputRefs.current[5]) {
-          inputRefs.current[5].focus();
-        }
-      } else {
-        // If partial code, fill from current position
-        const updatedDigits = [...digits];
-
-        for (let i = 0; i < pastedDigits.length && index + i < 6; i++) {
-          updatedDigits[index + i] = pastedDigits[i];
-        }
-
-        setDigits(updatedDigits);
-
-        // Focus the next empty field or the last filled field
-        const nextEmptyIndex = updatedDigits.findIndex(
-          (digit, idx) => idx > index && !digit
+    // Refs to each TextInput so we can focus the next one automatically
+    const inputRefs = useRef([]); // First useEffect for sending OTP - runs when component mounts or if userData changes
+    useEffect(() => {
+      // Send OTP email once when the component first loads
+      if (!otpSent && userData && userData.email) {
+        console.log("Sending initial OTP for:", userData.email);
+        generateEmailOTP();
+      } else if (!userData?.email) {
+        console.error("Cannot send OTP - missing email address");
+        setError(
+          "Email address is missing. Please go back and complete the previous step."
         );
-        const targetIndex =
-          nextEmptyIndex !== -1
-            ? nextEmptyIndex
-            : Math.min(index + pastedDigits.length, 5);
-
-        if (targetIndex < inputRefs.current.length) {
-          inputRefs.current[targetIndex].focus();
-        }
       }
-      return;
-    }
+    }, [userData?.email]); // Re-run if email changes
 
-    // Handle single character input
-    const newDigit = text.slice(0, 1);
-    const updatedDigits = [...digits];
-    updatedDigits[index] = newDigit;
-    setDigits(updatedDigits);
+    // Second useEffect for countdown timer - depends on countdown value
+    useEffect(() => {
+      // Set up countdown timer
+      let timer;
+      if (countdown > 0) {
+        timer = setInterval(() => {
+          setCountdown((prevCount) => prevCount - 1);
+        }, 1000);
+      }
 
-    // If the user typed one character, move to the next input
-    if (newDigit && index < inputRefs.current.length - 1) {
-      inputRefs.current[index + 1].focus();
-    }
-  };
+      // Cleanup function
+      return () => {
+        if (timer) clearInterval(timer);
+      };
+    }, [countdown]);
 
-  const handleBackspace = (key, index) => {
-    // If backspace on an empty box, focus the previous one
-    if (key === "Backspace" && !digits[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
-    }
-  };
+    // Update the loading state of the bottom bar when local loading state changes
+    useEffect(() => {
+      if (setBottomBarLoading) {
+        setBottomBarLoading(isLoading);
+      }
+    }, [isLoading, setBottomBarLoading]); // Expose validate method to parent via ref
+    React.useImperativeHandle(ref, () => ({
+      validate: async () => {
+        try {
+          setError("");
 
-  const generateEmailOTP = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
+          // First, check if we have the required userData
+          if (!userData || !userData.email) {
+            setError(
+              "Email address is missing. Please go back and complete the previous step."
+            );
+            console.error(
+              "Missing email in userData during validation",
+              userData
+            );
+            return false;
+          }
 
-      const response = await axios.post(
-        "http://159.203.58.60:5000/otp/email/generate",
-        {
-          email: userData.email,
+          const code = digits.join("");
+
+          if (code.length !== 6) {
+            setError("Please enter the complete 6-digit verification code");
+            return false;
+          }
+
+          setIsLoading(true);
+          console.log(`Validating OTP for ${userData.email}:`, code);
+
+          // Verify OTP first
+          const success = await verifyEmailOTP(code);
+          setIsLoading(false);
+
+          if (!success) {
+            setError("Invalid verification code. Please try again.");
+            return false;
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Error validating OTP:", error);
+          setError("An error occurred. Please try again.");
+          setIsLoading(false);
+          return false;
         }
-      );
+      },
+    }));
 
-      console.log("Email OTP response:", response.data);
+    const handleDigitChange = (text, index) => {
+      // Check if multiple characters were pasted
+      if (text.length > 1) {
+        // Handle paste operation - extract only numeric characters
+        const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
 
-      if (response?.data?.message === "OTP sent successfully") {
-        setOtpSent(true);
+        // If it's a full 6-digit code, clear all fields and start from beginning
+        if (pastedDigits.length === 6) {
+          const newDigits = pastedDigits.split("");
+          setDigits(newDigits);
+
+          // Focus the last field to indicate completion
+          if (inputRefs.current[5]) {
+            inputRefs.current[5].focus();
+          }
+        } else {
+          // If partial code, fill from current position
+          const updatedDigits = [...digits];
+
+          for (let i = 0; i < pastedDigits.length && index + i < 6; i++) {
+            updatedDigits[index + i] = pastedDigits[i];
+          }
+
+          setDigits(updatedDigits);
+
+          // Focus the next empty field or the last filled field
+          const nextEmptyIndex = updatedDigits.findIndex((d) => !d);
+          if (nextEmptyIndex !== -1 && nextEmptyIndex < 6) {
+            inputRefs.current[nextEmptyIndex].focus();
+          } else {
+            inputRefs.current[5].focus();
+          }
+        }
       } else {
-        setError("Failed to send verification code. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error sending email OTP:", error);
-      setError("Error sending verification code. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // Normal single digit input handling
+        if (text.match(/^\d?$/)) {
+          // Only allow single digit or empty string
+          const newDigits = [...digits];
+          newDigits[index] = text;
+          setDigits(newDigits);
 
-  const handleResend = () => {
-    if (countdown === 0) {
-      generateEmailOTP();
-      setCountdown(60);
-    }
-  };
-
-  const verifyEmailOTP = async (otp) => {
-    try {
-      const response = await axios.post(
-        "http://159.203.58.60:5000/otp/email/verify",
-        {
-          email: userData.email,
-          otp,
+          // If a digit was entered (not cleared) and this isn't the last input, move focus to next input
+          if (text !== "" && index < 5) {
+            inputRefs.current[index + 1].focus();
+          }
         }
-      );
-
-      return response.data && response.data.success;
-    } catch (error) {
-      console.error("Error verifying email OTP:", error);
-      return false;
-    }
-  };
-
-  const handleVerify = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const code = digits.join("");
-
-      if (code.length !== 6) {
-        setError("Please enter the complete 6-digit verification code");
-        setIsLoading(false);
-        return;
-      } // Verify email OTP
-      const verificationSuccess = await verifyEmailOTP(code);
-      if (!verificationSuccess) {
-        setError("Invalid verification code. Please try again.");
-        setIsLoading(false);
-        return;
       }
+    };
 
-      // If verification successful, navigate to password screen
-      console.log("Email verified successfully, navigating to password screen");
-      navigation.navigate("Password", userData);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error during verification:", error);
-      setError("Verification failed. Please try again.");
-      setIsLoading(false);
-    }
-  };
+    const handleBackspace = (key, index) => {
+      if (key === "Backspace" && index > 0 && digits[index] === "") {
+        inputRefs.current[index - 1].focus();
+      }
+    };
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
+    const clearAllDigits = () => {
+      setDigits(["", "", "", "", "", ""]);
+      // Focus the first input after clearing
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    };
 
-  const clearAllDigits = () => {
-    setDigits(["", "", "", "", "", ""]);
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus();
-    }
-  };
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.container}
-        bounces={false}
-      >
-        {/* Brand Title */}
-        <Logo
-          width={120}
-          height={42}
-          variant="black"
-          style={styles.brandLogo}
-        />
-        {/* Heading */}
-        <Text style={styles.heading}>Verify your email address</Text>
-        {/* Subheading */}
-        <Text style={styles.subheading}>
-          We just sent a verification code to {userData.email}. Please enter it
-          below to continue.
-        </Text>
-        {/* Paste instruction */}
-        <Text style={styles.pasteInstruction}>
-          Paste your 6-digit code in any field - it will fill all boxes
-          automatically
-        </Text>
-        {isLoading && (
-          <View style={styles.spinnerContainer}>
-            <ActivityIndicator size="large" color={COLORS.green} />
-          </View>
-        )}
-        <AnimatedDropdown
-          visible={!!error}
-          style={!!error ? styles.errorBox : {}}
-          maxHeight={100}
-          contentKey={error}
-        >
-          <Text
-            style={styles.errorText}
-            accessible={true}
-            accessibilityLabel="Verification error"
-          >
-            {error}
-          </Text>
-        </AnimatedDropdown>
-        {/* Code Input Row */}
-        <View style={styles.codeRow}>
-          {digits.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
-              style={styles.codeBox}
-              value={digit}
-              onChangeText={(text) => handleDigitChange(text, index)}
-              onKeyPress={({ nativeEvent }) =>
-                handleBackspace(nativeEvent.key, index)
+    const handleBack = () => {
+      navigation.goBack();
+    };
+    const generateEmailOTP = async () => {
+      try {
+        // Only send OTP if we have an email
+        if (userData && userData.email) {
+          console.log("Generating OTP for email:", userData.email);
+
+          try {
+            const response = await axios.post(
+              "http://159.203.58.60:5000/otp/email/generate",
+              {
+                email: userData.email,
               }
-              onFocus={() => {
-                // Select all text when focusing to make paste easier
-                if (digit) {
-                  inputRefs.current[index].setSelection(0, 1);
-                }
-              }}
-              keyboardType="number-pad"
-              maxLength={6} // Allow pasting up to 6 characters
-              textAlign="center"
-              autoFocus={index === 0}
-              selectTextOnFocus={true}
-            />
-          ))}
-        </View>
-        {/* Clear button - only show if there are digits entered */}
-        {digits.some((digit) => digit !== "") && (
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={clearAllDigits}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.clearButtonText}>Clear all</Text>
-          </TouchableOpacity>
-        )}
-        {/* Resend Button */}
-        <TouchableOpacity
-          style={[
-            styles.resendButton,
-            countdown > 0 && styles.resendButtonDisabled,
-          ]}
-          onPress={handleResend}
-          disabled={countdown > 0}
-          activeOpacity={0.8}
-        >
-          <Text
-            style={[
-              styles.resendButtonText,
-              countdown > 0 && styles.resendButtonTextDisabled,
-            ]}
-          >
-            {countdown > 0
-              ? `Send code again in ${countdown} seconds`
-              : "Send code again"}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-      {/* Bottom Bar */}
-      <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: Math.max(insets.bottom, 24) },
-        ]}
-      >
-        {/* Back Arrow */}
-        <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+            );
+            console.log("OTP generated response:", response.data);
 
-        {/* Verify Button */}
-        <TouchableOpacity
-          style={[
-            styles.verifyButton,
-            isLoading && styles.verifyButtonDisabled,
-          ]}
-          onPress={handleVerify}
-          disabled={isLoading}
+            if (response?.data?.message === "OTP sent successfully") {
+              setOtpSent(true);
+              // Reset any previous errors
+              setError("");
+            } else {
+              console.error("OTP generation failed:", response.data);
+              setError("Failed to send verification code. Please try again.");
+            }
+          } catch (apiError) {
+            console.error("API Error generating OTP:", apiError);
+            console.error("Error response:", apiError.response?.data);
+            setError(
+              apiError.response?.data?.error ||
+                "Failed to send verification code"
+            );
+            Alert.alert(
+              "Error",
+              apiError.response?.data?.error ||
+                "Failed to send verification code. Please try again."
+            );
+          }
+        } else {
+          console.error("No email provided for OTP generation", userData);
+          setError(
+            "No email address available for verification. Please go back and enter your email."
+          );
+          Alert.alert("Error", "No email provided for verification");
+        }
+      } catch (error) {
+        console.error("Error generating email OTP:", error);
+        setError("An error occurred. Please try again.");
+        Alert.alert(
+          "Error",
+          "Failed to send verification code. Please try again."
+        );
+      }
+    };
+
+    const handleResend = () => {
+      if (countdown === 0) {
+        generateEmailOTP();
+        setCountdown(60);
+      }
+    };
+    const verifyEmailOTP = async (otp) => {
+      try {
+        // Log the values being sent for verification
+        console.log("Verifying OTP with:", {
+          email: userData.email,
+          otp: otp,
+          fullUserData: JSON.stringify(userData),
+        });
+
+        // Check if email exists before sending the request
+        if (!userData.email) {
+          console.error("Email is missing from userData");
+          setError(
+            "Email address is missing. Please go back and complete previous steps."
+          );
+          return false;
+        }
+
+        // Make the API request with proper payload
+        const response = await axios.post(
+          "http://159.203.58.60:5000/otp/email/verify",
+          {
+            email: userData.email,
+            otp,
+          }
+        );
+
+        console.log("OTP verification response:", response.data);
+        return response.data && response.data.success;
+      } catch (error) {
+        // Enhanced error logging
+        console.error("Error verifying email OTP:", error);
+        console.error("Error response:", error.response?.data);
+
+        // Set specific error message if we have one from the server
+        if (error.response?.data?.error) {
+          setError(error.response.data.error);
+        }
+
+        return false;
+      }
+    };
+    const handleVerify = async (validateOnly = false) => {
+      try {
+        setIsLoading(true);
+        if (setBottomBarLoading) setBottomBarLoading(true);
+
+        setError("");
+        const code = digits.join("");
+
+        if (code.length !== 6) {
+          setError("Please enter the complete 6-digit verification code");
+          setIsLoading(false);
+          if (setBottomBarLoading) setBottomBarLoading(false);
+          return false;
+        }
+
+        const success = await verifyEmailOTP(code);
+
+        if (success) {
+          console.log("OTP verified successfully");
+          // Only navigate if not just validating
+          if (!validateOnly) {
+            navigation.navigate("Password", userData);
+          }
+          setIsLoading(false);
+          if (setBottomBarLoading) setBottomBarLoading(false);
+          return true;
+        } else {
+          setError("Invalid verification code. Please try again.");
+          setIsLoading(false);
+          if (setBottomBarLoading) setBottomBarLoading(false);
+          return false;
+        }
+      } catch (error) {
+        console.error("Error verifying OTP:", error);
+        setError("An error occurred. Please try again.");
+        setIsLoading(false);
+        if (setBottomBarLoading) setBottomBarLoading(false);
+        return false;
+      }
+    };
+
+    return (
+      <View style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardContainer}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
-          <Text style={styles.verifyButtonText}>
-            {isLoading ? "Verifying..." : "Verify"}
-          </Text>
-        </TouchableOpacity>
+          {/* Brand Title */}
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.contentContainer}
+            bounces={false}
+          >
+            {/* Heading */}
+            <Text style={styles.heading}>Verify your email address</Text>
+            {/* Subheading */}
+            <Text style={styles.subheading}>
+              We just sent a verification code to {userData.email}. Please enter
+              it below to continue.
+            </Text>
+            {/* Paste instruction */}
+            <Text style={styles.pasteInstruction}>
+              Paste your 6-digit code in any field - it will fill all boxes
+              automatically
+            </Text>
+            {isLoading && (
+              <View style={styles.spinnerContainer}>
+                <ActivityIndicator size="large" color={COLORS.green} />
+              </View>
+            )}
+            <AnimatedDropdown
+              visible={!!error}
+              style={!!error ? styles.errorBox : {}}
+              maxHeight={100}
+              contentKey={error}
+            >
+              <Text
+                style={styles.errorText}
+                accessible={true}
+                accessibilityLabel="Verification error"
+              >
+                {error}
+              </Text>
+            </AnimatedDropdown>
+            {/* Code Input Row */}
+            <View style={styles.codeRow}>
+              {digits.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  ref={(el) => (inputRefs.current[index] = el)}
+                  style={styles.codeBox}
+                  value={digit}
+                  onChangeText={(text) => handleDigitChange(text, index)}
+                  onKeyPress={({ nativeEvent }) =>
+                    handleBackspace(nativeEvent.key, index)
+                  }
+                  onFocus={() => {
+                    // Select all text when focusing to make paste easier
+                    if (digit) {
+                      inputRefs.current[index].setSelection(0, 1);
+                    }
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={6} // Allow pasting up to 6 characters
+                  textAlign="center"
+                  autoFocus={index === 0}
+                  selectTextOnFocus={true}
+                />
+              ))}
+            </View>
+            {/* Clear button - only show if there are digits entered */}
+            {digits.some((digit) => digit !== "") && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={clearAllDigits}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.clearButtonText}>Clear all</Text>
+              </TouchableOpacity>
+            )}
+            {/* Resend Button */}
+            <TouchableOpacity
+              style={[
+                styles.resendButton,
+                countdown > 0 && styles.resendButtonDisabled,
+              ]}
+              onPress={handleResend}
+              disabled={countdown > 0}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.resendButtonText,
+                  countdown > 0 && styles.resendButtonTextDisabled,
+                ]}
+              >
+                {countdown > 0
+                  ? `Send code again in ${countdown} seconds`
+                  : "Send code again"}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
-    </SafeAreaView>
-  );
-}
+    );
+  }
+);
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
   },
-  container: {
+  keyboardContainer: {
+    flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: 24,
     paddingVertical: 48,
-    paddingBottom: 120, // Add padding to account for fixed footer
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
   },
   brandLogo: {
     marginBottom: 32,
+    alignSelf: "center",
+    marginTop: 64,
   },
   heading: {
     fontSize: 20, // H2 size
@@ -388,12 +499,11 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   subheading: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
     color: COLORS.black,
     textAlign: "center",
-    marginBottom: 16,
-    lineHeight: 20,
+    marginBottom: 32,
     fontFamily: "Futura",
   },
   pasteInstruction: {
@@ -479,46 +589,8 @@ const styles = StyleSheet.create({
     fontSize: 12, // H4 size
     fontFamily: "Futura",
   },
-  resendButtonTextDisabled: {
-    color: COLORS.gray,
-  }, // Bottom bar
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: COLORS.black,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    paddingBottom: 24,
-    minHeight: 120,
-  },
-  backCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 50, // Made pill-shaped
-    backgroundColor: COLORS.black,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.white,
-  },
-  verifyButton: {
-    backgroundColor: COLORS.green,
-    borderRadius: 50, // Made pill-shaped
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-  },
-  verifyButtonDisabled: {
-    opacity: 0.7,
-  },
-  verifyButtonText: {
-    color: COLORS.white,
-    fontSize: 12, // H3 size
-    fontWeight: 700, // H3 weight
-    fontFamily: "Futura",
-  },
+  resendButtonTextDisabled: { color: COLORS.gray },
 });
+
+// Export the wrapped component with forwardRef
+export default EmailVerificationScreen;

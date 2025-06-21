@@ -130,22 +130,24 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        style={{ flex: 0.8 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 4 : 0}
       >
+        {/* Brand Logo */}
+        <Logo
+          width={120}
+          height={42}
+          variant="black"
+          style={styles.brandLogo}
+        />
+
         <ScrollView
           contentContainerStyle={styles.container}
+          style={styles.scrollView}
           bounces={false}
           keyboardShouldPersistTaps="handled"
           accessible={true}
         >
-          {/* Brand Logo */}
-          <Logo
-            width={120}
-            height={42}
-            variant="black"
-            style={styles.brandLogo}
-          />
           {/* Error Message */}
           {error && (
             <Text
@@ -214,24 +216,23 @@ export default function LoginScreen() {
               {loading ? "Logging in..." : "Log In"}
             </Text>
           </TouchableOpacity>
-
-          {/* Sign Up Section moved to bottom above footer */}
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpPrompt}>
-              Don't have An Account? Sign Up for Free
-            </Text>
-            <TouchableOpacity
-              style={styles.signUpButton}
-              onPress={handleSignUp}
-              accessible={true}
-              accessibilityLabel="Sign up for a new account"
-              accessibilityRole="button"
-            >
-              <Text style={styles.signUpButtonText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {/* Sign Up Section moved to bottom above footer */}
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpPrompt}>
+          Don't have An Account? Sign Up for Free
+        </Text>
+        <TouchableOpacity
+          style={styles.signUpButton}
+          onPress={handleSignUp}
+          accessible={true}
+          accessibilityLabel="Sign up for a new account"
+          accessibilityRole="button"
+        >
+          <Text style={styles.signUpButtonText}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
@@ -252,7 +253,10 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "F6F6F6",
+    backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
   },
   container: {
     height: "85%",
@@ -266,6 +270,8 @@ const styles = StyleSheet.create({
   brandLogo: {
     marginBottom: 32,
     alignSelf: "center",
+    marginTop: 64,
+    backgroundColor: COLORS.background, // Ensure logo has a background color
   },
   input: {
     width: "100%",
@@ -320,10 +326,10 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   signUpContainer: {
-    marginTop: 48,
     backgroundColor: COLORS.background,
     paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingTop: 4,
+    paddingBottom: 24,
     alignItems: "center",
   },
   signUpPrompt: {

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import SignupStack from "./navigation/SignupStack";
+import SignupStackWithFixedBar from "./navigation/SignupStackWithFixedBar";
 import RealtorOnboardingStack from "./navigation/RealtorOnboardingStack";
 import Home from "./Home";
 import WrappedClientDetails from "./screens/WrappedClientDetails";
@@ -34,7 +34,7 @@ export default function App() {
                   />
                   <Stack.Screen
                     name="SignupStack"
-                    component={SignupStack}
+                    component={SignupStackWithFixedBar}
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen

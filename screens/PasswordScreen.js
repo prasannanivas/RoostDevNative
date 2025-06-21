@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  SafeAreaView,
+  View,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -14,7 +13,6 @@ import {
   Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
 import Logo from "../components/Logo";
 import AnimatedDropdown from "../components/common/AnimatedDropdown";
@@ -43,186 +41,201 @@ const COLORS = {
   coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
-export default function PasswordScreen({ navigation, route }) {
-  const insets = useSafeAreaInsets();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [inviteCodeRequired, setInviteCodeRequired] = useState(false);
+const PasswordScreen = React.forwardRef(
+  ({ navigation, route, setBottomBarLoading }, ref) => {
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [inviteCode, setInviteCode] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordError, setPasswordError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [inviteCodeRequired, setInviteCodeRequired] = useState(false);
 
-  const { invitedBy } = route.params || {};
+    const { invitedBy } = route.params || {};
 
-  useEffect(() => {
-    // Check if invitation info is missing
-    setInviteCodeRequired(!invitedBy);
-  }, [invitedBy]);
+    useEffect(() => {
+      // Check if invitation info is missing
+      setInviteCodeRequired(!invitedBy);
+    }, [invitedBy]);
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
-  const registerUser = async (userData) => {
-    try {
-      const endpoint = userData.isRealtor
-        ? "http://159.203.58.60:5000/realtor/signup"
-        : "http://159.203.58.60:5000/client/signup";
-
-      const payload = {
-        name: `${userData.firstName} ${userData.lastName}`,
-        phone: userData.phone || "", // Keep phone in payload if provided
-        email: userData.email,
-        password: userData.password,
-      };
-
-      // Add RECO ID if it exists
-      if (userData.recoId) {
-        payload.recoId = userData.recoId;
+    // Update the loading state of the bottom bar when local loading state changes
+    useEffect(() => {
+      if (setBottomBarLoading) {
+        setBottomBarLoading(isLoading);
       }
+    }, [isLoading, setBottomBarLoading]); // Expose validate method to parent via ref
+    React.useImperativeHandle(ref, () => ({
+      validate: async () => {
+        try {
+          // Use the existing handleContinue function for validation
+          return await handleContinue();
+        } catch (error) {
+          console.error("Error in password validation:", error);
+          setPasswordError("An error occurred. Please try again.");
+          return false;
+        }
+      },
+    }));
 
-      // Add invite information if available
-      if (userData.inviterId) {
-        payload.inviterId = userData.inviterId;
-      } else if (userData.inviterCode) {
-        payload.inviterCode = userData.inviterCode;
-      }
+    const dismissKeyboard = () => {
+      Keyboard.dismiss();
+    };
 
-      const response = await axios.post(endpoint, payload);
+    const registerUser = async (userData) => {
+      try {
+        const endpoint = userData.isRealtor
+          ? "http://159.203.58.60:5000/realtor/signup"
+          : "http://159.203.58.60:5000/client/signup";
 
-      if (response.data) {
-        navigation.navigate("Success");
-      } else {
+        const payload = {
+          name: `${userData.firstName} ${userData.lastName}`,
+          phone: userData.phone || "", // Keep phone in payload if provided
+          email: userData.email,
+          password: userData.password,
+        };
+
+        // Add RECO ID if it exists
+        if (userData.recoId) {
+          payload.recoId = userData.recoId;
+        }
+
+        // Add invite information if available
+        if (userData.inviterId) {
+          payload.inviterId = userData.inviterId;
+        } else if (userData.inviterCode) {
+          payload.inviterCode = userData.inviterCode;
+        }
+
+        const response = await axios.post(endpoint, payload);
+
+        if (response.data) {
+          navigation.navigate("Success");
+        } else {
+          setPasswordError("");
+          setPasswordError("Registration failed. Please try again.");
+
+          setIsLoading(false);
+          if (setBottomBarLoading) setBottomBarLoading(false);
+        }
+        return true;
+      } catch (error) {
+        console.error("Error registering user:", error);
+
         setPasswordError("");
-        setPasswordError("Registration failed. Please try again.");
+        // Clear previous error before setting new one
+        setPasswordError(
+          `Registration failed: ${
+            error.response?.data?.error || "Unknown error"
+          }`
+        );
 
         setIsLoading(false);
+        if (setBottomBarLoading) setBottomBarLoading(false);
+        return false;
       }
-    } catch (error) {
-      console.error("Error registering user:", error);
+    };
 
-      setPasswordError("");
-      // Clear previous error before setting new one
-      setPasswordError(
-        `Registration failed: ${error.response?.data?.error || "Unknown error"}`
-      );
+    // Create refs for form inputs
+    const confirmPasswordRef = useRef(null);
+    const inviteCodeRef = useRef(null);
 
-      setIsLoading(false);
-    }
-  };
-
-  // Create refs for form inputs
-  const confirmPasswordRef = useRef(null);
-  const inviteCodeRef = useRef(null);
-  // Handle input submission and focus next field
-  const focusNextInput = (nextInput) => {
-    // Safe focus method that handles TextInputMask and normal TextInput
-    if (nextInput && nextInput.current) {
-      try {
-        // For TextInput components
-        if (typeof nextInput.current.focus === "function") {
-          nextInput.current.focus();
-        }
-        // For TextInputMask components which might have a different structure
-        else if (
-          nextInput.current.getElement &&
-          typeof nextInput.current.getElement === "function"
-        ) {
-          const element = nextInput.current.getElement();
-          if (element && typeof element.focus === "function") {
-            element.focus();
+    // Handle input submission and focus next field
+    const focusNextInput = (nextInput) => {
+      // Safe focus method that handles TextInputMask and normal TextInput
+      if (nextInput && nextInput.current) {
+        try {
+          // For TextInput components
+          if (typeof nextInput.current.focus === "function") {
+            nextInput.current.focus();
           }
+          // For TextInputMask components
+          else if (
+            nextInput.current.getElement &&
+            nextInput.current.getElement()
+          ) {
+            nextInput.current.getElement().focus();
+          }
+        } catch (error) {
+          console.log("Error focusing input:", error);
         }
+      }
+    };
+
+    const handleContinue = async () => {
+      try {
+        setPasswordError("");
+
+        const hasNumber = /\d/.test(password);
+        const hasUpperCase = /[A-Z]/.test(password);
+
+        if (password.length < 8) {
+          setPasswordError("");
+          // Clear previous error before setting new one
+          setPasswordError(
+            "The Password should be at 8 characters long including a number and an uppercase letter"
+          );
+          return false;
+        }
+
+        if (!hasNumber || !hasUpperCase) {
+          setPasswordError("");
+          // Clear previous error before setting new one
+          setPasswordError(
+            "The Password should be at 8 characters long including a number and an uppercase letter"
+          );
+          return false;
+        }
+
+        if (password !== confirmPassword) {
+          setPasswordError("");
+          // Clear previous error before setting new one
+          setPasswordError("Passwords do not match");
+          return false;
+        }
+
+        // Check invite code if required
+
+        setIsLoading(true);
+        if (setBottomBarLoading) setBottomBarLoading(true);
+
+        // Get user data from previous screen
+        const userData = route.params;
+
+        // Add inviterCode to userData if manually entered
+        const finalUserData = {
+          ...userData,
+          password,
+        };
+
+        if (inviteCodeRequired && inviteCode) {
+          finalUserData.inviterCode = inviteCode;
+        } else if (invitedBy) {
+          finalUserData.inviterId = invitedBy.id;
+        }
+
+        console.log("Password validated, proceeding to register user:", {
+          ...finalUserData,
+          password: "***",
+        });
+
+        // Register the user after password validation
+        return await registerUser(finalUserData);
       } catch (error) {
-        console.log("Error focusing input:", error);
+        console.error("Error in password screen:", error);
+        setPasswordError("An error occurred. Please try again.");
+        setIsLoading(false);
+        if (setBottomBarLoading) setBottomBarLoading(false);
+        return false;
       }
-    }
-  };
+    };
 
-  const handleContinue = async () => {
-    try {
-      setPasswordError("");
-
-      const hasNumber = /\d/.test(password);
-      const hasUpperCase = /[A-Z]/.test(password);
-
-      if (password.length < 8) {
-        setPasswordError("");
-        // Clear previous error before setting new one
-        setPasswordError(
-          "The Password should be at 8 characters long including a number and an uppercase letter"
-        );
-
-        return;
-      }
-
-      if (!hasNumber || !hasUpperCase) {
-        setPasswordError("");
-        // Clear previous error before setting new one
-        setPasswordError(
-          "The Password should be at 8 characters long including a number and an uppercase letter"
-        );
-
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setPasswordError("");
-        // Clear previous error before setting new one
-        setPasswordError("Passwords do not match");
-
-        return;
-      }
-
-      // Check invite code if required
-
-      setIsLoading(true);
-      // Get user data from previous screen
-      const userData = route.params;
-
-      // Add inviterCode to userData if manually entered
-      const finalUserData = {
-        ...userData,
-        password,
-      };
-
-      if (inviteCodeRequired && inviteCode) {
-        finalUserData.inviterCode = inviteCode;
-      } else if (invitedBy) {
-        finalUserData.inviterId = invitedBy.id;
-      }
-      console.log("Password validated, proceeding to register user:", {
-        ...finalUserData,
-        password: "***",
-      });
-
-      // Register the user after password validation
-      await registerUser(finalUserData);
-    } catch (error) {
-      console.error("Error in password screen:", error);
-      setPasswordError("An error occurred. Please try again.");
-      setIsLoading(false);
-    }
-  };
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardContainer}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-      >
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.container}
-          bounces={false}
-          keyboardShouldPersistTaps="handled"
-          accessible={true}
+    return (
+      <View style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardContainer}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 0}
         >
           {/* Logo */}
           <Logo
@@ -231,180 +244,166 @@ export default function PasswordScreen({ navigation, route }) {
             variant="black"
             style={styles.brandLogo}
           />
-          <Text style={styles.heading}>Secure your account</Text>
-          {/* Display invitation message if available */}
-          {invitedBy ? (
-            <View
-              style={styles.inviteBox}
-              accessible={true}
-              accessibilityLabel="Invitation details"
-            >
-              <Text style={styles.inviteText}>
-                You have been invited by
-                <Text style={styles.inviterName}>{invitedBy.name}</Text>
-              </Text>
-            </View>
-          ) : null}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={COLORS.gray}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              textContentType="password"
-              autoCorrect={false}
-              spellCheck={false}
-              keyboardType="default"
-              autoCapitalize="none"
-              accessible={true}
-              accessibilityLabel="Password input"
-              returnKeyType="next"
-              onSubmitEditing={() => focusNextInput(confirmPasswordRef)}
-              blurOnSubmit={false}
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-              accessible={true}
-              accessibilityLabel={
-                showPassword ? "Hide password" : "Show password"
-              }
-              accessibilityRole="button"
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={24}
-                color={COLORS.slate}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              ref={confirmPasswordRef}
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor={COLORS.gray}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              textContentType="password"
-              autoCorrect={false}
-              spellCheck={false}
-              keyboardType="default"
-              autoCapitalize="none"
-              accessible={true}
-              accessibilityLabel="Confirm password input"
-              returnKeyType={!invitedBy ? "next" : "done"}
-              onSubmitEditing={
-                !invitedBy && inviteCodeRef
-                  ? () => dismissKeyboard()
-                  : dismissKeyboard
-              }
-              blurOnSubmit={invitedBy}
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              accessible={true}
-              accessibilityLabel={
-                showConfirmPassword
-                  ? "Hide confirm password"
-                  : "Show confirm password"
-              }
-              accessibilityRole="button"
-            >
-              <Ionicons
-                name={showConfirmPassword ? "eye-off" : "eye"}
-                size={24}
-                color={COLORS.slate}
-              />
-            </TouchableOpacity>
-          </View>
-          {!invitedBy && (
-            <View style={styles.inviteCodeContainer}>
-              <Text style={styles.inviteCodeHeading}>
-                Enter the invite code of your Realtor to continue
-              </Text>
-              <View style={styles.enhancedInputContainer}>
-                <Ionicons
-                  name="key"
-                  size={22}
-                  color={COLORS.green}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  ref={inviteCodeRef}
-                  style={styles.enhancedInput}
-                  placeholder="Enter Invite Code"
-                  placeholderTextColor={COLORS.gray}
-                  value={inviteCode}
-                  onChangeText={setInviteCode}
-                  autoCorrect={false}
-                  spellCheck={false}
-                  keyboardType="default"
-                  autoCapitalize="none"
-                  accessible={true}
-                  accessibilityLabel="Invite code input"
-                  returnKeyType="done"
-                  onSubmitEditing={() => dismissKeyboard()}
-                />
-              </View>
-            </View>
-          )}
-          <AnimatedDropdown
-            visible={!!passwordError}
-            style={!!passwordError ? styles.errorBox : {}}
-            maxHeight={100}
-            contentKey={passwordError}
+
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.contentContainer}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            accessible={true}
           >
-            <Text
-              style={styles.errorText}
-              accessible={true}
-              accessibilityLabel="Password error message"
+            <Text style={styles.heading}>Secure your account</Text>
+            {/* Display invitation message if available */}
+            {invitedBy ? (
+              <View
+                style={styles.inviteBox}
+                accessible={true}
+                accessibilityLabel="Invitation details"
+              >
+                <Text style={styles.inviteText}>
+                  You have been invited by
+                  <Text style={styles.inviterName}>{invitedBy.name}</Text>
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={COLORS.gray}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                textContentType="password"
+                autoCorrect={false}
+                spellCheck={false}
+                keyboardType="default"
+                autoCapitalize="none"
+                accessible={true}
+                accessibilityLabel="Password input"
+                returnKeyType="next"
+                onSubmitEditing={() => focusNextInput(confirmPasswordRef)}
+                blurOnSubmit={false}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+                accessible={true}
+                accessibilityLabel={
+                  showPassword ? "Hide password" : "Show password"
+                }
+                accessibilityRole="button"
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color={COLORS.slate}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                ref={confirmPasswordRef}
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor={COLORS.gray}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                textContentType="password"
+                autoCorrect={false}
+                spellCheck={false}
+                keyboardType="default"
+                autoCapitalize="none"
+                accessible={true}
+                accessibilityLabel="Confirm password input"
+                returnKeyType={inviteCodeRequired ? "next" : "done"}
+                onSubmitEditing={() => {
+                  if (inviteCodeRequired) {
+                    focusNextInput(inviteCodeRef);
+                  } else {
+                    dismissKeyboard();
+                  }
+                }}
+                blurOnSubmit={!inviteCodeRequired}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                accessible={true}
+                accessibilityLabel={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+                accessibilityRole="button"
+              >
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color={COLORS.slate}
+                />
+              </TouchableOpacity>
+            </View>
+            {/* Ask for Invite Code if needed */}
+            {inviteCodeRequired && (
+              <View style={styles.inviteCodeSection}>
+                <View
+                  style={styles.inviteCodeMessage}
+                  accessible={true}
+                  accessibilityLabel="Invite code information"
+                >
+                  <Ionicons
+                    name="information-circle"
+                    size={18}
+                    color={COLORS.slate}
+                    style={styles.infoIcon}
+                  />
+                  <Text style={styles.inviteCodeText}>
+                    Enter invite code (optional). You can sign up without one,
+                    but it helps us connect you with realtors you know on Roost.
+                  </Text>
+                </View>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    ref={inviteCodeRef}
+                    style={styles.input}
+                    placeholder="Invite Code"
+                    placeholderTextColor={COLORS.gray}
+                    value={inviteCode}
+                    onChangeText={setInviteCode}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={10} // Adjust based on your actual invite code length
+                    accessible={true}
+                    accessibilityLabel="Invite code input (optional)"
+                    returnKeyType="done"
+                    onSubmitEditing={() => dismissKeyboard()}
+                  />
+                </View>
+              </View>
+            )}
+            <AnimatedDropdown
+              visible={!!passwordError}
+              style={!!passwordError ? styles.errorBox : {}}
+              maxHeight={100}
+              contentKey={passwordError}
             >
-              {passwordError}
-            </Text>
-          </AnimatedDropdown>
-        </ScrollView>
-      </KeyboardAvoidingView>
-      <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: Math.max(insets.bottom, 24) },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleBack}
-          accessible={true}
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-        >
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.continueButton, isLoading && styles.buttonDisabled]}
-          onPress={handleContinue}
-          disabled={isLoading}
-          accessible={true}
-          accessibilityLabel="Continue to next step"
-          accessibilityRole="button"
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.continueButtonText}>Continue</Text>
-          )}
-        </TouchableOpacity>
+              <Text
+                style={styles.errorText}
+                accessible={true}
+                accessibilityLabel="Password error message"
+              >
+                {passwordError}
+              </Text>
+            </AnimatedDropdown>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
-    </SafeAreaView>
-  );
-}
+    );
+  }
+);
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
@@ -414,76 +413,32 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    paddingBottom: 120, // Add padding to account for fixed footer
-    justifyContent: "center",
-  },
-  subHeading: {
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
-    color: COLORS.slate,
-    marginBottom: 16,
-    fontFamily: "Futura",
-  },
-  heading: {
-    fontSize: 24, // H1 size
-    textAlign: "center",
-    fontWeight: "bold", // H1 weight
-    color: COLORS.black,
-    marginBottom: 32,
-    fontFamily: "Futura",
+  contentContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 48,
+    alignItems: "center",
   },
   brandLogo: {
-    alignSelf: "center",
     marginBottom: 32,
+    alignSelf: "center",
+    marginTop: 64,
   },
-  inviteCodeContainer: {
-    marginTop: 16,
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: COLORS.coloredBgFill, // Using colored background fill with 10% opacity
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.green,
-  },
-  inviteCodeHeading: {
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
-    color: COLORS.green,
-    marginBottom: 16,
-    textAlign: "center",
-    fontFamily: "Futura",
-  },
-  enhancedInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.green,
-    borderRadius: 8,
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
-    height: 48,
-  },
-  inputIcon: {
-    marginRight: 16,
-  },
-  enhancedInput: {
-    flex: 1,
-    height: 48,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+  heading: {
+    fontSize: 20, // H2 size
+    fontWeight: "bold", // H2 weight
     color: COLORS.black,
+    marginBottom: 32,
     fontFamily: "Futura",
   },
   inputContainer: {
+    width: "100%",
+    marginBottom: 16,
+    position: "relative", // For positioning the eye icon
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.gray,
     borderRadius: 8,
-    marginBottom: 16,
     backgroundColor: COLORS.white,
   },
   input: {
@@ -496,7 +451,36 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   eyeIcon: {
-    padding: 16,
+    padding: 10,
+  },
+  passwordInstruction: {
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.slate,
+    marginTop: 4,
+    marginBottom: 16,
+    alignSelf: "flex-start",
+    fontFamily: "Futura",
+  },
+  inviteCodeSection: {
+    width: "100%",
+    marginTop: 24,
+  },
+  inviteCodeMessage: {
+    flexDirection: "row",
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  infoIcon: {
+    marginRight: 8,
+    marginTop: 2, // Align icon with first line of text
+  },
+  inviteCodeText: {
+    flex: 1,
+    fontSize: 12, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.slate,
+    fontFamily: "Futura",
   },
   errorBox: {
     backgroundColor: "#F0913A80", // Using notice container background with 25% opacity
@@ -506,49 +490,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12, // P size
-    fontWeight: 700, // P weight
+    fontWeight: "700", // P weight
     color: "#707070",
     fontFamily: "Futura",
-  },
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: COLORS.black,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    minHeight: 120,
-    paddingBottom: 24, // Ensure enough space for bottom safe area
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 50,
-    backgroundColor: COLORS.black,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.white,
-  },
-  continueButton: {
-    backgroundColor: COLORS.green,
-    borderRadius: 50, // Made pill-shaped
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    minHeight: 48,
-  },
-  continueButtonText: {
-    color: COLORS.white,
-    fontSize: 12, // H3 size
-    fontWeight: 700, // H3 weight
-    fontFamily: "Futura",
-  },
-  buttonDisabled: {
-    opacity: 0.7,
   },
   inviteBox: {
     backgroundColor: COLORS.coloredBgFill, // Using colored background fill with 10% opacity
@@ -567,3 +511,5 @@ const styles = StyleSheet.create({
     color: COLORS.green,
   },
 });
+
+export default PasswordScreen;

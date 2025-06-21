@@ -7,11 +7,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Logo from "../components/Logo";
 import AnimatedDropdown from "../components/common/AnimatedDropdown";
+import {} from "react-native-web";
 
 /**
  * Color palette from UX team design system
@@ -37,214 +39,221 @@ const COLORS = {
   coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
-export default function AccountTypeScreen({ navigation }) {
-  const insets = useSafeAreaInsets();
-  const [accountType, setAccountType] = useState("mortgage"); // Default selection
-  const [recoId, setRecoId] = useState("");
-  const [recoError, setRecoError] = useState(false);
+const AccountTypeScreen = React.forwardRef(
+  ({ navigation, setBottomBarLoading }, ref) => {
+    const [accountType, setAccountType] = useState("mortgage"); // Default selection
+    const [recoId, setRecoId] = useState("");
+    const [recoError, setRecoError] = useState(false);
 
-  // Switch between mortgage or realtor
-  const handleSelect = (type) => {
-    setAccountType(type);
-    // Reset RECO-related fields if user switches away
-    if (type !== "realtor") {
-      setRecoId("");
-      setRecoError(false);
-    }
-  };
+    // Expose validate method to parent via ref
+    React.useImperativeHandle(ref, () => ({
+      validate: () => {
+        // Validate RECO ID if a realtor account is selected
+        if (accountType === "realtor") {
+          if (!validateRecoId()) {
+            return false;
+          }
+        }
 
-  // Simple validation example
-  const validateRecoId = () => {
-    const recoRegex = /^\d{7}$/;
-    if (!recoRegex.test(recoId)) {
-      setRecoError(true);
-      return false;
-    }
-    setRecoError(false);
-    return true;
-  };
+        // Pass account type to next screen
+        navigation.setParams({ accountType, recoId });
 
-  const handleNext = () => {
-    if (accountType === "realtor") {
-      if (!validateRecoId()) {
-        return;
+        return true;
+      },
+    }));
+
+    // Switch between mortgage or realtor
+    const handleSelect = (type) => {
+      setAccountType(type);
+      // Reset RECO-related fields if user switches away
+      if (type !== "realtor") {
+        setRecoId("");
+        setRecoError(false);
       }
-    }
-    navigation.navigate("Details", { accountType, recoId });
-  };
+    };
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
+    // Simple validation example
+    const validateRecoId = () => {
+      const recoRegex = /^\d{7}$/;
+      if (!recoRegex.test(recoId)) {
+        setRecoError(true);
+        return false;
+      }
+      setRecoError(false);
+      return true;
+    };
+    // We've moved the handleNext function to useImperativeHandle
+    // so it can be called by the parent component via ref
 
-  const handleLogin = () => {
-    navigation.navigate("Login");
-  };
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.container}
-        bounces={false}
-      >
-        {/* Brand Title */}
-        <Logo
-          width={120}
-          height={42}
-          variant="black"
-          style={styles.brandLogo}
-        />
+    const handleLogin = () => {
+      // Navigate to the Login screen outside the signup flow
+      // using the parent navigation passed from App.js
+      if (navigation.getParent()) {
+        navigation.getParent().navigate("Login");
+      }
+    };
 
-        {/* Prompt */}
-        <Text style={styles.heading}>
-          What type of account are you sign up for?
-        </Text>
+    return (
+      <View style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardContainer}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+        >
+          {/* Brand Title */}
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
 
-        {/* Pill Buttons */}
-        <View style={styles.pillContainer}>
-          {/* Mortgage Pill */}
-          <TouchableOpacity
-            style={[
-              styles.pillButton,
-              accountType === "mortgage"
-                ? styles.pillSelected
-                : styles.pillUnselected,
-            ]}
-            onPress={() => handleSelect("mortgage")}
-            activeOpacity={0.8}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.contentContainer}
+            bounces={false}
           >
-            {accountType === "mortgage" && (
-              <Ionicons
-                name="checkmark"
-                size={16}
-                color="#FFFFFF"
-                style={styles.checkIcon}
-              />
-            )}
-            <Text
-              style={[
-                styles.pillText,
-                accountType === "mortgage"
-                  ? styles.pillTextSelected
-                  : styles.pillTextUnselected,
-              ]}
-            >
-              Looking for a mortgage
+            {/* Prompt */}
+            <Text style={styles.heading}>
+              What type of account are you sign up for?
             </Text>
-          </TouchableOpacity>
 
-          {/* Realtor Pill */}
-          <TouchableOpacity
-            style={[
-              styles.pillButton,
-              accountType === "realtor"
-                ? styles.pillSelected
-                : styles.pillUnselected,
-            ]}
-            onPress={() => handleSelect("realtor")}
-            activeOpacity={0.8}
-          >
+            {/* Pill Buttons */}
+            <View style={styles.pillContainer}>
+              {/* Mortgage Pill */}
+              <TouchableOpacity
+                style={[
+                  styles.pillButton,
+                  accountType === "mortgage"
+                    ? styles.pillSelected
+                    : styles.pillUnselected,
+                ]}
+                onPress={() => handleSelect("mortgage")}
+                activeOpacity={0.8}
+              >
+                {accountType === "mortgage" && (
+                  <Ionicons
+                    name="checkmark"
+                    size={16}
+                    color="#FFFFFF"
+                    style={styles.checkIcon}
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.pillText,
+                    accountType === "mortgage"
+                      ? styles.pillTextSelected
+                      : styles.pillTextUnselected,
+                  ]}
+                >
+                  Looking for a mortgage
+                </Text>
+              </TouchableOpacity>
+
+              {/* Realtor Pill */}
+              <TouchableOpacity
+                style={[
+                  styles.pillButton,
+                  accountType === "realtor"
+                    ? styles.pillSelected
+                    : styles.pillUnselected,
+                ]}
+                onPress={() => handleSelect("realtor")}
+                activeOpacity={0.8}
+              >
+                {accountType === "realtor" && (
+                  <Ionicons
+                    name="checkmark"
+                    size={16}
+                    color="#FFFFFF"
+                    style={styles.checkIcon}
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.pillText,
+                    accountType === "realtor"
+                      ? styles.pillTextSelected
+                      : styles.pillTextUnselected,
+                  ]}
+                >
+                  Realtor account
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* RECO ID Input & Error - Only show if 'realtor' is selected */}
             {accountType === "realtor" && (
-              <Ionicons
-                name="checkmark"
-                size={16}
-                color="#FFFFFF"
-                style={styles.checkIcon}
-              />
+              <View style={{ width: "100%", marginBottom: 20 }}>
+                <TextInput
+                  style={styles.recoInput}
+                  placeholder="Your RECO id number"
+                  placeholderTextColor={COLORS.gray}
+                  value={recoId}
+                  onChangeText={(text) =>
+                    text.match(/^\d{0,7}$/) ? setRecoId(text) : null
+                  }
+                  keyboardType="numeric"
+                  maxLength={7}
+                />
+                <AnimatedDropdown
+                  visible={recoError}
+                  style={styles.recoErrorContainer}
+                >
+                  <Text style={styles.recoErrorText}>
+                    You have not entered a valid RECO ID, each new account is
+                    verified to make sure that the agent is valid
+                  </Text>
+                </AnimatedDropdown>
+              </View>
             )}
-            <Text
-              style={[
-                styles.pillText,
-                accountType === "realtor"
-                  ? styles.pillTextSelected
-                  : styles.pillTextUnselected,
-              ]}
-            >
-              Realtor account
-            </Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* RECO ID Input & Error - Only show if 'realtor' is selected */}
-        {accountType === "realtor" && (
-          <View style={{ width: "100%", marginBottom: 20 }}>
-            <TextInput
-              style={styles.recoInput}
-              placeholder="Your RECO id number"
-              placeholderTextColor={COLORS.gray}
-              value={recoId}
-              onChangeText={(text) =>
-                text.match(/^\d{0,7}$/) ? setRecoId(text) : null
-              }
-              keyboardType="numeric"
-              maxLength={7}
-            />
-            <AnimatedDropdown
-              visible={recoError}
-              style={styles.recoErrorContainer}
-            >
-              <Text style={styles.recoErrorText}>
-                You have not entered a valid RECO ID, each new account is
-                verified to make sure that the agent is valid
+            {/* Already have an account? Log in here */}
+            <Text style={styles.alreadyHaveAccount}>
+              Already have an account?
+              <Text style={styles.loginLink} onPress={handleLogin}>
+                Log in here
               </Text>
-            </AnimatedDropdown>
-          </View>
-        )}
+            </Text>
 
-        {/* Already have an account? Log in here */}
-        <Text style={styles.alreadyHaveAccount}>
-          Already have an account?
-          <Text style={styles.loginLink} onPress={handleLogin}>
-            Log in here
-          </Text>
-        </Text>
-
-        {/* Footer Text */}
-        <Text style={styles.footerText}>
-          By signing up, you agree to Roost’s
-          <Text style={styles.linkText}>Terms of Use</Text> and
-          <Text style={styles.linkText}>Privacy Policy</Text>. By providing your
-          email & phone number, you consent to receive communications from
-          Roost. You can opt-out anytime.
-        </Text>
-      </ScrollView>
-      {/* Bottom navigation bar */}
-      <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: Math.max(insets.bottom, 24) },
-        ]}
-      >
-        {/* Back Arrow */}
-        <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        {/* Next Button */}
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Next</Text>
-        </TouchableOpacity>
+            {/* Footer Text */}
+            <Text style={styles.footerText}>
+              By signing up, you agree to Roost's
+              <Text style={styles.linkText}>Terms of Use</Text> and
+              <Text style={styles.linkText}>Privacy Policy</Text>. By providing
+              your email & phone number, you consent to receive communications
+              from Roost. You can opt-out anytime.
+            </Text>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
-    </SafeAreaView>
-  );
-}
+    );
+  }
+);
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
   },
-  container: {
+  contentContainer: {
     paddingHorizontal: 24,
     paddingVertical: 48,
-    paddingBottom: 120, // Add padding to account for fixed footer
     alignItems: "center",
+    justifyContent: "center",
+    flexGrow: 1,
   },
   brandLogo: {
     marginBottom: 32,
+    alignSelf: "center",
+    marginTop: 64,
   },
   heading: {
     fontSize: 20, // H2 size
@@ -257,14 +266,15 @@ const styles = StyleSheet.create({
 
   /* Pill Buttons */
   pillContainer: {
-    width: "100%",
     marginBottom: 24,
+    alignItems: "flex-start",
+    alignSelf: "stretch",
   },
   pillButton: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 50,
-    paddingVertical: 16,
+    paddingVertical: 13,
     paddingHorizontal: 24,
     marginBottom: 16,
   },
@@ -281,7 +291,7 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontSize: 12, // H3 size
-    fontWeight: 700, // H3 weight (medium)
+    fontWeight: "700", // H3 weight (medium)
     fontFamily: "Futura",
   },
   pillTextSelected: {
@@ -345,42 +355,8 @@ const styles = StyleSheet.create({
   linkText: {
     color: COLORS.green,
     textDecorationLine: "underline",
-  }, // Bottom bar
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    paddingBottom: 24,
-    backgroundColor: COLORS.black,
-    height: 120,
-    minHeight: 120,
-  },
-  backCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 50,
-    backgroundColor: COLORS.black,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.white,
-  },
-  nextButton: {
-    backgroundColor: COLORS.green,
-    borderRadius: 50,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-  },
-  nextButtonText: {
-    color: COLORS.white,
-    fontSize: 12, // H3 size
-    fontWeight: 700, // H3 weight
-    fontFamily: "Futura",
   },
 });
+
+// Export the wrapped component with forwardRef
+export default AccountTypeScreen;
