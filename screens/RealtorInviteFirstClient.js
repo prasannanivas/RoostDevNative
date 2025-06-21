@@ -16,6 +16,7 @@ import { COLORS } from "../styles";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useRealtor } from "../context/RealtorContext";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 export default function RealtorInviteFirstClient() {
   const navigation = useNavigation();
@@ -156,13 +157,27 @@ export default function RealtorInviteFirstClient() {
 
         {/* Disclaimer */}
         <View style={styles.disclaimerContainer}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="person-add-outline" size={24} color="#FFFFFF" />
-          </View>
           <Text style={styles.disclaimerText}>
             You can invite more later in the client tab, just click "add client"
             button
           </Text>
+          <View style={styles.iconContainer}>
+            <Svg width="57" height="56" viewBox="0 0 57 56" fill="none">
+              <Rect
+                x="1.5"
+                y="1"
+                width="54"
+                height="54"
+                rx="27"
+                fill="#F0913A"
+              />
+              <Path
+                d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+                stroke="#FDFDFD"
+                strokeWidth="2"
+              />
+            </Svg>
+          </View>
         </View>
 
         {/* Add Client Button */}
@@ -188,7 +203,7 @@ export default function RealtorInviteFirstClient() {
       {/* Bottom Navigation */}
       <View style={styles.bottomNavContainer}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back-circle" size={36} color="#fff" />
+          <Ionicons name="arrow-back" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextButtonText}>Next</Text>
@@ -214,58 +229,71 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
   heading: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: 700,
     marginBottom: 16,
     textAlign: "center",
     color: "#1D2327",
   },
   subheading: {
-    fontSize: 16,
-    color: "#666666",
+    fontSize: 14,
+    color: "#707070",
     textAlign: "center",
+    fontWeight: "500",
     marginBottom: 40,
     paddingHorizontal: 16,
   },
   input: {
     width: "100%",
-    height: 50,
+    minHeight: 42,
     borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 4,
+    borderColor: "#707070",
+    borderRadius: 6,
     marginBottom: 16,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: 12,
+    fontWeight: "500",
+    fontFamily: "Futura",
   },
   disclaimerContainer: {
-    backgroundColor: COLORS.orange,
+    backgroundColor: "#F0913A80",
     borderRadius: 8,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 24,
     width: "100%",
   },
   iconContainer: {
     marginRight: 10,
+    borderColor: COLORS.white,
+    borderWidth: 2,
+    borderRadius: 30,
+    padding: 0,
   },
   disclaimerText: {
-    color: "#FFFFFF",
-    fontSize: 14,
+    color: "#707070",
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: "Futura",
     flex: 1,
   },
   addClientButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 100,
-    paddingVertical: 16,
-    width: "100%",
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    minWidth: 334,
+    minHeight: 42,
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   addClientButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
   },
   loadingContainer: {
     position: "absolute",
@@ -294,9 +322,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     paddingBottom: 36,
+    height: "15%",
   },
   backButton: {
-    padding: 4,
+    padding: 3,
+    borderWidth: 2,
+    borderRadius: 33,
+    borderColor: COLORS.white,
   },
   nextButton: {
     backgroundColor: COLORS.green,
