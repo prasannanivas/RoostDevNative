@@ -23,7 +23,7 @@ import Svg, {
   Circle,
 } from "react-native-svg";
 
-const POINTS_TO_DOLLARS = 3.14; // Assuming this constant is used as in the parent component
+const POINTS_TO_DOLLARS = 1; // Assuming this constant is used as in the parent component
 
 const ClaimRewardsModal = ({
   claimModal,
@@ -145,41 +145,20 @@ const ClaimRewardsModal = ({
                   {selectedReward.rewardName?.toUpperCase()}
                 </Text>
                 <Text style={localStyles.pointsText}>
-                  {Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS)}
+                  {Math.ceil(selectedReward.rewardAmount / POINTS_TO_DOLLARS) +
+                    " "}
                   PTS
                 </Text>
-                <Text style={localStyles.descriptionTitle}>
-                  This custom gift basket come with
-                </Text>
                 <View style={localStyles.descriptionContainer}>
-                  {selectedReward.description ? (
+                  {selectedReward.description &&
                     selectedReward.description
                       .split("\n")
                       .map((item, index) => (
                         <Text key={index} style={localStyles.descriptionItem}>
                           {item.trim() || "Heritage Bee Soap"}
                         </Text>
-                      ))
-                  ) : (
-                    <>
-                      <Text style={localStyles.descriptionItem}>
-                        Heritage Bee Soap
-                      </Text>
-                      <Text style={localStyles.descriptionItem}>
-                        Berts Bees lip balm
-                      </Text>
-                      <Text style={localStyles.descriptionItem}>
-                        Apple cider Vinegar
-                      </Text>
-                      <Text style={localStyles.descriptionItem}>
-                        Pine Cone wax
-                      </Text>
-                    </>
-                  )}
+                      ))}
                 </View>
-                <Text style={localStyles.noteText}>
-                  Plus a custom thank you card from you
-                </Text>
                 {selectedReward.rewardFor === "Clients" && (
                   <View style={localStyles.clientSelectorWrapper}>
                     <ClientSelector
@@ -275,16 +254,18 @@ const ClaimRewardsModal = ({
                 />
               </Svg>
             </TouchableOpacity>
-            <Text style={styles.addressModalTitle}>
+            <Text style={localStyles.addressModalTitle}>
               Confirm Shipping Address
             </Text>
-            <Text style={styles.addressModalSubtitle}>
-              {`Please confirm or edit the address for ${
-                selectedReward?.rewardFor === "Clients"
+            <Text style={localStyles.addressModalSubtitle}>
+              {`Please confirm or edit the address for `}
+              <Text style={localStyles.boldText}>
+                {selectedReward?.rewardFor === "Clients"
                   ? selectedClientData?.referenceName
-                  : realtor?.name || "yourself"
-              }`}
+                  : realtor?.name || "yourself"}
+              </Text>
             </Text>
+
             <Text style={styles.label}>Address:</Text>
             <TextInput
               style={styles.input}
@@ -312,20 +293,20 @@ const ClaimRewardsModal = ({
             />
             <View style={styles.addressButtonsRow}>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={localStyles.cancelButton}
                 onPress={() => {
                   setAddressConfirmation(false);
                   setClaimModal(false);
                   setSelectedReward(null);
                 }}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={localStyles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
-                  styles.confirmButton,
-                  claimLoading && styles.buttonDisabled,
+                  localStyles.confirmButton,
+                  claimLoading && localStyles.buttonDisabled,
                 ]}
                 onPress={async () => {
                   setClaimLoading(true);
@@ -341,7 +322,9 @@ const ClaimRewardsModal = ({
                 {claimLoading ? (
                   <ActivityIndicator color={COLORS.white} size="small" />
                 ) : (
-                  <Text style={styles.confirmButtonText}>Confirm & Submit</Text>
+                  <Text style={localStyles.confirmButtonText}>
+                    Confirm & Submit
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -355,9 +338,41 @@ const ClaimRewardsModal = ({
 const localStyles = StyleSheet.create({
   closeButton: {
     position: "absolute",
-    top: -18.5, // Half of the circle height (37/2) to position it 50% outside
-    right: -18.5, // Half of the circle width (37/2) to position it 50% outside
+    top: -8, // Half of the circle height (37/2) to position it 50% outside
+    right: -8, // Half of the circle width (37/2) to position it 50% outside
     zIndex: 10,
+  },
+
+  addressModalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+    color: COLORS.black,
+  },
+  addressModalSubtitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: "#666666",
+    marginTop: 8,
+    marginBottom: 16,
+    textAlign: "center",
+    paddingHorizontal: 16,
+  },
+
+  boldText: {
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.black,
+
+    fontSize: 14,
+  },
+
+  buttonDisabled: {
+    backgroundColor: "#CCCCCC",
   },
   claimModal: {
     width: "90%",
@@ -381,10 +396,10 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   pointsText: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
-    color: COLORS.black,
+    color: "#707070",
     marginBottom: 10,
   },
   giftImage: {
@@ -421,12 +436,13 @@ const localStyles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   descriptionItem: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
-    color: "#666666",
+    color: "#707070",
     marginVertical: 4,
     textAlign: "center",
     lineHeight: 22,
@@ -468,8 +484,8 @@ const localStyles = StyleSheet.create({
     height: 50,
   },
   passButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.green,
   },
@@ -488,8 +504,42 @@ const localStyles = StyleSheet.create({
     backgroundColor: "#CCCCCC",
   },
   sendButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.white,
+  },
+  cancelButton: {
+    borderWidth: 2,
+    borderColor: COLORS.green,
+    backgroundColor: "transparent",
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 117,
+    marginRight: 10,
+  },
+  cancelButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.green,
+  },
+  confirmButton: {
+    backgroundColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 179,
+    marginLeft: 10,
+  },
+  confirmButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.white,
   },

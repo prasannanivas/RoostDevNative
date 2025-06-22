@@ -82,7 +82,7 @@ export default function RealtorRewards({
 
   console.log("selectedClient", selectedClient);
 
-  const POINTS_TO_DOLLARS = 3.14;
+  const POINTS_TO_DOLLARS = 1;
   const currentPoints = realtor?.points || 0;
 
   // Add new animation state
