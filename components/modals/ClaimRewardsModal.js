@@ -23,7 +23,7 @@ import Svg, {
   Circle,
 } from "react-native-svg";
 
-const POINTS_TO_DOLLARS = 100; // Assuming this constant is used as in the parent component
+const POINTS_TO_DOLLARS = 3.14; // Assuming this constant is used as in the parent component
 
 const ClaimRewardsModal = ({
   claimModal,
@@ -52,7 +52,9 @@ const ClaimRewardsModal = ({
     <>
       {/* Claim Reward Modal */}
       <Modal
-        visible={claimModal && selectedReward !== null}
+        visible={
+          claimModal && selectedReward !== null && addressConfirmation === false
+        }
         transparent
         animationType="fade"
         onRequestClose={() => setClaimModal(false)}
@@ -257,19 +259,31 @@ const ClaimRewardsModal = ({
         <View style={styles.modalOverlay}>
           <View style={styles.addressModal}>
             <TouchableOpacity
-              style={styles.claimClose}
-              onPress={() => setAddressConfirmation(false)}
+              style={localStyles.closeButton}
+              onPress={() => {
+                setAddressConfirmation(false);
+                setClaimModal(false);
+                setSelectedReward(null);
+              }}
             >
-              <Ionicons name="close-outline" size={24} color={COLORS.black} />
+              <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
+                <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                <Path
+                  d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                  fill="#A9A9A9"
+                />
+              </Svg>
             </TouchableOpacity>
             <Text style={styles.addressModalTitle}>
               Confirm Shipping Address
             </Text>
             <Text style={styles.addressModalSubtitle}>
-              Please confirm or edit the address for
-              {selectedReward?.rewardFor === "Clients"
-                ? selectedClientData?.referenceName
-                : realtor?.name || "yourself"}
+              {`Please confirm or edit the address for ${
+                selectedReward?.rewardFor === "Clients"
+                  ? selectedClientData?.referenceName
+                  : realtor?.name || "yourself"
+              }`}
             </Text>
             <Text style={styles.label}>Address:</Text>
             <TextInput
@@ -299,7 +313,11 @@ const ClaimRewardsModal = ({
             <View style={styles.addressButtonsRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setAddressConfirmation(false)}
+                onPress={() => {
+                  setAddressConfirmation(false);
+                  setClaimModal(false);
+                  setSelectedReward(null);
+                }}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>

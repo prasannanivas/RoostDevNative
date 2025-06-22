@@ -34,12 +34,13 @@ const ClientSelector = ({
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
       >
-        <ClientSelectDropdown
-          width={Dimensions.get("window").width * 0.9}
-          label={displayText}
-        />
+        <View>
+          <ClientSelectDropdown
+            width={Dimensions.get("window").width * 0.9}
+            label={displayText}
+          />
+        </View>
       </TouchableOpacity>
-
       <Modal
         visible={modalVisible}
         transparent
@@ -52,7 +53,8 @@ const ClientSelector = ({
           onPress={() => setModalVisible(false)}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select a client</Text>            <FlatList
+            <Text style={styles.modalTitle}>Select a client</Text>
+            <FlatList
               data={items}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
@@ -105,7 +107,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-  },  modalContent: {
+  },
+  modalContent: {
     width: "90%",
     backgroundColor: COLORS.white,
     borderRadius: 16,

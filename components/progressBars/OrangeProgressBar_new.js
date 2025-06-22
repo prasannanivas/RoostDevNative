@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   barText: {
     fontSize: 12,
-    fontWeight: 700,
+    fontWeight: "500",
     fontFamily: "Futura",
     marginLeft: 10,
     zIndex: 5,

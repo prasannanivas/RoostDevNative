@@ -1,5 +1,12 @@
 import React from "react";
-import Svg, { G, Path, ClipPath, Defs, Text } from "react-native-svg";
+import { Text as RNText } from "react-native";
+import Svg, {
+  G,
+  Path,
+  ClipPath,
+  Defs,
+  Text as SvgText,
+} from "react-native-svg";
 
 const ClientSelectDropdown = ({
   width = 302,
@@ -24,7 +31,7 @@ const ClientSelectDropdown = ({
           fill="#FDFDFD"
         />
         {/* Custom text instead of the SVG path text */}
-        <Text
+        <SvgText
           x="25"
           y="26"
           fontSize="16"
@@ -33,7 +40,7 @@ const ClientSelectDropdown = ({
           fontFamily="Futura"
         >
           {displayLabel}
-        </Text>
+        </SvgText>
         <Path
           d="M278.5 25L272.005 18.25L284.995 18.25L278.5 25Z"
           fill="#1D2327"

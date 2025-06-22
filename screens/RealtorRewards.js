@@ -13,20 +13,10 @@ import {
   Alert,
   Animated,
   Dimensions,
-  Linking,
-  StatusBar,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  FontAwesome,
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
-  Entypo,
-} from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import Svg, { Circle, Path } from "react-native-svg";
-import { Picker } from "@react-native-picker/picker";
 import { OrangeProgressBar } from "../components/progressBars";
 import InviteRealtorModal from "../components/modals/InviteRealtorModal";
 import ClaimRewardsModal from "../components/modals/ClaimRewardsModal";
@@ -238,53 +228,6 @@ export default function RealtorRewards({
       console.error(e);
       throw e;
     }
-  };
-
-  const renderRewardCard = (reward) => {
-    if (!reward) return null;
-    const { progress, pointsNeeded, isEligible } = getRewardProgress(
-      reward.rewardAmount
-    );
-    return (
-      <TouchableOpacity
-        key={reward._id}
-        style={styles.rewardCard}
-        onPress={() => {
-          setSelectedReward(reward);
-          setClaimModal(true);
-          setSelectedClient("");
-        }}
-      >
-        {reward.imageUrl ? (
-          <Image
-            source={{ uri: `http://159.203.58.60:5000${reward.imageUrl}` }}
-            style={styles.rewardImage}
-          />
-        ) : (
-          <View style={styles.rewardInitials}>
-            <Text>{getInitials(reward.rewardName)}</Text>
-          </View>
-        )}
-        <Text style={styles.rewardName}>{reward.rewardName}</Text>
-        {reward.description ? (
-          <Text numberOfLines={1} style={styles.rewardDesc}>
-            {reward.description}
-          </Text>
-        ) : null}
-        {/* <Text style={styles.rewardAmt}>${reward.rewardAmount.toFixed(2)}</Text> */}
-        <OrangeProgressBar
-          progress={progress}
-          showPercentage={false}
-          style={isEligible ? { borderColor: COLORS.green } : {}}
-        />
-        <View style={styles.pointsNeededRow}>
-          <Text style={styles.pointsNeeded}>
-            {currentPoints}/{pointsNeeded} pts
-          </Text>
-          {isEligible && <Text style={styles.eligibleTag}>Eligible!</Text>}
-        </View>
-      </TouchableOpacity>
-    );
   };
 
   // Format history date
