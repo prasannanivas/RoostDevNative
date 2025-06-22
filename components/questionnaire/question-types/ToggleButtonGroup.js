@@ -138,7 +138,10 @@ const ToggleButton = ({ options, value, onValueChange }) => {
   );
 };
 
-const ToggleButtonGroup = ({ question, value, onValueChange }) => {
+const ToggleButtonGroup = ({ question, value = "no", onValueChange }) => {
+  if (!value) {
+    value = "no"; // Default to "no" if value is not provided
+  }
   const handleSelect = (selectedValue) => {
     onValueChange(selectedValue);
   };

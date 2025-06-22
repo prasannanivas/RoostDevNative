@@ -287,7 +287,7 @@ const questions = [
 
     nextQuestionMap: {
       employed: 10,
-      self_employed: 11,
+      self_employed: 10,
       pension: 12,
       other: 12,
     },
@@ -369,16 +369,6 @@ const questions = [
         label: "",
         type: "text",
         keyboard: "numeric",
-      },
-      {
-        key: "companyAddress",
-        placeholder: "Company Address",
-        type: "text",
-      },
-      {
-        key: "jobTitle",
-        placeholder: "Your Job Title",
-        type: "text",
       },
       {
         key: "bonuses",
@@ -718,15 +708,13 @@ const questions = [
         type: "text",
         keyboard: "numeric",
       },
-      { key: "companyAddress", placeholder: "Company Address", type: "text" },
-      { key: "jobTitle", placeholder: "Your Job Title", type: "text" },
       {
         key: "bonuses",
         label: "Bonuses or Commissions?",
         type: "toggleButtonGroup",
         options: [
-          { value: "yes", label: "Yes" },
           { value: "no", label: "Nope" },
+          { value: "yes", label: "Yes" },
         ],
       },
       {
@@ -734,23 +722,12 @@ const questions = [
         label: "Benefits?",
         type: "toggleButtonGroup",
         options: [
-          { value: "yes", label: "Yes" },
           { value: "no", label: "Nope" },
+          { value: "yes", label: "Yes" },
         ],
       },
     ],
-    nextQuestion: 109, // Skip to co-signer income question
-  },
-  {
-    id: 109,
-    page: 109,
-    text: "What is your monthly income?",
-    type: "numericInput",
-    profileInitials: "",
-    placeholder: "Enter amount",
-    prefix: "$",
-    keyboard: "numeric",
-    nextQuestion: 114,
+    nextQuestion: 114, // Skip to co-signer income question
   },
   {
     id: 114,
@@ -1074,8 +1051,6 @@ const questions = [
         type: "text",
         keyboard: "numeric",
       },
-      { key: "coCompanyAddress", placeholder: "Company Address", type: "text" },
-      { key: "coJobTitle", placeholder: "Job Title", type: "text" },
       {
         key: "coBonuses",
         label: "Bonuses or Commissions?",

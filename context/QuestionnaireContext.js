@@ -7,8 +7,24 @@ import {
 const QuestionnaireContext = createContext();
 
 export const QuestionnaireProvider = ({ children }) => {
+  const defaultResponses = {
+    11: { bonuses: "no", benefits: "no" }, // Default value for question 10
+    14: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 14
+    13: { hasAssets: "no", items: [] }, // Default value for question 15
+    108: { bonuses: "no", benefits: "no" }, // Default value for question 108
+    116: { hasAssets: "no", items: [] }, // Default value for question 116
+    118: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 118
+    112: { coBonuses: "no", coBenefits: "no" }, // Default value for question 112
+    117: { coHasAssets: "no", coItem: [] }, // Default value for question 117
+    119: {
+      coHasOtherProperties: "no",
+      coHasMortgage: "no",
+      coPlanningSelling: "no",
+    }, // Default value for question 119
+  };
+
   const [currentQuestionId, setCurrentQuestionId] = useState(1);
-  const [responses, setResponses] = useState({});
+  const [responses, setResponses] = useState(defaultResponses);
   const [isCompleted, setIsCompleted] = useState(false);
   const [visitedQuestions, setVisitedQuestions] = useState(new Set([1]));
   const [questionHistory, setQuestionHistory] = useState([1]); // Track actual navigation order
@@ -26,7 +42,7 @@ export const QuestionnaireProvider = ({ children }) => {
         const newFlowType = response; // "just_me" or "co_signer"
 
         // Clear responses and visited questions for questions that don't belong to the new flow
-        const newResponses = {};
+        const newResponses = defaultResponses;
         const newVisitedQuestions = new Set();
         const newQuestionHistory = [];
 

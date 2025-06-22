@@ -1,0 +1,119 @@
+{
+  "1": "still_looking",
+  "10": {
+    "companyAddress": "Bbss",
+    "companyName": "G",
+    "employmentType": "part_time",
+    "income": "88",
+    "jobTitle": "Bbb",
+    "months": "3",
+    "years": "2020"
+  },
+  "11": {
+    "companyAddress": "Hjkks",
+    "companyName": "Ca",
+    "employmentType": "part_time",
+    "income": "88",
+    "jobTitle": "Hhkks",
+    "months": "3",
+    "years": "2020"
+  },
+  "12": "bmo",
+  "13": {
+    "hasAssets": "yes",
+    "items": []
+  },
+  "14": {
+    "hasOtherProperties": "no"
+  },
+  "2": {
+    "downPaymentAmount": "25",
+    "purchaseAmount": "25"
+  },
+  "4": "living_here",
+  "5": "just_me",
+  "6": {
+    "email": "Happy@gmail.com",
+    "firstName": "Pah",
+    "lastName": "Vvva",
+    "phone": "880049999491"
+  },
+  "7": {
+    "birthDay": "4",
+    "birthMonth": "3",
+    "birthYear": "2022",
+    "dependents": "4+",
+    "sinNumber": "Vvbnmd"
+  },
+  "8": {
+    "address": "Bb",
+    "birthDay": "4",
+    "birthMonth": "3",
+    "birthYear": "2022",
+    "dependents": "4+",
+    "livingStatus": "rent",
+    "months": "3",
+    "sinNumber": "Vvbnmd",
+    "years": "2024"
+  },
+  "9": "employed"
+}
+
+
+
+ {
+  "1": "still_looking",
+  "100": {
+    "email": "Mee@mee.com",
+    "firstName": "Me",
+    "lastName": "me",
+    "phone": "8000"
+  },
+  "101": {
+    "coEmail": "hhpp@hhl.com",
+    "coFirstName": "Hh",
+    "coLastName": "Pp",
+    "coPhone": "80"
+  },
+  "102": {
+    "birthDay": "5",
+    "birthMonth": "4"
+  },
+  "104": {
+    "birthDay": "5",
+    "birthMonth": "4",
+    "livingStatus": "rent"
+  },
+  "106": "employed",
+  "108": {
+    "income": "280"
+  },
+  "109": "388",
+  "110": "self_employed",
+  "112": {
+    "coIncome": "50"
+  },
+  "114": "bmo",
+  "115": "scotiabank",
+  "116": {
+    "items": []
+  },
+  "117": {
+    "items": []
+  },
+  "118": {
+    "hasMortgage": "yes",
+    "hasOtherProperties": "yes",
+    "mortgageAmount": "288"
+  },
+  "119": {
+    "coHasMortgage": "no",
+    "coHasOtherProperties": "yes"
+  },
+  "2": {
+    "downPaymentAmount": "28",
+    "purchaseAmount": "52"
+  },
+  "4": "living_here",
+  "5": "co_signer"
+}

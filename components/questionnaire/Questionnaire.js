@@ -220,45 +220,13 @@ const Questionnaire = ({ navigation }) => {
       isCoSigner: isCurrQuestionForCoSigner,
     };
   }; // Enhanced debug logging for response state and initials
-  const userInfo = getUserInitials();
-  console.log("Questionnaire Debug:", {
-    currentQuestionId,
-    currentResponse,
-    responseType: typeof currentResponse,
-    hasNextQuestionMap: !!currentQuestion?.nextQuestionMap,
-    userInfo, // Log the current user info with initials and type
-  });
 
   // Debug specifically for initials
-  console.log("Initials Debug:", {
-    initials: userInfo.initials,
-    isCoSigner: userInfo.isCoSigner,
-    currentQuestionId,
-    isCoSignerQuestion: isCoSignerQuestion(
-      currentQuestionId,
-      currentQuestion?.text
-    ),
-    q101Data: responses["101"] || responses[101],
-    currentResponseData: {
-      firstName: currentResponse?.firstName,
-      lastName: currentResponse?.lastName,
-      coFirstName: currentResponse?.coFirstName,
-      coLastName: currentResponse?.coLastName,
-    },
-  });
   const handleResponseChange = (value) => {
     // For all other questions, update normally
     updateResponse(currentQuestionId, value);
   };
   const getNextQuestionId = (requireResponse = false) => {
-    console.log(
-      "Questionnaire: Using nextQuestionMap for question",
-      currentQuestion,
-      currentResponse,
-      "requireResponse:",
-      requireResponse
-    );
-
     if (!currentQuestion) return null;
 
     // Handle nextQuestionMap (conditional navigation)
@@ -308,11 +276,6 @@ const Questionnaire = ({ navigation }) => {
   };
 
   const getNextQuestionIdWithResponse = (responseValue) => {
-    console.log(
-      "Questionnaire: getNextQuestionIdWithResponse called with:",
-      responseValue
-    );
-
     if (!currentQuestion) return null;
 
     // Handle nextQuestionMap (conditional navigation)
@@ -347,23 +310,6 @@ const Questionnaire = ({ navigation }) => {
     return currentQuestion.nextQuestion;
   };
   const handleAutoNavigate = (selectedValue) => {
-    console.log(
-      "Questionnaire: handleAutoNavigate called with selectedValue:",
-      selectedValue
-    );
-    console.log(
-      "Questionnaire: Current question has nextQuestionMap:",
-      !!currentQuestion?.nextQuestionMap
-    );
-    console.log(
-      "Questionnaire: nextQuestionMap:",
-      currentQuestion?.nextQuestionMap
-    );
-    console.log(
-      "Questionnaire: currentResponse for auto-nav:",
-      currentResponse
-    );
-
     // For form questions that collect names, we don't auto-navigate
     // because we need to validate name fields first - they will use the "Looks Good" button
     if (
@@ -469,24 +415,159 @@ const Questionnaire = ({ navigation }) => {
     }
   };
 
+  const findEmploymentStatusofSelf = (responses) => {
+    let employmentStatus = "employed";
+    if (responses["5"] === "just_me") {
+      if (responses["9"] === "employed") {
+        employmentStatus = "Employed";
+      } else if (responses["9"] === "self_employed") {
+        employmentStatus = "Self-employed";
+      } else {
+        employmentStatus = "Unemployed";
+      }
+      return employmentStatus;
+    }
+    if (responses["5"] === "co_signer") {
+      if (responses["106"] === "employed") {
+        employmentStatus = "Employed";
+      } else if (responses["106"] === "self_employed") {
+        employmentStatus = "Self-employed";
+      } else {
+        employmentStatus = "Unemployed";
+      }
+      return employmentStatus;
+    }
+
+    console.error("Invalid responses for employment status");
+    return "";
+  };
+
+  const findEmploymentStatusofCoSigner = (responses) => {
+    if (responses["110"] === "employed") {
+      return "Employed";
+    }
+    if (responses["110"] === "self_employed") {
+      return "Self-employed";
+    }
+    if (responses["110"] === "unemployed") {
+      return "Unemployed";
+    } else {
+      console.error("Invalid responses for employment status of co-signer");
+      return "";
+    }
+  };
+
+  const findOwnAnotherPropertySelf = (responses) => {
+    if (responses["5"] === "just_me") {
+      if (responses["14"]?.hasOtherProperties === "no") {
+        return "No";
+      }
+      if (responses["14"]?.hasOtherProperties === "yes") {
+        if (responses["14"]?.hasMortgage === "no") {
+          return "Yes - All paid off";
+        } else if (responses["14"]?.hasMortgage === "yes") {
+          return "Yes - with a mortgage";
+        } else {
+          return "No";
+        }
+      }
+    }
+    if (responses["5"] === "co_signer") {
+      if (responses["118"]?.hasOtherProperties === "no") {
+        return "No";
+      }
+      if (responses["118"]?.hasOtherProperties === "yes") {
+        if (responses["118"]?.hasMortgage === "no") {
+          return "Yes - All paid off";
+        } else if (responses["118"]?.hasMortgage === "yes") {
+          return "Yes - with a mortgage";
+        } else {
+          console.error(
+            "Question 118 has invalid responses for Property - mortgages"
+          );
+          return "";
+        }
+      }
+    }
+
+    console.error("Invalid responses for own another property");
+    return "";
+  };
+
+  const findOwnAnotherPropertyCoSigner = (responses) => {
+    if (responses["119"]?.coHasOtherProperties === "no") {
+      return "No";
+    }
+    if (responses["119"]?.coHasOtherProperties === "yes") {
+      if (responses["119"]?.coHasMortgage === "no") {
+        return "Yes - All paid off";
+      } else if (responses["119"]?.coHasMortgage === "yes") {
+        return "Yes - with a mortgage";
+      } else {
+        console.error(
+          "Question 119 has invalid responses for Property - mortgages"
+        );
+        return "";
+      }
+    }
+
+    console.error("Invalid responses for own another property of co-signer");
+    return "";
+  };
+
+  const findCoSignerDetails = (responses) => {
+    if (responses["5"] === "just_me") {
+      return {}; // No co-signer details needed for self
+    }
+    if (responses["5"] === "co_signer") {
+      const coSignerDetails = {
+        name:
+          responses["101"]?.coFirstName + " " + responses["101"]?.coLastName ||
+          "",
+        email: responses["101"]?.coEmail || "",
+        phone: responses["101"]?.coPhone || "",
+        employmentStatus: findEmploymentStatusofCoSigner(responses),
+        ownAnotherProperty: findOwnAnotherPropertyCoSigner(responses),
+      };
+      return coSignerDetails;
+    }
+
+    console.error("Invalid responses for co-signer details");
+    return {};
+  };
+
   const handleSubmit = async () => {
     if (!auth?.client?.id) {
       Alert.alert("Error", "User not authenticated");
       return;
     }
 
+    console.log("Submitting questionnaire with responses:", responses);
+
     setIsSubmitting(true);
     try {
       await axios.put(
         `http://159.203.58.60:5000/client/questionnaire/${auth.client.id}`,
-        { responses }
+        {
+          applyingbehalf: responses["5"] === "just_me" ? "Self" : "other",
+          employmentStatus: findEmploymentStatusofSelf(responses),
+          ownAnotherProperty: findOwnAnotherPropertySelf(responses),
+          otherDetails: findCoSignerDetails(responses),
+          responses,
+        }
       );
 
       markAsCompleted();
       Alert.alert("Success", "Questionnaire submitted successfully!", [
         {
           text: "OK",
-          onPress: () => navigation.goBack(),
+          onPress: () => {
+            try {
+              navigation.goBack();
+            } catch (error) {
+              navigation.navigate("Home");
+            }
+          },
         },
       ]);
     } catch (error) {
@@ -533,8 +614,14 @@ const Questionnaire = ({ navigation }) => {
 
           <View style={styles.footer}>
             <Button
-              title={currentQuestion.submitButtonText || "Complete"}
-              onPress={() => navigation.goBack()}
+              title={
+                isCompleted
+                  ? "Done"
+                  : currentQuestion.submitButtonText || "Complete"
+              }
+              onPress={() => {
+                navigation?.goBack() || navigation?.navigate("Home");
+              }}
               variant="primary"
             />
           </View>
