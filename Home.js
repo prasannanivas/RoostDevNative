@@ -24,7 +24,7 @@ const Home = () => {
       );
       const data = await response.json();
       setClientQuestionaire({
-        responses: data.responses,
+        responses: data?.questionnaire?.responses,
         applyingbehalf: data.applyingbehalf,
         employmentStatus: data.employmentStatus,
         ownAnotherProperty: data.ownAnotherProperty,
@@ -62,7 +62,10 @@ const Home = () => {
       {auth.client ? (
         <ClientProvider>
           {showQuestionnaire ? (
-            <ClientQuestionaire navigation={navigation} />
+            <ClientQuestionaire
+              navigation={navigation}
+              questionnaireData={clientQuestionaire}
+            />
           ) : (
             <ClientHome questionnaireData={clientQuestionaire} />
           )}

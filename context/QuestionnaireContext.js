@@ -119,7 +119,7 @@ export const QuestionnaireProvider = ({ children }) => {
   };
   const resetQuestionnaire = () => {
     setCurrentQuestionId(1);
-    setResponses({});
+    setResponses(defaultResponses);
     setIsCompleted(false);
     setVisitedQuestions(new Set([1]));
     setQuestionHistory([1]);
@@ -139,6 +139,7 @@ export const QuestionnaireProvider = ({ children }) => {
         goToNextQuestion,
         goToPreviousQuestion,
         markAsCompleted,
+        setResponses,
         resetQuestionnaire,
         getProgress,
         canGoBack: questionHistory.length > 1 && !isCompleted,

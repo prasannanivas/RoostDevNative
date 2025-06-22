@@ -580,6 +580,7 @@ const ClientHome = ({ questionnaireData }) => {
             navigation={{
               goBack: () => setShowQuestionnaire(false),
             }}
+            questionnaireData={questionnaireData}
           />
         </QuestionnaireProvider>
       </Modal>

@@ -37,7 +37,7 @@ const COLORS = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-const Questionnaire = ({ navigation }) => {
+const Questionnaire = ({ navigation, questionnaireData }) => {
   const { auth } = useAuth();
   const {
     currentQuestionId,
@@ -46,10 +46,21 @@ const Questionnaire = ({ navigation }) => {
     goToNextQuestion,
     goToPreviousQuestion,
     markAsCompleted,
+    setResponses,
     getProgress,
     canGoBack,
     isCompleted,
   } = useQuestionnaire();
+
+  console.log(
+    "Questionnaire: Initializing with currentQuestionId:",
+    currentQuestionId,
+    questionnaireData
+  );
+  if (questionnaireData?.responses) {
+    console.log("questionnaireData has responses", questionnaireData.responses);
+    setResponses(questionnaireData.responses);
+  }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
   const currentResponse = responses[currentQuestionId];
