@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
+import { StatusBar } from "expo-status-bar";
 
 /**
  * Color palette from UX team design system
@@ -128,6 +129,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 0.8 }}
