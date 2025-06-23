@@ -384,7 +384,7 @@ Looking forward to working with you!`;
                 </Text>
                 <Text style={styles.linkText}>
                   {inviteLink ||
-                    "http://signup.roostapp.io/signup.html ?realtorCode=" +
+                    "http://signup.roostapp.io/?realtorCode=" +
                       (realtorInfo?.inviteCode || "")}
                 </Text>
                 <TouchableOpacity
@@ -430,16 +430,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 700,
     marginBottom: 5,
     textAlign: "center",
+    fontFamily: "futura",
     color: COLORS.black,
-    fontFamily: "System",
   },
   modalSubtitle: {
     fontSize: 16,
-    color: "#666",
+    color: COLORS.secondary,
     textAlign: "center",
+    fontFamily: "futura",
+    fontWeight: "500",
     marginBottom: 30,
   },
   inputContainer: {
@@ -449,8 +451,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: "futura",
     backgroundColor: COLORS.white,
   },
   feedbackMsg: {
@@ -471,15 +474,17 @@ const styles = StyleSheet.create({
   sendInviteBtn: {
     backgroundColor: COLORS.primary,
     borderRadius: 50,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     justifyContent: "center",
     alignItems: "center",
     marginVertical: 10,
   },
   sendInviteBtnText: {
     color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "futura",
   },
   modalBtnDisabled: {
     opacity: 0.6,
@@ -508,27 +513,32 @@ const styles = StyleSheet.create({
   },
   shareLinkText: {
     fontSize: 16,
-    color: "#666",
+    fontWeight: "500",
+    fontFamily: "futura",
+    color: COLORS.secondary,
     marginBottom: 10,
   },
   linkText: {
     fontSize: 16,
     color: "#333",
     marginBottom: 15,
-    fontWeight: "500",
+    fontWeight: 700,
+    fontFamily: "futura",
+    textAlign: "center",
   },
   copyButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 50,
-    paddingVertical: 10,
-    paddingHorizontal: 40,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     justifyContent: "center",
     alignItems: "center",
   },
   copyButtonText: {
     color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "futura",
   },
   contactOptions: {
     marginTop: 15,

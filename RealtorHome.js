@@ -1220,8 +1220,8 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 14, // H3 size
+    fontWeight: "700", // H3 weight
     fontFamily: "Futura",
   },
   nameAgencyContainer: {
@@ -1356,8 +1356,8 @@ const styles = StyleSheet.create({
   },
   initialsText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 14, // H3 size
+    fontWeight: "700", // H3 weight
     fontFamily: "Futura",
   },
   clientDetails: {
