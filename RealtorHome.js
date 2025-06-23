@@ -83,6 +83,7 @@ const RealtorHome = () => {
     email: "",
   });
   const [showRewards, setShowRewards] = useState(false);
+  const [feedback, setFeedback] = useState({ msg: "", type: "" });
   const [showProfile, setShowProfile] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -333,7 +334,7 @@ const RealtorHome = () => {
     setRefreshing(true);
     Promise.all([
       auth.refetch?.(),
-      realtorFromContext?.fetchLatestRealtor?.(),
+      realtorFromContext?.fetchLatestRealtor(),
     ]).finally(() => {
       setRefreshing(false);
     });
@@ -1311,6 +1312,7 @@ const styles = StyleSheet.create({
   inputField: {
     borderWidth: 1,
     borderColor: COLORS.gray,
+    color: COLORS.black,
     borderRadius: 8,
     padding: 16,
     fontSize: 14, // P size

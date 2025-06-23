@@ -20,6 +20,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { OrangeProgressBar } from "../components/progressBars";
 import InviteRealtorModal from "../components/modals/InviteRealtorModal";
 import ClaimRewardsModal from "../components/modals/ClaimRewardsModal";
+import { useRealtor } from "../context/RealtorContext";
 
 // Design System Colors
 const COLORS = {
@@ -80,6 +81,8 @@ export default function RealtorRewards({
     postalCode: "",
   });
 
+  const { fetchLatestRealtor } = useRealtor();
+
   console.log("selectedClient", selectedClient);
 
   const POINTS_TO_DOLLARS = 1;
@@ -101,19 +104,23 @@ export default function RealtorRewards({
     useNativeDriver: true,
   });
 
+  const fetchRewards = async () => {
+    setFetchingRewards(true);
+    try {
+      const resp = await fetch("http://159.203.58.60:5000/admin/rewards");
+      console.log("Rewards response", resp);
+      const data = await resp.json();
+      setRewards(data);
+      fetchLatestRealtor();
+    } catch (e) {
+      console.error(e);
+    }
+    setFetchingRewards(false);
+  };
+
   // Fetch rewards on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const resp = await fetch("http://159.203.58.60:5000/admin/rewards");
-        console.log("Rewards response", resp);
-        const data = await resp.json();
-        setRewards(data);
-      } catch (e) {
-        console.error(e);
-      }
-      setFetchingRewards(false);
-    })();
+    fetchRewards();
   }, []);
 
   const getRewardProgress = (rewardAmount) => {
@@ -216,6 +223,7 @@ export default function RealtorRewards({
         ).then((r) => r.json());
         console.log("Claim successful", fresh);
         setRewards(fresh);
+        fetchLatestRealtor();
         setClaimModal(false);
         setAddressConfirmation(false);
         Alert.alert("Success", "Reward claimed successfully!");
@@ -227,6 +235,8 @@ export default function RealtorRewards({
     } catch (e) {
       console.error(e);
       throw e;
+    } finally {
+      await fetchRewards();
     }
   };
 
@@ -371,7 +381,7 @@ export default function RealtorRewards({
                     <View style={styles.rewardCardContent}>
                       <Text style={styles.rewardType}>{reward.rewardName}</Text>
                       <Text style={styles.rewardName}>
-                        ${reward.rewardAmount}
+                        {reward.rewardAmount}
                       </Text>
                       <OrangeProgressBar
                         progress={
@@ -424,7 +434,7 @@ export default function RealtorRewards({
                     <View style={styles.rewardCardContent}>
                       <Text style={styles.rewardType}>Cash</Text>
                       <Text style={styles.rewardName}>
-                        ${reward.rewardAmount}
+                        {reward.rewardAmount}
                       </Text>
                       <OrangeProgressBar
                         progress={
@@ -476,7 +486,7 @@ export default function RealtorRewards({
                     <View style={styles.rewardCardContent}>
                       <Text style={styles.rewardType}>Cash</Text>
                       <Text style={styles.rewardName}>
-                        ${reward.rewardAmount}
+                        {reward.rewardAmount}
                       </Text>
                       <OrangeProgressBar
                         progress={

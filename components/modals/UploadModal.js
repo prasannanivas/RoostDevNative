@@ -676,6 +676,7 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
+    flexWrap: "wrap",
     gap: 16,
     marginVertical: 16,
   },
@@ -690,8 +691,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 33,
+    minWidth: 121,
     textAlign: "center",
     alignItems: "center",
+    justifyContent: "center",
   },
   actionButtonHalf: {
     flex: 160,
@@ -712,6 +715,7 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: COLORS.green,
+    flex: 199,
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 50,

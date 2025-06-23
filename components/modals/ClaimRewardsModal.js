@@ -291,7 +291,7 @@ const ClaimRewardsModal = ({
               }
               keyboardType="numeric"
             />
-            <View style={styles.addressButtonsRow}>
+            <View style={localStyles.addressButtonsRow}>
               <TouchableOpacity
                 style={localStyles.cancelButton}
                 onPress={() => {
@@ -409,6 +409,11 @@ const localStyles = StyleSheet.create({
     borderTopRightRadius: 16,
     marginBottom: 0,
   },
+  addressButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
   svgContainer: {
     width: "100%",
     height: 200,
@@ -519,6 +524,7 @@ const localStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flex: 117,
+    minWidth: 87,
     marginRight: 10,
   },
   cancelButtonText: {
@@ -534,7 +540,8 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: "center",
     alignItems: "center",
-    flex: 179,
+    flex: 299,
+    minWidth: 117,
     marginLeft: 10,
   },
   confirmButtonText: {
