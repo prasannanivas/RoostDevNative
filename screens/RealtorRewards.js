@@ -499,6 +499,62 @@ export default function RealtorRewards({
                 ))}
             </View>
           )}
+
+          {/* CASH OUT SECTION */}
+          <Text style={styles.rewardsSubTitle}>CASH OUT</Text>
+          <Text style={styles.rewardsDescription}>
+            Convert all my points to cash, keep in mind funds will have to go to
+            your brokerage and they will have to disburse it for you. Sorry RECO
+            rules.
+          </Text>
+          <View style={styles.cashOutContainer}>
+            <View style={styles.cashOutValueContainer}>
+              <Text style={styles.cashOutLabel}>Cash</Text>
+              <TextInput
+                style={styles.cashOutValueInput}
+                keyboardType="numeric"
+                value={"$" + (currentPoints * POINTS_TO_DOLLARS).toFixed(2)}
+                editable={false}
+              />
+            </View>
+            <Text style={styles.cashOutMinimum}>
+              Minimum cash out value is $250
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.cashOutButton,
+                currentPoints < 250 && styles.cashOutButtonDisabled,
+              ]}
+              disabled={currentPoints < 250}
+              onPress={() => {
+                Alert.alert(
+                  "Cash Out Confirmation",
+                  `Are you sure you want to convert ${currentPoints} points to $${(
+                    currentPoints * POINTS_TO_DOLLARS
+                  ).toFixed(2)}?`,
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Confirm",
+                      onPress: () => {
+                        Alert.alert(
+                          "Request Submitted",
+                          "Your cash out request has been submitted. The funds will be sent to your brokerage.",
+                          [{ text: "OK" }]
+                        );
+                      },
+                    },
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.cashOutButtonText}>
+                {currentPoints < 250
+                  ? `Need ${250 - currentPoints} more points`
+                  : "Cash Out"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         {/* Keep all the other functionality intact */}
         {/* Invite Form Modal */}
@@ -792,7 +848,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   rewardsSubTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 700,
     fontFamily: "Futura",
     marginTop: 16,
@@ -806,7 +862,7 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
     color: "#707070",
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: 8,
     paddingHorizontal: 24,
   },
 
@@ -1244,53 +1300,76 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "medium",
     fontFamily: "Futura",
-    marginBottom: 8,
-    textAlign: "center",
-    color: COLORS.black,
-  },
-  addressModalSubtitle: {
-    fontSize: 14,
-    fontWeight: "medium",
-    fontFamily: "Futura",
     marginBottom: 16,
-    textAlign: "center",
-    color: COLORS.gray,
-  },
-  addressButtonsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 16,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: COLORS.silver,
-    padding: 16,
-    borderRadius: 50,
-    alignItems: "center",
-    marginRight: 8,
-    height: 48,
-  },
-  cancelButtonText: {
     color: COLORS.black,
-    fontWeight: "medium",
-    fontFamily: "Futura",
-    fontSize: 14,
   },
-  confirmButton: {
-    flex: 1,
-    backgroundColor: COLORS.green,
+
+  /* Cash Out Section */
+  cashOutContainer: {
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
     padding: 16,
-    borderRadius: 50,
-    alignItems: "center",
-    marginLeft: 8,
+    marginHorizontal: 8,
+    marginVertical: 8,
   },
-  confirmButtonText: {
-    color: COLORS.white,
-    fontWeight: "medium",
+  cashOutLabel: {
+    fontSize: 20,
+    fontWeight: "500",
     fontFamily: "Futura",
-    fontSize: 14,
+    color: COLORS.gray,
+    marginBottom: 8,
   },
-  buttonDisabled: {
-    opacity: 0.6,
+  cashOutValueContainer: {
+    flexDirection: "column",
+    alignItems: "left",
+    borderWidth: 1.5,
+    borderColor: COLORS.green,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  cashOutValuePrefix: {
+    fontSize: 24,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.green,
+    marginRight: 8,
+  },
+  cashOutValueInput: {
+    fontSize: 32,
+    fontWeight: "bold",
+    fontFamily: "Futura",
+    color: COLORS.green,
+    flex: 1,
+    paddingVertical: 0,
+  },
+  cashOutMinimum: {
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: COLORS.gray,
+    marginBottom: 16,
+  },
+  cashOutButton: {
+    borderRadius: 33,
+    borderColor: COLORS.green,
+    borderWidth: 2,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
+    width: 120,
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  cashOutButtonDisabled: {
+    backgroundColor: COLORS.lightGray,
+  },
+  cashOutButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.green,
   },
 });
