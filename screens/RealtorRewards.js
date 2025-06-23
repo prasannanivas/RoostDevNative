@@ -86,6 +86,7 @@ export default function RealtorRewards({
   console.log("selectedClient", selectedClient);
 
   const POINTS_TO_DOLLARS = 1;
+  const MIN_CASHOUT_DOLLAR = 250;
   const currentPoints = realtor?.points || 0;
 
   // Add new animation state
@@ -518,14 +519,15 @@ export default function RealtorRewards({
               />
             </View>
             <Text style={styles.cashOutMinimum}>
-              Minimum cash out value is $250
+              {`Minimum cash out value is $${MIN_CASHOUT_DOLLAR}`}
             </Text>
             <TouchableOpacity
               style={[
                 styles.cashOutButton,
-                currentPoints < 250 && styles.cashOutButtonDisabled,
+                currentPoints < MIN_CASHOUT_DOLLAR &&
+                  styles.cashOutButtonDisabled,
               ]}
-              disabled={currentPoints < 250}
+              disabled={currentPoints < MIN_CASHOUT_DOLLAR}
               onPress={() => {
                 Alert.alert(
                   "Cash Out Confirmation",
@@ -549,8 +551,8 @@ export default function RealtorRewards({
               }}
             >
               <Text style={styles.cashOutButtonText}>
-                {currentPoints < 250
-                  ? `Need ${250 - currentPoints} more points`
+                {currentPoints < MIN_CASHOUT_DOLLAR
+                  ? `Need ${MIN_CASHOUT_DOLLAR - currentPoints} more points`
                   : "Cash Out"}
               </Text>
             </TouchableOpacity>
@@ -1357,14 +1359,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     paddingVertical: 13,
     paddingHorizontal: 24,
-    width: 120,
+    minWidth: 120,
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
   },
   cashOutButtonDisabled: {
-    backgroundColor: COLORS.lightGray,
+    borderColor: "#D3D3D3",
+    borderWidth: 2,
   },
   cashOutButtonText: {
     fontSize: 12,
