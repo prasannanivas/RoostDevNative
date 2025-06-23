@@ -15,6 +15,9 @@ import {
   Linking,
   Alert,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
 } from "react-native";
 import ReactNativeModal from "react-native-modal";
 import * as Contacts from "expo-contacts";
@@ -69,7 +72,6 @@ const RealtorHome = () => {
   console.log("Realtor Home invited clients:", invited);
 
   const navigation = useNavigation();
-
   // Local state
   const [showForm, setShowForm] = useState(false);
   const [showCSVUploadForm, setShowCSVUploadForm] = useState(false);
@@ -81,7 +83,15 @@ const RealtorHome = () => {
     referenceName: "",
     phone: "",
     email: "",
+    type: "Client",
+    inviteLink: "",
+    inviteCode: "",
   });
+
+  // Refs for text inputs to handle focus
+  const lastNameInputRef = useRef();
+  const emailInputRef = useRef();
+  const phoneInputRef = useRef();
   const [showRewards, setShowRewards] = useState(false);
   const [feedback, setFeedback] = useState({ msg: "", type: "" });
   const [showProfile, setShowProfile] = useState(false);
@@ -91,6 +101,7 @@ const RealtorHome = () => {
   const [isMultiple, setIsMultiple] = useState(false); // New state for single/multiple toggle
   const [showContactOptions, setShowContactOptions] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
+  const [showInviteOptionsModal, setShowInviteOptionsModal] = useState(false);
   const [selectedClientCard, setSelectedClientCard] = useState(null);
   const [showClientCardModal, setShowClientCardModal] = useState(false); // Animation values - initial positions for different slide directions
   // For left slide (profile), start at -1000 (off-screen to the left)
@@ -235,13 +246,21 @@ const RealtorHome = () => {
       );
 
       if (response.ok) {
+        const data = await response.json();
+        console.log("Client invited successfully", data.inviteLink);
+        setFormData({
+          ...formData,
+          inviteLink: data.inviteLink,
+          inviteCode: data.invite.inviteCode,
+        });
         setFeedback({
           message: "Client invited successfully!",
           type: "success",
         });
 
-        // Show contact options instead of closing modal
-        setShowContactOptions(true);
+        // Close current modal and show the invite options modal
+        setShowForm(false);
+        setShowInviteOptionsModal(true);
 
         // Refresh the realtor data to show the new client
         realtorFromContext?.fetchLatestRealtor();
@@ -386,7 +405,9 @@ const RealtorHome = () => {
   const openWhatsApp = () => {
     // Get realtor invite code if available
     const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink = `http://159.203.58.60:5000/signup.html?realtorCode=${inviteCode}`;
+    const signupLink =
+      formData.inviteLink ||
+      `https://signup.roostapp.io/?realtorCode=${inviteCode}`;
 
     const whatsappMessage = `Hey ${formData.firstName}, I'm sharing a link to view and share listings with me on Roost. Click here to get started: ${signupLink}`;
     const phone = formData.phone.replace(/[^0-9]/g, "");
@@ -412,7 +433,9 @@ const RealtorHome = () => {
   const openSMS = () => {
     // Get realtor invite code if available
     const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink = `http://159.203.58.60:5000/signup.html?realtorCode=${inviteCode}`;
+    const signupLink =
+      formData.inviteLink ||
+      `https://signup.roostapp.io/?realtorCode=${inviteCode}`;
 
     const smsMessage = `Hey ${formData.firstName}, I'm sharing a link to view and share listings with me on Roost. Click here to get started: ${signupLink}`;
     const smsUrl = `sms:${formData.phone}?body=${encodeURIComponent(
@@ -427,7 +450,9 @@ const RealtorHome = () => {
   const openEmail = () => {
     // Get realtor invite code if available
     const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink = `http://159.203.58.60:5000/signup.html?realtorCode=${inviteCode}`;
+    const signupLink =
+      formData.inviteLink ||
+      `https://signup.roostapp.io/?realtorCode=${inviteCode}`;
 
     const emailSubject = "Join Roost";
     const emailBody = `Hey ${formData.firstName},
@@ -450,7 +475,6 @@ Looking forward to working with you!`;
   return (
     <View style={styles.container}>
       {/* ================= TOP HEADER ================= */}
-
       <View style={styles.headerContainer}>
         <TouchableOpacity
           style={styles.userInfoContainer}
@@ -614,7 +638,6 @@ Looking forward to working with you!`;
           <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
         </View>
       </TouchableOpacity>
-
       {/* ================== MODALS ================== */}
       {/* Profile Modal - Slides from left using react-native-modal */}
       <ReactNativeModal
@@ -684,6 +707,99 @@ Looking forward to working with you!`;
         realtorInfo={realtorFromContext?.realtorInfo}
         realtorId={realtor.id}
       />
+
+      {/* New Invite Options Modal */}
+      <Modal
+        visible={showInviteOptionsModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowInviteOptionsModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.formOverlay}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.inviteOptionsContainer}>
+              <TouchableOpacity
+                style={styles.closeFormButton}
+                onPress={() => setShowInviteOptionsModal(false)}
+              >
+                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
+                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                  <Path
+                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                    fill="#A9A9A9"
+                  />
+                </Svg>
+              </TouchableOpacity>
+
+              <Text style={styles.inviteOptionsTitle}>
+                Client Added Successfully!
+              </Text>
+              <Text style={styles.inviteOptionsSubtitle}>
+                Contact {formData.firstName} {formData.lastName} via:
+              </Text>
+
+              <View style={styles.contactIcons}>
+                {formData.phone && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.contactIconBtn}
+                      onPress={openWhatsApp}
+                    >
+                      <MaterialCommunityIcons
+                        name="whatsapp"
+                        size={32}
+                        color="#25D366"
+                      />
+                      <Text style={styles.contactIconText}>WhatsApp</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.contactIconBtn}
+                      onPress={openSMS}
+                    >
+                      <MaterialIcons name="sms" size={32} color="#2196F3" />
+                      <Text style={styles.contactIconText}>SMS</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {formData.email && (
+                  <TouchableOpacity
+                    style={styles.contactIconBtn}
+                    onPress={openEmail}
+                  >
+                    <Entypo name="mail" size={32} color="#F44336" />
+                    <Text style={styles.contactIconText}>Email</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => {
+                  setShowInviteOptionsModal(false);
+                  setFormData({
+                    firstName: "",
+                    lastName: "",
+                    referenceName: "",
+                    phone: "",
+                    email: "",
+                    type: "Client",
+                    inviteLink: "",
+                    inviteCode: "",
+                  });
+                }}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
       {/* Invite Form Modal (Overlay) */}
       <Modal
         visible={showForm}
@@ -691,99 +807,119 @@ Looking forward to working with you!`;
         transparent={true}
         onRequestClose={() => setShowForm(false)}
       >
-        <View style={styles.formOverlay}>
-          <View style={styles.formContainer}>
-            {/* Add close button here */}
-            <TouchableOpacity
-              style={styles.closeFormButton}
-              onPress={() => setShowForm(false)}
-            >
-              <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-                <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
-                <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
-                <Path
-                  d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                  fill="#A9A9A9"
-                />
-              </Svg>
-            </TouchableOpacity>
-            <Text style={styles.formTitle}>ADD A CLIENT</Text>
-            <Text style={styles.formSubtitle}>
-              Send your client an invite to view and share listing with you.
-            </Text>
-            {/* One/Multiple Toggle */}
-            <View style={styles.toggleContainer}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.formOverlay}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.formContainer}>
+              {/* Add close button here */}
               <TouchableOpacity
-                style={[
-                  styles.toggleOption,
-                  !isMultiple && styles.toggleOptionActive,
-                ]}
-                onPress={() => setIsMultiple(false)}
+                style={styles.closeFormButton}
+                onPress={() => setShowForm(false)}
               >
-                <Text
-                  style={
-                    !isMultiple ? styles.toggleTextActive : styles.toggleText
-                  }
-                >
-                  One
-                </Text>
+                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
+                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                  <Path
+                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                    fill="#A9A9A9"
+                  />
+                </Svg>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.toggleOption,
-                  isMultiple && styles.toggleOptionActive,
-                ]}
-                onPress={() => setIsMultiple(true)}
-              >
-                <Text
-                  style={
-                    isMultiple ? styles.toggleTextActive : styles.toggleText
-                  }
+              <Text style={styles.formTitle}>ADD A CLIENT</Text>
+              <Text style={styles.formSubtitle}>
+                Send your client an invite to view and share listing with you.
+              </Text>
+              {/* One/Multiple Toggle */}
+              <View style={styles.toggleContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleOption,
+                    !isMultiple && styles.toggleOptionActive,
+                  ]}
+                  onPress={() => setIsMultiple(false)}
                 >
-                  Multiple
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {!isMultiple ? (
-              /* Single Client Form */
-              <>
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, firstName: text })
-                  }
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, lastName: text })
-                  }
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Email"
-                  keyboardType="email-address"
-                  value={formData.email}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, email: text })
-                  }
-                />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Phone"
-                  keyboardType="phone-pad"
-                  value={formData.phone}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, phone: text })
-                  }
-                />
-
-                {/* Replace the send invite button with this conditional rendering */}
-                {!showContactOptions ? (
+                  <Text
+                    style={
+                      !isMultiple ? styles.toggleTextActive : styles.toggleText
+                    }
+                  >
+                    One
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleOption,
+                    isMultiple && styles.toggleOptionActive,
+                  ]}
+                  onPress={() => setIsMultiple(true)}
+                >
+                  <Text
+                    style={
+                      isMultiple ? styles.toggleTextActive : styles.toggleText
+                    }
+                  >
+                    Multiple
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {!isMultiple ? (
+                /* Single Client Form */
+                <>
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="First Name"
+                    placeholderTextColor={COLORS.gray}
+                    value={formData.firstName}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, firstName: text })
+                    }
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => lastNameInputRef.current?.focus()}
+                  />
+                  <TextInput
+                    ref={lastNameInputRef}
+                    style={styles.inputField}
+                    placeholder="Last Name"
+                    placeholderTextColor={COLORS.gray}
+                    value={formData.lastName}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, lastName: text })
+                    }
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => emailInputRef.current?.focus()}
+                  />
+                  <TextInput
+                    ref={emailInputRef}
+                    style={styles.inputField}
+                    placeholder="Email"
+                    placeholderTextColor={COLORS.gray}
+                    keyboardType="email-address"
+                    value={formData.email}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, email: text })
+                    }
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => phoneInputRef.current?.focus()}
+                  />
+                  <TextInput
+                    ref={phoneInputRef}
+                    style={styles.inputField}
+                    placeholder="Phone"
+                    placeholderTextColor={COLORS.gray}
+                    keyboardType="phone-pad"
+                    value={formData.phone}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, phone: text })
+                    }
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss}
+                  />
+                  {/* Send invite button */}
                   <TouchableOpacity
                     style={styles.sendInviteButton}
                     onPress={handleInviteClient}
@@ -797,119 +933,149 @@ Looking forward to working with you!`;
                       </Text>
                     )}
                   </TouchableOpacity>
-                ) : (
-                  /* Contact options when showContactOptions is true */
-                  <View style={styles.contactOptions}>
-                    <Text style={styles.contactOptionsTitle}>Contact via:</Text>
-                    <View style={styles.contactIcons}>
-                      {formData.phone && (
-                        <>
-                          <TouchableOpacity
-                            style={styles.contactIconBtn}
-                            onPress={openWhatsApp}
-                          >
-                            <MaterialCommunityIcons
-                              name="whatsapp"
-                              size={32}
-                              color="#25D366"
-                            />
-                            <Text style={styles.contactIconText}>WhatsApp</Text>
-                          </TouchableOpacity>
 
-                          <TouchableOpacity
-                            style={styles.contactIconBtn}
-                            onPress={openSMS}
-                          >
-                            <MaterialIcons
-                              name="sms"
-                              size={32}
-                              color="#2196F3"
-                            />
-                            <Text style={styles.contactIconText}>SMS</Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
-
-                      {formData.email && (
-                        <TouchableOpacity
-                          style={styles.contactIconBtn}
-                          onPress={openEmail}
-                        >
-                          <Entypo name="mail" size={32} color="#F44336" />
-                          <Text style={styles.contactIconText}>Email</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
+                  {/* Use contactInviteContainer instead of dividerContainer */}
+                  <View style={styles.contactInviteContainer}>
+                    <Text style={styles.orText}>
+                      Or you can invite the contact you have on your phone
+                    </Text>
 
                     <TouchableOpacity
-                      style={styles.doneButton}
-                      onPress={() => {
-                        setShowForm(false);
-                        setShowContactOptions(false);
-                        setFormData({
-                          firstName: "",
-                          lastName: "",
-                          referenceName: "",
-                          phone: "",
-                          email: "",
-                        });
-                        setFeedback({ message: "", type: "" });
-                      }}
+                      style={styles.contactsButton}
+                      onPress={pickContact}
                     >
-                      <Text style={styles.doneButtonText}>Done</Text>
+                      <Text style={styles.contactsButtonText}>
+                        Invite my contacts
+                      </Text>
                     </TouchableOpacity>
                   </View>
-                )}
-
-                {/* Use contactInviteContainer instead of dividerContainer */}
-                <View style={styles.contactInviteContainer}>
-                  <Text style={styles.orText}>
-                    Or you can invite the contact you have on your phone
-                  </Text>
-
+                </>
+              ) : (
+                /* Multiple Clients Form */
+                <>
                   <TouchableOpacity
-                    style={styles.contactsButton}
-                    onPress={pickContact}
+                    style={styles.uploadFileButton}
+                    onPress={() => {
+                      /* Handle file upload */
+                    }}
                   >
-                    <Text style={styles.contactsButtonText}>
-                      Invite my contacts
+                    <Text style={styles.uploadFileText}>Upload File</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.sendInviteButton}
+                    onPress={() => {
+                      /* Handle sending multiple invites */
+                    }}
+                  >
+                    <Text style={styles.sendInviteButtonText}>
+                      Send Invites
                     </Text>
                   </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              /* Multiple Clients Form */
-              <>
-                <TouchableOpacity
-                  style={styles.uploadFileButton}
-                  onPress={() => {
-                    /* Handle file upload */
-                  }}
-                >
-                  <Text style={styles.uploadFileText}>Upload File</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.sendInviteButton}
-                  onPress={() => {
-                    /* Handle sending multiple invites */
-                  }}
-                >
-                  <Text style={styles.sendInviteButtonText}>Send Invites</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.orDivider}>OR</Text>
-
-                <Text style={styles.alternativeText}>
-                  You can always email a file (Excel or .CSV) to us at
-                  <Text style={{ fontWeight: "bold" }}>files@roostapp.io</Text>
-                  and we can take care of it for you
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
+                  <Text style={styles.orDivider}>OR</Text>
+                  <Text style={styles.alternativeText}>
+                    You can always email a file (Excel or .CSV) to us at
+                    <Text style={{ fontWeight: "bold" }}>
+                      files@roostapp.io
+                    </Text>
+                    and we can take care of it for you
+                  </Text>
+                </>
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
+
+      {/* New Invite Options Modal */}
+      <Modal
+        visible={showInviteOptionsModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowInviteOptionsModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.formOverlay}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.inviteOptionsContainer}>
+              <TouchableOpacity
+                style={styles.closeFormButton}
+                onPress={() => setShowInviteOptionsModal(false)}
+              >
+                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
+                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                  <Path
+                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                    fill="#A9A9A9"
+                  />
+                </Svg>
+              </TouchableOpacity>
+
+              <Text style={styles.inviteOptionsTitle}>
+                Client Added Successfully!
+              </Text>
+              <Text style={styles.inviteOptionsSubtitle}>
+                Contact {formData.firstName} {formData.lastName} via:
+              </Text>
+
+              <View style={styles.contactIcons}>
+                {formData.phone && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.contactIconBtn}
+                      onPress={openWhatsApp}
+                    >
+                      <MaterialCommunityIcons
+                        name="whatsapp"
+                        size={32}
+                        color="#25D366"
+                      />
+                      <Text style={styles.contactIconText}>WhatsApp</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.contactIconBtn}
+                      onPress={openSMS}
+                    >
+                      <MaterialIcons name="sms" size={32} color="#2196F3" />
+                      <Text style={styles.contactIconText}>SMS</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {formData.email && (
+                  <TouchableOpacity
+                    style={styles.contactIconBtn}
+                    onPress={openEmail}
+                  >
+                    <Entypo name="mail" size={32} color="#F44336" />
+                    <Text style={styles.contactIconText}>Email</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => {
+                  setShowInviteOptionsModal(false);
+                  setFormData({
+                    firstName: "",
+                    lastName: "",
+                    referenceName: "",
+                    phone: "",
+                    email: "",
+                  });
+                }}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* Client Card Detail Modal - Slides from bottom */}
       <Modal
         visible={showClientCardModal}
@@ -1275,6 +1441,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 10,
   },
   formContainer: {
     backgroundColor: COLORS.white,
@@ -1314,11 +1481,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gray,
     color: COLORS.black,
     borderRadius: 8,
-    padding: 16,
+    padding: 12,
     fontSize: 14, // P size
     fontWeight: "500", // P weight
     marginBottom: 16,
-    height: 48,
+    minHeight: 48,
     fontFamily: "Futura",
   },
   label: {
@@ -1338,7 +1505,7 @@ const styles = StyleSheet.create({
   },
   toggleOption: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: "center",
     borderRadius: 60,
     backgroundColor: COLORS.white,
@@ -1348,14 +1515,14 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     color: COLORS.black,
-    fontWeight: "500", // P weight
-    fontSize: 14, // P size
+    fontWeight: "700", // P weight
+    fontSize: 12, // P size
     fontFamily: "Futura",
   },
   toggleTextActive: {
     color: COLORS.white,
-    fontWeight: "500", // P weight
-    fontSize: 14, // P size
+    fontWeight: "700", // P weight
+    fontSize: 12, // P size
     fontFamily: "Futura",
   },
   formActions: {
@@ -1364,11 +1531,11 @@ const styles = StyleSheet.create({
   },
   sendInviteButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 50,
-    paddingVertical: 16,
+    borderRadius: 33,
+    paddingVertical: 13,
     alignSelf: "center",
     alignItems: "center",
-    width: 120,
+    minWidth: 120,
     marginVertical: 24,
   },
   loadingButton: {
@@ -1376,7 +1543,7 @@ const styles = StyleSheet.create({
   },
   sendInviteButtonText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
+    fontSize: 12, // H3 size
     borderRadius: 50,
     fontWeight: 700, // H3 weight
     fontFamily: "Futura",
@@ -1549,15 +1716,15 @@ const styles = StyleSheet.create({
   },
   contactsButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 50,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    borderRadius: 33,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
     alignItems: "center",
-    width: "80%",
+    width: "90%",
   },
   contactsButtonText: {
     color: COLORS.white,
-    fontSize: 14, // P size
+    fontSize: 12, // P size
     fontWeight: 700, // P weight
     fontFamily: "Futura",
   },
@@ -1592,8 +1759,8 @@ const styles = StyleSheet.create({
   },
   closeFormButton: {
     position: "absolute",
-    top: -20, // Half of the circle height (37/2) to position it 50% outside
-    right: -20, // Half of the circle width (37/2) to position it 50% outside
+    top: -10, // Half of the circle height (37/2) to position it 50% outside
+    right: -10, // Half of the circle width (37/2) to position it 50% outside
     zIndex: 10,
   },
   contactOptions: {
@@ -1640,6 +1807,40 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     fontSize: 16, // H3 size
     fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
+  },
+  inviteOptionsContainer: {
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 8,
+    width: "90%",
+    maxHeight: "90%",
+    elevation: 5,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    marginTop: 18.5,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    overflow: "visible",
+    position: "relative",
+    alignItems: "center",
+  },
+  inviteOptionsTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+    letterSpacing: 0,
+    color: COLORS.green,
+    fontFamily: "Futura",
+  },
+  inviteOptionsSubtitle: {
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.black,
+    marginBottom: 24,
+    paddingHorizontal: 16,
     fontFamily: "Futura",
   },
   contactInviteContainer: {
