@@ -12,6 +12,8 @@ import {
   Animated,
   Dimensions,
   Clipboard,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRealtor } from "../context/RealtorContext";
@@ -99,7 +101,41 @@ export default function RealtorProfile({ onClose }) {
   const saveTimerRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Field validation error states
+  const [fieldErrors, setFieldErrors] = useState({
+    brokeragePhone: false,
+    brokerageEmail: false,
+  });
+
+  // Field-specific error messages
+  const [fieldErrorMessages, setFieldErrorMessages] = useState({
+    brokeragePhone: "",
+    brokerageEmail: "",
+  });
+
+  // Animation for save success notification
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email || email.trim() === "") return true; // Empty is allowed
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone || phone.trim() === "") return true; // Empty is allowed
+    // Remove all non-digit characters
+    const digitsOnly = phone.replace(/\D/g, "");
+    // Check if it's a valid North American phone number (10 or 11 digits)
+    // 10 digits: (123) 456-7890 or 123-456-7890
+    // 11 digits: +1 123 456 7890 or 1-123-456-7890 (must start with 1)
+    return (
+      digitsOnly.length === 10 ||
+      (digitsOnly.length === 11 && digitsOnly.startsWith("1"))
+    );
+  };
 
   // Load notification preferences when component mounts
   useEffect(() => {
@@ -345,6 +381,26 @@ export default function RealtorProfile({ onClose }) {
   // Update the handleFieldChange function to capture the latest state value
 
   const handleFieldChange = (field, value) => {
+    // Check if the field that's being changed would now be valid
+    if (field === "brokeragePhone") {
+      const isValid = validatePhone(value);
+      if (isValid && fieldErrors.brokeragePhone) {
+        // Clear field error and feedback only when field becomes valid
+        setFieldErrors((prev) => ({ ...prev, brokeragePhone: false }));
+        setFieldErrorMessages((prev) => ({ ...prev, brokeragePhone: "" }));
+        setFeedback({ message: "", type: "" });
+      }
+    }
+    if (field === "brokerageEmail") {
+      const isValid = validateEmail(value);
+      if (isValid && fieldErrors.brokerageEmail) {
+        // Clear field error and feedback only when field becomes valid
+        setFieldErrors((prev) => ({ ...prev, brokerageEmail: false }));
+        setFieldErrorMessages((prev) => ({ ...prev, brokerageEmail: "" }));
+        setFeedback({ message: "", type: "" });
+      }
+    }
+
     // Update form data with the new value
     setFormData((prev) => {
       const updatedData = { ...prev, [field]: value };
@@ -368,6 +424,44 @@ export default function RealtorProfile({ onClose }) {
   const handleSubmitWithData = (currentFormData) => {
     // Prevent duplicate save calls
     if (isSaving) return;
+
+    // Validate brokerage phone and email before submitting
+    const brokeragePhoneValid = validatePhone(currentFormData.brokeragePhone);
+    const brokerageEmailValid = validateEmail(currentFormData.brokerageEmail);
+
+    // Update field error states and messages
+    setFieldErrors({
+      brokeragePhone: !brokeragePhoneValid,
+      brokerageEmail: !brokerageEmailValid,
+    });
+
+    setFieldErrorMessages({
+      brokeragePhone: !brokeragePhoneValid
+        ? "Please enter a valid phone number (10-11 digits)"
+        : "",
+      brokerageEmail: !brokerageEmailValid
+        ? "Please enter a valid email address"
+        : "",
+    });
+
+    if (!brokeragePhoneValid) {
+      return;
+    }
+
+    if (!brokerageEmailValid) {
+      return;
+    }
+
+    // Clear any previous error messages and field errors
+    setFeedback({ message: "", type: "" });
+    setFieldErrors({
+      brokeragePhone: false,
+      brokerageEmail: false,
+    });
+    setFieldErrorMessages({
+      brokeragePhone: "",
+      brokerageEmail: "",
+    });
 
     try {
       setIsSaving(true);
@@ -767,7 +861,18 @@ export default function RealtorProfile({ onClose }) {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      {/* Success notification */}
+      {saveSuccess && (
+        <Animated.View style={[styles.saveNotification, { opacity: fadeAnim }]}>
+          <Text style={styles.saveNotificationText}>Changes saved!</Text>
+        </Animated.View>
+      )}
+
       {/* Close button */}
 
       {onClose && (
@@ -802,32 +907,14 @@ export default function RealtorProfile({ onClose }) {
           </Text>
         </View>
       </View>
-      {/* Feedback Messages */}
-      {feedback.message ? (
-        <View
-          style={[
-            styles.feedbackBox,
-            feedback.type === "success" ? styles.successBox : styles.errorBox,
-          ]}
-        >
-          <Text
-            style={[
-              styles.feedbackText,
-              feedback.type === "success"
-                ? styles.successText
-                : styles.errorText,
-            ]}
-          >
-            {feedback.message}
-          </Text>
-        </View>
-      ) : null}
       {/* Personal Info (Disabled fields for name, email, phone, location) */}
 
       <ScrollView
         style={{ zIndex: 20 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
         <View style={styles.section}>
           <Text style={styles.sectionSubTitle}>
@@ -955,20 +1042,37 @@ export default function RealtorProfile({ onClose }) {
           </View>
           <View style={styles.formGroup}>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                fieldErrors.brokeragePhone && styles.inputError,
+              ]}
               value={formData.brokeragePhone}
               placeholder="Brokerage Phone"
+              keyboardType="phone-pad"
               onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
             />
+            {fieldErrorMessages.brokeragePhone ? (
+              <Text style={styles.fieldErrorText}>
+                {fieldErrorMessages.brokeragePhone}
+              </Text>
+            ) : null}
           </View>
           <View style={styles.formGroup}>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                fieldErrors.brokerageEmail && styles.inputError,
+              ]}
               value={formData.brokerageEmail}
               placeholder="Brokerage Email"
               keyboardType="email-address"
               onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
             />
+            {fieldErrorMessages.brokerageEmail ? (
+              <Text style={styles.fieldErrorText}>
+                {fieldErrorMessages.brokerageEmail}
+              </Text>
+            ) : null}
           </View>
           {/* <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
@@ -1371,15 +1475,7 @@ export default function RealtorProfile({ onClose }) {
           </View>
         </View>
       </Modal>
-      {/* Auto-save Success Notification */}
-      {saveSuccess && (
-        <Animated.View
-          style={[styles.autoSaveNotification, { opacity: fadeAnim }]}
-        >
-          <Text style={styles.autoSaveText}>Changes saved!</Text>
-        </Animated.View>
-      )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -1473,6 +1569,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
+    zIndex: 30, // Higher than ScrollView's zIndex: 20
   },
   successBox: {
     backgroundColor: COLORS.noticeContainer,
@@ -1546,6 +1643,18 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
     color: COLORS.black,
     height: 48,
+  },
+  inputError: {
+    borderColor: COLORS.red,
+    borderWidth: 2,
+  },
+  fieldErrorText: {
+    color: COLORS.red,
+    fontSize: 12,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    marginTop: 4,
+    marginLeft: 4,
   },
   /* Save changes button */
   saveButton: {
@@ -1916,15 +2025,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  autoSaveNotification: {
+  // Success notification (matches ClientProfile style)
+  saveNotification: {
     position: "absolute",
     bottom: 24,
+    left: 24,
     right: 24,
     backgroundColor: COLORS.green,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    padding: 16,
     borderRadius: 8,
-    flexDirection: "row",
+    zIndex: 100,
     alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: {
@@ -1935,10 +2045,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  autoSaveText: {
+  saveNotificationText: {
     color: COLORS.white,
-    fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "500",
     fontFamily: "Futura",
+    fontSize: 14,
   },
 });

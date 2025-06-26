@@ -553,7 +553,7 @@ export default function ClientProfile({ onClose }) {
         </View>
         {/* Address Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Send my rewards to</Text>
+          <Text style={styles.cardTitle}>My address</Text>
           <Text style={styles.cardSubtitle}>
             Make sure thing info is complete and up to date.
           </Text>

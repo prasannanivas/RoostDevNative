@@ -205,7 +205,7 @@ const questions = [
       },
       {
         fields: [
-          { key: "sinNumber", label: "", placeholder: "SIN Number" },
+          { key: "sinNumber", label: "", placeholder: "SIN number" },
           {
             key: "dependents",
             label: "",
@@ -564,7 +564,7 @@ const questions = [
       },
       {
         fields: [
-          { key: "sinNumber", placeholder: "SIN Number" },
+          { key: "sinNumber", placeholder: "SIN number" },
           {
             key: "dependents",
             placeholder: "Number of Dependents",
@@ -907,7 +907,7 @@ const questions = [
       },
       {
         fields: [
-          { key: "coSinNumber", placeholder: "SIN Number" },
+          { key: "coSinNumber", placeholder: "SIN number" },
           {
             key: "coDependents",
             placeholder: "Number of Dependents",
