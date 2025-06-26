@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput as RNTextInput, StyleSheet } from "react-native";
+import AnimatedDropdown from "./AnimatedDropdown";
 
 const TextInput = ({
   label,
@@ -51,7 +52,13 @@ const TextInput = ({
           placeholderTextColor="#707070"
         />
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      <AnimatedDropdown
+        visible={!!error}
+        style={!!error ? styles.errorBox : {}}
+        maxHeight={100}
+      >
+        <Text style={styles.errorText}>{error}</Text>
+      </AnimatedDropdown>
     </View>
   );
 };
@@ -125,10 +132,19 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     textAlignVertical: "top",
   },
+  errorBox: {
+    width: "100%",
+    backgroundColor: "#F0DE3A40", // Using notice container background with 25% opacity (same as SignupScreen2)
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+  },
   errorText: {
-    fontSize: 14,
-    color: "#FF3B30",
-    marginTop: 4,
+    fontSize: 14, // P size (same as SignupScreen2)
+    fontWeight: "500", // P weight (same as SignupScreen2)
+    color: "#707070", // Same color as SignupScreen2
+    lineHeight: 20,
+    fontFamily: "Futura",
   },
 });
 

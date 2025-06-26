@@ -53,6 +53,7 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
   } = useQuestionnaire();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({}); // Add state for field errors
 
   // Handle initial questionnaire data loading
   useEffect(() => {
@@ -241,6 +242,8 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
 
   // Debug specifically for initials
   const handleResponseChange = (value) => {
+    // Clear field errors when user changes input
+    setFieldErrors({});
     // For all other questions, update normally
     updateResponse(currentQuestionId, value);
   };
@@ -417,9 +420,76 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
     return true;
   };
 
+  // Helper function to validate email, phone, and SIN fields
+  const validateContactFields = () => {
+    const errors = {};
+
+    // Check if this is a form or complexForm question
+    if (
+      currentQuestion?.type !== "form" &&
+      currentQuestion?.type !== "complexForm"
+    ) {
+      return true; // Not a form question, no validation needed
+    }
+
+    if (!currentResponse) {
+      return true; // No response yet, allow empty
+    }
+
+    // For form questions (email and phone validation)
+    if (currentQuestion?.type === "form") {
+      // Validate email fields
+      const emailFields = ["email", "coEmail"];
+      for (const field of emailFields) {
+        if (currentResponse[field]) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(currentResponse[field])) {
+            errors[field] = "Please enter a valid email address.";
+          }
+        }
+      }
+
+      // Validate phone fields
+      const phoneFields = ["phone", "coPhone"];
+      for (const field of phoneFields) {
+        if (currentResponse[field]) {
+          const cleanPhone = currentResponse[field].replace(/\D/g, "");
+          if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+            errors[field] = "Please enter a valid phone number (10-11 digits).";
+          }
+        }
+      }
+    }
+
+    // For complexForm questions (SIN validation) - questions 7, 102, 103
+    if (currentQuestion?.type === "complexForm") {
+      // Validate SIN fields (only digits)
+      const sinFields = ["sinNumber", "coSinNumber"];
+      for (const field of sinFields) {
+        if (currentResponse[field]) {
+          const cleanSIN = currentResponse[field].replace(/\D/g, "");
+          if (cleanSIN.length !== 9) {
+            errors[field] = "SIN number must be exactly 9 digits.";
+          }
+        }
+      }
+    }
+
+    // Set errors in state
+    setFieldErrors(errors);
+
+    // Return true if no errors, false if there are errors
+    return Object.keys(errors).length === 0;
+  };
+
   const handleNext = () => {
     // First validate name fields if applicable
     if (!validateNameFields()) {
+      return; // Stop if validation fails
+    }
+
+    // Validate email, phone, and SIN fields
+    if (!validateContactFields()) {
       return; // Stop if validation fails
     }
 
@@ -717,6 +787,7 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
                 onValueChange={handleResponseChange}
                 allResponses={responses} // Pass all responses for dynamic text replacement
                 onAutoNavigate={handleAutoNavigate}
+                fieldErrors={fieldErrors} // Pass field errors for display
               />
             </View>
             {/* "Looks Good" button after questions */}

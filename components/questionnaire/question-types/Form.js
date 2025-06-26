@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import TextInput from "../../common/TextInput";
+import { validateField } from "../../../utils/questionnaireUtils";
 
 const COLORS = {
   green: "#377473",
@@ -15,44 +16,64 @@ const COLORS = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-const Form = ({ question, value, onValueChange }) => {
+const Form = ({
+  question,
+  value,
+  onValueChange,
+  onValidationChange,
+  fieldErrors = {},
+}) => {
   const [formData, setFormData] = useState(value || {});
-  const [fieldErrors, setFieldErrors] = useState({});
+  const [localFieldErrors, setLocalFieldErrors] = useState({});
   const previousFormData = useRef(value || {});
+
+  // Merge external field errors with local errors
+  const allErrors = { ...localFieldErrors, ...fieldErrors };
+
+  // Expose validation method to parent
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange({
+        validate: () => {
+          const errors = {};
+          let hasErrors = false;
+
+          question.fields.forEach((field) => {
+            // Create field config for validation
+            const fieldConfig = {
+              ...field,
+              type:
+                field.key === "email" || field.key === "coEmail"
+                  ? "email"
+                  : field.key === "phone" || field.key === "coPhone"
+                  ? "phone"
+                  : "text",
+            };
+
+            const validation = validateField(
+              fieldConfig,
+              formData[field.key] || ""
+            );
+            if (!validation.isValid) {
+              errors[field.key] = validation.error;
+              hasErrors = true;
+            }
+          });
+
+          setLocalFieldErrors(errors);
+          return !hasErrors;
+        },
+      });
+    }
+  }, [formData, question.fields, onValidationChange]);
+
   useEffect(() => {
     // Only call onValueChange if formData has actually changed
     if (JSON.stringify(formData) !== JSON.stringify(previousFormData.current)) {
       onValueChange(formData);
       previousFormData.current = formData;
-
-      // Validate all fields and update error state
-      const newErrors = {};
-      let hasErrors = false;
-
-      question.fields.forEach((field) => {
-        if (
-          field.required &&
-          (!formData[field.key] || formData[field.key].trim() === "")
-        ) {
-          newErrors[field.key] = `${field.label} is required`;
-          hasErrors = true;
-        } else if (fieldErrors[field.key] && formData[field.key]) {
-          // Clear errors for fields that are now filled
-        } else {
-          // Keep existing errors for other fields
-          if (fieldErrors[field.key]) {
-            newErrors[field.key] = fieldErrors[field.key];
-            hasErrors = true;
-          }
-        }
-      });
-
-      // Only update state if errors changed
-      if (JSON.stringify(newErrors) !== JSON.stringify(fieldErrors)) {
-        setFieldErrors(newErrors);
-      }
     }
-  }, [formData]);
+  }, [formData, onValueChange]);
 
   const handleFieldChange = (fieldKey, fieldValue) => {
     setFormData((prev) => ({
@@ -78,24 +99,25 @@ const Form = ({ question, value, onValueChange }) => {
               label={getLabelWithRequired(field)}
               prefix={field.prefix}
               value={formData[field.key] || ""}
+              error={allErrors[field.key] || ""}
               onChangeText={(text) => handleFieldChange(field.key, text)}
               placeholder={field.placeholder}
               keyboardType={field.keyboard || "default"}
               style={[
                 styles.field,
-                fieldErrors[field.key] ? styles.errorField : null,
+                allErrors[field.key] ? styles.errorField : null,
               ]}
               isRequired={field.required}
             />
-            {fieldErrors[field.key] && (
-              <Text style={styles.errorText}>{fieldErrors[field.key]}</Text>
-            )}
+            {/* {allErrors[field.key] && (
+              <Text style={styles.errorText}>{allErrors[field.key]}</Text>
+            )} */}
           </View>
         ))}
       </View>
-      {Object.keys(fieldErrors).length > 0 && (
+      {/* {Object.keys(allErrors).length > 0 && (
         <Text style={styles.requiredNote}>* Required fields</Text>
-      )}
+      )} */}
     </View>
   );
 };

@@ -34,6 +34,8 @@ const QuestionRenderer = ({
   allResponses = {},
   onAutoNavigate,
   showTitle = true,
+  onValidationChange,
+  fieldErrors = {},
 }) => {
   if (!question) {
     return (
@@ -77,6 +79,8 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          onValidationChange={onValidationChange}
+          fieldErrors={fieldErrors}
         />
       );
 
@@ -86,6 +90,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
 

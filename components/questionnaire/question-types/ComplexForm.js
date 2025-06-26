@@ -153,7 +153,7 @@ const CustomToggleButton = ({ options, value, onValueChange }) => {
   );
 };
 
-const ComplexForm = ({ question, value, onValueChange }) => {
+const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
   const { responses } = useQuestionnaire();
   const [formData, setFormData] = useState(value || {});
   const previousFormData = useRef(value || {});
@@ -247,20 +247,26 @@ const ComplexForm = ({ question, value, onValueChange }) => {
       case "text":
       default:
         return (
-          <TextInput
-            key={field.key}
-            label={field.label}
-            value={fieldValue}
-            onChangeText={(text) => handleFieldChange(field.key, text)}
-            placeholder={field.placeholder}
-            keyboardType={field.keyboard || "default"}
-            prefix={field.prefix}
-            style={
-              field.accommodateWidth
-                ? { flex: field.accommodateWidth }
-                : undefined
-            }
-          />
+          <View key={field.key}>
+            <TextInput
+              label={field.label}
+              value={fieldValue}
+              onChangeText={(text) => handleFieldChange(field.key, text)}
+              placeholder={field.placeholder}
+              error={fieldErrors[field.key]}
+              keyboardType={field.keyboard || "default"}
+              prefix={field.prefix}
+              style={[
+                field.accommodateWidth
+                  ? { flex: field.accommodateWidth }
+                  : undefined,
+                fieldErrors[field.key] ? styles.errorField : null,
+              ]}
+            />
+            {/* {fieldErrors[field.key] && (
+              <Text style={styles.errorText}>{fieldErrors[field.key]}</Text>
+            )} */}
+          </View>
         );
     }
   };
@@ -386,6 +392,15 @@ const styles = StyleSheet.create({
     height: 42,
     alignItems: "center",
     justifyContent: "center",
+  },
+  errorField: {
+    borderColor: COLORS.error,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: 12,
+    fontFamily: "Futura",
+    marginBottom: 4,
   },
 });
 

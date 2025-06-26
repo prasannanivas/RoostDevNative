@@ -138,9 +138,17 @@ export const validateField = (field, value) => {
         error: isValidPhone ? null : "Please enter a valid phone number",
       };
     case "numeric":
-      return !isNaN(value) && value.length > 0;
+      const isValidNumeric = !isNaN(value) && value.length > 0;
+      return {
+        isValid: isValidNumeric,
+        error: isValidNumeric ? null : "Please enter a valid number",
+      };
     default:
-      return value && value.length > 0;
+      const isValidDefault = value && value.length > 0;
+      return {
+        isValid: isValidDefault,
+        error: isValidDefault ? null : "This field is required",
+      };
   }
 };
 
