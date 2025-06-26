@@ -167,7 +167,8 @@ const ClaimRewardsModal = ({
                       items={(invitedClients || [])
                         .filter(
                           (c) =>
-                            c.status === "ACCEPTED" && c.clientAddress !== null
+                            c.clientStatus === "Completed" &&
+                            c.clientAddress !== null
                         )
                         .map((c) => ({
                           label: c.referenceName,
