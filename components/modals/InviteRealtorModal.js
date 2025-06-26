@@ -87,9 +87,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
       // Handle the response and set feedback
       if (resp.ok) {
         const responseData = await resp.json();
-        setInviteLink(
-          responseData.inviteLink || "http://signup.roostapp.io/signup.html"
-        ); // Set the invite link from response
+        setInviteLink(responseData.inviteLink || "http://signup.roostapp.io/"); // Set the invite link from response
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
 
         // Instead of automatically opening apps, show contact option icons
@@ -116,8 +114,8 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     // Use the invite link returned from the API response if available
     const signupLink =
       inviteLink ||
-      `http://159.203.58.60:5000/signup.html?realtorCode=${
-        realtorInfo?.inviteCode || "http://159.203.58.60:5000/signup.html"
+      `https://signup.roostapp.io/?realtorCode=${
+        realtorInfo?.inviteCode || "https://signup.roostapp.io/"
       }`;
 
     const whatsappMessage = `Hey ${
@@ -149,7 +147,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     // Use the invite link returned from the API response if available
     const signupLink =
       inviteLink ||
-      `http://159.203.58.60:5000/signup.html?realtorCode=${
+      `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
       }`;
 
@@ -171,7 +169,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     // Use the invite link returned from the API response if available
     const signupLink =
       inviteLink ||
-      `http://159.203.58.60:5000/signup.html?realtorCode=${
+      `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
       }`;
 
@@ -211,7 +209,7 @@ Looking forward to working with you!`;
     // Use the invite link returned from the API response if available
     const linkToCopy =
       inviteLink ||
-      `http://signup.roostapp.io/signup.html?realtorCode=${
+      `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
       }`;
 
