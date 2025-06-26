@@ -52,16 +52,23 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
     isCompleted,
   } = useQuestionnaire();
 
-  console.log(
-    "Questionnaire: Initializing with currentQuestionId:",
-    currentQuestionId,
-    questionnaireData
-  );
-  if (questionnaireData?.responses) {
-    console.log("questionnaireData has responses", questionnaireData.responses);
-    setResponses(questionnaireData.responses);
-  }
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle initial questionnaire data loading
+  useEffect(() => {
+    console.log(
+      "Questionnaire: Initializing with currentQuestionId:",
+      currentQuestionId,
+      questionnaireData
+    );
+    if (questionnaireData?.responses) {
+      console.log(
+        "questionnaireData has responses",
+        questionnaireData.responses
+      );
+      setResponses(questionnaireData.responses);
+    }
+  }, [questionnaireData, setResponses]);
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
   const currentResponse = responses[currentQuestionId];
 
