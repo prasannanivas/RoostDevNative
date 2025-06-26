@@ -639,9 +639,9 @@ const questions = [
     ],
     nextQuestionMap: {
       employed: 107,
-      self_employed: 108,
-      pension: 109,
-      other: 109,
+      self_employed: 107,
+      pension: 114,
+      other: 114,
     },
   },
   {
@@ -982,7 +982,7 @@ const questions = [
     ],
     nextQuestionMap: {
       employed: 111,
-      self_employed: 112,
+      self_employed: 111,
       pension: 113,
       other: 113,
     },
