@@ -691,7 +691,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 33,
-    minWidth: 121,
     textAlign: "center",
     alignItems: "center",
     justifyContent: "center",
@@ -702,7 +701,6 @@ const styles = StyleSheet.create({
   },
   actionButtonTakePicture: {
     backgroundColor: COLORS.green,
-    flex: 127,
     minHeight: 42,
   },
   fileSelected: {
@@ -715,12 +713,11 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: COLORS.green,
-    flex: 199,
+    minWidth: 372,
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 50,
     marginTop: 16,
-    width: "100%",
   },
   uploadButtonText: {
     color: COLORS.white,

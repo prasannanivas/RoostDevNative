@@ -1274,10 +1274,10 @@ const styles = StyleSheet.create({
   changeEmailButton: {
     borderColor: COLORS.green,
     borderWidth: 1,
-    paddingVertical: 16,
+    paddingVertical: 13,
     paddingHorizontal: 16,
-    borderRadius: 50,
-    marginLeft: 16,
+    borderRadius: 33,
+    marginLeft: 8,
     justifyContent: "center",
   },
   changeEmailText: {
