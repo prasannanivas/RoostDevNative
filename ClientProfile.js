@@ -71,15 +71,15 @@ export default function ClientProfile({ onClose }) {
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
     // Push notifications
-    documentReminders: false,
-    documentApprovals: false,
-    newMessages: false,
-    marketingNotifications: false,
+    documentReminders: true,
+    documentApprovals: true,
+    newMessages: true,
+    marketingNotifications: true,
 
     // Email notifications
-    termsOfServiceEmails: false,
-    statusUpdateEmails: false,
-    marketingEmails: false,
+    termsOfServiceEmails: true,
+    statusUpdateEmails: true,
+    marketingEmails: true,
   });
 
   // For demonstration, we split name into firstName & lastName to match screenshot
@@ -146,7 +146,9 @@ export default function ClientProfile({ onClose }) {
 
   const loadNotificationPreferences = async () => {
     try {
-      const savedPrefs = await AsyncStorage.getItem("notificationPreferences");
+      const savedPrefs = await AsyncStorage.getItem(
+        "notificationPreferences" + clientInfo.id
+      );
       if (savedPrefs) {
         setNotificationPrefs(JSON.parse(savedPrefs));
       }
@@ -158,7 +160,7 @@ export default function ClientProfile({ onClose }) {
   const saveNotificationPreferences = async (newPrefs) => {
     try {
       await AsyncStorage.setItem(
-        "notificationPreferences",
+        "notificationPreferences" + clientInfo.id,
         JSON.stringify(newPrefs)
       );
     } catch (error) {

@@ -87,14 +87,14 @@ export default function RealtorProfile({ onClose }) {
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
     // Push notifications
-    clientAccept: false,
-    clientPreApproval: false,
-    marketingNotifications: false,
+    clientAccept: true,
+    clientPreApproval: true,
+    marketingNotifications: true,
 
     // Email notifications
-    termsOfServiceEmails: false,
-    clientPreApprovalEmails: false,
-    marketingEmails: false,
+    termsOfServiceEmails: true,
+    clientPreApprovalEmails: true,
+    marketingEmails: true,
   });
 
   // Add these state variables at the top of your component with the other state declarations
@@ -165,7 +165,7 @@ export default function RealtorProfile({ onClose }) {
   const loadNotificationPreferences = async () => {
     try {
       const savedPrefs = await AsyncStorage.getItem(
-        "realtorNotificationPreferences"
+        "realtorNotificationPreferences" + realtor._id
       );
       if (savedPrefs) {
         setNotificationPrefs(JSON.parse(savedPrefs));
@@ -179,7 +179,7 @@ export default function RealtorProfile({ onClose }) {
   const saveNotificationPreferences = async (newPrefs) => {
     try {
       await AsyncStorage.setItem(
-        "realtorNotificationPreferences",
+        "realtorNotificationPreferences" + realtor._id,
         JSON.stringify(newPrefs)
       );
     } catch (error) {

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import * as DocumentPicker from "expo-document-picker";
 import {
   View,
   Text,
@@ -87,6 +88,95 @@ const RealtorHome = () => {
     inviteLink: "",
     inviteCode: "",
   });
+
+  // State for file upload feedback
+
+  const [multiInviteLoading, setMultiInviteLoading] = useState(false);
+  const [multiInviteFeedback, setMultiInviteFeedback] = useState("");
+  const [selectedInviteFile, setSelectedInviteFile] = useState(null);
+
+  // Handler for picking the file (Upload File button)
+  const handlePickInviteFile = async () => {
+    setMultiInviteFeedback("");
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: [
+          "text/csv",
+          "application/vnd.ms-excel",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/vnd.oasis.opendocument.spreadsheet",
+          "application/pdf",
+        ],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (res.canceled || !res.assets || !res.assets[0]) {
+        setMultiInviteFeedback("No file selected.");
+        setSelectedInviteFile(null);
+        return;
+      }
+      const file = res.assets[0];
+      // For web, use the File object directly if available
+      if (Platform.OS === "web" && file.file) {
+        setSelectedInviteFile(file.file);
+      } else {
+        setSelectedInviteFile({
+          uri: file.uri,
+          name: file.name || "invite-clients.csv",
+          type: file.mimeType || "text/csv",
+        });
+      }
+      setMultiInviteFeedback("");
+    } catch (e) {
+      setMultiInviteFeedback("Error picking file: " + (e?.message || e));
+      setSelectedInviteFile(null);
+    }
+  };
+
+  // Handler for sending multiple invites via file upload (Send Invites button)
+  const handleMultipleInvites = async () => {
+    if (!selectedInviteFile) {
+      setMultiInviteFeedback("Please select a file first.");
+      return;
+    }
+    setMultiInviteLoading(true);
+    setMultiInviteFeedback("");
+    try {
+      const formData = new FormData();
+      if (Platform.OS === "web" && selectedInviteFile instanceof File) {
+        // On web, append the File object directly
+        formData.append("file", selectedInviteFile, selectedInviteFile.name);
+      } else {
+        // On native, append the { uri, name, type } object
+        formData.append("file", selectedInviteFile);
+      }
+      const resp = await fetch(
+        `http://159.203.58.60:5000/realtor/${realtor.id}/invite-client-csv`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+            // Do NOT set Content-Type, let fetch handle it
+          },
+        }
+      );
+      if (!resp.ok) {
+        const errText = await resp.text();
+        setMultiInviteFeedback("Upload failed: " + errText);
+      } else {
+        setMultiInviteFeedback(
+          "Invites sent successfully to the Admin. Please wait for confirmation. This may take 2-3 business days."
+        );
+        setSelectedInviteFile(null);
+        realtorFromContext?.fetchLatestRealtor?.();
+      }
+    } catch (e) {
+      setMultiInviteFeedback("Error: " + (e?.message || e));
+    } finally {
+      setMultiInviteLoading(false);
+    }
+  };
 
   // Refs for text inputs to handle focus
   const lastNameInputRef = useRef();
@@ -955,22 +1045,47 @@ Looking forward to working with you!`;
                 <>
                   <TouchableOpacity
                     style={styles.uploadFileButton}
-                    onPress={() => {
-                      /* Handle file upload */
-                    }}
+                    onPress={handlePickInviteFile}
                   >
                     <Text style={styles.uploadFileText}>Upload File</Text>
                   </TouchableOpacity>
+                  {selectedInviteFile && (
+                    <Text
+                      style={{
+                        color: COLORS.slate,
+                        marginTop: 8,
+                        textAlign: "center",
+                      }}
+                    >
+                      Selected: {selectedInviteFile.name}
+                    </Text>
+                  )}
                   <TouchableOpacity
                     style={styles.sendInviteButton}
-                    onPress={() => {
-                      /* Handle sending multiple invites */
-                    }}
+                    onPress={handleMultipleInvites}
+                    disabled={multiInviteLoading}
                   >
-                    <Text style={styles.sendInviteButtonText}>
-                      Send Invites
-                    </Text>
+                    {multiInviteLoading ? (
+                      <ActivityIndicator color={COLORS.white} />
+                    ) : (
+                      <Text style={styles.sendInviteButtonText}>
+                        Send Invites
+                      </Text>
+                    )}
                   </TouchableOpacity>
+                  {!!multiInviteFeedback && (
+                    <Text
+                      style={{
+                        color: multiInviteFeedback.includes("success")
+                          ? COLORS.green
+                          : COLORS.red,
+                        marginTop: 8,
+                        textAlign: "center",
+                      }}
+                    >
+                      {multiInviteFeedback}
+                    </Text>
+                  )}
                   <Text style={styles.orDivider}>OR</Text>
                   <Text style={styles.alternativeText}>
                     You can always email a file (Excel or .CSV) to us at
@@ -1730,14 +1845,16 @@ const styles = StyleSheet.create({
   },
   uploadFileButton: {
     backgroundColor: COLORS.orange,
-    borderRadius: 8,
-    paddingVertical: 16,
+    borderRadius: 6,
+    paddingHorizontal: 24,
     alignItems: "center",
-    marginVertical: 24,
+    justifyContent: "center",
+    marginVertical: 13,
+    minHeight: 42,
   },
   uploadFileText: {
     color: COLORS.white,
-    fontSize: 14, // P size
+    fontSize: 12, // P size
     fontWeight: "500", // P weight
     fontFamily: "Futura",
   },
