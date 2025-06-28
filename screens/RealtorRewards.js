@@ -20,6 +20,8 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { OrangeProgressBar } from "../components/progressBars";
 import InviteRealtorModal from "../components/modals/InviteRealtorModal";
 import ClaimRewardsModal from "../components/modals/ClaimRewardsModal";
+import CashoutModal from "../components/modals/CashoutModal";
+import CashoutMinimumModal from "../components/modals/CashoutMinimumModal";
 import { useRealtor } from "../context/RealtorContext";
 
 // Design System Colors
@@ -70,11 +72,14 @@ export default function RealtorRewards({
   const [fetchingRewards, setFetchingRewards] = useState(true);
 
   const [claimModal, setClaimModal] = useState(false);
+  const [showCashoutModal, setShowCashoutModal] = useState(false);
+  const [showCashoutMinimumModal, setShowCashoutMinimumModal] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
   const [selectedClient, setSelectedClient] = useState("");
   const [claimLoading, setClaimLoading] = useState(false);
   const [selectedClientData, setSelectedClientData] = useState(null);
   const [addressConfirmation, setAddressConfirmation] = useState(false);
+  const [showAddressConfirm, setShowAddressConfirm] = useState(false);
   const [addressToSend, setAddressToSend] = useState({
     address: "",
     city: "",
@@ -88,22 +93,6 @@ export default function RealtorRewards({
   const POINTS_TO_DOLLARS = 1;
   const MIN_CASHOUT_DOLLAR = 250;
   const currentPoints = realtor?.points || 0;
-
-  // Add new animation state
-  const panY = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const resetPositionAnim = Animated.timing(translateY, {
-    toValue: 0,
-    duration: 200,
-    useNativeDriver: true,
-  });
-
-  const closeAnim = Animated.timing(translateY, {
-    toValue: Dimensions.get("window").height,
-    duration: 200,
-    useNativeDriver: true,
-  });
 
   const fetchRewards = async () => {
     setFetchingRewards(true);
@@ -165,6 +154,7 @@ export default function RealtorRewards({
       // Use realtor's brokerage address if available
       if (realtor.brokerageInfo) {
         setAddressToSend({
+          name: realtor.brokerageInfo.brokerageName || "",
           address: realtor.brokerageInfo.brokerageAddress || "",
           city: realtor.brokerageInfo.brokerageCity || "",
           postalCode: realtor.brokerageInfo.brokeragePostalCode || "",
@@ -527,27 +517,12 @@ export default function RealtorRewards({
                 currentPoints < MIN_CASHOUT_DOLLAR &&
                   styles.cashOutButtonDisabled,
               ]}
-              disabled={currentPoints < MIN_CASHOUT_DOLLAR}
               onPress={() => {
-                Alert.alert(
-                  "Cash Out Confirmation",
-                  `Are you sure you want to convert ${currentPoints} points to $${(
-                    currentPoints * POINTS_TO_DOLLARS
-                  ).toFixed(2)}?`,
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Confirm",
-                      onPress: () => {
-                        Alert.alert(
-                          "Request Submitted",
-                          "Your cash out request has been submitted. The funds will be sent to your brokerage.",
-                          [{ text: "OK" }]
-                        );
-                      },
-                    },
-                  ]
-                );
+                if (currentPoints >= MIN_CASHOUT_DOLLAR) {
+                  setShowCashoutModal(true);
+                } else {
+                  setShowCashoutMinimumModal(true);
+                }
               }}
             >
               <Text style={styles.cashOutButtonText}>
@@ -556,6 +531,80 @@ export default function RealtorRewards({
                   : "Cash Out"}
               </Text>
             </TouchableOpacity>
+            {/* Cashout Modal */}
+            <CashoutModal
+              visible={showCashoutModal}
+              points={currentPoints}
+              brokerageAddress={{
+                name: realtor?.brokerageInfo?.brokerageName || "",
+                address: realtor?.brokerageInfo?.brokerageAddress || "",
+                city: realtor?.brokerageInfo?.brokerageCity || "",
+                postalCode: realtor?.brokerageInfo?.brokeragePostalCode || "",
+              }}
+              showAddressConfirm={showAddressConfirm}
+              onCancel={() => {
+                setShowCashoutModal(false);
+                setShowAddressConfirm(false);
+              }}
+              onRequestClose={() => {
+                setShowCashoutModal(false);
+                setShowAddressConfirm(false);
+              }}
+              onShowAddressConfirm={() => setShowAddressConfirm(true)}
+              onFinalConfirm={async () => {
+                setClaimLoading(true);
+                const uniqueId = `Cash${Date.now()}`;
+                const payload = {
+                  rewardId: uniqueId,
+                  realtorId: realtor._id,
+                  to: "Realtor",
+                  toAddress: {
+                    name: realtor?.brokerageInfo?.brokerageName || "",
+                    address: realtor?.brokerageInfo?.brokerageAddress || "",
+                    city: realtor?.brokerageInfo?.brokerageCity || "",
+                    postalCode:
+                      realtor?.brokerageInfo?.brokeragePostalCode || "",
+                  },
+                  targetRealtorId: realtor._id,
+                  points: currentPoints,
+                };
+                try {
+                  const resp = await fetch(
+                    `http://159.203.58.60:5000/realtor/claimRewards`,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(payload),
+                    }
+                  );
+                  if (resp.ok) {
+                    setShowCashoutModal(false);
+                    setShowAddressConfirm(false);
+                    Alert.alert(
+                      "Request Submitted",
+                      "Your cash out request has been submitted. The funds will be sent to your brokerage.",
+                      [{ text: "OK" }]
+                    );
+                  } else {
+                    const errorData = await resp.json();
+                    Alert.alert(
+                      "Error",
+                      errorData.message || "Failed to claim cashout"
+                    );
+                  }
+                } catch (e) {
+                  Alert.alert("Error", "Failed to claim cashout");
+                } finally {
+                  await fetchLatestRealtor();
+                  setClaimLoading(false);
+                }
+              }}
+            />
+            <CashoutMinimumModal
+              visible={showCashoutMinimumModal}
+              minPoints={MIN_CASHOUT_DOLLAR}
+              onClose={() => setShowCashoutMinimumModal(false)}
+            />
           </View>
         </View>
         {/* Keep all the other functionality intact */}
@@ -582,18 +631,21 @@ export default function RealtorRewards({
         </TouchableOpacity>
         {!isHistoryCollapsed && (
           <View style={styles.collapsibleContent}>
-            {realtor?.pointsHistory?.map((e, i) => (
-              <View key={i} style={styles.historyRow}>
-                <View style={styles.historyPts}>
-                  <FontAwesome name="star" size={14} color={COLORS.orange} />
-                  <Text style={styles.historyPtsTxt}>+{e.points}</Text>
+            {realtor?.pointsHistory
+              ?.slice()
+              .reverse()
+              .map((e, i) => (
+                <View key={i} style={styles.historyRow}>
+                  <View style={styles.historyPts}>
+                    <FontAwesome name="star" size={14} color={COLORS.orange} />
+                    <Text style={styles.historyPtsTxt}>+{e.points}</Text>
+                  </View>
+                  <View style={styles.historyDetails}>
+                    <Text style={styles.historyReason}>{e.reason}</Text>
+                    <Text style={styles.historyDate}>{formatDate(e.date)}</Text>
+                  </View>
                 </View>
-                <View style={styles.historyDetails}>
-                  <Text style={styles.historyReason}>{e.reason}</Text>
-                  <Text style={styles.historyDate}>{formatDate(e.date)}</Text>
-                </View>
-              </View>
-            ))}
+              ))}
             {(!realtor?.pointsHistory ||
               realtor.pointsHistory.length === 0) && (
               <Text style={styles.noDataText}>No points history available</Text>
