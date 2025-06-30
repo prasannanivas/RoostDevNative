@@ -120,18 +120,23 @@ const ClientHome = ({ questionnaireData }) => {
   }, [clientId]);
   // Merge API + client uploads with proper logging
   const merged = React.useMemo(() => {
+    if (documentsFromApi.length === 0) {
+      // If API returns nothing, fall back to clientDocs
+      console.log(
+        `Merged documents fallback: 0 from API, ${clientDocs.length} from clientDocs`
+      );
+      return clientDocs;
+    }
     const result = documentsFromApi.map((apiDoc) => {
       const match = clientDocs.find(
         (d) => d.docType?.toLowerCase() === apiDoc.docType?.toLowerCase()
       );
       return match ? { ...apiDoc, ...match } : apiDoc;
     });
-
     // Log merge results on changes
     console.log(
       `Merged documents: ${result.length} (API: ${documentsFromApi.length}, Client: ${clientDocs.length})`
     );
-
     return result;
   }, [documentsFromApi, clientDocs]);
 
@@ -558,13 +563,14 @@ const ClientHome = ({ questionnaireData }) => {
         onClose={() => setShowSubmittedModal(false)}
         document={selectedSubmittedDoc}
         clientId={clientId}
-        onDeleteSuccess={() =>
+        onDeleteSuccess={() => {
           fetchRefreshData(clientId).then((result) => {
             if (result?.neededDocsResponse?.documents_needed) {
               setDocumentsFromApi(result.neededDocsResponse.documents_needed);
             }
-          })
-        }
+          });
+          setShowSubmittedModal(false);
+        }}
       />
       {/* Modal for questionnaire preview */}
       {/* <QuestionnairePreview /> */}

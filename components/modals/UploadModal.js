@@ -713,17 +713,16 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: COLORS.green,
-    minWidth: 372,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
     borderRadius: 50,
     marginTop: 16,
   },
   uploadButtonText: {
     color: COLORS.white,
-    fontWeight: "500", // P weight
+    fontWeight: "700", // P weight
     textAlign: "center",
-    fontSize: 16, // H3 size
+    fontSize: 12, // H3 size
     fontFamily: "Futura",
   },
   loadingIndicator: {
