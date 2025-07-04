@@ -152,14 +152,13 @@ export default function RealtorRewards({
   useEffect(() => {
     if (selectedReward && selectedReward.rewardFor === "Realtors" && realtor) {
       // Use realtor's brokerage address if available
-      if (realtor.brokerageInfo) {
-        setAddressToSend({
-          name: realtor.brokerageInfo.brokerageName || "",
-          address: realtor.brokerageInfo.brokerageAddress || "",
-          city: realtor.brokerageInfo.brokerageCity || "",
-          postalCode: realtor.brokerageInfo.brokeragePostalCode || "",
-        });
-      }
+
+      setAddressToSend({
+        name: realtor.name || "",
+        address: realtor?.rewardsAddress || "",
+        city: realtor?.rewardsCity || "",
+        postalCode: realtor?.rewardsPostalCode || "",
+      });
     }
   }, [selectedReward, realtor]);
   // Claim reward
@@ -536,10 +535,10 @@ export default function RealtorRewards({
               visible={showCashoutModal}
               points={currentPoints}
               brokerageAddress={{
-                name: realtor?.brokerageInfo?.brokerageName || "",
-                address: realtor?.brokerageInfo?.brokerageAddress || "",
-                city: realtor?.brokerageInfo?.brokerageCity || "",
-                postalCode: realtor?.brokerageInfo?.brokeragePostalCode || "",
+                name: realtor?.name || "",
+                address: realtor?.rewardsAddress || "",
+                city: realtor?.rewardsCity || "",
+                postalCode: realtor?.rewardsPostalCode || "",
               }}
               showAddressConfirm={showAddressConfirm}
               onCancel={() => {
@@ -559,11 +558,10 @@ export default function RealtorRewards({
                   realtorId: realtor._id,
                   to: "Realtor",
                   toAddress: {
-                    name: realtor?.brokerageInfo?.brokerageName || "",
-                    address: realtor?.brokerageInfo?.brokerageAddress || "",
-                    city: realtor?.brokerageInfo?.brokerageCity || "",
-                    postalCode:
-                      realtor?.brokerageInfo?.brokeragePostalCode || "",
+                    name: realtor?.name || "",
+                    address: realtor?.rewardsAddress || "",
+                    city: realtor?.rewardsCity || "",
+                    postalCode: realtor?.rewardsPostalCode || "",
                   },
                   targetRealtorId: realtor._id,
                   points: currentPoints,
