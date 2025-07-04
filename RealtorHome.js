@@ -586,7 +586,7 @@ Looking forward to working with you!`;
                   style={[
                     styles.avatar,
                     {
-                      backgroundColor: "#23231A",
+                      backgroundColor: "#2271B1",
                       justifyContent: "center",
                       alignItems: "center",
                     },
@@ -601,7 +601,9 @@ Looking forward to working with you!`;
           )}
           <View style={styles.nameAgencyContainer}>
             <Text style={styles.realtorName}>{realtor.name}</Text>
-            <Text style={styles.agencyName}>ABC Realty</Text>
+            <Text style={styles.agencyName}>
+              {realtor?.brokerageInfo?.brokerageName || ""}
+            </Text>
           </View>
         </TouchableOpacity>
         <GiftIcon

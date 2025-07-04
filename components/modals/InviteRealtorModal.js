@@ -87,7 +87,10 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
       // Handle the response and set feedback
       if (resp.ok) {
         const responseData = await resp.json();
-        setInviteLink(responseData.inviteLink || "http://signup.roostapp.io/"); // Set the invite link from response
+        setInviteLink(
+          responseData.inviteLink ||
+            `http://signup.roostapp.io/?realtorCode=${realtorInfo?.inviteCode}&iv=r`
+        ); // Set the invite link from response
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
 
         // Instead of automatically opening apps, show contact option icons

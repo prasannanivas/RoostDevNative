@@ -18,6 +18,7 @@ const Home = () => {
 
   const fetchClientInfo = async () => {
     if (!auth?.client) return;
+    console.log(auth.client);
     try {
       const response = await fetch(
         `http://159.203.58.60:5000/client/${auth.client.id}`

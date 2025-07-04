@@ -3,14 +3,30 @@ import {
   calculateQuestionnaireProgress,
   isQuestionInFlow,
 } from "../utils/questionnaireUtils";
+import { useClient } from "./ClientContext";
 
 const QuestionnaireContext = createContext();
 
 export const QuestionnaireProvider = ({ children }) => {
+  const { clientInfo } = useClient();
+
   const defaultResponses = {
     11: { bonuses: "no", benefits: "no" }, // Default value for question 10
+
     14: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 14
     13: { hasAssets: "no", items: [] }, // Default value for question 15
+    6: {
+      firstName: clientInfo?.name.split(" ")[0],
+      lastName: clientInfo?.name.split(" ")[1] || "",
+      email: clientInfo?.email || "",
+      phone: clientInfo?.phone || "",
+    }, // Default value for question 6
+    100: {
+      firstName: clientInfo?.name.split(" ")[0],
+      lastName: clientInfo?.name.split(" ")[1] || "",
+      email: clientInfo?.email || "",
+      phone: clientInfo?.phone || "",
+    }, // Default value for question 100
     108: { bonuses: "no", benefits: "no" }, // Default value for question 108
     116: { hasAssets: "no", items: [] }, // Default value for question 116
     118: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 118
