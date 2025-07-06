@@ -40,6 +40,7 @@ const styles = StyleSheet.create({
   },
   successContainer: {
     alignItems: "center",
+    justifyContent: "center",
     gap: 24,
   },
   checkmark: {

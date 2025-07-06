@@ -700,15 +700,20 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
             allResponses={responses}
           />
 
-          <View style={styles.footer}>
+          <View style={styles.finalStepFooter}>
             <Button
               title={
                 isCompleted
                   ? "Done"
                   : currentQuestion.submitButtonText || "Complete"
               }
+              style={styles.finalStepButton}
               onPress={() => {
-                navigation?.goBack() || navigation?.navigate("Home");
+                try {
+                  navigation?.goBack() || navigation?.navigate("Home");
+                } catch (error) {
+                  navigation?.navigate("Home");
+                }
               }}
               variant="primary"
             />
@@ -930,6 +935,19 @@ const styles = StyleSheet.create({
   },
   fullWidthButton: {
     flex: 1,
+  },
+  finalStepFooter: {
+    paddingHorizontal: 24,
+    backgroundColor: COLORS.background,
+    alignItems: "center",
+  },
+  finalStepButton: {
+    width: "100%",
+    maxWidth: 400, // Limit width for final step button
+    backgroundColor: COLORS.green,
+    color: COLORS.white,
+    borderColor: COLORS.green,
+    borderWidth: 1,
   },
   errorContainer: {
     flex: 1,
