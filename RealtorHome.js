@@ -593,16 +593,22 @@ Looking forward to working with you!`;
                   ]}
                 >
                   <Text style={styles.avatarText}>
-                    {getInitials(realtor.name)}
+                    {getInitials(
+                      realtorFromContext?.realtorInfo?.name || realtor.name
+                    )}
                   </Text>
                 </View>
               )}
             </>
           )}
           <View style={styles.nameAgencyContainer}>
-            <Text style={styles.realtorName}>{realtor.name}</Text>
+            <Text style={styles.realtorName}>
+              {realtorFromContext?.realtorInfo?.name || realtor.name}
+            </Text>
             <Text style={styles.agencyName}>
-              {realtor?.brokerageInfo?.brokerageName || ""}
+              {realtorFromContext?.realtorInfo?.brokerageInfo?.brokerageName ||
+                realtor?.brokerageInfo?.brokerageName ||
+                null}
             </Text>
           </View>
         </TouchableOpacity>

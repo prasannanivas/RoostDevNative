@@ -97,7 +97,9 @@ const PasswordScreen = React.forwardRef(
 
         // Add RECO ID if it exists
         if (userData.recoId) {
-          payload.recoId = userData.recoId;
+          payload.brokerageInfo = {
+            licenseNumber: userData.recoId,
+          };
         }
 
         // Add invite information if available
