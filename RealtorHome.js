@@ -552,42 +552,17 @@ const RealtorHome = () => {
     }
   };
 
-  const openWhatsApp = () => {
-    // Get realtor invite code if available
-    const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
+  const handlePersonalText = () => {
+    // Updated SMS message content
     const signupLink =
       formData.inviteLink ||
-      `https://signup.roostapp.io/?realtorCode=${inviteCode}`;
+      `https://signup.roostapp.io/?realtorCode=${
+        realtorFromContext?.realtorInfo?.inviteCode || ""
+      }`;
+    const smsMessage = `Hi ${formData.firstName},
 
-    const whatsappMessage = `Hey ${formData.firstName}, I'm sharing a link to view and share listings with me on Roost. Click here to get started: ${signupLink}`;
-    const phone = formData.phone.replace(/[^0-9]/g, "");
-    let whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
-      whatsappMessage
-    )}`;
+I'm sending you an invite to get a mortgage with Roost, here is the link to sign up ${signupLink}.`;
 
-    Linking.canOpenURL(whatsappUrl)
-      .then((supported) => {
-        if (supported) {
-          return Linking.openURL(whatsappUrl);
-        } else {
-          Alert.alert(
-            "WhatsApp not installed",
-            "Please install WhatsApp to use this feature",
-            [{ text: "OK" }]
-          );
-        }
-      })
-      .catch((err) => console.error("Error opening WhatsApp:", err));
-  };
-
-  const openSMS = () => {
-    // Get realtor invite code if available
-    const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
-    const signupLink =
-      formData.inviteLink ||
-      `https://signup.roostapp.io/?realtorCode=${inviteCode}`;
-
-    const smsMessage = `Hey ${formData.firstName}, I'm sharing a link to view and share listings with me on Roost. Click here to get started: ${signupLink}`;
     const smsUrl = `sms:${formData.phone}?body=${encodeURIComponent(
       smsMessage
     )}`;
@@ -595,23 +570,24 @@ const RealtorHome = () => {
     Linking.openURL(smsUrl).catch((err) =>
       console.error("Error opening SMS:", err)
     );
+
+    // Close modal and schedule transactional email check
+    setShowInviteOptionsModal(false);
+    resetFormData();
+    scheduleTransactionalEmailCheck();
   };
 
-  const openEmail = () => {
-    // Get realtor invite code if available
-    const inviteCode = realtorFromContext?.realtorInfo?.inviteCode || "";
+  const handlePersonalEmail = () => {
+    // Updated email content
     const signupLink =
       formData.inviteLink ||
-      `https://signup.roostapp.io/?realtorCode=${inviteCode}`;
+      `https://signup.roostapp.io/?realtorCode=${
+        realtorFromContext?.realtorInfo?.inviteCode || ""
+      }`;
+    const emailSubject = "Invitation to get a mortgage with Roost";
+    const emailBody = `Hi ${formData.firstName}
 
-    const emailSubject = "Join Roost";
-    const emailBody = `Hey ${formData.firstName},
-
-I'm sharing a link to view and share listings with me on Roost.
-
-Click here to get started: ${signupLink}
-
-Looking forward to working with you!`;
+I'm sending you an invite to get a mortgage with Roost, here is the link to sign up ${signupLink}. If you have any questions just ask.`;
 
     const mailtoUrl = `mailto:${formData.email}?subject=${encodeURIComponent(
       emailSubject
@@ -620,6 +596,87 @@ Looking forward to working with you!`;
     Linking.openURL(mailtoUrl).catch((err) =>
       console.error("Error opening email:", err)
     );
+
+    // Close modal and schedule transactional email check
+    setShowInviteOptionsModal(false);
+    resetFormData();
+    scheduleTransactionalEmailCheck();
+  };
+
+  const handleNoneOption = () => {
+    // Send transactional email immediately
+    sendTransactionalEmail();
+    setShowInviteOptionsModal(false);
+    resetFormData();
+  };
+
+  const resetFormData = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      referenceName: "",
+      phone: "",
+      email: "",
+      type: "Client",
+      inviteLink: "",
+      inviteCode: "",
+    });
+  };
+
+  const scheduleTransactionalEmailCheck = () => {
+    // Wait 15 minutes to check if client signed up
+    setTimeout(() => {
+      checkClientSignupAndSendEmail();
+    }, 15 * 60 * 1000); // 15 minutes
+  };
+
+  const checkClientSignupAndSendEmail = async () => {
+    try {
+      // Check if client has signed up by checking their status
+      const updatedRealtor = await realtorFromContext?.fetchLatestRealtor();
+      const clientStillPending = updatedRealtor?.invitedClients?.find(
+        (client) =>
+          client.referenceName ===
+            `${formData.firstName} ${formData.lastName}` &&
+          client.status === "PENDING"
+      );
+
+      if (clientStillPending) {
+        // Client hasn't signed up, send transactional email
+        sendTransactionalEmail();
+      }
+      // If client signed up, do nothing
+    } catch (error) {
+      console.error("Error checking client signup status:", error);
+      // If there's an error checking, send the email anyway
+      sendTransactionalEmail();
+    }
+  };
+
+  const sendTransactionalEmail = async () => {
+    try {
+      // Call backend API to send transactional email
+      const response = await fetch(
+        `http://159.203.58.60:5000/realtor/${realtor.id}/send-transactional-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            clientFirstName: formData.firstName,
+            clientEmail: formData.email,
+            inviteLink: formData.inviteLink,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to send transactional email");
+      }
+    } catch (error) {
+      console.error("Error sending transactional email:", error);
+    }
   };
 
   return (
@@ -895,67 +952,42 @@ Looking forward to working with you!`;
                 </Svg>
               </TouchableOpacity>
 
-              <Text style={styles.inviteOptionsTitle}>
-                Client Added Successfully!
-              </Text>
+              <Text style={styles.inviteOptionsTitle}>Client invite via</Text>
               <Text style={styles.inviteOptionsSubtitle}>
-                Contact {formData.firstName} {formData.lastName} via:
+                Its always best to send personal invite to your client, if you
+                choose none we will just send them an email in 5 minutes
               </Text>
 
-              <View style={styles.contactIcons}>
+              <View style={styles.contactOptions}>
                 {formData.phone && (
-                  <>
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openWhatsApp}
-                    >
-                      <MaterialCommunityIcons
-                        name="whatsapp"
-                        size={32}
-                        color="#25D366"
-                      />
-                      <Text style={styles.contactIconText}>WhatsApp</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openSMS}
-                    >
-                      <MaterialIcons name="sms" size={32} color="#2196F3" />
-                      <Text style={styles.contactIconText}>SMS</Text>
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity
+                    style={styles.primaryOptionBtn}
+                    onPress={handlePersonalText}
+                  >
+                    <MaterialIcons name="sms" size={32} color="#2196F3" />
+                    <Text style={styles.primaryOptionText}>Personal Text</Text>
+                  </TouchableOpacity>
                 )}
 
                 {formData.email && (
                   <TouchableOpacity
-                    style={styles.contactIconBtn}
-                    onPress={openEmail}
+                    style={styles.primaryOptionBtn}
+                    onPress={handlePersonalEmail}
                   >
                     <Entypo name="mail" size={32} color="#F44336" />
-                    <Text style={styles.contactIconText}>Email</Text>
+                    <Text style={styles.primaryOptionText}>Personal Email</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={() => {
-                  setShowInviteOptionsModal(false);
-                  setFormData({
-                    firstName: "",
-                    lastName: "",
-                    referenceName: "",
-                    phone: "",
-                    email: "",
-                    type: "Client",
-                    inviteLink: "",
-                    inviteCode: "",
-                  });
-                }}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
+              <View style={styles.noneOptionContainer}>
+                <TouchableOpacity
+                  style={styles.noneButton}
+                  onPress={handleNoneOption}
+                >
+                  <Text style={styles.noneButtonText}>None</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
@@ -1198,64 +1230,42 @@ Looking forward to working with you!`;
                 </Svg>
               </TouchableOpacity>
 
-              <Text style={styles.inviteOptionsTitle}>
-                Client Added Successfully!
-              </Text>
+              <Text style={styles.inviteOptionsTitle}>Client invite via</Text>
               <Text style={styles.inviteOptionsSubtitle}>
-                Contact {formData.firstName} {formData.lastName} via:
+                Its always best to send personal invite to your client, if you
+                choose none we will just send them an email in 5 minutes
               </Text>
 
-              <View style={styles.contactIcons}>
+              <View style={styles.contactOptions}>
                 {formData.phone && (
-                  <>
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openWhatsApp}
-                    >
-                      <MaterialCommunityIcons
-                        name="whatsapp"
-                        size={32}
-                        color="#25D366"
-                      />
-                      <Text style={styles.contactIconText}>WhatsApp</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openSMS}
-                    >
-                      <MaterialIcons name="sms" size={32} color="#2196F3" />
-                      <Text style={styles.contactIconText}>SMS</Text>
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity
+                    style={styles.primaryOptionBtn}
+                    onPress={handlePersonalText}
+                  >
+                    <MaterialIcons name="sms" size={32} color="#2196F3" />
+                    <Text style={styles.primaryOptionText}>Personal Text</Text>
+                  </TouchableOpacity>
                 )}
 
                 {formData.email && (
                   <TouchableOpacity
-                    style={styles.contactIconBtn}
-                    onPress={openEmail}
+                    style={styles.primaryOptionBtn}
+                    onPress={handlePersonalEmail}
                   >
                     <Entypo name="mail" size={32} color="#F44336" />
-                    <Text style={styles.contactIconText}>Email</Text>
+                    <Text style={styles.primaryOptionText}>Personal Email</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={() => {
-                  setShowInviteOptionsModal(false);
-                  setFormData({
-                    firstName: "",
-                    lastName: "",
-                    referenceName: "",
-                    phone: "",
-                    email: "",
-                  });
-                }}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
+              <View style={styles.noneOptionContainer}>
+                <TouchableOpacity
+                  style={styles.noneButton}
+                  onPress={handleNoneOption}
+                >
+                  <Text style={styles.noneButtonText}>None</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
@@ -1967,10 +1977,52 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontFamily: "Futura",
   },
-  contactIcons: {
+  contactOptions: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 24,
+    gap: 24,
+    marginBottom: 48, // 48px gap before None button
+  },
+  primaryOptionBtn: {
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    minWidth: 120,
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  primaryOptionText: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "bold",
+    color: COLORS.white,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  noneOptionContainer: {
+    alignItems: "center",
+    width: "100%",
+  },
+  noneButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: COLORS.gray,
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    alignItems: "center",
+    width: "80%",
+  },
+  noneButtonText: {
+    color: COLORS.gray,
+    fontSize: 16,
+    fontWeight: "500",
+    fontFamily: "Futura",
   },
   contactIconBtn: {
     alignItems: "center",
