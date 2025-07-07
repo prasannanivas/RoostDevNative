@@ -13,6 +13,7 @@ import { useRoute } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import RequestDocumentModal from "./RequestDocumentModal.js"; // Ensure this is a React Native component
 import Toast from "react-native-toast-message"; // Make sure to set up this library if used
+import { generateInitialsFromFullName } from "../utils/initialsUtils";
 
 const ClientDetails = () => {
   // Get clientId from navigation route parameters
@@ -188,8 +189,10 @@ const ClientDetails = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.clientHeader}>
         <Text style={styles.clientName}>{client.name}</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusBadgeText}>{client.status}</Text>
+        <View style={styles.initialsCircle}>
+          <Text style={styles.initialsText}>
+            {generateInitialsFromFullName(client.name)}
+          </Text>
         </View>
         {/* <TouchableOpacity
           style={styles.requestButton}
@@ -323,6 +326,20 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 14,
     color: "#23231A",
+  },
+  initialsCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#2271B1", // Blue color
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  initialsText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#FFFFFF", // White text
   },
   requestButton: {
     backgroundColor: "#019B8E",

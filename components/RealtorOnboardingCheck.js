@@ -13,7 +13,7 @@ import { useAuth } from "../context/AuthContext";
  * If either check fails, navigate to the appropriate onboarding screen
  * No modifications to AuthContext are needed as we use existing data from RealtorContext
  */
-const RealtorOnboardingCheck = () => {
+const RealtorOnboardingCheck = ({ onCompleted }) => {
   const { realtorInfo, invitedClients, loadingRealtor } = useRealtor();
   const { auth } = useAuth();
   const navigation = useNavigation();
@@ -42,6 +42,8 @@ const RealtorOnboardingCheck = () => {
           // Fallback to individually created screens if available
           alert("Please set up your profile picture to continue");
         }
+        // Call onCompleted callback to indicate check is done
+        onCompleted?.();
         return;
       }
 
@@ -61,11 +63,15 @@ const RealtorOnboardingCheck = () => {
         } else {
           alert("Please invite your first client to continue");
         }
+        // Call onCompleted callback to indicate check is done
+        onCompleted?.();
         return;
       }
 
       // If we reach here, both conditions are met so no onboarding needed
       console.log("Realtor onboarding complete");
+      // Call onCompleted callback to indicate check is done
+      onCompleted?.();
     }
   }, [realtorInfo, invitedClients, loadingRealtor, auth]);
 

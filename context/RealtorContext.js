@@ -64,12 +64,24 @@ export const RealtorProvider = ({ children }) => {
   const fetchRefreshData = async (realtorId) => {
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtorId}`
+        `http://159.203.58.60:5000/realtor/${realtorId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.ok) {
         const freshData = await response.json();
         setRealtorInfo(freshData);
+        console.log("Realtor data refreshed successfully");
         return freshData;
+      } else {
+        console.error(
+          "Failed to refresh realtor data, status:",
+          response.status
+        );
       }
     } catch (error) {
       console.error("Error refreshing realtor data:", error);

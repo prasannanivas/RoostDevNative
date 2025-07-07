@@ -95,6 +95,9 @@ const RealtorHome = () => {
   const [multiInviteFeedback, setMultiInviteFeedback] = useState("");
   const [selectedInviteFile, setSelectedInviteFile] = useState(null);
 
+  // State for needed documents count for each client
+  const [neededDocumentsCount, setNeededDocumentsCount] = useState({});
+
   // Handler for picking the file (Upload File button)
   const handlePickInviteFile = async () => {
     setMultiInviteFeedback("");
@@ -186,6 +189,7 @@ const RealtorHome = () => {
   const [feedback, setFeedback] = useState({ msg: "", type: "" });
   const [showProfile, setShowProfile] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
   const [refreshing, setRefreshing] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [isMultiple, setIsMultiple] = useState(false); // New state for single/multiple toggle
@@ -307,6 +311,22 @@ const RealtorHome = () => {
     }
   }, [showClientCardModal]);
 
+  // Effect to fetch needed documents counts when invited clients change
+  useEffect(() => {
+    if (invited.length > 0) {
+      updateNeededDocumentsCounts();
+    }
+  }, [invited]);
+
+  // Effect to refresh profile picture when realtor data changes
+  useEffect(() => {
+    if (realtorFromContext?.realtorInfo) {
+      // Reset image load error state and refresh key when realtor data updates
+      setImageLoadError(false);
+      setImageRefreshKey(Date.now());
+    }
+  }, [realtorFromContext?.realtorInfo]);
+
   const handleInviteClient = async () => {
     setIsLoading(true);
     setFeedback({ message: "", type: "" });
@@ -354,6 +374,11 @@ const RealtorHome = () => {
 
         // Refresh the realtor data to show the new client
         realtorFromContext?.fetchLatestRealtor();
+
+        // Update needed documents counts for all clients
+        setTimeout(() => {
+          updateNeededDocumentsCounts();
+        }, 1000); // Small delay to ensure the new client is available
 
         // Don't close the modal automatically - user will click "Done" now
       } else {
@@ -417,6 +442,39 @@ const RealtorHome = () => {
     return { approved, pending };
   };
 
+  // Function to fetch needed documents count for a client
+  const fetchNeededDocumentsCount = async (clientId) => {
+    try {
+      const response = await fetch(
+        `http://159.203.58.60:5000/client/neededdocument/${clientId}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // Count documents with type "Needed" from the documents_needed array
+        const neededDocs = data.documents_needed || [];
+        const neededCount = neededDocs.length;
+        return neededCount || 10; // fallback to 10 if no needed documents found
+      }
+      return 10; // fallback to 10 if request fails
+    } catch (error) {
+      console.error("Error fetching needed documents:", error);
+      return 10; // fallback to 10 if error
+    }
+  };
+
+  // Function to update needed documents count for all clients
+  const updateNeededDocumentsCounts = async () => {
+    const counts = {};
+    for (const client of invited) {
+      if (client.inviteeId) {
+        counts[client.inviteeId] = await fetchNeededDocumentsCount(
+          client.inviteeId
+        );
+      }
+    }
+    setNeededDocumentsCount(counts);
+  };
+
   const getInitials = (name) => {
     return name
       ?.split(" ")
@@ -441,12 +499,14 @@ const RealtorHome = () => {
   // Update the onRefresh function to also fetch realtor data
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    Promise.all([
-      auth.refetch?.(),
-      realtorFromContext?.fetchLatestRealtor(),
-    ]).finally(() => {
-      setRefreshing(false);
-    });
+    Promise.all([auth.refetch?.(), realtorFromContext?.fetchLatestRealtor()])
+      .then(() => {
+        // After fetching realtor data, update needed documents counts
+        updateNeededDocumentsCounts();
+      })
+      .finally(() => {
+        setRefreshing(false);
+      });
   }, [auth, realtorFromContext]);
 
   const pickContact = async () => {
@@ -576,7 +636,7 @@ Looking forward to working with you!`;
               {!imageLoadError ? (
                 <Image
                   source={{
-                    uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}`,
+                    uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
                   }}
                   style={styles.avatar}
                   onError={() => setImageLoadError(true)}
@@ -659,6 +719,8 @@ Looking forward to working with you!`;
               ? getDocumentCounts(client.documents)
               : { approved: 0, pending: 0 };
 
+            const totalNeeded = neededDocumentsCount[client.inviteeId] || 10;
+
             const statusText =
               client.status === "PENDING"
                 ? "Invited"
@@ -670,7 +732,7 @@ Looking forward to working with you!`;
                     client?.clientAddress !== null)
                 ? "Signed Up"
                 : client.status === "ACCEPTED" && client.documents.length > 0
-                ? `${docCount.approved}/10 Documents`
+                ? `${docCount.approved}/${totalNeeded} Documents`
                 : client.clientAddress === null
                 ? "Account Deleted"
                 : client.status;
@@ -693,8 +755,8 @@ Looking forward to working with you!`;
                   client.documents &&
                   client.documents.length > 0 ? (
                     <MidProgressBar
-                      text={`${docCount.approved}/10 DOCUMENTS`}
-                      progress={(docCount.approved / 10) * 100}
+                      text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
+                      progress={(docCount.approved / totalNeeded) * 100}
                       style={styles.statusProgressBar}
                     />
                   ) : (
@@ -1242,48 +1304,51 @@ Looking forward to working with you!`;
                       <Text style={styles.clientCardName}>
                         {selectedClientCard.referenceName}
                       </Text>
-                      <EmptyProgressBar
-                        text={
-                          selectedClientCard.status === "PENDING"
-                            ? "INVITED"
-                            : selectedClientCard.clientAddress === null
-                            ? "ACCOUNT DELETED"
-                            : selectedClientCard.status === "ACCEPTED" &&
-                              (!selectedClientCard.documents ||
-                                selectedClientCard.documents.length === 0 ||
-                                selectedClientCard?.clientAddress !== null)
-                            ? "SIGNED UP"
-                            : selectedClientCard.status === "ACCEPTED" &&
-                              selectedClientCard.documents &&
-                              selectedClientCard.documents.length > 0
-                            ? `${
-                                getDocumentCounts(selectedClientCard.documents)
-                                  .approved
-                              }/10 DOCUMENTS`
-                            : selectedClientCard.clientAddress === null
-                            ? "ACCOUNT DELETED"
-                            : selectedClientCard.status.toUpperCase()
-                        }
-                        progress={
-                          selectedClientCard.status === "PENDING"
-                            ? 10
-                            : selectedClientCard.status === "ACCEPTED" &&
-                              (!selectedClientCard.documents ||
-                                selectedClientCard.documents.length === 0)
-                            ? 30
-                            : selectedClientCard.status === "ACCEPTED" &&
-                              selectedClientCard.documents
-                            ? Math.min(
-                                (getDocumentCounts(selectedClientCard.documents)
-                                  .approved /
-                                  10) *
-                                  100,
-                                100
-                              )
-                            : 50
-                        }
-                        style={styles.detailStatusProgressBar}
-                      />
+                      {(() => {
+                        const docCount = selectedClientCard.documents
+                          ? getDocumentCounts(selectedClientCard.documents)
+                          : { approved: 0, pending: 0 };
+                        const totalNeeded =
+                          neededDocumentsCount[selectedClientCard.inviteeId] ||
+                          10;
+
+                        return selectedClientCard.status === "ACCEPTED" &&
+                          selectedClientCard.documents &&
+                          selectedClientCard.documents.length > 0 ? (
+                          <MidProgressBar
+                            text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
+                            progress={(docCount.approved / totalNeeded) * 100}
+                            style={styles.detailStatusProgressBar}
+                          />
+                        ) : (
+                          <EmptyProgressBar
+                            text={
+                              selectedClientCard.status === "PENDING"
+                                ? "INVITED"
+                                : selectedClientCard.clientAddress === null
+                                ? "ACCOUNT DELETED"
+                                : selectedClientCard.status === "ACCEPTED" &&
+                                  (!selectedClientCard.documents ||
+                                    selectedClientCard.documents.length === 0 ||
+                                    selectedClientCard?.clientAddress !== null)
+                                ? "SIGNED UP"
+                                : selectedClientCard.clientAddress === null
+                                ? "ACCOUNT DELETED"
+                                : selectedClientCard.status.toUpperCase()
+                            }
+                            progress={
+                              selectedClientCard.status === "PENDING"
+                                ? 10
+                                : selectedClientCard.status === "ACCEPTED" &&
+                                  (!selectedClientCard.documents ||
+                                    selectedClientCard.documents.length === 0)
+                                ? 30
+                                : 50
+                            }
+                            style={styles.detailStatusProgressBar}
+                          />
+                        );
+                      })()}
                     </View>
                   </View>
 

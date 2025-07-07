@@ -15,6 +15,9 @@ const Home = () => {
   const [isPending, startTransition] = useTransition();
   const [clientQuestionaire, setClientQuestionaire] = useState({});
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [onboardingCheckCompleted, setOnboardingCheckCompleted] =
+    useState(false);
+  const [lastAuthId, setLastAuthId] = useState(null);
 
   const fetchClientInfo = async () => {
     if (!auth?.client) return;
@@ -55,6 +58,19 @@ const Home = () => {
     }
   }, [auth?.client]);
 
+  // Reset onboarding check when auth changes (new login)
+  useEffect(() => {
+    const currentAuthId = auth?.realtor?.id || auth?.client?.id;
+    if (currentAuthId && currentAuthId !== lastAuthId) {
+      setOnboardingCheckCompleted(false);
+      setLastAuthId(currentAuthId);
+    } else if (!auth) {
+      // Reset when logged out
+      setOnboardingCheckCompleted(false);
+      setLastAuthId(null);
+    }
+  }, [auth, lastAuthId]);
+
   if (!auth) {
     return <LoginScreen />;
   }
@@ -73,8 +89,12 @@ const Home = () => {
         </ClientProvider>
       ) : auth.realtor ? (
         <RealtorProvider>
-          {/* RealtorOnboardingCheck will handle navigation if needed */}
-          <RealtorOnboardingCheck />
+          {/* RealtorOnboardingCheck will handle navigation if needed - only on initial login */}
+          {!onboardingCheckCompleted && (
+            <RealtorOnboardingCheck
+              onCompleted={() => setOnboardingCheckCompleted(true)}
+            />
+          )}
           <RealtorHome />
         </RealtorProvider>
       ) : (

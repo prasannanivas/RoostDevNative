@@ -14,6 +14,7 @@ import {
   Clipboard,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRealtor } from "../context/RealtorContext";
@@ -101,6 +102,11 @@ export default function RealtorProfile({ onClose }) {
   const saveTimerRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Profile picture upload states
+  const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
 
   // Field validation error states
   const [fieldErrors, setFieldErrors] = useState({
@@ -731,76 +737,133 @@ export default function RealtorProfile({ onClose }) {
 
   const pickImage = async (source) => {
     try {
+      console.log(`Opening ${source}...`);
       let result;
       const options = {
-        mediaTypes: "Images",
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
       };
 
       if (source === "camera") {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
+        const permissionResult =
+          await ImagePicker.requestCameraPermissionsAsync();
+        if (permissionResult.granted === false) {
           Alert.alert(
             "Permission Denied",
             "We need camera permissions to make this work!"
           );
+          console.log("Camera permission denied");
           return;
         }
+        console.log("Launching camera...");
         result = await ImagePicker.launchCameraAsync(options);
       } else {
-        const { status } =
+        const permissionResult =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
+        if (permissionResult.granted === false) {
           Alert.alert(
             "Permission Denied",
             "We need gallery permissions to make this work!"
           );
+          console.log("Media library permission denied");
           return;
         }
+        console.log("Launching image picker...");
         result = await ImagePicker.launchImageLibraryAsync(options);
       }
 
-      if (!result.canceled) {
-        const asset = result.assets[0];
-        const formData = new FormData();
-        const fileType = asset.uri.split(".").pop() || "jpg";
-
-        formData.append("profilePicture", {
-          uri: asset.uri,
-          type: `image/${fileType}`,
-          name: `profile-picture.${fileType}`,
-        });
-
-        const response = await fetch(
-          `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}`,
-          {
-            method: "POST",
-            body: formData,
-            // Do NOT set the "Content-Type" header manually!
-          }
-        );
-
-        if (response.ok) {
-          setFeedback({
-            message: "Profile picture updated successfully!",
-            type: "success",
-          });
-          // Optionally refresh context to get the new image
-        } else {
-          setFeedback({
-            message: "Failed to update profile picture",
-            type: "error",
-          });
-        }
+      console.log("Image picker result:", JSON.stringify(result));
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+        console.log("Selected image:", selectedAsset.uri);
+        setSelectedImage(selectedAsset.uri);
+        // Automatically upload the image
+        await uploadProfilePicture(selectedAsset.uri);
+      } else {
+        console.log("No image selected or picker was canceled");
       }
     } catch (error) {
+      console.error("Error selecting image:", error);
+      Alert.alert(
+        "Error",
+        "There was a problem selecting your image. Please try again."
+      );
+    }
+  };
+
+  const uploadProfilePicture = async (imageUri) => {
+    setUploadingProfilePic(true);
+    try {
+      console.log("Starting image upload process...");
+      console.log("Image URI:", imageUri);
+
+      // Create FormData for image upload
+      const formData = new FormData();
+
+      // Get file extension from the URI path
+      const uriParts = imageUri.split("/");
+      const fileName = uriParts[uriParts.length - 1];
+      const fileNameParts = fileName.split(".");
+      const fileType =
+        fileNameParts.length > 1
+          ? fileNameParts[fileNameParts.length - 1]
+          : "jpg";
+
+      console.log("Detected file type:", fileType);
+
+      formData.append("profilePicture", {
+        uri: imageUri,
+        type: `image/${fileType}`,
+        name: `profile-picture.${fileType}`,
+      });
+
+      console.log("FormData created");
+      console.log("Uploading to realtorId:", realtor._id);
+
+      const uploadUrl = `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}`;
+      console.log("Uploading to URL:", uploadUrl);
+
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        body: formData,
+        // Do NOT set the "Content-Type" header manually!
+      });
+
+      console.log("Upload response status:", response.status);
+
+      if (response.ok) {
+        console.log("Profile picture uploaded successfully");
+        setFeedback({
+          message: "Profile picture updated successfully!",
+          type: "success",
+        });
+        // Refresh realtor data to include the new profile picture
+        await fetchRefreshData(realtor._id);
+        // Force image refresh by updating the cache-busting key
+        setImageRefreshKey(Date.now());
+        // Clear the selected image after successful upload
+        setSelectedImage(null);
+      } else {
+        console.log("Server responded with status:", response.status);
+        const errorData = await response.text();
+        console.log("Error response:", errorData);
+        setFeedback({
+          message: "Failed to update profile picture",
+          type: "error",
+        });
+        setSelectedImage(null);
+      }
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
       setFeedback({
         message: "Error updating profile picture",
         type: "error",
       });
-      console.error("Profile pic upload error:", error);
+      setSelectedImage(null);
+    } finally {
+      setUploadingProfilePic(false);
     }
   };
   const handleLogout = async () => {
@@ -873,6 +936,17 @@ export default function RealtorProfile({ onClose }) {
         </Animated.View>
       )}
 
+      {/* Profile picture upload loading overlay */}
+      {uploadingProfilePic && (
+        <View style={styles.uploadLoadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.green} />
+          <Text style={styles.uploadLoadingText}>Uploading photo...</Text>
+          <Text style={styles.uploadLoadingSubText}>
+            Please wait while we process your image
+          </Text>
+        </View>
+      )}
+
       {/* Close button */}
 
       {onClose && (
@@ -881,32 +955,7 @@ export default function RealtorProfile({ onClose }) {
 
       <View style={styles.topMargin}></View>
       {/* Header: Avatar, Name, Info - Updated to match Figma Android design */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleProfilePicture}>
-          {realtor.profilePicture ? (
-            <Image
-              source={{
-                uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}`,
-              }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitial}>
-                {formData.firstName
-                  ? formData.firstName.charAt(0).toUpperCase() +
-                    formData.lastName.charAt(0).toUpperCase()
-                  : "R"}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.realtorName}>
-            {formData.firstName} {formData.lastName}
-          </Text>
-        </View>
-      </View>
+
       {/* Personal Info (Disabled fields for name, email, phone, location) */}
 
       <ScrollView
@@ -916,6 +965,62 @@ export default function RealtorProfile({ onClose }) {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
       >
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleProfilePicture}
+            disabled={uploadingProfilePic}
+            style={styles.avatarContainer}
+          >
+            {uploadingProfilePic && (
+              <View style={styles.uploadingOverlay}>
+                <ActivityIndicator size="large" color={COLORS.green} />
+                <Text style={styles.uploadingText}>Uploading...</Text>
+              </View>
+            )}
+            {selectedImage ? (
+              // Show selected image preview during upload
+              <Image
+                source={{ uri: selectedImage }}
+                style={[
+                  styles.avatar,
+                  uploadingProfilePic && styles.avatarUploading,
+                ]}
+              />
+            ) : realtor.profilePicture ? (
+              // Show existing profile picture
+              <Image
+                source={{
+                  uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}?t=${imageRefreshKey}`,
+                }}
+                style={[
+                  styles.avatar,
+                  uploadingProfilePic && styles.avatarUploading,
+                ]}
+              />
+            ) : (
+              // Show placeholder with initials
+              <View
+                style={[
+                  styles.avatarPlaceholder,
+                  uploadingProfilePic && styles.avatarUploading,
+                ]}
+              >
+                <Text style={styles.avatarInitial}>
+                  {formData.firstName
+                    ? formData.firstName.charAt(0).toUpperCase() +
+                      formData.lastName.charAt(0).toUpperCase()
+                    : "R"}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.realtorName}>
+              {formData.firstName} {formData.lastName}
+            </Text>
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionSubTitle}>
             Keep your personal info up-to-date
@@ -1484,7 +1589,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.background,
     flex: 1, // Changed from width: "100%" to flex: 1
-    paddingTop: 60,
     paddingHorizontal: 12,
   },
 
@@ -1494,6 +1598,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.black,
     position: "absolute",
     top: 0,
+    zIndex: 999,
   },
 
   closeButton: {
@@ -1509,20 +1614,19 @@ const styles = StyleSheet.create({
 
   /* Header area with avatar and name */
   header: {
-    position: "absolute",
-    top: 66,
-    left: 0,
-    right: 0,
     alignItems: "center",
     backgroundColor: COLORS.background,
     zIndex: 1,
     minHeight: 172,
   },
-  avatarPlaceholder: {
+  avatarContainer: {
+    position: "relative",
     marginTop: 16,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
@@ -1537,15 +1641,40 @@ const styles = StyleSheet.create({
   avatar: {
     width: 120,
     height: 120,
-    borderRadius: 100, // Make it circular per design
-    marginTop: 16,
+    borderRadius: 60, // Make it circular per design
+    marginBottom: 16,
+  },
+  avatarUploading: {
+    opacity: 0.7,
+  },
+  uploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    marginBottom: 16,
+  },
+  uploadingText: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.green,
+    fontFamily: "Futura",
   },
   headerTextContainer: {
     flex: 1,
     justifyContent: "center",
   },
   scrollContent: {
-    marginTop: 186 /* Add padding to account for the avatar container height */,
+    marginTop: 63 /* Add padding to account for the avatar container height */,
     paddingBottom: 48,
     zIndex: 10,
     backgroundColor: COLORS.background,
@@ -2050,5 +2179,33 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontFamily: "Futura",
     fontSize: 14,
+  },
+
+  // Profile picture upload loading overlay
+  uploadLoadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    zIndex: 1000,
+  },
+  uploadLoadingText: {
+    marginTop: 16,
+    fontSize: 18,
+    fontWeight: "600",
+    color: COLORS.green,
+    fontFamily: "Futura",
+  },
+  uploadLoadingSubText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: COLORS.slate,
+    fontFamily: "Futura",
+    textAlign: "center",
+    paddingHorizontal: 32,
   },
 });
