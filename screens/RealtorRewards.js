@@ -57,8 +57,9 @@ export default function RealtorRewards({
   onClose,
   useFixedHeader = false,
 }) {
-  console.log("invitedClients", invitedClients);
-  console.log("invitedRealtors", invitedRealtors);
+  console.log("realtor in rewards", realtor);
+  // console.log("invitedClients", invitedClients);
+  // console.log("invitedRealtors", invitedRealtors);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [isEmail, setIsEmail] = useState(true);
 
@@ -610,7 +611,7 @@ export default function RealtorRewards({
         <InviteRealtorModal
           visible={showInviteForm}
           onClose={() => setShowInviteForm(false)}
-          realtorInfo={realtor?.realtorInfo}
+          realtorInfo={realtor}
           realtorId={realtor?._id}
         />
         {/* Points History */}
@@ -882,9 +883,9 @@ const styles = StyleSheet.create({
   },
   inviteBtnTxt: {
     color: COLORS.white,
-    fontWeight: "medium",
+    fontWeight: 700,
     fontFamily: "Futura",
-    fontSize: 14,
+    fontSize: 12,
   },
 
   rewardsContainer: {
