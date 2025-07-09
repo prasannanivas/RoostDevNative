@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useTransition } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "./context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import ClientHome from "./ClientHome.js";
@@ -18,6 +19,32 @@ const Home = () => {
   const [onboardingCheckCompleted, setOnboardingCheckCompleted] =
     useState(false);
   const [lastAuthId, setLastAuthId] = useState(null);
+
+  // AsyncStorage keys for tracking realtor onboarding completion
+  const REALTOR_ONBOARDING_KEY = "realtor_onboarding_completed_";
+
+  // Check if realtor has completed onboarding before
+  const checkRealtorOnboardingStatus = async (realtorId) => {
+    try {
+      const key = `${REALTOR_ONBOARDING_KEY}${realtorId}`;
+      const completed = await AsyncStorage.getItem(key);
+      return completed === "true";
+    } catch (error) {
+      console.error("Error checking realtor onboarding status:", error);
+      return false;
+    }
+  };
+
+  // Mark realtor onboarding as completed
+  const markRealtorOnboardingCompleted = async (realtorId) => {
+    try {
+      const key = `${REALTOR_ONBOARDING_KEY}${realtorId}`;
+      await AsyncStorage.setItem(key, "true");
+      console.log(`Realtor ${realtorId} onboarding marked as completed`);
+    } catch (error) {
+      console.error("Error marking realtor onboarding as completed:", error);
+    }
+  };
 
   const fetchClientInfo = async () => {
     if (!auth?.client) return;
@@ -58,17 +85,37 @@ const Home = () => {
     }
   }, [auth?.client]);
 
-  // Reset onboarding check when auth changes (new login)
+  // Check onboarding status when auth changes (new login)
   useEffect(() => {
-    const currentAuthId = auth?.realtor?.id || auth?.client?.id;
-    if (currentAuthId && currentAuthId !== lastAuthId) {
-      setOnboardingCheckCompleted(false);
-      setLastAuthId(currentAuthId);
-    } else if (!auth) {
-      // Reset when logged out
-      setOnboardingCheckCompleted(false);
-      setLastAuthId(null);
-    }
+    const checkOnboardingStatus = async () => {
+      const currentAuthId = auth?.realtor?.id || auth?.client?.id;
+
+      if (currentAuthId && currentAuthId !== lastAuthId) {
+        // This is a new login or auth change
+        setLastAuthId(currentAuthId);
+
+        if (auth?.realtor) {
+          // For realtors, check AsyncStorage to see if they've completed onboarding
+          const hasCompletedOnboarding = await checkRealtorOnboardingStatus(
+            auth.realtor.id
+          );
+          setOnboardingCheckCompleted(hasCompletedOnboarding);
+          console.log(
+            `Realtor ${auth.realtor.id} onboarding status:`,
+            hasCompletedOnboarding
+          );
+        } else {
+          // For clients, no onboarding check needed
+          setOnboardingCheckCompleted(true);
+        }
+      } else if (!auth) {
+        // Reset when logged out
+        setOnboardingCheckCompleted(false);
+        setLastAuthId(null);
+      }
+    };
+
+    checkOnboardingStatus();
   }, [auth, lastAuthId]);
 
   if (!auth) {
@@ -92,7 +139,11 @@ const Home = () => {
           {/* RealtorOnboardingCheck will handle navigation if needed - only on initial login */}
           {!onboardingCheckCompleted && (
             <RealtorOnboardingCheck
-              onCompleted={() => setOnboardingCheckCompleted(true)}
+              onCompleted={async () => {
+                // Mark onboarding as completed in AsyncStorage
+                await markRealtorOnboardingCompleted(auth.realtor.id);
+                setOnboardingCheckCompleted(true);
+              }}
             />
           )}
           <RealtorHome />

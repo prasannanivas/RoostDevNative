@@ -38,6 +38,7 @@ import {
   EmptyProgressBar,
   MidProgressBar,
   CustomProgressBar,
+  CompleteProgressBar,
 } from "./components/progressBars";
 import InviteRealtorModal from "./components/modals/InviteRealtorModal";
 
@@ -779,7 +780,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             const totalNeeded = neededDocumentsCount[client.inviteeId] || 10;
 
             const statusText =
-              client.status === "PENDING"
+              client?.clientStatus === "Completed"
+                ? "Completed"
+                : client.status === "PENDING"
                 ? "Invited"
                 : client.clientAddress === null
                 ? "Account Deleted"
@@ -808,9 +811,25 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 </View>
                 <View style={styles.clientDetails}>
                   <Text style={styles.clientName}>{client.referenceName}</Text>
-                  {client.status === "ACCEPTED" &&
-                  client.documents &&
-                  client.documents.length > 0 ? (
+                  {client.clientStatus === "Completed" ? (
+                    <CompleteProgressBar
+                      text="COMPLETED"
+                      points={client?.completionDetails?.realtorAward || ""}
+                      date={
+                        client?.completionDetails?.date
+                          ? new Date(
+                              client.completionDetails.date
+                            ).toLocaleDateString("en-US", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            })
+                          : ""
+                      }
+                    />
+                  ) : client.status === "ACCEPTED" &&
+                    client.documents &&
+                    client.documents.length > 0 ? (
                     <MidProgressBar
                       text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
                       progress={(docCount.approved / totalNeeded) * 100}
@@ -1322,7 +1341,27 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           neededDocumentsCount[selectedClientCard.inviteeId] ||
                           10;
 
-                        return selectedClientCard.status === "ACCEPTED" &&
+                        return selectedClientCard.clientStatus ===
+                          "Completed" ? (
+                          <CompleteProgressBar
+                            text="COMPLETED"
+                            points={
+                              selectedClientCard?.completionDetails
+                                ?.realtorAward || ""
+                            }
+                            date={
+                              selectedClientCard?.completionDetails?.date
+                                ? new Date(
+                                    selectedClientCard.completionDetails.date
+                                  ).toLocaleDateString("en-US", {
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    year: "numeric",
+                                  })
+                                : ""
+                            }
+                          />
+                        ) : selectedClientCard.status === "ACCEPTED" &&
                           selectedClientCard.documents &&
                           selectedClientCard.documents.length > 0 ? (
                           <MidProgressBar
@@ -2136,6 +2175,7 @@ const styles = StyleSheet.create({
   },
   clientCardDetails: {
     alignItems: "center",
+    marginBottom: 16,
   },
   clientCardHeader: {
     flexDirection: "row",

@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from "react-native";
 /**
  * A Progress Bar with 100% progress (complete - blue)
  */
-const CompleteProgressBar = () => {
+const CompleteProgressBar = ({ text, points, date }) => {
   const COLORS = {
     green: "#377473",
     orange: "#F0913A",
@@ -18,7 +18,9 @@ const CompleteProgressBar = () => {
     <View style={styles.container}>
       <View style={styles.background}>
         <View style={[styles.fill]} />
-        <Text style={styles.barText}>APPROVED</Text>
+        <Text style={styles.barText}>{`${text} ${
+          points ? ` - ${points} PTS` : ""
+        }${date ? ` - ${date}` : ""}`}</Text>
       </View>
     </View>
   );
@@ -47,7 +49,7 @@ const styles = StyleSheet.create({
   },
   barText: {
     color: "#FDFDFD", // White color for text
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     fontFamily: "Futura",
     textAlign: "center",
