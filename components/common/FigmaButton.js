@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     fontFamily: "Futura",
     textAlign: "center",
     letterSpacing: 0.2,
