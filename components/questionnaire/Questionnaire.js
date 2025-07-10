@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -37,7 +38,8 @@ const COLORS = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-const Questionnaire = ({ navigation, questionnaireData }) => {
+const Questionnaire = ({ questionnaireData }) => {
+  const navigation = useNavigation();
   const { auth } = useAuth();
   const {
     currentQuestionId,
@@ -646,18 +648,18 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
       );
 
       markAsCompleted();
-      Alert.alert("Success", "Questionnaire submitted successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            try {
-              navigation.goBack();
-            } catch (error) {
-              navigation.navigate("Home");
-            }
-          },
-        },
-      ]);
+      // Alert.alert("Success", "Questionnaire submitted successfully!", [
+      //   {
+      //     text: "OK",
+      //     onPress: () => {
+      //       console.log("Navigating after submit");
+      //       navigation.reset({
+      //         index: 0,
+      //         routes: [{ name: "Home" }],
+      //       });
+      //     },
+      //   },
+      // ]);
     } catch (error) {
       console.error("Error submitting questionnaire:", error);
       Alert.alert("Error", "Failed to submit questionnaire. Please try again.");
@@ -709,10 +711,14 @@ const Questionnaire = ({ navigation, questionnaireData }) => {
               }
               style={styles.finalStepButton}
               onPress={() => {
+                console.log("Done button pressed");
                 try {
-                  navigation?.goBack() || navigation?.navigate("Home");
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Home" }],
+                  });
                 } catch (error) {
-                  navigation?.navigate("Home");
+                  console.error("Navigation error in Done button:", error);
                 }
               }}
               variant="primary"

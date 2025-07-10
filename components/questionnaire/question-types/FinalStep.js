@@ -23,8 +23,9 @@ const FinalStep = ({ question }) => {
         </View>
         <Text style={styles.successText}>{question.text}</Text>
         <Text style={styles.subtitle}>
-          Your questionnaire responses have been saved. We'll review your
-          information and get back to you soon.
+          Your answers have been submitted, a representative will reach out
+          shortly with your pre-approval. In the mean time you can get started
+          by submitting documents.
         </Text>
       </View>
     </View>

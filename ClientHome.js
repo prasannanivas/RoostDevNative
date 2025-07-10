@@ -25,6 +25,7 @@ import Questionnaire from "./components/questionnaire/Questionnaire";
 import NotificationBell from "./components/icons/NotificationBell";
 import HelpButton from "./components/icons/HelpButton";
 import ReactNativeModal from "react-native-modal";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 // Import modal components
 import UploadModal from "./components/modals/UploadModal";
 import SubmittedDocumentModal from "./components/modals/SubmittedDocumentModal";
@@ -55,6 +56,7 @@ const COLORS = {
 };
 
 const ClientHome = ({ questionnaireData }) => {
+  const navigation = useNavigation();
   const { auth } = useAuth();
   const {
     documents: contextDocuments,
