@@ -679,6 +679,25 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       console.error("Error sending transactional email:", error);
     }
   };
+  const [completedClients, setCompletedClients] = useState([]);
+  const [activeClients, setActiveClients] = useState([]);
+
+  // Add this useEffect to segregate clients
+  useEffect(() => {
+    if (invited.length > 0) {
+      const completed = invited.filter(
+        (client) => client.clientStatus === "Completed"
+      );
+      const active = invited.filter(
+        (client) => client.clientStatus !== "Completed"
+      );
+      setCompletedClients(completed);
+      setActiveClients(active);
+    } else {
+      setCompletedClients([]);
+      setActiveClients([]);
+    }
+  }, [invited]);
 
   return (
     <View style={styles.container}>
@@ -771,109 +790,248 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             />
           }
         >
-          {/* List of Clients */}
-          {invited.map((client) => {
-            const docCount = client.documents
-              ? getDocumentCounts(client.documents)
-              : { approved: 0, pending: 0 };
-
-            const totalNeeded = neededDocumentsCount[client.inviteeId] || 10;
-
-            const statusText =
-              client?.clientStatus === "Completed"
-                ? "Completed"
-                : client.status === "PENDING"
-                ? "Invited"
-                : client.clientAddress === null
-                ? "Account Deleted"
-                : client.status === "ACCEPTED" &&
-                  (!client.documents ||
-                    client.documents.length === 0 ||
-                    client?.clientAddress !== null)
-                ? "Signed Up"
-                : client.status === "ACCEPTED" && client.documents.length > 0
-                ? `${docCount.approved}/${totalNeeded} Documents`
-                : client.clientAddress === null
-                ? "Account Deleted"
-                : client.status;
-
-            return (
+          {activeClients.length === 0 ? (
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>
+                Client activity will show here
+              </Text>
+              <Text style={styles.emptyStateSubText}>
+                Add your first client by pressing the button below
+              </Text>
               <TouchableOpacity
-                key={client._id}
-                style={styles.clientCard}
-                onPress={() => handleClientClick(client)}
+                style={styles.addClientsButton}
+                onPress={() => setShowForm(true)}
                 activeOpacity={0.8}
               >
-                <View style={styles.initialsCircle}>
-                  <Text style={styles.initialsText}>
-                    {getInitials(client.referenceName)}
-                  </Text>
-                </View>
-                <View style={styles.clientDetails}>
-                  <Text style={styles.clientName}>{client.referenceName}</Text>
-                  {client.clientStatus === "Completed" ? (
-                    <CompleteProgressBar
-                      text="COMPLETED"
-                      points={client?.completionDetails?.realtorAward || ""}
-                      date={
-                        client?.completionDetails?.date
-                          ? new Date(
-                              client.completionDetails.date
-                            ).toLocaleDateString("en-US", {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            })
-                          : ""
-                      }
+                <View style={styles.addButtonContent}>
+                  <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
+                    <Rect
+                      x="1"
+                      y="1"
+                      width="54"
+                      height="54"
+                      rx="27"
+                      fill="#F0913A"
                     />
-                  ) : client.status === "ACCEPTED" &&
-                    client.documents &&
-                    client.documents.length > 0 ? (
-                    <MidProgressBar
-                      text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
-                      progress={(docCount.approved / totalNeeded) * 100}
-                      style={styles.statusProgressBar}
+                    <Path
+                      d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+                      stroke="#FDFDFD"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
-                  ) : (
-                    <EmptyProgressBar
-                      text={statusText.toUpperCase()}
-                      progress={
-                        client.status === "PENDING"
-                          ? 10
-                          : client.status === "ACCEPTED"
-                          ? 30
-                          : 50
-                      }
-                      style={styles.statusProgressBar}
-                    />
-                  )}
+                  </Svg>
+                  <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
                 </View>
               </TouchableOpacity>
-            );
-          })}
+            </View>
+          ) : (
+            activeClients.map((client) => {
+              const docCount = client.documents
+                ? getDocumentCounts(client.documents)
+                : { approved: 0, pending: 0 };
+
+              const totalNeeded = neededDocumentsCount[client.inviteeId] || 10;
+
+              const statusText =
+                client?.clientStatus === "Completed"
+                  ? "Completed"
+                  : client.status === "PENDING"
+                  ? "Invited"
+                  : client.clientAddress === null
+                  ? "Account Deleted"
+                  : client.status === "ACCEPTED" &&
+                    (!client.documents ||
+                      client.documents.length === 0 ||
+                      client?.clientAddress !== null)
+                  ? "Signed Up"
+                  : client.status === "ACCEPTED" && client.documents.length > 0
+                  ? `${docCount.approved}/${totalNeeded} Documents`
+                  : client.clientAddress === null
+                  ? "Account Deleted"
+                  : client.status;
+
+              return (
+                <TouchableOpacity
+                  key={client._id}
+                  style={styles.clientCard}
+                  onPress={() => handleClientClick(client)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.initialsCircle}>
+                    <Text style={styles.initialsText}>
+                      {getInitials(client.referenceName)}
+                    </Text>
+                  </View>
+                  <View style={styles.clientDetails}>
+                    <Text style={styles.clientName}>
+                      {client.referenceName}
+                    </Text>
+                    {client.clientStatus === "Completed" ? (
+                      <CompleteProgressBar
+                        text="COMPLETED"
+                        points={client?.completionDetails?.realtorAward || ""}
+                        date={
+                          client?.completionDetails?.date
+                            ? new Date(
+                                client.completionDetails.date
+                              ).toLocaleDateString("en-US", {
+                                month: "2-digit",
+                                day: "2-digit",
+                                year: "numeric",
+                              })
+                            : ""
+                        }
+                      />
+                    ) : client.status === "ACCEPTED" &&
+                      client.documents &&
+                      client.documents.length > 0 ? (
+                      <MidProgressBar
+                        text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
+                        progress={(docCount.approved / totalNeeded) * 100}
+                        style={styles.statusProgressBar}
+                      />
+                    ) : (
+                      <EmptyProgressBar
+                        text={statusText.toUpperCase()}
+                        progress={
+                          client.status === "PENDING"
+                            ? 10
+                            : client.status === "ACCEPTED"
+                            ? 30
+                            : 50
+                        }
+                        style={styles.statusProgressBar}
+                      />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+
+          <View style={[styles.clientsTitleContainer]}>
+            <Text style={styles.ActiveText}>COMPLETED</Text>
+          </View>
+
+          {completedClients.length > 0 ? (
+            <>
+              {completedClients.map((client) => {
+                const docCount = client.documents
+                  ? getDocumentCounts(client.documents)
+                  : { approved: 0, pending: 0 };
+
+                const totalNeeded =
+                  neededDocumentsCount[client.inviteeId] || 10;
+
+                const statusText =
+                  client?.clientStatus === "Completed"
+                    ? "Completed"
+                    : client.status === "PENDING"
+                    ? "Invited"
+                    : client.clientAddress === null
+                    ? "Account Deleted"
+                    : client.status === "ACCEPTED" &&
+                      (!client.documents ||
+                        client.documents.length === 0 ||
+                        client?.clientAddress !== null)
+                    ? "Signed Up"
+                    : client.status === "ACCEPTED" &&
+                      client.documents.length > 0
+                    ? `${docCount.approved}/${totalNeeded} Documents`
+                    : client.clientAddress === null
+                    ? "Account Deleted"
+                    : client.status;
+
+                return (
+                  <TouchableOpacity
+                    key={client._id}
+                    style={styles.clientCard}
+                    onPress={() => handleClientClick(client)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.initialsCircle}>
+                      <Text style={styles.initialsText}>
+                        {getInitials(client.referenceName)}
+                      </Text>
+                    </View>
+                    <View style={styles.clientDetails}>
+                      <Text style={styles.clientName}>
+                        {client.referenceName}
+                      </Text>
+                      {client.clientStatus === "Completed" ? (
+                        <CompleteProgressBar
+                          text="COMPLETED"
+                          points={client?.completionDetails?.realtorAward || ""}
+                          date={
+                            client?.completionDetails?.date
+                              ? new Date(
+                                  client.completionDetails.date
+                                ).toLocaleDateString("en-US", {
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  year: "numeric",
+                                })
+                              : ""
+                          }
+                        />
+                      ) : client.status === "ACCEPTED" &&
+                        client.documents &&
+                        client.documents.length > 0 ? (
+                        <MidProgressBar
+                          text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
+                          progress={(docCount.approved / totalNeeded) * 100}
+                          style={styles.statusProgressBar}
+                        />
+                      ) : (
+                        <EmptyProgressBar
+                          text={statusText.toUpperCase()}
+                          progress={
+                            client.status === "PENDING"
+                              ? 10
+                              : client.status === "ACCEPTED"
+                              ? 30
+                              : 50
+                          }
+                          style={styles.statusProgressBar}
+                        />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </>
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>
+                Currently no mortgages have been completed.
+              </Text>
+            </View>
+          )}
         </ScrollView>
         {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
       </ScrollView>
-      <TouchableOpacity
-        style={styles.floatingAddButton}
-        onPress={() => setShowForm(true)}
-        activeOpacity={0.8}
-      >
-        <View style={styles.addButtonContent}>
-          <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
-            <Rect x="1" y="1" width="54" height="54" rx="27" fill="#F0913A" />
-            <Path
-              d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
-              stroke="#FDFDFD"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-          <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
-        </View>
-      </TouchableOpacity>
+      {(activeClients.length > 0 || completedClients.length > 0) && (
+        <TouchableOpacity
+          style={styles.floatingAddButton}
+          onPress={() => setShowForm(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.addButtonContent}>
+            <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
+              <Rect x="1" y="1" width="54" height="54" rx="27" fill="#F0913A" />
+              <Path
+                d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+                stroke="#FDFDFD"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+            <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
+          </View>
+        </TouchableOpacity>
+      )}
       {/* ================== MODALS ================== */}
       {/* Profile Modal - Slides from left using react-native-modal */}
       <ReactNativeModal
@@ -1019,8 +1177,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         onRequestClose={() => setShowForm(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "height" : "height"}
           style={styles.formOverlay}
+          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : 0}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.formContainer}>
@@ -1038,6 +1197,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   />
                 </Svg>
               </TouchableOpacity>
+
               <Text style={styles.formTitle}>ADD A CLIENT</Text>
               <Text style={styles.formSubtitle}>
                 Send your client an invite to view and share listing with you.
@@ -1075,92 +1235,98 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   </Text>
                 </TouchableOpacity>
               </View>
+
               {!isMultiple ? (
                 /* Single Client Form */
-                <>
-                  <TextInput
-                    style={styles.inputField}
-                    placeholder="First Name"
-                    placeholderTextColor={COLORS.gray}
-                    value={formData.firstName}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, firstName: text })
-                    }
-                    returnKeyType="next"
-                    blurOnSubmit={false}
-                    onSubmitEditing={() => lastNameInputRef.current?.focus()}
-                  />
-                  <TextInput
-                    ref={lastNameInputRef}
-                    style={styles.inputField}
-                    placeholder="Last Name"
-                    placeholderTextColor={COLORS.gray}
-                    value={formData.lastName}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, lastName: text })
-                    }
-                    returnKeyType="next"
-                    blurOnSubmit={false}
-                    onSubmitEditing={() => emailInputRef.current?.focus()}
-                  />
-                  <TextInput
-                    ref={emailInputRef}
-                    style={styles.inputField}
-                    placeholder="Email"
-                    placeholderTextColor={COLORS.gray}
-                    keyboardType="email-address"
-                    value={formData.email}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, email: text })
-                    }
-                    returnKeyType="next"
-                    blurOnSubmit={false}
-                    onSubmitEditing={() => phoneInputRef.current?.focus()}
-                  />
-                  <TextInput
-                    ref={phoneInputRef}
-                    style={styles.inputField}
-                    placeholder="Phone"
-                    placeholderTextColor={COLORS.gray}
-                    keyboardType="phone-pad"
-                    value={formData.phone}
-                    onChangeText={(text) =>
-                      setFormData({ ...formData, phone: text })
-                    }
-                    returnKeyType="done"
-                    onSubmitEditing={Keyboard.dismiss}
-                  />
-                  {/* Send invite button */}
-                  <TouchableOpacity
-                    style={styles.sendInviteButton}
-                    onPress={handleInviteClient}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color={COLORS.white} />
-                    ) : (
-                      <Text style={styles.sendInviteButtonText}>
-                        Send Invite
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-
-                  {/* Use contactInviteContainer instead of dividerContainer */}
-                  <View style={styles.contactInviteContainer}>
-                    <Text style={styles.orText}>
-                      Or you can invite the contact you have on your phone
-                    </Text>
-
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
+                >
+                  <>
+                    <TextInput
+                      style={styles.inputField}
+                      placeholder="First Name"
+                      placeholderTextColor={COLORS.gray}
+                      value={formData.firstName}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, firstName: text })
+                      }
+                      returnKeyType="next"
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => lastNameInputRef.current?.focus()}
+                    />
+                    <TextInput
+                      ref={lastNameInputRef}
+                      style={styles.inputField}
+                      placeholder="Last Name"
+                      placeholderTextColor={COLORS.gray}
+                      value={formData.lastName}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, lastName: text })
+                      }
+                      returnKeyType="next"
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => emailInputRef.current?.focus()}
+                    />
+                    <TextInput
+                      ref={emailInputRef}
+                      style={styles.inputField}
+                      placeholder="Email"
+                      placeholderTextColor={COLORS.gray}
+                      keyboardType="email-address"
+                      value={formData.email}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, email: text })
+                      }
+                      returnKeyType="next"
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => phoneInputRef.current?.focus()}
+                    />
+                    <TextInput
+                      ref={phoneInputRef}
+                      style={styles.inputField}
+                      placeholder="Phone"
+                      placeholderTextColor={COLORS.gray}
+                      keyboardType="phone-pad"
+                      value={formData.phone}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, phone: text })
+                      }
+                      returnKeyType="done"
+                      onSubmitEditing={Keyboard.dismiss}
+                    />
+                    {/* Send invite button */}
                     <TouchableOpacity
-                      style={styles.contactsButton}
-                      onPress={pickContact}
+                      style={styles.sendInviteButton}
+                      onPress={handleInviteClient}
+                      disabled={isLoading}
                     >
-                      <Text style={styles.contactsButtonText}>
-                        Invite my contacts
-                      </Text>
+                      {isLoading ? (
+                        <ActivityIndicator color={COLORS.white} />
+                      ) : (
+                        <Text style={styles.sendInviteButtonText}>
+                          Send Invite
+                        </Text>
+                      )}
                     </TouchableOpacity>
-                  </View>
-                </>
+
+                    {/* Use contactInviteContainer instead of dividerContainer */}
+                    <View style={styles.contactInviteContainer}>
+                      <Text style={styles.orText}>
+                        Or you can invite the contact you have on your phone
+                      </Text>
+
+                      <TouchableOpacity
+                        style={styles.contactsButton}
+                        onPress={pickContact}
+                      >
+                        <Text style={styles.contactsButtonText}>
+                          Invite my contacts
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                </ScrollView>
               ) : (
                 /* Multiple Clients Form */
                 <>
@@ -1551,7 +1717,7 @@ const styles = StyleSheet.create({
     fontWeight: 700, // P weight
     color: COLORS.slate,
     fontFamily: "Futura",
-    marginTop: 24,
+    marginTop: 6,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -1649,15 +1815,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+
     paddingHorizontal: 16,
-    gap: 10, // Space between icon and text
+    //gap: 8, // Space between icon and text
   },
   addClientButtonText: {
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "700",
     fontFamily: "Futura",
-    marginLeft: 6,
+    marginLeft: 0,
   },
   contactInviteContainer: {
     backgroundColor: COLORS.background,
@@ -1689,7 +1856,6 @@ const styles = StyleSheet.create({
     elevation: 5,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
-    marginTop: 18.5, // Add top margin to account for close button overlay
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     overflow: "visible",
@@ -2271,6 +2437,62 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
     zIndex: 100,
+  },
+  emptyStateContainer: {
+    marginTop: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#FDFDFD",
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    // iOS shadow
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    // Android shadow
+    elevation: 4,
+    backgroundColor: "#FDFDFD", // Required for Android shadow
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: "#A9A9A9",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptyStateSubText: {
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Futura",
+    color: "#A9A9A9",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  addClientsButton: {
+    backgroundColor: "#F0913A",
+    marginTop: 16,
+    minWidth: 271,
+    minHeight: 56,
+    borderRadius: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  addClientsButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
