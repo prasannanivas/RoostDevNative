@@ -260,10 +260,13 @@ const UploadModal = ({
           r.onloadend = () => res(r.result);
           r.readAsDataURL(blob);
         });
-        return `<img src="${b64}" style="page-break-after: always;" />`;
+        return `<div style="width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; page-break-after: always;">
+          <img src="${b64}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+        </div>`;
       })
     ).then(
-      (arr) => `<html><body style="margin:0">${arr.join("")}</body></html>`
+      (arr) =>
+        `<html><body style="margin:0; padding:0;">${arr.join("")}</body></html>`
     );
 
     const { uri: pdfUri } = await Print.printToFileAsync({ html });
