@@ -465,6 +465,7 @@ const ClientHome = ({ questionnaireData }) => {
           />
         </View>
       </View>
+
       <ScrollView
         style={styles.mainContent}
         refreshControl={
@@ -477,11 +478,45 @@ const ClientHome = ({ questionnaireData }) => {
         }
       >
         <View style={styles.contentContainer}>
-          <Text style={styles.bigTitle}>Everything need for a mortgage</Text>
-          <Text style={styles.subTitle}>
-            We understand we are asking for a lot but it’s what’s needed for all
-            mortgages in Ontario
-          </Text>
+          <View style={styles.statusContainer}>
+            {
+              /* Status */
+              clientFromContext.status === "PreApproved" ? (
+                <>
+                  <Text style={styles.bigTitlePreApproved}>Pre-Approved!</Text>
+                  <Text style={styles.moneyPreApproved}>
+                    {(clientFromContext?.preApprovalAmount || 0).toLocaleString(
+                      "en-US",
+                      {
+                        style: "currency",
+                        currency: "USD",
+                        minimumFractionDigits: 0,
+                      }
+                    )}
+                  </Text>
+                  <Text style={styles.subTitlePreApproved}>
+                    For the full approval we will need the following documents.
+                    by the way if you need more we might be able to help. Click
+                    the help button above.
+                  </Text>
+                </>
+              ) : clientFromContext.status === "Completed" ? (
+                <>
+                  <Text style={styles.bigTitlePreApproved}>Approved!</Text>
+                  <Text style={styles.subTitle}>TBD</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.bigTitle}>Just Hang in there</Text>
+                  <Text style={styles.subTitle}>
+                    One of our mortgage specialists will reach out soon, usually
+                    less then 24 hours. However you can get started by sharing
+                    some needed documents.
+                  </Text>
+                </>
+              )
+            }
+          </View>
           {loadingDocuments ? (
             <ActivityIndicator
               size="large"
@@ -489,40 +524,44 @@ const ClientHome = ({ questionnaireData }) => {
               style={styles.loadingIndicator}
             />
           ) : (
-            <View>
-              {/* Needed */}
-              <Text style={styles.sectionHeader}>WHAT’S NEEDED FOR YOU</Text>
-              <View style={styles.docsContainer}>
-                {docsNeeded.length > 0 ? (
-                  docsNeeded.map(renderDocumentRow)
-                ) : (
-                  <Text style={styles.noDocsText}>No documents needed.</Text>
-                )}
-              </View>
+            clientFromContext.status !== "Completed" && (
+              <View>
+                {/* Needed */}
+                <Text style={styles.sectionHeader}>WHAT’S NEEDED FOR YOU</Text>
+                <View style={styles.docsContainer}>
+                  {docsNeeded.length > 0 ? (
+                    docsNeeded.map(renderDocumentRow)
+                  ) : (
+                    <Text style={styles.noDocsText}>No documents needed.</Text>
+                  )}
+                </View>
 
-              {/* Requested */}
-              {clientFromContext.applyingbehalf &&
-                clientFromContext.applyingbehalf.toLowerCase() === "other" && (
-                  <View>
-                    <Text style={styles.sectionHeader}>
-                      {"WHAT'S NEEDED FOR " +
-                        (clientFromContext.otherDetails?.name || "")}
-                    </Text>
-                    <View style={styles.docsContainer}>
-                      {docsRequested.length > 0 ? (
-                        docsRequested.map(renderDocumentRow)
-                      ) : (
-                        <Text style={styles.noDocsText}>
-                          No documents requested.
-                        </Text>
-                      )}
+                {/* Requested */}
+                {clientFromContext.applyingbehalf &&
+                  clientFromContext.applyingbehalf.toLowerCase() ===
+                    "other" && (
+                    <View>
+                      <Text style={styles.sectionHeader}>
+                        {"WHAT'S NEEDED FOR " +
+                          (clientFromContext.otherDetails?.name || "")}
+                      </Text>
+                      <View style={styles.docsContainer}>
+                        {docsRequested.length > 0 ? (
+                          docsRequested.map(renderDocumentRow)
+                        ) : (
+                          <Text style={styles.noDocsText}>
+                            No documents requested.
+                          </Text>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                )}
-            </View>
+                  )}
+              </View>
+            )
           )}
         </View>
       </ScrollView>
+
       {/* Profile Panel */}
       <ReactNativeModal
         isVisible={showProfile}
@@ -732,6 +771,20 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 24,
   },
+  statusContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 24,
+
+    shadowColor: "#00000040",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+  },
   bigTitle: {
     fontSize: 24, // H1 size
     fontWeight: "bold", // H1 weight
@@ -743,9 +796,31 @@ const styles = StyleSheet.create({
     fontSize: 14, // P size
     fontWeight: "500", // P weight
     color: COLORS.slate,
-    marginBottom: 32,
+    fontFamily: "Futura",
+    marginBottom: 8,
+  },
+  bigTitlePreApproved: {
+    fontSize: 24, // H1 size
+    fontWeight: "700", // H1 weight
+    color: COLORS.green,
+    marginBottom: 16,
     fontFamily: "Futura",
   },
+  moneyPreApproved: {
+    fontSize: 16, // H1 size
+    fontWeight: "500", // H1 weight
+    color: COLORS.green,
+    marginBottom: 16,
+    fontFamily: "Futura",
+  },
+  subTitlePreApproved: {
+    fontSize: 14, // P size
+    fontWeight: "500", // P weight
+    color: COLORS.slate,
+    fontFamily: "Futura",
+    marginBottom: 8,
+  },
+
   sectionHeader: {
     fontSize: 20,
     fontWeight: "700",
@@ -770,8 +845,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   docLabel: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
+    fontSize: 12, // P size
+    fontWeight: "700", // P weight
     color: COLORS.black,
     flex: 1,
     marginRight: 8,
