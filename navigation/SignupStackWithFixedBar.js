@@ -152,7 +152,7 @@ export default function SignupStackWithFixedBar({
           navigationContainerRef.current.navigate("Password", currentParams);
           break;
         case "Password":
-          navigationContainerRef.current.navigate("Success");
+          navigationContainerRef.current.navigate("Success", currentParams);
           break;
       }
     } catch (error) {
@@ -231,11 +231,11 @@ export default function SignupStackWithFixedBar({
                   />
                 )}
               </Stack.Screen>
-              <Stack.Screen
-                name="Success"
-                component={SignupSuccess}
-                options={{ gestureEnabled: false }}
-              />
+              <Stack.Screen name="Success" options={{ gestureEnabled: false }}>
+                {(props) => (
+                  <SignupSuccess {...props} setIsLoading={setIsLoading} />
+                )}
+              </Stack.Screen>
             </Stack.Navigator>
           </NavigationContainer>
         </NavigationIndependentTree>

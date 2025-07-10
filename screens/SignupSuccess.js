@@ -11,7 +11,6 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-// import { Ionicons } from "@expo/vector-icons"; // No longer needed
 import { Asset } from "expo-asset";
 import Logo from "../components/Logo";
 
@@ -39,8 +38,54 @@ const COLORS = {
   coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
-export default function SignupSuccessScreen({ navigation }) {
+export default function SignupSuccessScreen({
+  navigation,
+  route,
+  setIsLoading,
+}) {
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Debug log route params and state
+  useEffect(() => {
+    console.log("SignupSuccess route params:", route?.params);
+    console.log("SignupSuccess route:", route);
+    const navState = navigation.getState();
+    console.log("SignupSuccess navigation state:", navState);
+
+    // Log all route params to see what's available
+    navState.routes.forEach((route, index) => {
+      console.log(`Route ${index} (${route.name}):`, route.params);
+    });
+  }, [route, navigation]);
+
+  // Get isRealtor from route params or try to get it from navigation state
+  const { isRealtor: paramIsRealtor } = route?.params || {};
+  const navigationState = navigation.getState();
+
+  // Try to find isRealtor from any of the previous routes
+  let routeIsRealtor = false;
+  for (const navRoute of navigationState?.routes || []) {
+    if (navRoute.params?.isRealtor !== undefined) {
+      routeIsRealtor = navRoute.params.isRealtor;
+      console.log(
+        `Found isRealtor=${routeIsRealtor} in route ${navRoute.name}`
+      );
+      break;
+    }
+    // Also check for accountType
+    if (navRoute.params?.accountType) {
+      routeIsRealtor = navRoute.params.accountType === "realtor";
+      console.log(
+        `Found accountType=${navRoute.params.accountType} in route ${navRoute.name}, isRealtor=${routeIsRealtor}`
+      );
+      break;
+    }
+  }
+
+  // Use the first available value, defaulting to false
+  const isRealtor = paramIsRealtor ?? routeIsRealtor ?? false;
+
+  console.log(`Final isRealtor value: ${isRealtor}`);
 
   // Preload image and track ActiveCampaign conversion
   useEffect(() => {
@@ -102,13 +147,49 @@ export default function SignupSuccessScreen({ navigation }) {
     }
   };
 
-  const handleTutorial = (topic) => {
-    console.log("Navigate to tutorial topic:", topic);
-    // TODO: Implement actual navigation or linking logic
+  const handleTutorial = (videoId) => {
+    let videoUrl = "";
+    // For clients
+    if (!isRealtor) {
+      switch (videoId) {
+        case "mortgage":
+          videoUrl = "https://roostapp.io/Video6";
+          break;
+        case "preapproval":
+          videoUrl = "https://roostapp.io/Video7";
+          break;
+        case "help":
+          videoUrl = "https://roostapp.io/Video5";
+          break;
+        case "process":
+          videoUrl = "https://roostapp.io/Video1";
+          break;
+      }
+    } else {
+      // For realtors
+      switch (videoId) {
+        case "addClients":
+          videoUrl = "https://roostapp.io/Video1";
+          break;
+        case "maximize":
+          videoUrl = "https://roostapp.io/Video2";
+          break;
+        case "rewards":
+          videoUrl = "https://roostapp.io/Video3";
+          break;
+        case "seeRewards":
+          videoUrl = "https://roostapp.io/Video4";
+          break;
+      }
+    }
+
+    if (videoUrl) {
+      Linking.openURL(videoUrl);
+    }
   };
 
   const handleGetStarted = () => {
-    navigation.navigate("Home"); // Using screen name instead of "/"
+    navigation.navigate("Home");
   };
 
   return (
@@ -146,24 +227,73 @@ export default function SignupSuccessScreen({ navigation }) {
             You can watch a few tutorials
           </Text>
           {/* Tutorial Buttons */}
-          <TouchableOpacity
-            style={styles.tutorialButton}
-            onPress={() => handleTutorial("rewards")}
-          >
-            <Text style={styles.tutorialButtonText}>How do rewards work?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tutorialButton}
-            onPress={() => handleTutorial("maximize")}
-          >
-            <Text style={styles.tutorialButtonText}>How to maximize Roost</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tutorialButton}
-            onPress={() => handleTutorial("help")}
-          >
-            <Text style={styles.tutorialButtonText}>What if I need help?</Text>
-          </TouchableOpacity>
+          {!isRealtor ? (
+            // Client tutorial buttons
+            <>
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("help")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  What if I need help?
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("mortgage")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  What is the Process of getting a mortgage?
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("preapproval")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  How quickly can I get pre-approved?
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            // Realtor tutorial buttons
+            <>
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("addClients")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  How do I add clients?
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("maximize")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  How to maximize Roost?
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("rewards")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  How do rewards work?
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.tutorialButton}
+                onPress={() => handleTutorial("seeRewards")}
+              >
+                <Text style={styles.tutorialButtonText}>
+                  Where can I see my rewards?
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>
