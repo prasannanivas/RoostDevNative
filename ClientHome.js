@@ -503,7 +503,83 @@ const ClientHome = ({ questionnaireData }) => {
               ) : clientFromContext.status === "Completed" ? (
                 <>
                   <Text style={styles.bigTitlePreApproved}>Approved!</Text>
-                  <Text style={styles.subTitle}>TBD</Text>
+
+                  {clientFromContext.completionDetails && (
+                    <View style={styles.completionDetailsContainer}>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Property Price:</Text>
+                        <Text style={styles.detailValue}>
+                          $
+                          {Number(
+                            clientFromContext.completionDetails.propertyPrice ||
+                              0
+                          ).toLocaleString()}
+                        </Text>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Mortgage Amount:</Text>
+                        <Text style={styles.detailValue}>
+                          $
+                          {Number(
+                            clientFromContext.completionDetails
+                              .mortgageAmount || 0
+                          ).toLocaleString()}
+                        </Text>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Realtor Award:</Text>
+                        <Text style={styles.detailValue}>
+                          $
+                          {Number(
+                            clientFromContext.completionDetails.realtorAward ||
+                              0
+                          ).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </Text>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Referral Reward:</Text>
+                        <Text style={styles.detailValue}>
+                          $
+                          {Number(
+                            clientFromContext.completionDetails
+                              .referralReward || 0
+                          ).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </Text>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Address:</Text>
+                        <Text style={styles.detailValue}>
+                          {clientFromContext.completionDetails.clientAddress ||
+                            "N/A"}
+                        </Text>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Approval Date:</Text>
+                        <Text style={styles.detailValue}>
+                          {clientFromContext.completionDetails.date
+                            ? new Date(
+                                clientFromContext.completionDetails.date
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
+                            : "N/A"}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </>
               ) : (
                 <>
@@ -1185,6 +1261,34 @@ const styles = StyleSheet.create({
   },
   pillDisabled: {
     opacity: 0.7,
+  },
+  completionDetailsContainer: {
+    backgroundColor: COLORS.black,
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.2)",
+  },
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.white,
+    fontFamily: "Futura",
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.white,
+    fontFamily: "Futura",
+    textAlign: "right",
+    flex: 1,
+    marginLeft: 12,
   },
   questionnaireButtonContainer: {
     flexDirection: "row",

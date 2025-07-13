@@ -198,6 +198,8 @@ export const NotificationProvider = ({ children }) => {
       DOCUMENT_REJECTED: "close-circle",
       DOCUMENT_REQUESTED: "alert-circle",
       APPLICATION_UPDATE: "refresh-circle",
+      MORTGAGE_COMPLETED: "checkmark-circle",
+      PRE_APPROVED: "checkmark-circle",
       GENERAL: "notifications",
     };
 

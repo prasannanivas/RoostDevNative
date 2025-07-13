@@ -13,11 +13,13 @@ import { useNetwork } from "../context/NetworkContext";
 const NetworkStatusIndicator = () => {
   const { isConnected } = useNetwork();
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
+  // Add a ref to store the animation controller
+  const animationRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!isConnected) {
       // Start blinking animation when offline
-      Animated.loop(
+      animationRef.current = Animated.loop(
         Animated.sequence([
           Animated.timing(fadeAnim, {
             toValue: 0.3,
@@ -30,17 +32,17 @@ const NetworkStatusIndicator = () => {
             useNativeDriver: true,
           }),
         ])
-      ).start();
+      );
+      animationRef.current.start();
     } else {
-      // Stop animation and fade out when back online
-      fadeAnim.stopAnimation();
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      // Stop animation when back online
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
+      // Reset opacity to 1
+      fadeAnim.setValue(1);
     }
-  }, [isConnected]);
+  }, [isConnected, fadeAnim]);
 
   if (isConnected) {
     return null;

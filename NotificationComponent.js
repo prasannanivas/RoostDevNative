@@ -64,13 +64,20 @@ export const NotificationMessage = ({
   switch (notificationType) {
     case "success-green":
       containerStyle = styles.notificationMessageGreen;
-      iconSvg = approvedGreenSvgXml;
+      iconSvg = approvedBlueSvgXml;
       break;
     case "success-blue":
       containerStyle = styles.notificationMessageBlue;
       iconSvg = approvedBlueSvgXml;
       break;
-    case "warning":
+    case "warning-orange":
+      containerStyle = styles.notificationMessageOrange;
+      iconSvg = warningSvgXml;
+      break;
+    case "warning-red":
+      containerStyle = styles.notificationMessageRed;
+      iconSvg = warningSvgXml; // Use the same warning icon for red
+      break;
     default:
       containerStyle = styles.notificationMessageOrange;
       iconSvg = warningSvgXml;
@@ -125,10 +132,16 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
   // Determine notification type based on the notification data
   let notificationType = "warning";
   if (notification.category === "DOCUMENT_REJECTED") {
-    notificationType = "warning";
+    notificationType = "warning-red";
   } else if (notification.category === "DOCUMENT_REQUESTED") {
+    notificationType = "warning-orange";
+  } else if (notification.category === "DOCUMENT_SUBMITTED") {
     notificationType = "success-green";
   } else if (notification.category === "DOCUMENT_APPROVED") {
+    notificationType = "success-blue";
+  } else if (notification.category === "MORTGAGE_COMPLETED") {
+    notificationType = "success-blue";
+  } else if (notification.category === "PRE_APPROVED") {
     notificationType = "success-blue";
   }
 
@@ -384,6 +397,9 @@ const styles = StyleSheet.create({
   },
   notificationMessageOrange: {
     backgroundColor: "#F0913A1A",
+  },
+  notificationMessageRed: {
+    backgroundColor: "#F24E1A1A",
   },
   notificationMessageGreen: {
     backgroundColor: "#3774731A",
