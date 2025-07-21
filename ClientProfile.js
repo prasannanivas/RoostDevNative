@@ -614,7 +614,7 @@ export default function ClientProfile({ onClose }) {
 
           {/* Document Approvals */}
           <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Approvals</Text>
+            <Text style={styles.switchLabel}>Document Updates</Text>
             <TouchableOpacity
               onPress={() => toggleNotificationPref("documentApprovals")}
               style={[
@@ -631,20 +631,20 @@ export default function ClientProfile({ onClose }) {
             </TouchableOpacity>
           </View>
 
-          {/* New Messages */}
+          {/* Status Updates */}
           <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>New Messages</Text>
+            <Text style={styles.switchLabel}>Status Updates</Text>
             <TouchableOpacity
-              onPress={() => toggleNotificationPref("newMessages")}
+              onPress={() => toggleNotificationPref("statusUpdates")}
               style={[
                 styles.toggleSwitch,
-                notificationPrefs.newMessages && styles.toggleSwitchOn,
+                notificationPrefs.statusUpdates && styles.toggleSwitchOn,
               ]}
             >
               <View
                 style={[
                   styles.toggleThumb,
-                  notificationPrefs.newMessages && styles.toggleThumbOn,
+                  notificationPrefs.statusUpdates && styles.toggleThumbOn,
                 ]}
               />
             </TouchableOpacity>
@@ -679,7 +679,7 @@ export default function ClientProfile({ onClose }) {
           </Text>
 
           {/* Terms of Service Updates */}
-          <View style={styles.switchRow}>
+          {/* <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Terms of Service Updates</Text>
             <TouchableOpacity
               onPress={() => toggleNotificationPref("termsOfServiceEmails")}
@@ -692,6 +692,49 @@ export default function ClientProfile({ onClose }) {
                 style={[
                   styles.toggleThumb,
                   notificationPrefs.termsOfServiceEmails &&
+                    styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View> */}
+
+          {/* Document Reminders */}
+
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Document Reminders</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("documentReminderEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.documentReminderEmails &&
+                  styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.documentReminderEmails &&
+                    styles.toggleThumbOn,
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Document Approvals */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Document Updates</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("documentApprovalEmails")}
+              style={[
+                styles.toggleSwitch,
+                notificationPrefs.documentApprovalEmails &&
+                  styles.toggleSwitchOn,
+              ]}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  notificationPrefs.documentApprovalEmails &&
                     styles.toggleThumbOn,
                 ]}
               />

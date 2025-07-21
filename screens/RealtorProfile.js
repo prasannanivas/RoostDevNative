@@ -927,7 +927,7 @@ export default function RealtorProfile({ onClose }) {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
       {/* Success notification */}
       {saveSuccess && (
@@ -1072,6 +1072,7 @@ export default function RealtorProfile({ onClose }) {
               value={formData.rewardsAddress}
               placeholder="Address"
               onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
+              returnKeyType="done"
             />
           </View>
           <View style={styles.formGroup}>
@@ -1079,6 +1080,7 @@ export default function RealtorProfile({ onClose }) {
               style={styles.input}
               value={formData.rewardsCity}
               placeholder="City"
+              returnKeyType="done"
               onChangeText={(text) => handleFieldChange("rewardsCity", text)}
             />
           </View>
