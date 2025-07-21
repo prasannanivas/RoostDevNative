@@ -1,30 +1,62 @@
 {
   "expo": {
-    "name": "RoostDevNative",
+    "name": "Roost",
     "slug": "RoostDevNative",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/favicon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "description": "Roost - Streamline your real estate transactions with secure document management, client communication, and reward tracking for realtors and clients.",
+    "keywords": [
+      "real estate",
+      "realtor",
+      "document management",
+      "property",
+      "transactions",
+      "client management"
+    ],
+    "category": "PRODUCTIVITY",
+    "privacy": "https://roostapp.io/privacy",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/favicon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.prasannanivas.RoostDevNative",
+      "bundleIdentifier": "com.roostapp.roost",
+      "buildNumber": "1",
+      "icon": "./assets/favicon.png",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Roost needs camera access to allow you to take photos of documents for secure upload and verification.",
+        "NSPhotoLibraryUsageDescription": "Roost needs photo library access to allow you to select and upload documents from your device.",
+        "NSContactsUsageDescription": "Roost needs contacts access to help you invite clients and realtors more easily.",
+        "NSUserNotificationsUsageDescription": "Roost sends notifications to keep you updated on document status, client interactions, and important transaction milestones.",
+        "NSAppTransportSecurity": {
+          "NSExceptionDomains": {
+            "159.203.58.60": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "1.0"
+            }
+          }
+        }
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/favicon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.prasannanivas.RoostDevNative"
+      "package": "com.roostapp.roost",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_CONTACTS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,7 +70,22 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts."
+          "contactsPermission": "Roost needs contacts access to help you invite clients and realtors more easily."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Roost needs photo library access to allow you to select and upload documents from your device.",
+          "cameraPermission": "Roost needs camera access to allow you to take photos of documents for secure upload and verification."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/favicon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default"
         }
       ]
     ]

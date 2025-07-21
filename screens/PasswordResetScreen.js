@@ -14,7 +14,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 // Keep the import for future use
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TextInputMask } from "react-native-masked-text";
 import Logo from "../components/Logo";
 import AnimatedDropdown from "../components/common/AnimatedDropdown";
 

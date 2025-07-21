@@ -12,7 +12,6 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
-import { TextInputMask } from "react-native-masked-text";
 import Logo from "../components/Logo";
 import AnimatedDropdown from "../components/common/AnimatedDropdown";
 
@@ -368,14 +367,10 @@ const SignUpDetailsScreen = React.forwardRef(
               </Text>
             </AnimatedDropdown>
 
-            {/* Phone Number Input with Mask */}
+            {/* Phone Number Input with formatting */}
             <View style={styles.phoneContainer}>
               <Text style={styles.countryCode}>+1</Text>
-              <TextInputMask
-                type={"custom"}
-                options={{
-                  mask: "999-999-9999",
-                }}
+              <TextInput
                 style={[
                   styles.phoneInput,
                   isLoading ? styles.inputDisabled : null,
@@ -384,11 +379,36 @@ const SignUpDetailsScreen = React.forwardRef(
                 placeholderTextColor={COLORS.gray}
                 value={phone}
                 onChangeText={(text) => {
-                  setPhone(text);
-                  // Format for display
-                  const formatted = text
-                    .replace(/\D/g, "")
-                    .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+                  // Remove non-digit characters
+                  const digits = text.replace(/\D/g, "");
+
+                  // Limit to 10 digits
+                  const limitedDigits = digits.slice(0, 10);
+
+                  // Format as the user types: XXX-XXX-XXXX
+                  let formattedText = limitedDigits;
+                  if (limitedDigits.length > 3 && limitedDigits.length <= 6) {
+                    formattedText = `${limitedDigits.slice(
+                      0,
+                      3
+                    )}-${limitedDigits.slice(3)}`;
+                  } else if (limitedDigits.length > 6) {
+                    formattedText = `${limitedDigits.slice(
+                      0,
+                      3
+                    )}-${limitedDigits.slice(3, 6)}-${limitedDigits.slice(6)}`;
+                  }
+
+                  setPhone(formattedText);
+
+                  // Format for display using the (XXX) XXX-XXXX format
+                  const formatted =
+                    limitedDigits.length === 10
+                      ? limitedDigits.replace(
+                          /(\d{3})(\d{3})(\d{4})/,
+                          "($1) $2-$3"
+                        )
+                      : "";
                   setFormattedPhone(formatted);
                 }}
                 keyboardType="phone-pad"
