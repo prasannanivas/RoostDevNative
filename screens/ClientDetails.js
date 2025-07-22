@@ -9,18 +9,19 @@ import {
   Linking,
   Alert,
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import RequestDocumentModal from "./RequestDocumentModal.js"; // Ensure this is a React Native component
 import Toast from "react-native-toast-message"; // Make sure to set up this library if used
 import { generateInitialsFromFullName } from "../utils/initialsUtils";
 
 const ClientDetails = () => {
+  const navigation = useNavigation();
   // Get clientId from navigation route parameters
   const { clientId, statusText } = useRoute().params;
   const { auth } = useAuth();
   const { realtor } = auth;
-  const realtorId = realtor.id;
+  const realtorId = realtor.id; // Keep this line as it is the correct declaration
 
   const [client, setClient] = useState(null);
   const [requestedDocs, setRequestedDocs] = useState([]);
@@ -162,10 +163,64 @@ const ClientDetails = () => {
   if (!client) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>
-          {" "}
-          {statusText || "Client not found"}
-        </Text>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={async () => {
+            Alert.alert(
+              "Delete Client",
+              "Are you sure you want to delete this client?",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      setLoading(true);
+                      const response = await fetch(
+                        `http://159.203.58.60:5000/Realtor/DeleteClient`,
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ clientId, realtorId }),
+                        }
+                      );
+                      setLoading(false);
+                      if (response.ok) {
+                        Alert.alert("Success", "Client deleted successfully", [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              navigation.goBack();
+                            },
+                          },
+                        ]);
+                        // Optionally, navigate back or refresh
+                      } else {
+                        Alert.alert("Error", "Failed to delete client", [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              navigation.goBack();
+                            },
+                          },
+                        ]);
+                      }
+                    } catch (error) {
+                      setLoading(false);
+                      Alert.alert("Error", "Failed to delete client", [
+                        { text: "OK", onPress: () => {} },
+                      ]);
+                    }
+                  },
+                },
+              ]
+            );
+          }}
+        >
+          <Text style={styles.deleteButtonText}>Delete Client</Text>
+        </TouchableOpacity>
+        <Text style={styles.errorText}>{statusText || "Client not found"}</Text>
       </View>
     );
   }
@@ -197,12 +252,6 @@ const ClientDetails = () => {
             {generateInitialsFromFullName(client.name)}
           </Text>
         </View>
-        {/* <TouchableOpacity
-          style={styles.requestButton}
-          onPress={() => setIsModalOpen(true)}
-        >
-          <Text style={styles.requestButtonText}>Request Document</Text>
-        </TouchableOpacity> */}
       </View>
 
       <RequestDocumentModal
@@ -306,6 +355,21 @@ const getStatusColor = (status) => {
 };
 
 const styles = StyleSheet.create({
+  deleteButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "#dc3545",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    zIndex: 10,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
   container: {
     padding: 20,
     backgroundColor: "#FFFFFF",
