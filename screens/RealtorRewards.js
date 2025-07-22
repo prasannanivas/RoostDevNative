@@ -22,6 +22,7 @@ import InviteRealtorModal from "../components/modals/InviteRealtorModal";
 import ClaimRewardsModal from "../components/modals/ClaimRewardsModal";
 import CashoutModal from "../components/modals/CashoutModal";
 import CashoutMinimumModal from "../components/modals/CashoutMinimumModal";
+import RewardClaimedModal from "../components/modals/RewardClaimedModal";
 import { useRealtor } from "../context/RealtorContext";
 
 // Design System Colors
@@ -81,6 +82,7 @@ export default function RealtorRewards({
   const [selectedClientData, setSelectedClientData] = useState(null);
   const [addressConfirmation, setAddressConfirmation] = useState(false);
   const [showAddressConfirm, setShowAddressConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [addressToSend, setAddressToSend] = useState({
     address: "",
     city: "",
@@ -217,7 +219,7 @@ export default function RealtorRewards({
         fetchLatestRealtor();
         setClaimModal(false);
         setAddressConfirmation(false);
-        Alert.alert("Success", "Reward claimed successfully!");
+        setShowSuccessModal(true); // Show success modal instead of alert
       } else {
         const errorData = await resp.json();
         console.error("Claim failed", errorData);
@@ -714,6 +716,12 @@ export default function RealtorRewards({
           selectedClient={selectedClient}
           setSelectedClient={setSelectedClient}
           styles={styles}
+        />
+
+        {/* Success Modal */}
+        <RewardClaimedModal
+          visible={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
         />
       </ScrollView>
     </View>

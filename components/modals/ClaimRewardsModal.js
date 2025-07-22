@@ -222,7 +222,11 @@ const ClaimRewardsModal = ({
                       {claimLoading ? (
                         <ActivityIndicator color={COLORS.white} />
                       ) : (
-                        <Text style={localStyles.sendButtonText}>Send</Text>
+                        <Text style={localStyles.sendButtonText}>
+                          {selectedReward.rewardFor === "Realtors"
+                            ? "Get"
+                            : "Send"}
+                        </Text>
                       )}
                     </TouchableOpacity>
                   </View>

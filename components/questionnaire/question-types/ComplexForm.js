@@ -253,9 +253,11 @@ const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
               value={fieldValue}
               onChangeText={(text) => handleFieldChange(field.key, text)}
               placeholder={field.placeholder}
+              infoText={field.infoText}
               error={fieldErrors[field.key]}
               keyboardType={field.keyboard || "default"}
               prefix={field.prefix}
+              fieldKey={field.key}
               style={[
                 field.accommodateWidth
                   ? { flex: field.accommodateWidth }

@@ -208,8 +208,9 @@ const questions = [
           {
             key: "sinNumber",
             label: "",
-            placeholder: "SIN number",
+            placeholder: "SIN Number (Optional)",
             keyboard: "numeric",
+            infoText: "SIN is not required, but can speed up the pre-approval",
           },
           {
             key: "dependents",
@@ -569,7 +570,12 @@ const questions = [
       },
       {
         fields: [
-          { key: "sinNumber", placeholder: "SIN number", keyboard: "numeric" },
+          {
+            key: "sinNumber",
+            placeholder: "SIN Number (Optional)",
+            keyboard: "numeric",
+            infoText: "SIN is not required, but can speed up the pre-approval",
+          },
           {
             key: "dependents",
             placeholder: "Number of Dependents",
@@ -914,8 +920,9 @@ const questions = [
         fields: [
           {
             key: "coSinNumber",
-            placeholder: "SIN number",
+            placeholder: "SIN Number (Optional)",
             keyboard: "numeric",
+            infoText: "SIN is not required, but can speed up the pre-approval",
           },
           {
             key: "coDependents",

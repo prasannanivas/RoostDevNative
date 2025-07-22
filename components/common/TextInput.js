@@ -1,6 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput as RNTextInput, StyleSheet } from "react-native";
 import AnimatedDropdown from "./AnimatedDropdown";
+
+// Helper function to format SIN number with dashes (xxx-xxx-xxx)
+const formatSinNumber = (text) => {
+  // Remove any non-numeric characters
+  const cleaned = text.replace(/[^\d]/g, "");
+
+  // Limit to 9 digits
+  const limited = cleaned.slice(0, 9);
+
+  // Apply xxx-xxx-xxx format
+  if (limited.length <= 3) {
+    return limited;
+  } else if (limited.length <= 6) {
+    return `${limited.slice(0, 3)}-${limited.slice(3)}`;
+  } else {
+    return `${limited.slice(0, 3)}-${limited.slice(3, 6)}-${limited.slice(6)}`;
+  }
+};
+
+// Check if a field is a SIN number field based on key
+const isSinNumberField = (key) => {
+  return key && key.toLowerCase().includes("sinnumber");
+};
 
 const TextInput = ({
   label,
@@ -10,16 +33,36 @@ const TextInput = ({
   keyboardType = "default",
   multiline = false,
   numberOfLines = 1,
+  infoText,
   style,
   prefix,
   error,
   isRequired = false,
+  isSinNumber = false,
+  fieldKey,
 }) => {
   const [localValue, setLocalValue] = useState(value || "");
 
+  // Determine if this is a SIN number field based on props or key name
+  const isSinField = isSinNumber || isSinNumberField(fieldKey);
+
+  // Format SIN number on initial value if needed
+  useEffect(() => {
+    if (isSinField && value) {
+      setLocalValue(formatSinNumber(value));
+    }
+  }, []);
+
   const handleChangeText = (text) => {
-    setLocalValue(text);
-    onChangeText && onChangeText(text);
+    // Apply formatting for SIN numbers
+    if (isSinField) {
+      const formattedText = formatSinNumber(text);
+      setLocalValue(formattedText);
+      onChangeText && onChangeText(formattedText);
+    } else {
+      setLocalValue(text);
+      onChangeText && onChangeText(text);
+    }
   };
   return (
     <View style={[styles.container, style]}>
@@ -50,8 +93,10 @@ const TextInput = ({
           multiline={multiline}
           numberOfLines={numberOfLines}
           placeholderTextColor="#707070"
+          maxLength={isSinField ? 11 : undefined} // 9 digits + 2 dashes
         />
       </View>
+      {infoText && <Text style={styles.infoText}>{infoText}</Text>}
       <AnimatedDropdown
         visible={!!error}
         style={!!error ? styles.errorBox : {}}
@@ -74,6 +119,15 @@ const styles = StyleSheet.create({
     color: "#1D2327",
     letterSpacing: 0,
     marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#828080ff",
+    lineHeight: 20,
+    fontFamily: "Futura",
+    marginTop: 8,
+    marginBottom: 4,
   },
   requiredIndicator: {
     color: "#FF3B30", // Red color for required indicator
