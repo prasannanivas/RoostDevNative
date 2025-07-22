@@ -484,7 +484,7 @@ const Questionnaire = ({ questionnaireData }) => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // First validate name fields if applicable
     if (!validateNameFields()) {
       return; // Stop if validation fails
@@ -501,7 +501,16 @@ const Questionnaire = ({ questionnaireData }) => {
       goToNextQuestion(nextQuestionId);
     } else {
       // This is the final question
-      handleSubmit();
+      await handleSubmit();
+
+      try {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" }],
+        });
+      } catch (error) {
+        console.error("Navigation error in Done button:", error);
+      }
     }
   };
 
@@ -804,7 +813,9 @@ const Questionnaire = ({ questionnaireData }) => {
             {/* "Looks Good" button after questions */}
             {currentQuestion?.type !== "multipleChoice" && (
               <Button
-                title="Looks Good"
+                title={
+                  currentQuestion?.type === "finalStep" ? "Done" : "Looks Good"
+                }
                 onPress={handleNext}
                 variant="secondary"
                 loading={isSubmitting}

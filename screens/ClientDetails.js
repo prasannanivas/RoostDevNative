@@ -17,7 +17,7 @@ import { generateInitialsFromFullName } from "../utils/initialsUtils";
 
 const ClientDetails = () => {
   // Get clientId from navigation route parameters
-  const { clientId } = useRoute().params;
+  const { clientId, statusText } = useRoute().params;
   const { auth } = useAuth();
   const { realtor } = auth;
   const realtorId = realtor.id;
@@ -162,7 +162,10 @@ const ClientDetails = () => {
   if (!client) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Client not found</Text>
+        <Text style={styles.errorText}>
+          {" "}
+          {statusText || "Client not found"}
+        </Text>
       </View>
     );
   }

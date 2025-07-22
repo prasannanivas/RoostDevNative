@@ -1574,6 +1574,20 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         setShowClientCardModal(false);
                         navigation.navigate("ClientDetails", {
                           clientId: selectedClientCard.inviteeId,
+                          client: selectedClientCard,
+                          statusText:
+                            selectedClientCard.status === "PENDING"
+                              ? "Client Invited"
+                              : selectedClientCard.clientAddress === null
+                              ? "Account Deleted"
+                              : selectedClientCard.status === "ACCEPTED" &&
+                                (!selectedClientCard.documents ||
+                                  selectedClientCard.documents.length === 0 ||
+                                  selectedClientCard?.clientAddress !== null)
+                              ? "Client Signed Up"
+                              : selectedClientCard.clientAddress === null
+                              ? "Account Deleted"
+                              : selectedClientCard.status.toUpperCase(),
                         });
                       }}
                     >
