@@ -241,8 +241,8 @@ const ClientHome = ({ questionnaireData }) => {
           style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
           onPress={() => setShowQuestionnaire(true)}
         >
-          <Ionicons name="play" size={24} color={COLORS.white} />
-          {/* <Text style={styles.questionnaireButtonText}>Test Questionnaire</Text> */}
+          {/* <Ionicons name="play" size={24} color={COLORS.white} /> */}
+          <Text style={styles.questionnaireButtonText}>Change Application</Text>
         </TouchableOpacity>
       </View>
     );
@@ -317,108 +317,6 @@ const ClientHome = ({ questionnaireData }) => {
     );
   };
 
-  // Component for displaying the questionnaire in read-only mode
-  const QuestionnairePreview = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showQuestionnairePreview}
-      onRequestClose={() => setShowQuestionnairePreview(false)}
-    >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          justifyContent: "center",
-          padding: 20,
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: "white",
-            borderRadius: 10,
-            padding: 20,
-            maxHeight: "80%",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 15,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                Your Questionnaire Responses
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowQuestionnairePreview(false)}
-            >
-              <Ionicons name="close-circle" size={24} color={COLORS.slate} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ marginBottom: 15 }}>
-            <View style={{ marginBottom: 10 }}>
-              <Text
-                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
-              >
-                Applying on Behalf:
-              </Text>
-              <Text>
-                {questionnaireData.applyingbehalf === "other"
-                  ? `Me and ${questionnaireData.otherDetails?.name}`
-                  : "Self"}
-              </Text>
-            </View>
-
-            <View style={{ marginBottom: 10 }}>
-              <Text
-                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
-              >
-                Employment Status:
-              </Text>
-              <Text>
-                {questionnaireData.employmentStatus || "Not specified"}
-              </Text>
-            </View>
-
-            <View style={{ marginBottom: 10 }}>
-              <Text
-                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
-              >
-                Own Another Property:
-              </Text>
-              <Text>{questionnaireData.ownAnotherProperty ? "Yes" : "No"}</Text>
-            </View>
-
-            {questionnaireData.otherDetails && (
-              <View>
-                <Text
-                  style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}
-                >
-                  {questionnaireData.otherDetails.name}'s Details:
-                </Text>
-                <Text>
-                  Relationship:
-                  {questionnaireData.otherDetails.relationship || "N/A"}
-                </Text>
-                <Text>
-                  Employment details:
-                  {questionnaireData.otherDetails.employmentStatus || "N/A"}
-                </Text>
-                <Text>
-                  Own another property:
-                  {questionnaireData.otherDetails.ownAnotherProperty || "N/A"}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
   return (
     <View style={styles.safeArea}>
       {/* Main Header - Bottom 63px */}
@@ -448,7 +346,6 @@ const ClientHome = ({ questionnaireData }) => {
             </Text>
           </View>
         </TouchableOpacity>
-        {renderQuestionnaireButton()}
 
         {/* Right Section: Notification Bell and Help Button */}
         <View style={styles.rightSection}>
@@ -637,6 +534,8 @@ const ClientHome = ({ questionnaireData }) => {
           )}
         </View>
       </ScrollView>
+
+      {renderQuestionnaireButton()}
 
       {/* Profile Panel */}
       <ReactNativeModal
@@ -842,6 +741,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
+    marginBottom: 64,
   },
   contentContainer: {
     flex: 1,
@@ -1292,16 +1192,22 @@ const styles = StyleSheet.create({
   },
   questionnaireButtonContainer: {
     flexDirection: "row",
-    gap: 8,
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    width: "90%",
+    bottom: 24,
+    zIndex: 1000, // Ensure it appears above other content
   },
   questionnaireButton: {
     backgroundColor: COLORS.green,
-    padding: 8,
-    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 13,
+    borderRadius: 33,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    minWidth: 80,
+    width: "90%",
     justifyContent: "center",
   },
   testQuestionnaireButton: {
@@ -1310,7 +1216,7 @@ const styles = StyleSheet.create({
   questionnaireButtonText: {
     color: COLORS.white,
     fontSize: 12, // H4 size
-    fontWeight: "bold", // H4 weight
+    fontWeight: "700", // H4 weight
     fontFamily: "Futura",
   },
 });

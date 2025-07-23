@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
 import { questions } from "../../data/questionnaireData";
@@ -24,6 +25,7 @@ import {
 } from "../../utils/initialsUtils";
 import { processDynamicText } from "../../utils/questionnaireUtils";
 import Logo from "../Logo";
+import CloseIconSvg from "../icons/CloseIconSvg";
 
 const COLORS = {
   green: "#377473",
@@ -635,6 +637,19 @@ const Questionnaire = ({ questionnaireData }) => {
     return {};
   };
 
+  const handleSubmitAndClose = async () => {
+    handleSubmit();
+
+    try {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
+    } catch (error) {
+      console.error("Navigation error in Done button:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!auth?.client?.id) {
       Alert.alert("Error", "User not authenticated");
@@ -677,29 +692,6 @@ const Questionnaire = ({ questionnaireData }) => {
     }
   };
 
-  const isNextDisabled = () => {
-    if (!currentResponse) return true;
-
-    // For form types, check if all required fields are filled
-    if (
-      currentQuestion?.type === "form" ||
-      currentQuestion?.type === "complexForm"
-    ) {
-      if (typeof currentResponse === "object" && currentResponse !== null) {
-        const requiredFields = currentQuestion.fields || [];
-        if (currentQuestion.sections) {
-          // Flatten fields from sections
-          requiredFields.push(
-            ...currentQuestion.sections.flatMap((s) => s.fields || [])
-          );
-        }
-
-        return requiredFields.some((field) => !currentResponse[field.key]);
-      }
-    }
-
-    return false;
-  };
   if (isCompleted && currentQuestion?.type === "finalStep") {
     return (
       <SafeAreaView style={styles.container}>
@@ -751,7 +743,14 @@ const Questionnaire = ({ questionnaireData }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <ProgressBar progress={getProgress()} />
+        <TouchableOpacity
+          style={styles.closeModalButton}
+          onPress={handleSubmitAndClose}
+        >
+          <CloseIconSvg />
+        </TouchableOpacity>
       </View>
+
       <View style={styles.logoContainer}>
         <Logo
           width={120}
@@ -760,6 +759,7 @@ const Questionnaire = ({ questionnaireData }) => {
           style={styles.brandLogo}
         />
       </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
@@ -903,6 +903,16 @@ const styles = StyleSheet.create({
   },
   coSignerInitialsCircle: {
     backgroundColor: "#FF3B30", // Red color for co-signer to visually distinguish
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    padding: 5,
+    borderRadius: 8,
+    backgroundColor: "#F6F6F6",
+    justifyContent: "center",
+    alignItems: "center",
   },
   initialsText: {
     color: COLORS.white,
