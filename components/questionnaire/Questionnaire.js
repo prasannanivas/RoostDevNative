@@ -40,7 +40,7 @@ const COLORS = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-const Questionnaire = ({ questionnaireData }) => {
+const Questionnaire = ({ questionnaireData, showCloseButton }) => {
   const navigation = useNavigation();
   const { auth } = useAuth();
   const {
@@ -539,7 +539,7 @@ const Questionnaire = ({ questionnaireData }) => {
       return employmentStatus;
     }
 
-    console.error("Invalid responses for employment status");
+    console.log("Invalid responses for employment status");
     return "";
   };
 
@@ -553,7 +553,7 @@ const Questionnaire = ({ questionnaireData }) => {
     if (responses["110"] === "unemployed") {
       return "Unemployed";
     } else {
-      console.error("Invalid responses for employment status of co-signer");
+      console.log("Invalid responses for employment status of co-signer");
       return "";
     }
   };
@@ -591,7 +591,7 @@ const Questionnaire = ({ questionnaireData }) => {
       }
     }
 
-    console.error("Invalid responses for own another property");
+    console.log("Invalid responses for own another property");
     return "";
   };
 
@@ -612,7 +612,7 @@ const Questionnaire = ({ questionnaireData }) => {
       }
     }
 
-    console.error("Invalid responses for own another property of co-signer");
+    console.log("Invalid responses for own another property of co-signer");
     return "";
   };
 
@@ -633,7 +633,7 @@ const Questionnaire = ({ questionnaireData }) => {
       return coSignerDetails;
     }
 
-    console.error("Invalid responses for co-signer details");
+    console.log("Invalid responses for co-signer details");
     return {};
   };
 
@@ -743,12 +743,14 @@ const Questionnaire = ({ questionnaireData }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <ProgressBar progress={getProgress()} />
-        <TouchableOpacity
-          style={styles.closeModalButton}
-          onPress={handleSubmitAndClose}
-        >
-          <CloseIconSvg />
-        </TouchableOpacity>
+        {showCloseButton && (
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={handleSubmitAndClose}
+          >
+            <CloseIconSvg />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.logoContainer}>

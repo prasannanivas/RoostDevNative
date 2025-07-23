@@ -603,6 +603,7 @@ const ClientHome = ({ questionnaireData }) => {
               goBack: () => setShowQuestionnaire(false),
             }}
             questionnaireData={questionnaireData}
+            showCloseButton={true}
           />
         </QuestionnaireProvider>
       </Modal>

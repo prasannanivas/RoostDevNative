@@ -129,6 +129,7 @@ const Home = () => {
             <ClientQuestionaire
               navigation={navigation}
               questionnaireData={clientQuestionaire}
+              showCloseButton={false}
             />
           ) : (
             <ClientHome questionnaireData={clientQuestionaire} />
