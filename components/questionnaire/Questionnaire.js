@@ -9,7 +9,10 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
 import { questions } from "../../data/questionnaireData";
 import QuestionRenderer from "./QuestionRenderer";
@@ -42,6 +45,7 @@ const COLORS = {
 
 const Questionnaire = ({ questionnaireData, showCloseButton }) => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { auth } = useAuth();
   const {
     currentQuestionId,
@@ -762,71 +766,81 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
         />
       </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollViewContent}
+      {/* Only wrap the ScrollView/content in KeyboardAvoidingView, not the footer */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <View style={styles.content}>
-          <View style={styles.contentWrapper}>
-            {/* Question Header with Initials and Question Text */}
-            <View style={styles.questionHeaderRow}>
-              {/* Always render the circle, but conditionally style based on type */}
-              {(() => {
-                const userInfo = getUserInitials();
-                const hasInitials =
-                  userInfo.initials && userInfo.initials.trim() !== "";
-                return hasInitials ? (
-                  <View
-                    style={[
-                      styles.initialsCircle,
-                      !hasInitials && styles.emptyInitialsCircle,
-                      userInfo.isCoSigner && styles.coSignerInitialsCircle,
-                    ]}
-                  >
-                    {hasInitials && (
-                      <Text style={styles.initialsText}>
-                        {userInfo.initials}
-                      </Text>
-                    )}
-                  </View>
-                ) : (
-                  <></>
-                );
-              })()}
-              <Text style={styles.questionTextHeader}>
-                {processDynamicText(currentQuestion.text, responses)}
-              </Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <View style={styles.content}>
+            <View style={styles.contentWrapper}>
+              {/* Question Header with Initials and Question Text */}
+              <View style={styles.questionHeaderRow}>
+                {/* Always render the circle, but conditionally style based on type */}
+                {(() => {
+                  const userInfo = getUserInitials();
+                  const hasInitials =
+                    userInfo.initials && userInfo.initials.trim() !== "";
+                  return hasInitials ? (
+                    <View
+                      style={[
+                        styles.initialsCircle,
+                        !hasInitials && styles.emptyInitialsCircle,
+                        userInfo.isCoSigner && styles.coSignerInitialsCircle,
+                      ]}
+                    >
+                      {hasInitials && (
+                        <Text style={styles.initialsText}>
+                          {userInfo.initials}
+                        </Text>
+                      )}
+                    </View>
+                  ) : (
+                    <></>
+                  );
+                })()}
+                <Text style={styles.questionTextHeader}>
+                  {processDynamicText(currentQuestion.text, responses)}
+                </Text>
+              </View>
+              {/* Question Content */}
+              <View style={styles.questionContent}>
+                <QuestionRenderer
+                  question={{
+                    ...currentQuestion,
+                    text: "", // Text is already displayed in the header
+                    profileInitials: null,
+                  }}
+                  value={currentResponse}
+                  onValueChange={handleResponseChange}
+                  allResponses={responses} // Pass all responses for dynamic text replacement
+                  onAutoNavigate={handleAutoNavigate}
+                  fieldErrors={fieldErrors} // Pass field errors for display
+                />
+              </View>
+              {/* "Looks Good" button after questions */}
+              {currentQuestion?.type !== "multipleChoice" && (
+                <Button
+                  title={
+                    currentQuestion?.type === "finalStep"
+                      ? "Done"
+                      : "Looks Good"
+                  }
+                  onPress={handleNext}
+                  variant="secondary"
+                  loading={isSubmitting}
+                  style={styles.looksGoodButton}
+                />
+              )}
             </View>
-            {/* Question Content */}
-            <View style={styles.questionContent}>
-              <QuestionRenderer
-                question={{
-                  ...currentQuestion,
-                  text: "", // Text is already displayed in the header
-                  profileInitials: null,
-                }}
-                value={currentResponse}
-                onValueChange={handleResponseChange}
-                allResponses={responses} // Pass all responses for dynamic text replacement
-                onAutoNavigate={handleAutoNavigate}
-                fieldErrors={fieldErrors} // Pass field errors for display
-              />
-            </View>
-            {/* "Looks Good" button after questions */}
-            {currentQuestion?.type !== "multipleChoice" && (
-              <Button
-                title={
-                  currentQuestion?.type === "finalStep" ? "Done" : "Looks Good"
-                }
-                onPress={handleNext}
-                variant="secondary"
-                loading={isSubmitting}
-                style={styles.looksGoodButton}
-              />
-            )}
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      {/* Footer stays outside KeyboardAvoidingView so it remains fixed */}
       <View style={styles.footer}>
         <View style={styles.buttonContainer}>
           {canGoBack && (
@@ -948,7 +962,7 @@ const styles = StyleSheet.create({
     marginRight: 0, // Ensure it's positioned at the right edge
   },
   footer: {
-    position: "absolute",
+    position: Platform.OS === "ios" ? "absolute" : "relative",
     bottom: 0,
     width: "100%",
     height: "15%",
@@ -961,6 +975,9 @@ const styles = StyleSheet.create({
   backButton: {
     borderWidth: 0,
     marginLeft: 24, // 8px increment spacing
+    backgroundColor: COLORS.black,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   fullWidthButton: {
     flex: 1,

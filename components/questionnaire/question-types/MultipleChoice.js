@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   optionButton: {
     borderWidth: 1, // Slightly thicker border
     borderColor: COLORS.green,
+    backgroundColor: COLORS.background,
     borderRadius: 33,
     paddingVertical: 13, // More vertical padding
     paddingHorizontal: 24, // More horizontal padding
