@@ -11,6 +11,8 @@ import {
   Switch,
   Image,
   Animated, // Add this for animation
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -480,206 +482,213 @@ export default function ClientProfile({ onClose }) {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Success notification */}
-      {saveSuccess && (
-        <Animated.View style={[styles.saveNotification, { opacity: fadeAnim }]}>
-          <Text style={styles.saveNotificationText}>
-            Profile updated successfully
-          </Text>
-        </Animated.View>
-      )}
-      {/* Close Button in top-right corner - updated to use new handler */}
-      {onClose && (
-        <CloseButton onPress={handleClose} style={styles.closeButton} />
-      )}
-      {/* Avatar & Title */}
-      <View style={styles.topMargin}></View>
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>{getInitials()}</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : null}
+      keyboardVerticalOffset={0} // adjust as needed for your header
+    >
+      <View style={styles.container}>
+        {/* Success notification */}
+        {saveSuccess && (
+          <Animated.View
+            style={[styles.saveNotification, { opacity: fadeAnim }]}
+          >
+            <Text style={styles.saveNotificationText}>
+              Profile updated successfully
+            </Text>
+          </Animated.View>
+        )}
+        {/* Close Button in top-right corner - updated to use new handler */}
+        {onClose && (
+          <CloseButton onPress={handleClose} style={styles.closeButton} />
+        )}
+        {/* Avatar & Title */}
+        <View style={styles.topMargin}></View>
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>{getInitials()}</Text>
+          </View>
+          <Text style={styles.profileTitle}>Your Profile</Text>
         </View>
-        <Text style={styles.profileTitle}>Your Profile</Text>
-      </View>
-      <ScrollView
-        style={{ zIndex: 20 }}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Personal Info Card */}
-        <View style={styles.card}>
-          <Text style={styles.profileSubtitle}>
-            Keep your personal info up to date
-          </Text>
-          <View style={styles.formGroup}>
-            <TextInput
-              style={styles.input}
-              placeholder="First Name"
-              placeholderTextColor={COLORS.gray}
-              value={formData.firstName}
-              onChangeText={(text) => handleChange("firstName", text)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Last Name"
-              placeholderTextColor={COLORS.gray}
-              value={formData.lastName}
-              onChangeText={(text) => handleChange("lastName", text)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              placeholderTextColor={COLORS.gray}
-              keyboardType="phone-pad"
-              value={formData.phone}
-              onChangeText={(text) => handleChange("phone", text)}
-            />
-            {/* Email with Change Button */}
-            <View style={styles.emailContainer}>
+        <ScrollView
+          style={{ zIndex: 20 }}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Personal Info Card */}
+          <View style={styles.card}>
+            <Text style={styles.profileSubtitle}>
+              Keep your personal info up to date
+            </Text>
+            <View style={styles.formGroup}>
               <TextInput
-                style={[styles.input, styles.emailInput]}
-                placeholder="Email"
+                style={styles.input}
+                placeholder="First Name"
                 placeholderTextColor={COLORS.gray}
-                keyboardType="email-address"
-                value={formData.email}
-                editable={false} // Make it non-editable
+                value={formData.firstName}
+                onChangeText={(text) => handleChange("firstName", text)}
               />
+              <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                placeholderTextColor={COLORS.gray}
+                value={formData.lastName}
+                onChangeText={(text) => handleChange("lastName", text)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                placeholderTextColor={COLORS.gray}
+                keyboardType="phone-pad"
+                value={formData.phone}
+                onChangeText={(text) => handleChange("phone", text)}
+              />
+              {/* Email with Change Button */}
+              <View style={styles.emailContainer}>
+                <TextInput
+                  style={[styles.input, styles.emailInput]}
+                  placeholder="Email"
+                  placeholderTextColor={COLORS.gray}
+                  keyboardType="email-address"
+                  value={formData.email}
+                  editable={false} // Make it non-editable
+                />
+                <TouchableOpacity
+                  style={styles.changeEmailButton}
+                  onPress={handleEmailChangeStart}
+                >
+                  <Text style={styles.changeEmailText}>Change</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+          {/* Address Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>My address</Text>
+            <Text style={styles.cardSubtitle}>
+              Make sure thing info is complete and up to date.
+            </Text>
+            <View style={styles.formGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor={COLORS.gray}
+                value={formData.firstName + " " + formData.lastName}
+                editable={false}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Address"
+                placeholderTextColor={COLORS.gray}
+                value={formData.address}
+                onChangeText={(text) => handleChange("address", text)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                placeholderTextColor={COLORS.gray}
+                value={formData.city}
+                onChangeText={(text) => handleChange("city", text)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Postal Code"
+                placeholderTextColor={COLORS.gray}
+                value={formData.postalCode}
+                onChangeText={(text) => handleChange("postalCode", text)}
+              />
+            </View>
+          </View>
+          {/* Notifications Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Notifications</Text>
+            {/* Document Reminders */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Document Reminders</Text>
               <TouchableOpacity
-                style={styles.changeEmailButton}
-                onPress={handleEmailChangeStart}
+                onPress={() => toggleNotificationPref("documentReminders")}
+                style={[
+                  styles.toggleSwitch,
+                  notificationPrefs.documentReminders && styles.toggleSwitchOn,
+                ]}
               >
-                <Text style={styles.changeEmailText}>Change</Text>
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.documentReminders && styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Document Approvals */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Document Updates</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("documentApprovals")}
+                style={[
+                  styles.toggleSwitch,
+                  notificationPrefs.documentApprovals && styles.toggleSwitchOn,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.documentApprovals && styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Status Updates */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Status Updates</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("statusUpdates")}
+                style={[
+                  styles.toggleSwitch,
+                  notificationPrefs.statusUpdates && styles.toggleSwitchOn,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.statusUpdates && styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Marketing Notifications */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Marketing Notifications</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("marketingNotifications")}
+                style={[
+                  styles.toggleSwitch,
+                  notificationPrefs.marketingNotifications &&
+                    styles.toggleSwitchOn,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.marketingNotifications &&
+                      styles.toggleThumbOn,
+                  ]}
+                />
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-        {/* Address Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>My address</Text>
-          <Text style={styles.cardSubtitle}>
-            Make sure thing info is complete and up to date.
-          </Text>
-          <View style={styles.formGroup}>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              placeholderTextColor={COLORS.gray}
-              value={formData.firstName + " " + formData.lastName}
-              editable={false}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Address"
-              placeholderTextColor={COLORS.gray}
-              value={formData.address}
-              onChangeText={(text) => handleChange("address", text)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="City"
-              placeholderTextColor={COLORS.gray}
-              value={formData.city}
-              onChangeText={(text) => handleChange("city", text)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Postal Code"
-              placeholderTextColor={COLORS.gray}
-              value={formData.postalCode}
-              onChangeText={(text) => handleChange("postalCode", text)}
-            />
-          </View>
-        </View>
-        {/* Notifications Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Notifications</Text>
-          {/* Document Reminders */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Reminders</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("documentReminders")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.documentReminders && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.documentReminders && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
+          {/* Email Notifications Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Email</Text>
+            <Text style={styles.cardSubtitle}>
+              Manage what emails you receive from us
+            </Text>
 
-          {/* Document Approvals */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Updates</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("documentApprovals")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.documentApprovals && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.documentApprovals && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Status Updates */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Status Updates</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("statusUpdates")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.statusUpdates && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.statusUpdates && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Marketing Notifications */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Marketing Notifications</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("marketingNotifications")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.marketingNotifications &&
-                  styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.marketingNotifications &&
-                    styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* Email Notifications Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Email</Text>
-          <Text style={styles.cardSubtitle}>
-            Manage what emails you receive from us
-          </Text>
-
-          {/* Terms of Service Updates */}
-          {/* <View style={styles.switchRow}>
+            {/* Terms of Service Updates */}
+            {/* <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Terms of Service Updates</Text>
             <TouchableOpacity
               onPress={() => toggleNotificationPref("termsOfServiceEmails")}
@@ -698,304 +707,314 @@ export default function ClientProfile({ onClose }) {
             </TouchableOpacity>
           </View> */}
 
-          {/* Document Reminders */}
+            {/* Document Reminders */}
 
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Reminders</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("documentReminderEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.documentReminderEmails &&
-                  styles.toggleSwitchOn,
-              ]}
-            >
-              <View
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Document Reminders</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("documentReminderEmails")}
                 style={[
-                  styles.toggleThumb,
+                  styles.toggleSwitch,
                   notificationPrefs.documentReminderEmails &&
-                    styles.toggleThumbOn,
+                    styles.toggleSwitchOn,
                 ]}
-              />
-            </TouchableOpacity>
-          </View>
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.documentReminderEmails &&
+                      styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
 
-          {/* Document Approvals */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Document Updates</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("documentApprovalEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.documentApprovalEmails &&
-                  styles.toggleSwitchOn,
-              ]}
-            >
-              <View
+            {/* Document Approvals */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Document Updates</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("documentApprovalEmails")}
                 style={[
-                  styles.toggleThumb,
+                  styles.toggleSwitch,
                   notificationPrefs.documentApprovalEmails &&
-                    styles.toggleThumbOn,
+                    styles.toggleSwitchOn,
                 ]}
-              />
-            </TouchableOpacity>
-          </View>
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.documentApprovalEmails &&
+                      styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
 
-          {/* Status Updates */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Status Updates</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("statusUpdateEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.statusUpdateEmails && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
+            {/* Status Updates */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Status Updates</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("statusUpdateEmails")}
                 style={[
-                  styles.toggleThumb,
-                  notificationPrefs.statusUpdateEmails && styles.toggleThumbOn,
+                  styles.toggleSwitch,
+                  notificationPrefs.statusUpdateEmails && styles.toggleSwitchOn,
                 ]}
-              />
-            </TouchableOpacity>
-          </View>
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.statusUpdateEmails &&
+                      styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
 
-          {/* Marketing Emails */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Marketing Emails</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("marketingEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.marketingEmails && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
+            {/* Marketing Emails */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Marketing Emails</Text>
+              <TouchableOpacity
+                onPress={() => toggleNotificationPref("marketingEmails")}
                 style={[
-                  styles.toggleThumb,
-                  notificationPrefs.marketingEmails && styles.toggleThumbOn,
+                  styles.toggleSwitch,
+                  notificationPrefs.marketingEmails && styles.toggleSwitchOn,
                 ]}
-              />
-            </TouchableOpacity>
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    notificationPrefs.marketingEmails && styles.toggleThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        {/* Buttons */}
-        <View style={styles.buttonContainer}>
-          {/* <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+          {/* Buttons */}
+          <View style={styles.buttonContainer}>
+            {/* <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </TouchableOpacity> */}
-          <TouchableOpacity
-            style={styles.passwordButton}
-            onPress={() => setShowPasswordModal(true)}
-          >
-            <Text style={styles.passwordButtonText}>Change Password</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      {/* Email Change Modal */}
-      <Modal visible={showEmailModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {emailChangeStep === 1
-                  ? "Change Email Address"
-                  : emailChangeStep === 2
-                  ? "Verify Your Email"
-                  : "Email Updated!"}
-              </Text>
-              {!emailChangeSuccess && (
-                <TouchableOpacity
-                  onPress={handleEmailModalClose}
-                  style={styles.modalCloseButton}
-                >
-                  <Text style={styles.modalCloseText}>×</Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.passwordButton}
+              onPress={() => setShowPasswordModal(true)}
+            >
+              <Text style={styles.passwordButtonText}>Change Password</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+        {/* Email Change Modal */}
+        <Modal visible={showEmailModal} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {emailChangeStep === 1
+                    ? "Change Email Address"
+                    : emailChangeStep === 2
+                    ? "Verify Your Email"
+                    : "Email Updated!"}
+                </Text>
+                {!emailChangeSuccess && (
+                  <TouchableOpacity
+                    onPress={handleEmailModalClose}
+                    style={styles.modalCloseButton}
+                  >
+                    <Text style={styles.modalCloseText}>×</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              {/* Error Message */}
+              {emailError ? (
+                <Text style={styles.errorMessage}>{emailError}</Text>
+              ) : null}
+              {/* Step 1: Enter New Email */}
+              {emailChangeStep === 1 && (
+                <>
+                  <Text style={styles.modalSubtitle}>
+                    Enter your new email address below. We'll send a
+                    verification code to this address.
+                  </Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="New Email Address"
+                    placeholderTextColor={COLORS.gray}
+                    keyboardType="email-address"
+                    value={newEmail}
+                    onChangeText={(text) => setNewEmail(text)}
+                    autoCapitalize="none"
+                    autoFocus={true}
+                  />
+                  <TouchableOpacity
+                    style={styles.fullWidthButton}
+                    onPress={handleEmailSubmit}
+                  >
+                    <Text style={styles.buttonText}>Continue</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {/* Step 2: Enter OTP */}
+              {emailChangeStep === 2 && (
+                <>
+                  <Text style={styles.modalSubtitle}>
+                    We've sent a verification code to {newEmail}. Enter it below
+                    to verify your email address.
+                  </Text>
+                  <Text style={styles.pasteInstruction}>
+                    Paste your 6-digit code in the field - it will handle full
+                    codes automatically
+                  </Text>
+                  <TextInput
+                    ref={otpInputRef}
+                    style={styles.otpInput}
+                    placeholder="Enter verification code"
+                    placeholderTextColor={COLORS.gray}
+                    keyboardType="numeric"
+                    value={emailOtp}
+                    onChangeText={(text) => {
+                      // Handle paste operation for full codes
+                      if (text.length > 1) {
+                        // Extract only numeric characters and limit to 6 digits
+                        const pastedDigits = text
+                          .replace(/\D/g, "")
+                          .slice(0, 6);
+                        setEmailOtp(pastedDigits);
+                      } else {
+                        // Handle single character input
+                        setEmailOtp(text.replace(/\D/g, ""));
+                      }
+                    }}
+                    maxLength={6}
+                    selectTextOnFocus={true}
+                    onFocus={() => {
+                      // Select all text when focusing to make paste/editing easier
+                      if (emailOtp) {
+                        otpInputRef.current?.setSelection(0, emailOtp.length);
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.fullWidthButton}
+                    onPress={handleOtpSubmit}
+                  >
+                    <Text style={styles.buttonText}>Verify Email</Text>
+                  </TouchableOpacity>
+                  {/* Resend button with countdown */}
+                  <TouchableOpacity
+                    style={[
+                      styles.resendButton,
+                      countdown > 0 && styles.resendButtonDisabled,
+                    ]}
+                    onPress={handleResendOtp}
+                    disabled={countdown > 0}
+                  >
+                    <Text
+                      style={[
+                        styles.resendButtonText,
+                        countdown > 0 && styles.resendButtonTextDisabled,
+                      ]}
+                    >
+                      {countdown > 0
+                        ? `Resend code in ${countdown} seconds`
+                        : "Resend verification code"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {/* Step 3: Success */}
+              {emailChangeStep === 3 && (
+                <View style={styles.successContainer}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={60}
+                    color={COLORS.green}
+                  />
+                  <Text style={styles.successText}>
+                    Email successfully updated!
+                  </Text>
+                </View>
               )}
             </View>
-            {/* Error Message */}
-            {emailError ? (
-              <Text style={styles.errorMessage}>{emailError}</Text>
-            ) : null}
-            {/* Step 1: Enter New Email */}
-            {emailChangeStep === 1 && (
-              <>
-                <Text style={styles.modalSubtitle}>
-                  Enter your new email address below. We'll send a verification
-                  code to this address.
-                </Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="New Email Address"
-                  placeholderTextColor={COLORS.gray}
-                  keyboardType="email-address"
-                  value={newEmail}
-                  onChangeText={(text) => setNewEmail(text)}
-                  autoCapitalize="none"
-                  autoFocus={true}
-                />
+          </View>
+        </Modal>
+        {/* Password Modal */}
+        <Modal visible={showPasswordModal} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Change Password</Text>
+              {error ? <Text style={styles.errorMessage}>{error}</Text> : null}
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Current Password"
+                placeholderTextColor={COLORS.gray}
+                secureTextEntry
+                value={passwordData.oldPassword}
+                onChangeText={(text) =>
+                  handlePasswordInputChange("oldPassword", text)
+                }
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="New Password"
+                placeholderTextColor={COLORS.gray}
+                secureTextEntry
+                value={passwordData.newPassword}
+                onChangeText={(text) =>
+                  handlePasswordInputChange("newPassword", text)
+                }
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Confirm New Password"
+                placeholderTextColor={COLORS.gray}
+                secureTextEntry
+                value={passwordData.confirmPassword}
+                onChangeText={(text) =>
+                  handlePasswordInputChange("confirmPassword", text)
+                }
+              />
+              <View style={styles.modalButtonRow}>
                 <TouchableOpacity
-                  style={styles.fullWidthButton}
-                  onPress={handleEmailSubmit}
+                  style={styles.modalButton}
+                  onPress={handlePasswordSubmit}
                 >
-                  <Text style={styles.buttonText}>Continue</Text>
+                  <Text style={styles.modalButtonText}>Update Password</Text>
                 </TouchableOpacity>
-              </>
-            )}
-            {/* Step 2: Enter OTP */}
-            {emailChangeStep === 2 && (
-              <>
-                <Text style={styles.modalSubtitle}>
-                  We've sent a verification code to {newEmail}. Enter it below
-                  to verify your email address.
-                </Text>
-                <Text style={styles.pasteInstruction}>
-                  Paste your 6-digit code in the field - it will handle full
-                  codes automatically
-                </Text>
-                <TextInput
-                  ref={otpInputRef}
-                  style={styles.otpInput}
-                  placeholder="Enter verification code"
-                  placeholderTextColor={COLORS.gray}
-                  keyboardType="numeric"
-                  value={emailOtp}
-                  onChangeText={(text) => {
-                    // Handle paste operation for full codes
-                    if (text.length > 1) {
-                      // Extract only numeric characters and limit to 6 digits
-                      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
-                      setEmailOtp(pastedDigits);
-                    } else {
-                      // Handle single character input
-                      setEmailOtp(text.replace(/\D/g, ""));
-                    }
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
+                  onPress={() => {
+                    setShowPasswordModal(false);
+                    setError("");
+                    setPasswordData({
+                      oldPassword: "",
+                      newPassword: "",
+                      confirmPassword: "",
+                    });
                   }}
-                  maxLength={6}
-                  selectTextOnFocus={true}
-                  onFocus={() => {
-                    // Select all text when focusing to make paste/editing easier
-                    if (emailOtp) {
-                      otpInputRef.current?.setSelection(0, emailOtp.length);
-                    }
-                  }}
-                />
-                <TouchableOpacity
-                  style={styles.fullWidthButton}
-                  onPress={handleOtpSubmit}
                 >
-                  <Text style={styles.buttonText}>Verify Email</Text>
+                  <Text style={styles.modalButtonText}>Cancel</Text>
                 </TouchableOpacity>
-                {/* Resend button with countdown */}
-                <TouchableOpacity
-                  style={[
-                    styles.resendButton,
-                    countdown > 0 && styles.resendButtonDisabled,
-                  ]}
-                  onPress={handleResendOtp}
-                  disabled={countdown > 0}
-                >
-                  <Text
-                    style={[
-                      styles.resendButtonText,
-                      countdown > 0 && styles.resendButtonTextDisabled,
-                    ]}
-                  >
-                    {countdown > 0
-                      ? `Resend code in ${countdown} seconds`
-                      : "Resend verification code"}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {/* Step 3: Success */}
-            {emailChangeStep === 3 && (
-              <View style={styles.successContainer}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={60}
-                  color={COLORS.green}
-                />
-                <Text style={styles.successText}>
-                  Email successfully updated!
-                </Text>
               </View>
-            )}
-          </View>
-        </View>
-      </Modal>
-      {/* Password Modal */}
-      <Modal visible={showPasswordModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Change Password</Text>
-            {error ? <Text style={styles.errorMessage}>{error}</Text> : null}
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Current Password"
-              placeholderTextColor={COLORS.gray}
-              secureTextEntry
-              value={passwordData.oldPassword}
-              onChangeText={(text) =>
-                handlePasswordInputChange("oldPassword", text)
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="New Password"
-              placeholderTextColor={COLORS.gray}
-              secureTextEntry
-              value={passwordData.newPassword}
-              onChangeText={(text) =>
-                handlePasswordInputChange("newPassword", text)
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Confirm New Password"
-              placeholderTextColor={COLORS.gray}
-              secureTextEntry
-              value={passwordData.confirmPassword}
-              onChangeText={(text) =>
-                handlePasswordInputChange("confirmPassword", text)
-              }
-            />
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handlePasswordSubmit}
-              >
-                <Text style={styles.modalButtonText}>Update Password</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
-                onPress={() => {
-                  setShowPasswordModal(false);
-                  setError("");
-                  setPasswordData({
-                    oldPassword: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                  });
-                }}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
+              {/* Logout Button */}
             </View>
-            {/* Logout Button */}
           </View>
-        </View>
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    </View>
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -1066,7 +1085,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     marginTop: 160 /* Add padding to account for the avatar container height */,
-    paddingBottom: 48,
+    paddingBottom: 160,
     zIndex: 10,
     backgroundColor: COLORS.background,
   },
