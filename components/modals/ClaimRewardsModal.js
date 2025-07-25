@@ -251,7 +251,7 @@ const ClaimRewardsModal = ({
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === "ios" ? -35 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? -50 : -45}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.addressModal}>

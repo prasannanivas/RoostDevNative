@@ -925,9 +925,9 @@ export default function RealtorProfile({ onClose }) {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : undefined}
     >
       {/* Success notification */}
       {saveSuccess && (
@@ -1677,7 +1677,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     marginTop: 63 /* Add padding to account for the avatar container height */,
-    paddingBottom: 48,
+    paddingBottom: 120,
     zIndex: 10,
     backgroundColor: COLORS.background,
   },

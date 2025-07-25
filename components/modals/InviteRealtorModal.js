@@ -301,6 +301,8 @@ Looking forward to working with you!`;
             <TextInput
               style={styles.input}
               keyboardType="phone-pad"
+              returnKeyType="done"
+              returnKeyLabel="close"
               value={inviteData.phone}
               onChangeText={(t) =>
                 setInviteData((prev) => ({
