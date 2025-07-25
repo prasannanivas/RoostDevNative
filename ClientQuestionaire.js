@@ -5,7 +5,11 @@ import Questionnaire from "./components/questionnaire/Questionnaire";
 import { Modal, View, Text, StyleSheet } from "react-native";
 import FigmaButton from "./components/common/FigmaButton";
 
-export default function ClientQuestionaire({ navigation, questionnaireData }) {
+export default function ClientQuestionaire({
+  navigation,
+  questionnaireData,
+  showCloseButton = true,
+}) {
   const [showPreview, setShowPreview] = useState(true);
 
   return (
@@ -35,6 +39,7 @@ export default function ClientQuestionaire({ navigation, questionnaireData }) {
         <Questionnaire
           navigation={navigation}
           questionnaireData={questionnaireData}
+          showCloseButton={showCloseButton}
         />
       )}
     </QuestionnaireProvider>
