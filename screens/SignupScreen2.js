@@ -289,7 +289,7 @@ const SignUpDetailsScreen = React.forwardRef(
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardContainer}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
         >
           <Logo
             width={120}

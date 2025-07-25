@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import Svg, {
   Rect,
@@ -246,38 +248,44 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
     formData[question.initialField.key] === "yes";
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.formContainer}>
-        {/* Initial toggle field */}
-        <View style={styles.fieldContainer}>
-          <View style={styles.toggleGroup}>
-            <CustomToggleButton
-              options={question.initialField.options}
-              value={formData[question.initialField.key]}
-              onValueChange={handleInitialFieldChange}
-            />
-          </View>
-        </View>
-
-        {/* Conditional items section */}
-        {shouldShowConditionalFields && (
-          <View style={styles.conditionalSection}>
-            {items.map((item, index) => renderItem(item, index))}
-
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                onPress={addAnotherItem}
-                style={styles.addButton}
-              >
-                <Text style={styles.addButtonText}>
-                  {question.addButtonText || "Add Another"}
-                </Text>
-              </TouchableOpacity>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "position" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 200 : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.formContainer}>
+          {/* Initial toggle field */}
+          <View style={styles.fieldContainer}>
+            <View style={styles.toggleGroup}>
+              <CustomToggleButton
+                options={question.initialField.options}
+                value={formData[question.initialField.key]}
+                onValueChange={handleInitialFieldChange}
+              />
             </View>
           </View>
-        )}
-      </View>
-    </ScrollView>
+
+          {/* Conditional items section */}
+          {shouldShowConditionalFields && (
+            <View style={styles.conditionalSection}>
+              {items.map((item, index) => renderItem(item, index))}
+
+              <View style={styles.actionButtons}>
+                <TouchableOpacity
+                  onPress={addAnotherItem}
+                  style={styles.addButton}
+                >
+                  <Text style={styles.addButtonText}>
+                    {question.addButtonText || "Add Another"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
