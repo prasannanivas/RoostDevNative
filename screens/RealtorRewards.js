@@ -506,7 +506,10 @@ export default function RealtorRewards({
               <TextInput
                 style={styles.cashOutValueInput}
                 keyboardType="numeric"
-                value={"$" + (currentPoints * POINTS_TO_DOLLARS).toFixed(2)}
+                value={Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }).format(currentPoints * POINTS_TO_DOLLARS)}
                 editable={false}
               />
             </View>

@@ -50,7 +50,12 @@ const CashoutModal = ({
           <Text style={styles.title}>Cashout</Text>
           <Text style={styles.pointsText}>
             <Text style={styles.points}>{points} pts</Text> ={" "}
-            <Text style={styles.dollars}>${points}</Text>
+            <Text style={styles.dollars}>
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+              }).format(points)}
+            </Text>
           </Text>
           {!showAddressConfirm ? (
             <>

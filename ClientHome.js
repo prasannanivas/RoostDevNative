@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "90%",
     bottom: 24,
-    zIndex: 1000, // Ensure it appears above other content
+    zIndex: 66, // Ensure it appears above other content
   },
   questionnaireButton: {
     backgroundColor: COLORS.green,
