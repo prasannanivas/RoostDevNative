@@ -46,6 +46,8 @@ import InviteRealtorModal from "./components/modals/InviteRealtorModal";
 import RealtorProfile from "./screens/RealtorProfile.js";
 import RealtorRewards from "./screens/RealtorRewards.js";
 import CSVUploadForm from "./screens/AddProfilePic";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 
 // Design System Colors
 const COLORS = {
@@ -70,12 +72,20 @@ const RealtorHome = () => {
   const realtorFromContext = useRealtor();
 
   const invited = realtorFromContext?.invitedClients || [];
+  const completedReferrals =
+    realtorFromContext?.completedReferrals?.completedInvites || [];
 
-  console.log("Realtor Home invited clients:", invited);
+  console.log(
+    "Realtor Home invited clients:",
+    invited,
+    "completed referrals:",
+    completedReferrals
+  );
 
   const navigation = useNavigation();
   // Local state
   const [showForm, setShowForm] = useState(false);
+  const [loadingDownload, setLoadingDownload] = useState(false);
   const [showCSVUploadForm, setShowCSVUploadForm] = useState(false);
   const [isEmail, setIsEmail] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -199,6 +209,7 @@ const RealtorHome = () => {
   const [showInviteOptionsModal, setShowInviteOptionsModal] = useState(false);
   const [selectedClientCard, setSelectedClientCard] = useState(null);
   const [showClientCardModal, setShowClientCardModal] = useState(false); // Animation values - initial positions for different slide directions
+  const [showClientReferralModal, setShowClientReferralModal] = useState(false);
   // For left slide (profile), start at -1000 (off-screen to the left)
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
   // For right slide (rewards), start at 1000 (off-screen to the right)
@@ -206,11 +217,13 @@ const RealtorHome = () => {
   // For bottom slide (client card), start at 1000 (off-screen to the bottom)
   const bottomSlideAnim = useRef(new Animated.Value(1000)).current;
 
+  console.log("sss", selectedClientCard);
   // Track whether we're in the middle of animations
   const isAnimating = useRef({
     profile: false,
     rewards: false,
     clientCard: false,
+    clientReferral: false,
   }).current;
   // Animation functions
   const slideIn = (direction) => {
@@ -311,6 +324,14 @@ const RealtorHome = () => {
       slideOut("bottom");
     }
   }, [showClientCardModal]);
+
+  useEffect(() => {
+    if (showClientReferralModal) {
+      slideIn("bottom");
+    } else if (!isAnimating.clientReferral) {
+      slideOut("bottom");
+    }
+  }, [showClientReferralModal]);
 
   // Effect to fetch needed documents counts when invited clients change
   useEffect(() => {
@@ -487,6 +508,12 @@ const RealtorHome = () => {
     console.log("Selected client:", client);
     setSelectedClientCard(client);
     setShowClientCardModal(true);
+  };
+
+  const handleClientReferralClick = (client) => {
+    console.log("Selected client:", client);
+    setSelectedClientCard(client);
+    setShowClientReferralModal(true);
   };
 
   const handleProfileClick = () => {
@@ -1006,6 +1033,46 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               <Text style={styles.emptyStateText}>
                 Currently no mortgages have been completed.
               </Text>
+            </View>
+          )}
+
+          {completedReferrals.length > 0 && (
+            <View style={styles.completedReferralsContainer}>
+              <View style={[styles.clientsTitleContainer]}>
+                <Text style={styles.ActiveText}>COMPLETED - REFERRAL</Text>
+              </View>
+              {completedReferrals.map((client) => (
+                <TouchableOpacity
+                  key={client._id}
+                  style={styles.clientCard}
+                  onPress={() => handleClientReferralClick(client)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.initialsCircle}>
+                    <Text style={styles.initialsText}>
+                      {getInitials(client.name)}
+                    </Text>
+                  </View>
+                  <View style={styles.clientDetails}>
+                    <Text style={styles.clientName}>{client.name}</Text>
+                    <CompleteProgressBar
+                      text="COMPLETED"
+                      points={client?.completionDetails?.referralReward || ""}
+                      date={
+                        client?.completionDetails?.date
+                          ? new Date(
+                              client.completionDetails.date
+                            ).toLocaleDateString("en-US", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            })
+                          : ""
+                      }
+                    />
+                  </View>
+                </TouchableOpacity>
+              ))}
             </View>
           )}
         </ScrollView>
@@ -1594,6 +1661,141 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       <Text style={styles.viewDetailsButtonText}>
                         View Details
                       </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+
+      <Modal
+        visible={showClientReferralModal}
+        animationType="none"
+        transparent={true}
+      >
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            {
+              opacity: bottomSlideAnim.interpolate({
+                inputRange: [0, 1000],
+                outputRange: [1, 0],
+              }),
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.bottomSlideModal,
+              { transform: [{ translateY: bottomSlideAnim }] },
+            ]}
+          >
+            <View style={styles.clientCardModalContent}>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowClientReferralModal(false)}
+              >
+                <Ionicons name="close" size={24} color={COLORS.black} />
+              </TouchableOpacity>
+
+              {selectedClientCard && (
+                <View style={styles.clientCardDetails}>
+                  <View style={styles.clientCardHeader}>
+                    <View style={styles.initialsCircle}>
+                      <Text style={styles.initialsText}>
+                        {getInitials(selectedClientCard.name)}
+                      </Text>
+                    </View>
+                    <View style={styles.clientCardInfo}>
+                      <Text style={styles.clientCardName}>
+                        {selectedClientCard.name}
+                      </Text>
+                      {(() => {
+                        return (
+                          <CompleteProgressBar
+                            text="COMPLETED"
+                            points={
+                              selectedClientCard?.completionDetails
+                                ?.referralReward || ""
+                            }
+                            date={
+                              selectedClientCard?.completionDetails?.date
+                                ? new Date(
+                                    selectedClientCard.completionDetails.date
+                                  ).toLocaleDateString("en-US", {
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    year: "numeric",
+                                  })
+                                : ""
+                            }
+                          />
+                        );
+                      })()}
+                    </View>
+                  </View>
+                  <View style={styles.clientCardActions}>
+                    <TouchableOpacity
+                      style={[
+                        styles.viewDetailsButton,
+                        { backgroundColor: COLORS.blue, borderRadius: 33 },
+                      ]}
+                      onPress={async () => {
+                        setLoadingDownload(true);
+                        try {
+                          const response = await fetch(
+                            "http://159.203.58.60:5000/pdf/download-filled-pdf",
+                            {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                clientId: selectedClientCard?.id,
+                                type: "realtorRewardPdf",
+                              }),
+                            }
+                          );
+                          if (!response.ok)
+                            throw new Error("Failed to download PDF");
+                          const blob = await response.blob();
+                          const reader = new FileReader();
+                          reader.onloadend = async () => {
+                            try {
+                              const base64data = reader.result.split(",")[1];
+                              const fileUri =
+                                FileSystem.cacheDirectory + "referral.pdf";
+                              await FileSystem.writeAsStringAsync(
+                                fileUri,
+                                base64data,
+                                { encoding: FileSystem.EncodingType.Base64 }
+                              );
+                              if (await Sharing.isAvailableAsync()) {
+                                await Sharing.shareAsync(fileUri);
+                              }
+                              setLoadingDownload(false);
+                              setShowClientReferralModal(false);
+                            } catch (err) {
+                              console.log(err);
+                              setLoadingDownload(false);
+                            }
+                          };
+                          reader.readAsDataURL(blob);
+                        } catch (err) {
+                          console.log(err);
+                          setLoadingDownload(false);
+                        }
+                      }}
+                    >
+                      {loadingDownload ? (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                      ) : (
+                        <Text style={styles.viewDetailsButtonText}>
+                          DOWNLOAD REFERRAL
+                        </Text>
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>

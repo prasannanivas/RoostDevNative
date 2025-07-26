@@ -9,6 +9,7 @@ export const RealtorProvider = ({ children }) => {
   const [loadingRealtor, setLoadingRealtor] = useState(true);
   const [realtorInfo, setRealtorInfo] = useState(null);
   const [invited, setInvited] = useState([]);
+  const [completedReferrals, setCompletedReferrals] = useState([]);
   const [invitedClients, setInvitedClients] = useState([]);
   const [invitedRealtors, setInvitedRealtors] = useState([]);
   const fetchData = async () => {
@@ -58,6 +59,25 @@ export const RealtorProvider = ({ children }) => {
       } finally {
         setLoadingRealtor(false);
       }
+
+      try {
+        // Fetch completed referrals
+        const completedResponse = await fetch(
+          `http://159.203.58.60:5000/realtor/completedReferrals/${realtor.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const completedData = await completedResponse.json();
+        setCompletedReferrals(completedData);
+      } catch (error) {
+        console.error("Error fetching completed referrals:", error);
+      } finally {
+        setLoadingRealtor(false);
+      }
     }
   };
 
@@ -98,6 +118,7 @@ export const RealtorProvider = ({ children }) => {
         invited,
         invitedClients,
         invitedRealtors,
+        completedReferrals,
         loadingRealtor,
         realtorInfo,
         fetchLatestRealtor: fetchData,

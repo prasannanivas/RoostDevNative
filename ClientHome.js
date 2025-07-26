@@ -535,7 +535,7 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </ScrollView>
 
-      {renderQuestionnaireButton()}
+      {clientFromContext.status !== "Completed" && renderQuestionnaireButton()}
 
       {/* Profile Panel */}
       <ReactNativeModal
