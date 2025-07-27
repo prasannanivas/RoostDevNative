@@ -1643,7 +1643,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           clientId: selectedClientCard.inviteeId,
                           client: selectedClientCard,
                           statusText:
-                            selectedClientCard.status === "PENDING"
+                            selectedClientCard.clientStatus === "Completed"
+                              ? "Completed"
+                              : selectedClientCard.status === "PENDING"
                               ? "Client Invited"
                               : selectedClientCard.clientAddress === null
                               ? "Account Deleted"

@@ -8,12 +8,31 @@ import {
   StyleSheet,
   Linking,
   Alert,
+  Button,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import RequestDocumentModal from "./RequestDocumentModal.js"; // Ensure this is a React Native component
 import Toast from "react-native-toast-message"; // Make sure to set up this library if used
 import { generateInitialsFromFullName } from "../utils/initialsUtils";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+
+const COLORS = {
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070",
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+  blue: "#2271B1",
+  yellow: "#F0DE3A",
+  orange: "#F0913A",
+  red: "#A20E0E",
+  noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
+  coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
+};
 
 const ClientDetails = () => {
   const navigation = useNavigation();
@@ -28,6 +47,8 @@ const ClientDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loadingDownload, setLoadingDownload] = useState(false);
+  const [showClientReferralModal, setShowClientReferralModal] = useState(false);
 
   const fetchClientDetails = async () => {
     try {
@@ -340,6 +361,68 @@ const ClientDetails = () => {
             <Text style={styles.emptyState}>No documents submitted yet</Text>
           )}
         </View>
+
+        {statusText === "Completed" && (
+          <TouchableOpacity
+            style={[
+              styles.viewDetailsButton,
+              {
+                backgroundColor: COLORS.blue,
+                borderRadius: 33,
+              },
+            ]}
+            onPress={async () => {
+              setLoadingDownload(true);
+              try {
+                const response = await fetch(
+                  "http://159.203.58.60:5000/pdf/download-filled-pdf",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      clientId: clientId,
+                      type: "realtorRewardPdf",
+                    }),
+                  }
+                );
+                if (!response.ok) throw new Error("Failed to download PDF");
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                  try {
+                    const base64data = reader.result.split(",")[1];
+                    const fileUri = FileSystem.cacheDirectory + "referral.pdf";
+                    await FileSystem.writeAsStringAsync(fileUri, base64data, {
+                      encoding: FileSystem.EncodingType.Base64,
+                    });
+                    if (await Sharing.isAvailableAsync()) {
+                      await Sharing.shareAsync(fileUri);
+                    }
+                    setLoadingDownload(false);
+                    setShowClientReferralModal(false);
+                  } catch (err) {
+                    console.log(err);
+                    setLoadingDownload(false);
+                  }
+                };
+                reader.readAsDataURL(blob);
+              } catch (err) {
+                console.log(err);
+                setLoadingDownload(false);
+              }
+            }}
+          >
+            {loadingDownload ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text style={styles.viewDetailsButtonText}>
+                DOWNLOAD REFERRAL
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -373,6 +456,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#FFFFFF",
+    flex: 1,
   },
   clientHeader: {
     alignItems: "center",
@@ -422,6 +506,7 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     marginTop: 20,
+    flex: 1,
   },
   section: {
     marginBottom: 30,
@@ -605,6 +690,23 @@ const styles = StyleSheet.create({
   errorMessage: {
     backgroundColor: "#f8d7da",
     color: "#721c24",
+  },
+  viewDetailsButton: {
+    position: "absolute",
+    bottom: 30,
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    alignItems: "center",
+    alignSelf: "center",
+    width: "80%",
+  },
+  viewDetailsButtonText: {
+    color: COLORS.white,
+    fontSize: 16, // H3 size
+    fontWeight: "500", // H3 weight
+    fontFamily: "Futura",
   },
 });
 
