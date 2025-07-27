@@ -37,7 +37,8 @@ const COLORS = {
 const ClientDetails = () => {
   const navigation = useNavigation();
   // Get clientId from navigation route parameters
-  const { clientId, statusText } = useRoute().params;
+  const { clientId, statusText, inviteId } = useRoute().params;
+  console.log("Invite ID:", inviteId); // Debugging line to check inviteId
   const { auth } = useAuth();
   const { realtor } = auth;
   const realtorId = realtor.id; // Keep this line as it is the correct declaration
@@ -205,10 +206,11 @@ const ClientDetails = () => {
                         {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ clientId, realtorId }),
+                          body: JSON.stringify({ inviteId, realtorId }),
                         }
                       );
                       setLoading(false);
+                      console.log("Delete response:", response.json());
                       if (response.ok) {
                         Alert.alert("Success", "Client deleted successfully", [
                           {

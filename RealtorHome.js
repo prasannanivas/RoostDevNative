@@ -788,7 +788,16 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         />
       </View>
       {/* ================= INVITE REALTORS BANNER ================= */}
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.green]} // Android
+            tintColor={COLORS.green} // iOS
+          />
+        }
+      >
         <View style={styles.inviteBanner}>
           <TouchableOpacity
             style={styles.inviteRealtorsButton}
@@ -939,104 +948,108 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             })
           )}
 
-          <View style={[styles.clientsTitleContainer]}>
-            <Text style={styles.ActiveText}>COMPLETED</Text>
-          </View>
-
-          {completedClients.length > 0 ? (
-            <>
-              {completedClients.map((client) => {
-                const docCount = client.documents
-                  ? getDocumentCounts(client.documents)
-                  : { approved: 0, pending: 0 };
-
-                const totalNeeded =
-                  neededDocumentsCount[client.inviteeId] || 10;
-
-                const statusText =
-                  client?.clientStatus === "Completed"
-                    ? "Completed"
-                    : client.status === "PENDING"
-                    ? "Invited"
-                    : client.clientAddress === null
-                    ? "Account Deleted"
-                    : client.status === "ACCEPTED" &&
-                      (!client.documents ||
-                        client.documents.length === 0 ||
-                        client?.clientAddress !== null)
-                    ? "Signed Up"
-                    : client.status === "ACCEPTED" &&
-                      client.documents.length > 0
-                    ? `${docCount.approved}/${totalNeeded} Documents`
-                    : client.clientAddress === null
-                    ? "Account Deleted"
-                    : client.status;
-
-                return (
-                  <TouchableOpacity
-                    key={client.id}
-                    style={styles.clientCard}
-                    onPress={() => handleClientClick(client)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.initialsCircle}>
-                      <Text style={styles.initialsText}>
-                        {getInitials(client.referenceName)}
-                      </Text>
-                    </View>
-                    <View style={styles.clientDetails}>
-                      <Text style={styles.clientName}>
-                        {client.referenceName}
-                      </Text>
-                      {client.clientStatus === "Completed" ? (
-                        <CompleteProgressBar
-                          text="COMPLETED"
-                          points={client?.completionDetails?.realtorAward || ""}
-                          date={
-                            client?.completionDetails?.date
-                              ? new Date(
-                                  client.completionDetails.date
-                                ).toLocaleDateString("en-US", {
-                                  month: "2-digit",
-                                  day: "2-digit",
-                                  year: "numeric",
-                                })
-                              : ""
-                          }
-                        />
-                      ) : client.status === "ACCEPTED" &&
-                        client.documents &&
-                        client.documents.length > 0 ? (
-                        <MidProgressBar
-                          text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
-                          progress={(docCount.approved / totalNeeded) * 100}
-                          style={styles.statusProgressBar}
-                        />
-                      ) : (
-                        <EmptyProgressBar
-                          text={statusText.toUpperCase()}
-                          progress={
-                            client.status === "PENDING"
-                              ? 10
-                              : client.status === "ACCEPTED"
-                              ? 30
-                              : 50
-                          }
-                          style={styles.statusProgressBar}
-                        />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </>
-          ) : (
-            <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>
-                Currently no mortgages have been completed.
-              </Text>
+          <View style={styles.completedClientsContainer}>
+            <View style={[styles.clientsTitleContainer]}>
+              <Text style={styles.ActiveText}>COMPLETED</Text>
             </View>
-          )}
+
+            {completedClients.length > 0 ? (
+              <>
+                {completedClients.map((client) => {
+                  const docCount = client.documents
+                    ? getDocumentCounts(client.documents)
+                    : { approved: 0, pending: 0 };
+
+                  const totalNeeded =
+                    neededDocumentsCount[client.inviteeId] || 10;
+
+                  const statusText =
+                    client?.clientStatus === "Completed"
+                      ? "Completed"
+                      : client.status === "PENDING"
+                      ? "Invited"
+                      : client.clientAddress === null
+                      ? "Account Deleted"
+                      : client.status === "ACCEPTED" &&
+                        (!client.documents ||
+                          client.documents.length === 0 ||
+                          client?.clientAddress !== null)
+                      ? "Signed Up"
+                      : client.status === "ACCEPTED" &&
+                        client.documents.length > 0
+                      ? `${docCount.approved}/${totalNeeded} Documents`
+                      : client.clientAddress === null
+                      ? "Account Deleted"
+                      : client.status;
+
+                  return (
+                    <TouchableOpacity
+                      key={client.id}
+                      style={styles.clientCard}
+                      onPress={() => handleClientClick(client)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.initialsCircle}>
+                        <Text style={styles.initialsText}>
+                          {getInitials(client.referenceName)}
+                        </Text>
+                      </View>
+                      <View style={styles.clientDetails}>
+                        <Text style={styles.clientName}>
+                          {client.referenceName}
+                        </Text>
+                        {client.clientStatus === "Completed" ? (
+                          <CompleteProgressBar
+                            text="COMPLETED"
+                            points={
+                              client?.completionDetails?.realtorAward || ""
+                            }
+                            date={
+                              client?.completionDetails?.date
+                                ? new Date(
+                                    client.completionDetails.date
+                                  ).toLocaleDateString("en-US", {
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    year: "numeric",
+                                  })
+                                : ""
+                            }
+                          />
+                        ) : client.status === "ACCEPTED" &&
+                          client.documents &&
+                          client.documents.length > 0 ? (
+                          <MidProgressBar
+                            text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
+                            progress={(docCount.approved / totalNeeded) * 100}
+                            style={styles.statusProgressBar}
+                          />
+                        ) : (
+                          <EmptyProgressBar
+                            text={statusText.toUpperCase()}
+                            progress={
+                              client.status === "PENDING"
+                                ? 10
+                                : client.status === "ACCEPTED"
+                                ? 30
+                                : 50
+                            }
+                            style={styles.statusProgressBar}
+                          />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </>
+            ) : (
+              <View style={styles.emptyStateContainer}>
+                <Text style={styles.emptyStateText}>
+                  Currently no mortgages have been completed.
+                </Text>
+              </View>
+            )}
+          </View>
 
           {completedReferrals.length > 0 && (
             <View style={styles.completedReferralsContainer}>
@@ -1644,6 +1657,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         navigation.navigate("ClientDetails", {
                           clientId: selectedClientCard.inviteeId,
                           client: selectedClientCard,
+                          inviteId: selectedClientCard.inviteId,
                           statusText:
                             selectedClientCard.clientStatus === "Completed"
                               ? "Completed"
