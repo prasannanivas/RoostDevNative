@@ -85,6 +85,8 @@ const RealtorHome = () => {
   const navigation = useNavigation();
   // Local state
   const [showForm, setShowForm] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+
   const [loadingDownload, setLoadingDownload] = useState(false);
   const [showCSVUploadForm, setShowCSVUploadForm] = useState(false);
   const [isEmail, setIsEmail] = useState(true);
@@ -880,7 +882,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
               return (
                 <TouchableOpacity
-                  key={client._id}
+                  key={client.id}
                   style={styles.clientCard}
                   onPress={() => handleClientClick(client)}
                   activeOpacity={0.8}
@@ -972,7 +974,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
                 return (
                   <TouchableOpacity
-                    key={client._id}
+                    key={client.id}
                     style={styles.clientCard}
                     onPress={() => handleClientClick(client)}
                     activeOpacity={0.8}
@@ -1043,7 +1045,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               </View>
               {completedReferrals.map((client) => (
                 <TouchableOpacity
-                  key={client._id}
+                  key={client.id}
                   style={styles.clientCard}
                   onPress={() => handleClientReferralClick(client)}
                   activeOpacity={0.8}
@@ -1746,45 +1748,75 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       ]}
                       onPress={async () => {
                         setLoadingDownload(true);
+                        setDownloadProgress(0);
                         try {
-                          const response = await fetch(
+                          // Use XMLHttpRequest for progress
+                          const xhr = new XMLHttpRequest();
+                          xhr.open(
+                            "POST",
                             "http://159.203.58.60:5000/pdf/download-filled-pdf",
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                              },
-                              body: JSON.stringify({
-                                clientId: selectedClientCard?.id,
-                                type: "realtorRewardPdf",
-                              }),
-                            }
+                            true
                           );
-                          if (!response.ok)
-                            throw new Error("Failed to download PDF");
-                          const blob = await response.blob();
-                          const reader = new FileReader();
-                          reader.onloadend = async () => {
-                            try {
-                              const base64data = reader.result.split(",")[1];
-                              const fileUri =
-                                FileSystem.cacheDirectory + "referral.pdf";
-                              await FileSystem.writeAsStringAsync(
-                                fileUri,
-                                base64data,
-                                { encoding: FileSystem.EncodingType.Base64 }
+                          xhr.setRequestHeader(
+                            "Content-Type",
+                            "application/json"
+                          );
+                          xhr.responseType = "blob";
+                          xhr.onprogress = (event) => {
+                            if (event.lengthComputable) {
+                              setDownloadProgress(
+                                Math.round((event.loaded / event.total) * 100)
                               );
-                              if (await Sharing.isAvailableAsync()) {
-                                await Sharing.shareAsync(fileUri);
+                            }
+                          };
+                          xhr.onload = async function () {
+                            if (xhr.status === 200) {
+                              try {
+                                const blob = xhr.response;
+                                const reader = new FileReader();
+                                reader.onloadend = async () => {
+                                  try {
+                                    const base64data =
+                                      reader.result.split(",")[1];
+                                    const fileUri =
+                                      FileSystem.cacheDirectory +
+                                      "referral.pdf";
+                                    await FileSystem.writeAsStringAsync(
+                                      fileUri,
+                                      base64data,
+                                      {
+                                        encoding:
+                                          FileSystem.EncodingType.Base64,
+                                      }
+                                    );
+                                    if (await Sharing.isAvailableAsync()) {
+                                      await Sharing.shareAsync(fileUri);
+                                    }
+                                    setLoadingDownload(false);
+                                    setShowClientReferralModal(false);
+                                  } catch (err) {
+                                    console.log(err);
+                                    setLoadingDownload(false);
+                                  }
+                                };
+                                reader.readAsDataURL(blob);
+                              } catch (err) {
+                                console.log(err);
+                                setLoadingDownload(false);
                               }
-                              setLoadingDownload(false);
-                              setShowClientReferralModal(false);
-                            } catch (err) {
-                              console.log(err);
+                            } else {
                               setLoadingDownload(false);
                             }
                           };
-                          reader.readAsDataURL(blob);
+                          xhr.onerror = function () {
+                            setLoadingDownload(false);
+                          };
+                          xhr.send(
+                            JSON.stringify({
+                              clientId: selectedClientCard?.id,
+                              type: "realtorRewardPdf",
+                            })
+                          );
                         } catch (err) {
                           console.log(err);
                           setLoadingDownload(false);
@@ -1792,7 +1824,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       }}
                     >
                       {loadingDownload ? (
-                        <ActivityIndicator size="small" color={COLORS.white} />
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          <ActivityIndicator
+                            size="small"
+                            color={COLORS.white}
+                          />
+                          <Text
+                            style={[
+                              styles.viewDetailsButtonText,
+                              { marginLeft: 10 },
+                            ]}
+                          >
+                            {`Downloading... ${downloadProgress}%`}
+                          </Text>
+                        </View>
                       ) : (
                         <Text style={styles.viewDetailsButtonText}>
                           DOWNLOAD REFERRAL
