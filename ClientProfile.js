@@ -20,6 +20,10 @@ import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
 import Ionicons from "react-native-vector-icons/Ionicons"; // Import Ionicons
 import Svg, { Circle, Path } from "react-native-svg";
+import {
+  formatPhoneNumber,
+  unFormatPhoneNumber,
+} from "./utils/phoneFormatUtils";
 
 // Design System Colors
 const COLORS = {
@@ -540,8 +544,10 @@ export default function ClientProfile({ onClose }) {
                 placeholder="Phone Number"
                 placeholderTextColor={COLORS.gray}
                 keyboardType="phone-pad"
-                value={formData.phone}
-                onChangeText={(text) => handleChange("phone", text)}
+                value={formatPhoneNumber(formData.phone)}
+                onChangeText={(text) =>
+                  handleChange("phone", unFormatPhoneNumber(text))
+                }
               />
               {/* Email with Change Button */}
               <View style={styles.emailContainer}>

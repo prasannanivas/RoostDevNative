@@ -16,6 +16,10 @@ import {
   MaterialIcons,
   Entypo,
 } from "@expo/vector-icons";
+import {
+  formatPhoneNumber,
+  unFormatPhoneNumber,
+} from "../../utils/phoneFormatUtils";
 
 const COLORS = {
   primary: "#377473", // Updated to green color as specified
@@ -58,8 +62,16 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     setShowContactOptions(false);
 
     // Validate that either email or phone is provided
-    if (!inviteData.email && !inviteData.phone) {
-      setInviteFeedback({ msg: "Phone or Email required", type: "error" });
+    if (
+      (!inviteData.email && !inviteData.phone) ||
+      inviteData.firstName.trim() === ""
+    ) {
+      setInviteFeedback({
+        msg: `${
+          inviteData.firstName.trim() === "" ? "First Name &" : ""
+        } Phone or Email required`,
+        type: "error",
+      });
       setInviteLoading(false);
       return;
     }
@@ -255,12 +267,13 @@ Looking forward to working with you!`;
             <TextInput
               style={styles.input}
               value={inviteData.firstName}
-              onChangeText={(t) =>
+              onChangeText={(t) => {
+                setInviteFeedback({ msg: "", type: "" });
                 setInviteData((prev) => ({
                   ...prev,
                   firstName: t,
-                }))
-              }
+                }));
+              }}
               placeholder="First Name"
               placeholderTextColor="#999"
             />
@@ -270,12 +283,13 @@ Looking forward to working with you!`;
             <TextInput
               style={styles.input}
               value={inviteData.lastName}
-              onChangeText={(t) =>
+              onChangeText={(t) => {
+                setInviteFeedback({ msg: "", type: "" });
                 setInviteData((prev) => ({
                   ...prev,
                   lastName: t,
-                }))
-              }
+                }));
+              }}
               placeholder="Last Name"
               placeholderTextColor="#999"
             />
@@ -303,11 +317,11 @@ Looking forward to working with you!`;
               keyboardType="phone-pad"
               returnKeyType="done"
               returnKeyLabel="close"
-              value={inviteData.phone}
+              value={formatPhoneNumber(inviteData.phone)}
               onChangeText={(t) =>
                 setInviteData((prev) => ({
                   ...prev,
-                  phone: t,
+                  phone: unFormatPhoneNumber(t),
                 }))
               }
               placeholder="Phone"

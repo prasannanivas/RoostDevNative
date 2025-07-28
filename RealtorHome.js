@@ -66,6 +66,11 @@ const COLORS = {
   coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
 };
 
+import {
+  formatPhoneNumber,
+  unFormatPhoneNumber,
+} from "./utils/phoneFormatUtils";
+
 const RealtorHome = () => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
@@ -199,6 +204,7 @@ const RealtorHome = () => {
   const emailInputRef = useRef();
   const phoneInputRef = useRef();
   const [showRewards, setShowRewards] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [feedback, setFeedback] = useState({ msg: "", type: "" });
   const [showProfile, setShowProfile] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
@@ -354,6 +360,23 @@ const RealtorHome = () => {
   const handleInviteClient = async () => {
     setIsLoading(true);
     setFeedback({ message: "", type: "" });
+
+    // Validation
+    let hasError = false;
+    let newFieldErrors = {};
+    if (!formData.firstName || formData.firstName.trim() === "") {
+      newFieldErrors.firstName = "First name is required.";
+      hasError = true;
+    }
+    if (!formData.email && !formData.phone) {
+      newFieldErrors.emailPhone = "Email or phone is required.";
+      hasError = true;
+    }
+    setFieldErrors(newFieldErrors);
+    if (hasError) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // Combine firstName and lastName into referenceName
@@ -1332,9 +1355,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       placeholder="First Name"
                       placeholderTextColor={COLORS.gray}
                       value={formData.firstName}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, firstName: text })
-                      }
+                      onChangeText={(text) => {
+                        setFormData({ ...formData, firstName: text });
+                        if (fieldErrors.firstName)
+                          setFieldErrors({
+                            ...fieldErrors,
+                            firstName: "",
+                          });
+                      }}
                       returnKeyType="next"
                       blurOnSubmit={false}
                       onSubmitEditing={() => lastNameInputRef.current?.focus()}
@@ -1359,9 +1387,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       placeholderTextColor={COLORS.gray}
                       keyboardType="email-address"
                       value={formData.email}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, email: text })
-                      }
+                      onChangeText={(text) => {
+                        setFormData({ ...formData, email: text });
+                        if (fieldErrors.emailPhone)
+                          setFieldErrors({
+                            ...fieldErrors,
+                            emailPhone: "",
+                          });
+                      }}
                       returnKeyType="next"
                       blurOnSubmit={false}
                       onSubmitEditing={() => phoneInputRef.current?.focus()}
@@ -1372,13 +1405,58 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       placeholder="Phone"
                       placeholderTextColor={COLORS.gray}
                       keyboardType="phone-pad"
-                      value={formData.phone}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, phone: text })
-                      }
+                      value={formatPhoneNumber(formData.phone)}
+                      onChangeText={(text) => {
+                        // Only allow digits, max 10
+
+                        setFormData({
+                          ...formData,
+                          phone: unFormatPhoneNumber(text),
+                        });
+                        if (fieldErrors.emailPhone)
+                          setFieldErrors({
+                            ...fieldErrors,
+                            emailPhone: "",
+                          });
+                      }}
+                      maxLength={14} // (xxx)-xxx-xxxx is 14 chars
                       returnKeyType="done"
                       onSubmitEditing={Keyboard.dismiss}
                     />
+
+                    {(fieldErrors.emailPhone || fieldErrors.firstName) && (
+                      <View
+                        style={{
+                          fontSize: 13,
+                        }}
+                      >
+                        {fieldErrors.emailPhone && (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              color: COLORS.red,
+                              marginBottom: 4,
+                              marginLeft: 4,
+                            }}
+                          >
+                            * {fieldErrors.emailPhone}
+                          </Text>
+                        )}
+                        {fieldErrors.firstName && (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              color: COLORS.red,
+                              marginBottom: 4,
+                              marginLeft: 4,
+                            }}
+                          >
+                            * {fieldErrors.firstName}
+                          </Text>
+                        )}
+                      </View>
+                    )}
+
                     {/* Send invite button */}
                     <TouchableOpacity
                       style={styles.sendInviteButton}

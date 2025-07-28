@@ -22,6 +22,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Circle, Path } from "react-native-svg";
+import { formatPhoneNumber } from "../utils/phoneFormatUtils";
 
 // Design System Colors
 const COLORS = {
@@ -1060,7 +1061,7 @@ export default function RealtorProfile({ onClose }) {
           <View style={styles.formGroup}>
             <TextInput
               style={[styles.input, { backgroundColor: COLORS.silver }]}
-              value={formData.phone}
+              value={formatPhoneNumber(formData.phone)}
               editable={false}
               placeholder="Phone"
             />
