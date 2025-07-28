@@ -363,10 +363,12 @@ const RealtorHome = () => {
 
       const payload = {
         referenceName: fullName, // Use combined name
-        phone: isEmail ? "" : formData.phone,
-        email: isEmail ? formData.email : "",
+        phone: formData.phone,
+        email: formData.email,
         type: "Client",
       };
+
+      console.log("Sending invite for:", payload);
 
       const response = await fetch(
         `http://159.203.58.60:5000/realtor/${realtor.id}/invite-client`,
@@ -891,7 +893,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
               return (
                 <TouchableOpacity
-                  key={client.id}
+                  key={client.id || client._id || client.inviteeId}
                   style={styles.clientCard}
                   onPress={() => handleClientClick(client)}
                   activeOpacity={0.8}
@@ -984,7 +986,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
                   return (
                     <TouchableOpacity
-                      key={client.id}
+                      key={client.id || client._id || client.inviteeId}
                       style={styles.clientCard}
                       onPress={() => handleClientClick(client)}
                       activeOpacity={0.8}
@@ -1058,7 +1060,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               </View>
               {completedReferrals.map((client) => (
                 <TouchableOpacity
-                  key={client.id}
+                  key={client.id || client._id || client.inviteeId}
                   style={styles.clientCard}
                   onPress={() => handleClientReferralClick(client)}
                   activeOpacity={0.8}
