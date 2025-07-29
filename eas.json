@@ -29,12 +29,11 @@
       "ios": {
         "ascAppId": "6463172728",
         "appleId": "d.prasannanivas@gmail.com",
-        "appleTeamId": "ENTER_YOUR_TEAM_ID"
+        "appleTeamId": "QH3NGA2YS4"
       },
       "android": {
         "track": "production",
-        "releaseStatus": "completed",
-        "serviceAccountKeyPath": "./pc-api-key.json"
+        "releaseStatus": "completed"
       }
     }
   }

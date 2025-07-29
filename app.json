@@ -4,7 +4,7 @@
     "slug": "RoostDevNative",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/favicon.png",
+    "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "description": "Roost - Streamline your real estate transactions with secure document management, client communication, and reward tracking for realtors and clients.",
@@ -27,7 +27,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.roostapp.roost",
       "buildNumber": "1",
-      "icon": "./assets/favicon.png",
+      "icon": "./assets/app-icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Roost needs camera access to allow you to take photos of documents for secure upload and verification.",
@@ -46,7 +46,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/favicon.png",
+        "foregroundImage": "./assets/app-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.roostapp.roost",
@@ -83,7 +83,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/favicon.png",
+          "icon": "./assets/app-icon.png",
           "color": "#ffffff",
           "defaultChannel": "default"
         }
