@@ -642,7 +642,10 @@ export default function RealtorRewards({
                 <View key={i} style={styles.historyRow}>
                   <View style={styles.historyPts}>
                     <FontAwesome name="star" size={14} color={COLORS.orange} />
-                    <Text style={styles.historyPtsTxt}>+{e.points}</Text>
+                    <Text style={styles.historyPtsTxt}>
+                      {" "}
+                      {e.points > 0 ? "+" : ""} {e.points}
+                    </Text>
                   </View>
                   <View style={styles.historyDetails}>
                     <Text style={styles.historyReason}>{e.reason}</Text>
@@ -748,7 +751,7 @@ const styles = StyleSheet.create({
   /* Header */
   header: {
     backgroundColor: COLORS.black,
-    paddingTop: 64,
+    paddingTop: 76,
     padding: 24,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -772,6 +775,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute",
     right: 16,
+    top: 16,
     padding: 8,
   },
 
@@ -794,6 +798,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "medium",
     fontFamily: "Futura",
+    position: "relative",
+    top: -12,
     color: COLORS.black,
   },
   pointsRow: {
@@ -1202,7 +1208,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   historyPts: {
-    width: 60,
+    minWidth: 60,
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -1214,7 +1221,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   historyDetails: {
-    flex: 1,
+    flex: 10,
   },
   historyReason: {
     fontSize: 14,

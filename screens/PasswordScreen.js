@@ -256,18 +256,7 @@ const PasswordScreen = React.forwardRef(
           >
             <Text style={styles.heading}>Secure your account</Text>
             {/* Display invitation message if available */}
-            {invitedBy ? (
-              <View
-                style={styles.inviteBox}
-                accessible={true}
-                accessibilityLabel="Invitation details"
-              >
-                <Text style={styles.inviteText}>
-                  You have been invited by
-                  <Text style={styles.inviterName}>{invitedBy.name}</Text>
-                </Text>
-              </View>
-            ) : null}
+
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
