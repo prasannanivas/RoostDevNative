@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -8,10 +8,8 @@ import {
   View,
   Platform,
   Linking,
-  Image,
-  ActivityIndicator,
 } from "react-native";
-import { Asset } from "expo-asset";
+import LottieView from "lottie-react-native";
 import Logo from "../components/Logo";
 
 /**
@@ -43,8 +41,6 @@ export default function SignupSuccessScreen({
   route,
   setIsLoading,
 }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
   // Debug log route params and state
   useEffect(() => {
     console.log("SignupSuccess route params:", route?.params);
@@ -87,24 +83,8 @@ export default function SignupSuccessScreen({
 
   console.log(`Final isRealtor value: ${isRealtor}`);
 
-  // Preload image and track ActiveCampaign conversion
+  // Track ActiveCampaign conversion
   useEffect(() => {
-    // Preload the celebration image
-    const preloadImages = async () => {
-      try {
-        // Create asset object from the image
-        const asset = Asset.fromModule(require("../assets/signupSuccess.png"));
-        // Download/load the image if it's not already cached
-        await asset.downloadAsync();
-        setImageLoaded(true);
-      } catch (error) {
-        console.error("Failed to preload image:", error);
-        // Set loaded to true anyway so UI isn't blocked
-        setImageLoaded(true);
-      }
-    };
-
-    preloadImages();
     trackActiveCampaignConversion();
   }, []);
 
@@ -209,18 +189,13 @@ export default function SignupSuccessScreen({
           />
           {/* Heading */}
           <Text style={styles.heading}>All signed up!</Text>
-          {/* Celebration Image with loading state */}
-          {imageLoaded ? (
-            <Image
-              source={require("../assets/signupSuccess.png")}
-              style={styles.confettiIcon}
-              resizeMode="contain"
-            />
-          ) : (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color={COLORS.green} />
-            </View>
-          )}
+          {/* Celebration Animation */}
+          <LottieView
+            source={require("../assets/celebration.json")}
+            autoPlay
+            loop={false}
+            style={styles.confettiIcon}
+          />
           {/* Subheading */}
           <Text style={styles.subheading}>Before you start</Text>
           <Text style={styles.subheadingsub}>

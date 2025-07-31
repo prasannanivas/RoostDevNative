@@ -785,7 +785,9 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
                   const userInfo = getUserInitials();
                   const hasInitials =
                     userInfo.initials && userInfo.initials.trim() !== "";
-                  return hasInitials ? (
+                  return hasInitials &&
+                    currentQuestion.id > 5 &&
+                    currentQuestion?.type !== "finalStep" ? (
                     <View
                       style={[
                         styles.initialsCircle,
@@ -803,7 +805,13 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
                     <></>
                   );
                 })()}
-                <Text style={styles.questionTextHeader}>
+                <Text
+                  style={
+                    currentQuestion?.type === "finalStep"
+                      ? styles.questionTextHeaderFinal
+                      : styles.questionTextHeader
+                  }
+                >
                   {processDynamicText(currentQuestion.text, responses)}
                 </Text>
               </View>
@@ -822,20 +830,6 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
                   fieldErrors={fieldErrors} // Pass field errors for display
                 />
               </View>
-              {/* "Looks Good" button after questions */}
-              {currentQuestion?.type !== "multipleChoice" && (
-                <Button
-                  title={
-                    currentQuestion?.type === "finalStep"
-                      ? "Done"
-                      : "Looks Good"
-                  }
-                  onPress={handleNext}
-                  variant="secondary"
-                  loading={isSubmitting}
-                  style={styles.looksGoodButton}
-                />
-              )}
             </View>
           </View>
         </ScrollView>
@@ -843,6 +837,16 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
       {/* Footer stays outside KeyboardAvoidingView so it remains fixed */}
       <View style={styles.footer}>
         <View style={styles.buttonContainer}>
+          <Button
+            title={
+              currentQuestion?.type === "finalStep" ? "Complete" : "Continue"
+            }
+            onPress={handleNext}
+            variant="primary"
+            loading={isSubmitting}
+            style={styles.looksGoodButton}
+          />
+
           {canGoBack && (
             <Button
               Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
@@ -851,6 +855,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
               style={styles.backButton}
             />
           )}
+          {/* "Looks Good" button after questions */}
         </View>
       </View>
     </SafeAreaView>
@@ -886,13 +891,16 @@ const styles = StyleSheet.create({
   content: {
     minHeight: "70%", // Ensure content takes up most of the screen
     paddingHorizontal: 48, // 8px increment spacing
+    overflow: "visible", // Prevent content overflow
     paddingVertical: 24,
     paddingBottom: 120, // No bottom padding to align with footer
     justifyContent: "center", // Center questions vertically
+    alignItems: "center",
   },
   contentWrapper: {
     maxWidth: 500, // Consistent maximum width
-    alignItems: "stretch", // Stretch items to fill container width
+    minWidth: 310, // Consistent minimum width
+    //alignItems: "stretch", // Stretch items to fill container width
     justifyContent: "space-between", // Space between vertically
   },
   questionHeaderRow: {
@@ -952,14 +960,14 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     flex: 1, // Take remaining space in row
   },
-  looksGoodButton: {
-    backgroundColor: "#F6F6F6",
-    color: COLORS.green,
-    borderColor: COLORS.green,
-    borderWidth: 1,
-    marginTop: 32, // Add space between questions and button
-    alignSelf: "flex-end", // Right align button
-    marginRight: 0, // Ensure it's positioned at the right edge
+  questionTextHeaderFinal: {
+    fontSize: 24,
+    fontWeight: 700,
+    letterSpacing: 0,
+    textAlign: "center",
+    fontFamily: "Futura",
+    color: COLORS.black,
+    flex: 1, // Take remaining space in row
   },
   footer: {
     position: Platform.OS === "ios" ? "absolute" : "relative",
@@ -970,14 +978,25 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.black, // Dark background
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
   },
   backButton: {
     borderWidth: 0,
-    marginLeft: 24, // 8px increment spacing
     backgroundColor: COLORS.black,
     shadowOpacity: 0,
     elevation: 0,
+  },
+  looksGoodButton: {
+    backgroundColor: COLORS.green,
+    color: COLORS.white,
+    borderColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginRight: 12,
   },
   fullWidthButton: {
     flex: 1,

@@ -69,10 +69,10 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 13,
     paddingHorizontal: 24,
-    borderRadius: 50, // Fully rounded for pill shape
+    borderRadius: 33, // Fully rounded for pill shape
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 50, // Slightly taller
+    minHeight: 42, // Slightly taller
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

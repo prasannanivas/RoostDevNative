@@ -1,5 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Easing,
+  Dimensions,
+} from "react-native";
 import Svg, {
   Rect,
   Path,
@@ -56,16 +64,23 @@ const ButtonGroup = ({
   const isMiddleSelected = value === middleOption.value;
   const isRightSelected = value === rightOption.value || !value; // Default to right if no selection
 
-  // Calculate the x position for the highlight based on selected option
-  let highlightX = "4"; // Default to left position
+  // Responsive width
+  const screenWidth = Dimensions.get("window").width;
+  const groupWidth = Math.min(screenWidth * 0.92, 310);
+  const optionWidth = groupWidth / 3;
+  const highlightAnim = React.useRef(new Animated.Value(0)).current;
 
-  if (isMiddleSelected) {
-    highlightX = "103";
-  } else if (isRightSelected) {
-    highlightX = "202.333";
-  }
-  const width = 310;
-  const height = 70; // Increased height from 55 to 70
+  React.useEffect(() => {
+    let toValue = 0;
+    if (isMiddleSelected) toValue = optionWidth;
+    else if (isRightSelected) toValue = optionWidth * 2;
+    Animated.timing(highlightAnim, {
+      toValue,
+      duration: 300,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: false,
+    }).start();
+  }, [isLeftSelected, isMiddleSelected, isRightSelected, optionWidth]);
 
   return (
     <View style={[styles.container, style]}>
@@ -76,74 +91,33 @@ const ButtonGroup = ({
         </Text>
       )}
       <View style={[styles.buttonContainer, error && styles.errorContainer]}>
-        <View style={styles.svgContainer}>
-          <Svg width={width} height={height} viewBox="0 0 310 70" fill="none">
-            <Defs>
-              <Filter
-                id="filter0_d_1366_9334"
-                x="0"
-                y="0"
-                width="310"
-                height="70"
-                filterUnits="userSpaceOnUse"
-                colorInterpolationFilters="sRGB"
-              >
-                <FeFlood floodOpacity="0" result="BackgroundImageFix" />
-                <FeColorMatrix
-                  in="SourceAlpha"
-                  type="matrix"
-                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                  result="hardAlpha"
-                />
-                <FeOffset />
-                <FeGaussianBlur stdDeviation="2" />
-                <FeComposite in2="hardAlpha" operator="out" />
-                <FeColorMatrix
-                  type="matrix"
-                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
-                />
-                <FeBlend
-                  mode="normal"
-                  in2="BackgroundImageFix"
-                  result="effect1_dropShadow_1366_9334"
-                />
-                <FeBlend
-                  mode="normal"
-                  in="SourceGraphic"
-                  in2="effect1_dropShadow_1366_9334"
-                  result="shape"
-                />
-              </Filter>
-            </Defs>
-
-            <G filter="url(#filter0_d_1366_9334)">
-              {/* Main button background */}
-              <Rect
-                x="6"
-                y="4"
-                width="302"
-                height="50"
-                rx="20.5"
-                fill="white"
-              />
-              {/* Highlight for selected option - moves based on selection */}
-              <Rect
-                x={highlightX}
-                y="6"
-                width="100.667"
-                height="46"
-                rx="20.5"
-                fill="#377473"
-              />
-            </G>
-          </Svg>
-
-          {/* Option Labels rendered on top of SVG */}
-          <View style={styles.optionsOverlay}>
+        <View style={[styles.customButtonGroup, { width: groupWidth }]}>
+          {/* Highlight for selected option - animated */}
+          <Animated.View
+            style={[
+              styles.highlight,
+              {
+                left: highlightAnim,
+                width: optionWidth,
+                shadowColor: COLORS.green,
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 8,
+              },
+            ]}
+          />
+          {/* Main button background */}
+          <View style={[styles.buttonBg, { width: groupWidth }]} />
+          {/* Option Labels rendered on top of background */}
+          <View style={styles.optionsRow}>
             <TouchableOpacity
               onPress={() => handleSelect(leftOption.value)}
-              style={[styles.optionTouch, { left: 0 }]}
-              activeOpacity={0.8}
+              style={[
+                styles.optionTouch,
+                isLeftSelected && styles.selectedTouch,
+              ]}
+              activeOpacity={0.95}
             >
               <Text
                 style={[
@@ -157,8 +131,11 @@ const ButtonGroup = ({
 
             <TouchableOpacity
               onPress={() => handleSelect(middleOption.value)}
-              style={[styles.optionTouch, { left: "33.33%" }]}
-              activeOpacity={0.8}
+              style={[
+                styles.optionTouch,
+                isMiddleSelected && styles.selectedTouch,
+              ]}
+              activeOpacity={0.95}
             >
               <Text
                 style={[
@@ -172,8 +149,11 @@ const ButtonGroup = ({
 
             <TouchableOpacity
               onPress={() => handleSelect(rightOption.value)}
-              style={[styles.optionTouch, { left: "66.66%" }]}
-              activeOpacity={0.8}
+              style={[
+                styles.optionTouch,
+                isRightSelected && styles.selectedTouch,
+              ]}
+              activeOpacity={0.95}
             >
               <Text
                 style={[
@@ -198,7 +178,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: "bold",
     fontFamily: "Futura",
     color: COLORS.black,
     marginBottom: 8,
@@ -216,36 +197,74 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16.5,
   },
-  svgContainer: {
-    width: "100%",
-    height: 60,
+  customButtonGroup: {
     position: "relative",
+    alignSelf: "center",
+    //alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: COLORS.background,
   },
-  optionsOverlay: {
+  buttonBg: {
     position: "absolute",
-    top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0,
+    height: "100%",
+    borderRadius: 33,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 12,
+  },
+  highlight: {
+    position: "absolute",
+    top: 2.5,
+    height: 40,
+    borderRadius: 33,
+    backgroundColor: COLORS.green,
+    zIndex: 1,
+    opacity: 0.95,
+    borderWidth: 2,
+    borderColor: COLORS.green,
+    shadowColor: COLORS.green,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  optionsRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-around",
+    zIndex: 2,
   },
   optionTouch: {
-    position: "absolute",
-    width: "33.33%",
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 33,
+    zIndex: 3,
+  },
+  selectedTouch: {
+    // Optional: add a subtle effect for selected touch
+    // backgroundColor: COLORS.green,
+    // opacity: 0.1,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 12,
     fontFamily: "Futura",
+    fontWeight: "700",
     color: COLORS.gray,
     textAlign: "center",
+
+    paddingVertical: 8,
+    paddingHorizontal: 2,
+    transition: "color 0.2s",
   },
   selectedOptionText: {
     color: COLORS.white,
     fontWeight: "bold",
+    textShadowColor: COLORS.green,
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   errorText: {
     color: COLORS.error,

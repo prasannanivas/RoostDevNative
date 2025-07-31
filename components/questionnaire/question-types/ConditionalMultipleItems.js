@@ -249,7 +249,7 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "position" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 200 : undefined}
       style={{ flex: 1 }}
     >

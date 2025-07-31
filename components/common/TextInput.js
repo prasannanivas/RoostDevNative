@@ -41,6 +41,15 @@ const TextInput = ({
   isSinNumber = false,
   fieldKey,
 }) => {
+  // Helper to format number with commas
+  const formatWithCommas = (num) => {
+    if (num === undefined || num === null || num === "") return "";
+    const strNum = num.toString().replace(/,/g, "");
+    // Only format if it's a valid number
+    if (!/^\d+$/.test(strNum)) return strNum;
+    return strNum.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
   const [localValue, setLocalValue] = useState(value || "");
 
   // Determine if this is a SIN number field based on props or key name
@@ -50,6 +59,10 @@ const TextInput = ({
   useEffect(() => {
     if (isSinField && value) {
       setLocalValue(formatSinNumber(value));
+    } else if (prefix === "$" && value) {
+      setLocalValue(formatWithCommas(value));
+    } else {
+      setLocalValue(value || "");
     }
   }, []);
 
@@ -59,6 +72,11 @@ const TextInput = ({
       const formattedText = formatSinNumber(text);
       setLocalValue(formattedText);
       onChangeText && onChangeText(formattedText);
+    } else if (prefix === "$") {
+      // Only update display with commas, but pass raw value to callback
+      const raw = text.replace(/[^\d]/g, "");
+      setLocalValue(formatWithCommas(raw));
+      onChangeText && onChangeText(raw);
     } else {
       setLocalValue(text);
       onChangeText && onChangeText(text);
@@ -93,7 +111,7 @@ const TextInput = ({
           multiline={multiline}
           numberOfLines={numberOfLines}
           placeholderTextColor="#707070"
-          maxLength={isSinField ? 11 : undefined} // 9 digits + 2 dashes
+          maxLength={isSinField ? 11 : undefined}
         />
       </View>
       {infoText && <Text style={styles.infoText}>{infoText}</Text>}

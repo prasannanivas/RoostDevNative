@@ -1,5 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { Asset } from "expo-asset";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import LottieView from "lottie-react-native";
 
 const COLORS = {
   green: "#377473",
@@ -18,9 +20,12 @@ const FinalStep = ({ question }) => {
   return (
     <View style={styles.container}>
       <View style={styles.successContainer}>
-        <View style={styles.checkmark}>
-          <Text style={styles.checkmarkText}>✓</Text>
-        </View>
+        <LottieView
+          source={require("../../../assets/celebration.json")}
+          autoPlay
+          loop={false}
+          style={styles.confettiIcon}
+        />
         <Text style={styles.successText}>{question.text}</Text>
         <Text style={styles.subtitle}>
           Your answers have been submitted, a representative will reach out
@@ -37,26 +42,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
+    backgroundColor: COLORS.background,
   },
   successContainer: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 24,
-  },
-  checkmark: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: COLORS.green,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkmarkText: {
-    fontSize: 36,
-    color: COLORS.white,
-    fontWeight: "bold",
-    fontFamily: "Futura",
   },
   successText: {
     fontSize: 24,
@@ -73,7 +63,11 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     textAlign: "center",
     lineHeight: 24,
-    maxWidth: 300,
+  },
+  confettiIcon: {
+    width: 160,
+    height: 160,
+    alignSelf: "center",
   },
 });
 
