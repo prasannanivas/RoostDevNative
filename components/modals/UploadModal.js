@@ -49,6 +49,8 @@ const UploadModal = ({
   selectedDocType,
   clientId,
   onUploadSuccess,
+  clientName,
+  coClientName = "",
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +59,8 @@ const UploadModal = ({
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewImageUri, setPreviewImageUri] = useState(null);
   const [previewImageIndex, setPreviewImageIndex] = useState(null);
+
+  console.log("Selected document type:", selectedDocType);
 
   // Pick PDF
   const pickDocumentFile = async () => {
@@ -287,7 +291,7 @@ const UploadModal = ({
     setUploadLoading(true);
 
     const data = new FormData();
-    data.append("docType", selectedDocType);
+    data.append("docType", selectedDocType.docType);
     data.append("pdfFile", {
       uri:
         Platform.OS === "android"
@@ -349,7 +353,21 @@ const UploadModal = ({
           ]}
         >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{selectedDocType}</Text>
+            <Text style={styles.modalTitle}>
+              {(
+                selectedDocType?.displayName ||
+                selectedDocType?.docType ||
+                "Document"
+              )
+                .charAt(0)
+                .toUpperCase() +
+                (
+                  selectedDocType?.displayName ||
+                  selectedDocType?.docType ||
+                  "Document"
+                ).slice(1)}
+            </Text>
+
             <TouchableOpacity
               style={styles.closeModalButton}
               onPress={handleClose}
@@ -357,6 +375,16 @@ const UploadModal = ({
               <CloseIconSvg />
             </TouchableOpacity>
           </View>
+
+          <Text style={styles.clientNameText}>
+            {selectedDocType?.type === "Needed" ? clientName : coClientName}
+          </Text>
+          {selectedDocType?.displayName?.toLowerCase().includes("paystub") && (
+            <Text style={styles.infotext}>
+              Please include your two most recent
+            </Text>
+          )}
+
           {capturedImages.length > 0 ? (
             <>
               <ScrollView style={styles.imageScrollView}>
@@ -550,6 +578,22 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 24,
     paddingRight: 10,
+  },
+  clientNameText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.slate,
+    textAlign: "center",
+    marginBottom: 16,
+    fontFamily: "Futura",
+  },
+  infotext: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: COLORS.slate,
+    textAlign: "center",
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   modalTitle: {
     fontSize: 24, // H2 size

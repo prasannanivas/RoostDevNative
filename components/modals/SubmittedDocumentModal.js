@@ -41,6 +41,8 @@ const SubmittedDocumentModal = ({
   document,
   clientId,
   onDeleteSuccess,
+  clientName,
+  coClientName = "",
 }) => {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
 
@@ -103,6 +105,10 @@ const SubmittedDocumentModal = ({
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.clientNameText}>
+            {document?.type === "Needed" ? clientName : coClientName}
+          </Text>
+
           <Text style={styles.completeModalText}>
             You have already submitted this document. If you wish to reupload
             it, delete the existing doc and try again.
@@ -143,6 +149,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+  },
+  clientNameText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.slate,
+    textAlign: "center",
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   modalContent: {
     backgroundColor: COLORS.white,

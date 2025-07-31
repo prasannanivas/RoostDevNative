@@ -146,8 +146,8 @@ const ClientHome = ({ questionnaireData }) => {
   const docsNeeded = merged.filter((d) => d.type === "Needed");
   const docsRequested = merged.filter((d) => d.type === "Needed-other");
   // Open upload modal
-  const handleAdd = (docType) => {
-    setSelectedDocType(docType);
+  const handleAdd = (doc) => {
+    setSelectedDocType(doc);
     setShowModal(true);
   };
 
@@ -258,7 +258,7 @@ const ClientHome = ({ questionnaireData }) => {
           style={[styles.addPill, actionLoading && styles.pillDisabled]}
           onPress={() => {
             setActionLoading(true);
-            handleAdd(doc.docType);
+            handleAdd(doc);
             setTimeout(() => setActionLoading(false), 300); // Reset after animation
           }}
           disabled={actionLoading}
@@ -311,7 +311,11 @@ const ClientHome = ({ questionnaireData }) => {
     }
     return (
       <View key={doc.docType} style={styles.docItem}>
-        <Text style={styles.docLabel}>{doc.displayName || doc.docType}</Text>
+        <Text style={styles.docLabel}>
+          {doc.displayName
+            ? doc.displayName.charAt(0).toUpperCase() + doc.displayName.slice(1)
+            : doc.docType.charAt(0).toUpperCase() + doc.docType.slice(1)}
+        </Text>
         {action}
       </View>
     );
@@ -558,6 +562,8 @@ const ClientHome = ({ questionnaireData }) => {
         visible={showModal}
         onClose={closeModal}
         selectedDocType={selectedDocType}
+        clientName={clientFromContext.name}
+        coClientName={clientFromContext.otherDetails?.name || ""}
         clientId={clientId}
         onUploadSuccess={() =>
           fetchRefreshData(clientId).then((result) => {
@@ -572,6 +578,9 @@ const ClientHome = ({ questionnaireData }) => {
         visible={showCompleteModal}
         onClose={() => setShowCompleteModal(false)}
         document={selectedCompleteDoc}
+        clientId={clientId}
+        clientName={clientFromContext.name}
+        coClientName={clientFromContext.otherDetails?.name || ""}
       />
       {/* Submitted Document Modal */}
       <SubmittedDocumentModal
@@ -579,6 +588,8 @@ const ClientHome = ({ questionnaireData }) => {
         onClose={() => setShowSubmittedModal(false)}
         document={selectedSubmittedDoc}
         clientId={clientId}
+        clientName={clientFromContext.name}
+        coClientName={clientFromContext.otherDetails?.name || ""}
         onDeleteSuccess={() => {
           fetchRefreshData(clientId).then((result) => {
             if (result?.neededDocsResponse?.documents_needed) {

@@ -27,7 +27,14 @@ const COLORS = {
   coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
-const CompleteDocumentModal = ({ visible, onClose, document }) => {
+const CompleteDocumentModal = ({
+  visible,
+  onClose,
+  document,
+  clientId,
+  clientName,
+  coClientName,
+}) => {
   return (
     <Modal
       visible={visible}
@@ -45,6 +52,10 @@ const CompleteDocumentModal = ({ visible, onClose, document }) => {
               {document?.displayName || document?.docType || "Document"}
             </Text>
           </View>
+
+          <Text style={styles.clientNameText}>
+            {document?.type === "Needed" ? clientName : coClientName}
+          </Text>
 
           <Text style={styles.completeModalText}>
             You have already submitted this document and accepted as valid
@@ -73,6 +84,14 @@ const styles = StyleSheet.create({
     width: "90%",
     maxWidth: 400,
     position: "relative",
+  },
+  clientNameText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.slate,
+    textAlign: "center",
+    marginBottom: 16,
+    fontFamily: "Futura",
   },
   modalHeader: {
     flexDirection: "row",
