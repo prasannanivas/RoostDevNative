@@ -24,6 +24,7 @@ import {
   formatPhoneNumber,
   unFormatPhoneNumber,
 } from "./utils/phoneFormatUtils";
+import LogoutConfirmationModal from "./components/LogoutConfirmationModal";
 
 // Design System Colors
 const COLORS = {
@@ -116,6 +117,7 @@ export default function ClientProfile({ onClose }) {
 
   // Countdown state for OTP resend
   const [countdown, setCountdown] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     // Load client info
@@ -201,8 +203,14 @@ export default function ClientProfile({ onClose }) {
     setPasswordData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleLogout = async () => {
-    console.log("Logging out...");
+  // Show confirmation modal instead of direct logout
+  const handleLogoutPress = () => {
+    setShowLogoutModal(true);
+  };
+
+  // Actual logout logic
+  const handleLogoutConfirmed = async () => {
+    setShowLogoutModal(false);
     setFeedback({ message: "", type: "" });
     try {
       await logout();
@@ -808,12 +816,18 @@ export default function ClientProfile({ onClose }) {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.logoutButton}
-              onPress={handleLogout}
+              onPress={handleLogoutPress}
             >
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
+        <LogoutConfirmationModal
+          visible={showLogoutModal}
+          onConfirm={handleLogoutConfirmed}
+          onCancel={() => setShowLogoutModal(false)}
+          COLORS={COLORS}
+        />
         {/* Email Change Modal */}
         <Modal visible={showEmailModal} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
@@ -1013,7 +1027,7 @@ export default function ClientProfile({ onClose }) {
           <View style={styles.section}>
             <TouchableOpacity
               style={styles.logoutButton}
-              onPress={handleLogout}
+              onPress={handleLogoutPress}
             >
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>

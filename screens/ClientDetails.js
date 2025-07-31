@@ -37,8 +37,8 @@ const COLORS = {
 const ClientDetails = () => {
   const navigation = useNavigation();
   // Get clientId from navigation route parameters
-  const { clientId, statusText, inviteId } = useRoute().params;
-  console.log("Invite ID:", inviteId); // Debugging line to check inviteId
+  const { clientId, statusText, inviteId, onDelete } = useRoute().params;
+  console.log("Invite ID:", inviteId, onDelete); // Debugging line to check inviteId
   const { auth } = useAuth();
   const { realtor } = auth;
   const realtorId = realtor.id; // Keep this line as it is the correct declaration
@@ -225,7 +225,8 @@ const ClientDetails = () => {
                         Alert.alert("Error", "Failed to delete client", [
                           {
                             text: "OK",
-                            onPress: () => {
+                            onPress: async () => {
+                              await onDelete();
                               navigation.goBack();
                             },
                           },

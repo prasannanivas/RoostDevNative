@@ -25,7 +25,7 @@ import * as Contacts from "expo-contacts";
 import Svg, { Rect, Path, Circle } from "react-native-svg";
 import { useAuth } from "./context/AuthContext";
 import { useRealtor } from "./context/RealtorContext";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import {
   FontAwesome,
   Ionicons,
@@ -356,6 +356,14 @@ const RealtorHome = () => {
       setImageRefreshKey(Date.now());
     }
   }, [realtorFromContext?.realtorInfo]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("useFocusEffect called");
+      onRefresh();
+      setRefreshing(false);
+    }, [onRefresh])
+  );
 
   const handleInviteClient = async () => {
     setIsLoading(true);
@@ -764,32 +772,36 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         >
           {realtor.id && (
             <>
-              {!imageLoadError ? (
-                <Image
-                  source={{
-                    uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
-                  }}
-                  style={styles.avatar}
-                  onError={() => setImageLoadError(true)}
-                />
-              ) : (
-                <View
-                  style={[
-                    styles.avatar,
-                    {
-                      backgroundColor: "#2271B1",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    },
-                  ]}
-                >
-                  <Text style={styles.avatarText}>
-                    {getInitials(
-                      realtorFromContext?.realtorInfo?.name || realtor.name
-                    )}
-                  </Text>
-                </View>
-              )}
+              {/* Always show initials avatar, overlay image when loaded */}
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor: "#2271B1",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                  },
+                ]}
+              >
+                <Text style={styles.avatarText}>
+                  {getInitials(
+                    realtorFromContext?.realtorInfo?.name || realtor.name
+                  )}
+                </Text>
+                {!imageLoadError && (
+                  <Image
+                    source={{
+                      uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
+                    }}
+                    style={[
+                      styles.avatar,
+                      { position: "absolute", top: 0, left: 0 },
+                    ]}
+                    onError={() => setImageLoadError(true)}
+                  />
+                )}
+              </View>
             </>
           )}
           <View style={styles.nameAgencyContainer}>
@@ -1738,6 +1750,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           clientId: selectedClientCard.inviteeId,
                           client: selectedClientCard,
                           inviteId: selectedClientCard.inviteId,
+                          onDelete: onRefresh,
                           statusText:
                             selectedClientCard.clientStatus === "Completed"
                               ? "Completed"

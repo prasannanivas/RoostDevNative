@@ -23,6 +23,7 @@ import { useAuth } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Circle, Path } from "react-native-svg";
 import { formatPhoneNumber } from "../utils/phoneFormatUtils";
+import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
 
 // Design System Colors
 const COLORS = {
@@ -867,8 +868,17 @@ export default function RealtorProfile({ onClose }) {
       setUploadingProfilePic(false);
     }
   };
-  const handleLogout = async () => {
-    console.log("Logging out...");
+  // Logout confirmation modal state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Show confirmation modal instead of direct logout
+  const handleLogoutPress = () => {
+    setShowLogoutModal(true);
+  };
+
+  // Actual logout logic
+  const handleLogoutConfirmed = async () => {
+    setShowLogoutModal(false);
     setFeedback({ message: "", type: "" });
     try {
       await logout();
@@ -972,48 +982,42 @@ export default function RealtorProfile({ onClose }) {
             disabled={uploadingProfilePic}
             style={styles.avatarContainer}
           >
-            {uploadingProfilePic && (
-              <View style={styles.uploadingOverlay}>
-                <ActivityIndicator size="large" color={COLORS.green} />
-                <Text style={styles.uploadingText}>Uploading...</Text>
-              </View>
-            )}
-            {selectedImage ? (
-              // Show selected image preview during upload
-              <Image
-                source={{ uri: selectedImage }}
-                style={[
-                  styles.avatar,
-                  uploadingProfilePic && styles.avatarUploading,
-                ]}
-              />
-            ) : realtor.profilePicture ? (
-              // Show existing profile picture
-              <Image
-                source={{
-                  uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}?t=${imageRefreshKey}`,
-                }}
-                style={[
-                  styles.avatar,
-                  uploadingProfilePic && styles.avatarUploading,
-                ]}
-              />
-            ) : (
-              // Show placeholder with initials
-              <View
-                style={[
-                  styles.avatarPlaceholder,
-                  uploadingProfilePic && styles.avatarUploading,
-                ]}
-              >
-                <Text style={styles.avatarInitial}>
-                  {formData.firstName
-                    ? formData.firstName.charAt(0).toUpperCase() +
-                      formData.lastName.charAt(0).toUpperCase()
-                    : "R"}
-                </Text>
-              </View>
-            )}
+            <View
+              style={[
+                styles.avatarPlaceholder,
+                uploadingProfilePic && styles.avatarUploading,
+                { position: "relative" },
+              ]}
+            >
+              <Text style={styles.avatarInitial}>
+                {formData.firstName
+                  ? formData.firstName.charAt(0).toUpperCase() +
+                    formData.lastName.charAt(0).toUpperCase()
+                  : "R"}
+              </Text>
+              {(selectedImage || realtor.profilePicture) && (
+                <Image
+                  source={
+                    selectedImage
+                      ? { uri: selectedImage }
+                      : {
+                          uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}?t=${imageRefreshKey}`,
+                        }
+                  }
+                  style={[
+                    styles.avatar,
+                    { position: "absolute", top: 0, left: 0 },
+                    uploadingProfilePic && styles.avatarUploading,
+                  ]}
+                />
+              )}
+              {uploadingProfilePic && (
+                <View style={styles.uploadingOverlay}>
+                  <ActivityIndicator size="large" color={COLORS.green} />
+                  <Text style={styles.uploadingText}>Uploading...</Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <Text style={styles.realtorName}>
@@ -1377,9 +1381,18 @@ export default function RealtorProfile({ onClose }) {
             <Text style={styles.changePasswordButtonText}>Change Password</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogoutPress}
+          >
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
+          <LogoutConfirmationModal
+            visible={showLogoutModal}
+            onConfirm={handleLogoutConfirmed}
+            onCancel={() => setShowLogoutModal(false)}
+            COLORS={COLORS}
+          />
         </View>
       </ScrollView>
 
