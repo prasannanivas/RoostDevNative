@@ -571,7 +571,6 @@ const RealtorHome = () => {
         setRefreshing(false);
       });
   }, [auth, realtorFromContext]);
-
   const pickContact = async () => {
     try {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -592,12 +591,15 @@ const RealtorHome = () => {
           const phoneNumber = contact.phoneNumbers?.[0]?.number || "";
           const email = contact.emails?.[0]?.email || "";
           const contactName =
-            contact.name ||
-            `${contact.firstName || ""} ${contact.lastName || ""}`.trim();
+            contact.firstName || contact.lastName
+              ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
+              : contact.name || "";
 
           setFormData({
             referenceName: contactName, // Set the nickname to the contact's name
-            phone: phoneNumber,
+            firstName: contact.firstName || "",
+            lastName: contact.lastName || "",
+            phone: phoneNumber.slice(-10),
             email: email,
           });
           setIsEmail(!!email);

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Linking,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
@@ -163,8 +164,8 @@ export default function LoginScreen() {
           {/* Email Input */}
           <TextInput
             style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={COLORS.slate}
+            placeholder="Email Address"
+            placeholderTextColor={COLORS.gray}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
@@ -183,7 +184,7 @@ export default function LoginScreen() {
             ref={passwordInputRef}
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor={COLORS.slate}
+            placeholderTextColor={COLORS.gray}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -239,9 +240,18 @@ export default function LoginScreen() {
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
         <Text style={styles.footerText}>
-          By logging in, you agree to Roost's
-          <Text style={styles.linkText}>Terms of Use</Text> and
-          <Text style={styles.linkText}> Privacy Policy</Text>.
+          By logging in, you agree to Roost's{" "}
+          <Text style={styles.linkText}>Terms of Use</Text> and{" "}
+          <Text
+            style={styles.linkText}
+            onPress={() => {
+              Linking.openURL("https://roostapp.io/privacy");
+            }}
+            accessibilityRole="link"
+          >
+            Privacy&nbsp;Policy
+          </Text>
+          .
         </Text>
         <Text style={styles.footerText}>
           By providing your email & phone number, you consent to receive
@@ -278,13 +288,13 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     height: 48,
-    borderWidth: 2,
-    borderColor: COLORS.slate,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
     borderRadius: 8,
     paddingHorizontal: 16,
     marginBottom: 16,
     fontSize: 14, // P size
-    fontWeight: "bold", // Changed to bold for thick placeholder text
+    fontWeight: "500", // Changed to 500 for regular placeholder text
     color: COLORS.black,
     backgroundColor: COLORS.white,
     fontFamily: "Futura",
