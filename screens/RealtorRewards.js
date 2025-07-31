@@ -279,7 +279,10 @@ export default function RealtorRewards({
           </TouchableOpacity>
           <View style={styles.pointsRow}>
             <Text style={styles.pointsNum}>{currentPoints}</Text>
-            <Text style={styles.pointsLbl}>points</Text>
+            <Text style={styles.pointsLbl}>p</Text>
+            <Text style={[styles.pointsLbl, { top: "-6", left: -2 }]}>
+              oints
+            </Text>
           </View>
         </View>
       </View>
