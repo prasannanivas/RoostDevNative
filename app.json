@@ -2,7 +2,7 @@
   "expo": {
     "name": "Roost",
     "slug": "RoostDevNative",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/app-icon-main.png",
     "userInterfaceStyle": "light",
@@ -46,11 +46,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/app-icon-main.png",
+        "foregroundImage": "./assets/android/mipmap-xxxhdpi/ic_launcher_foreground.png",
         "backgroundColor": "#ffffff"
       },
+      "icon": "./assets/android/mipmap-xxxhdpi/ic_launcher.png",
       "package": "com.roostapp.roost",
-      "versionCode": 2,
+      "versionCode": 5,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
