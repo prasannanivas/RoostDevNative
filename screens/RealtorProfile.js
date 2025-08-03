@@ -90,14 +90,18 @@ export default function RealtorProfile({ onClose }) {
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
     // Push notifications
-    clientAccept: true,
-    clientPreApproval: true,
-    marketingNotifications: true,
+    clientAccept: realtor?.notificationPreferences?.clientAccept || true,
+    clientPreApproval:
+      realtor?.notificationPreferences?.clientPreApproval || true,
+    marketingNotifications:
+      realtor?.notificationPreferences?.marketingNotifications || true,
 
     // Email notifications
-    termsOfServiceEmails: true,
-    clientPreApprovalEmails: true,
-    marketingEmails: true,
+    termsOfServiceEmails:
+      realtor?.notificationPreferences?.termsOfServiceEmails || true,
+    clientPreApprovalEmails:
+      realtor?.notificationPreferences?.clientPreApprovalEmails || true,
+    marketingEmails: realtor?.notificationPreferences?.marketingEmails || true,
   });
 
   // Add these state variables at the top of your component with the other state declarations
@@ -190,6 +194,25 @@ export default function RealtorProfile({ onClose }) {
         "realtorNotificationPreferences" + realtor._id,
         JSON.stringify(newPrefs)
       );
+
+      // Save to backend
+      const response = await fetch(
+        `https://signup.roostapp.io/notifications/preferences`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            realtorId: realtor._id,
+            notificationPrefs: newPrefs,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.log(
+          "Failed to save notification preferences to server:",
+          await response.text()
+        );
+      }
     } catch (error) {
       console.log("Error saving notification preferences:", error);
     }
@@ -211,7 +234,7 @@ export default function RealtorProfile({ onClose }) {
 
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor._id}/shareable-link`
+        `https://signup.roostapp.io/realtor/${realtor._id}/shareable-link`
       );
 
       if (response.ok) {
@@ -245,7 +268,7 @@ export default function RealtorProfile({ onClose }) {
 
       // First check if email already exists
       const checkResponse = await fetch(
-        "http://159.203.58.60:5000/presignup/email",
+        "https://signup.roostapp.io/presignup/email",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -266,7 +289,7 @@ export default function RealtorProfile({ onClose }) {
       // If we get here, the email is available (doesn't exist yet)
       // Now send OTP to the new email using the correct endpoint
       const otpResponse = await fetch(
-        "http://159.203.58.60:5000/otp/email/generate",
+        "https://signup.roostapp.io/otp/email/generate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -305,7 +328,7 @@ export default function RealtorProfile({ onClose }) {
 
       // First verify the OTP using the correct endpoint
       const verifyResponse = await fetch(
-        "http://159.203.58.60:5000/otp/email/verify",
+        "https://signup.roostapp.io/otp/email/verify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -324,7 +347,7 @@ export default function RealtorProfile({ onClose }) {
         const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
         const updateResponse = await fetch(
-          `http://159.203.58.60:5000/realtor/${realtor._id}`,
+          `https://signup.roostapp.io/realtor/${realtor._id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -477,7 +500,7 @@ export default function RealtorProfile({ onClose }) {
       const fullName =
         `${currentFormData.firstName} ${currentFormData.lastName}`.trim();
 
-      fetch(`http://159.203.58.60:5000/realtor/${realtor._id}`, {
+      fetch(`https://signup.roostapp.io/realtor/${realtor._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -540,7 +563,7 @@ export default function RealtorProfile({ onClose }) {
     try {
       setEmailError("");
       const response = await fetch(
-        "http://159.203.58.60:5000/otp/email/generate",
+        "https://signup.roostapp.io/otp/email/generate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -622,7 +645,7 @@ export default function RealtorProfile({ onClose }) {
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor._id}`,
+        `https://signup.roostapp.io/realtor/${realtor._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -689,7 +712,7 @@ export default function RealtorProfile({ onClose }) {
 
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor._id}/updatepassword`,
+        `https://signup.roostapp.io/realtor/${realtor._id}/updatepassword`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -824,7 +847,7 @@ export default function RealtorProfile({ onClose }) {
       console.log("FormData created");
       console.log("Uploading to realtorId:", realtor._id);
 
-      const uploadUrl = `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}`;
+      const uploadUrl = `https://signup.roostapp.io/realtor/profilepic/${realtor._id}`;
       console.log("Uploading to URL:", uploadUrl);
 
       const response = await fetch(uploadUrl, {
@@ -878,7 +901,6 @@ export default function RealtorProfile({ onClose }) {
 
   // Actual logout logic
   const handleLogoutConfirmed = async () => {
-    setShowLogoutModal(false);
     setFeedback({ message: "", type: "" });
     try {
       await logout();
@@ -1001,7 +1023,7 @@ export default function RealtorProfile({ onClose }) {
                     selectedImage
                       ? { uri: selectedImage }
                       : {
-                          uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor._id}?t=${imageRefreshKey}`,
+                          uri: `https://signup.roostapp.io/realtor/profilepic/${realtor._id}?t=${imageRefreshKey}`,
                         }
                   }
                   style={[

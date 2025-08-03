@@ -78,14 +78,21 @@ export default function ClientProfile({ onClose }) {
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
     // Push notifications
-    documentReminders: true,
-    documentApprovals: true,
-    newMessages: true,
-    marketingNotifications: true,
+    documentReminders:
+      clientInfo?.notificationPreferences?.documentReminders || true,
+    documentApprovals:
+      clientInfo?.notificationPreferences?.documentApprovals || true,
+    statusUpdates: clientInfo?.notificationPreferences?.statusUpdates || true,
+    marketingNotifications:
+      clientInfo?.notificationPreferences?.marketingNotifications || true,
 
     // Email notifications
-    termsOfServiceEmails: true,
-    statusUpdateEmails: true,
+    documentReminderEmails:
+      clientInfo?.notificationPreferences?.documentReminderEmails || true,
+    documentApprovalEmails:
+      clientInfo?.notificationPreferences?.documentApprovalEmails || true,
+    statusUpdateEmails:
+      clientInfo?.notificationPreferences?.statusUpdateEmails || true,
     marketingEmails: true,
   });
 
@@ -167,10 +174,40 @@ export default function ClientProfile({ onClose }) {
 
   const saveNotificationPreferences = async (newPrefs) => {
     try {
+      // Save to local storage
       await AsyncStorage.setItem(
         "notificationPreferences" + clientInfo.id,
         JSON.stringify(newPrefs)
       );
+
+      // Save to backend
+      const response = await fetch(
+        `https://signup.roostapp.io/notifications/preferences`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            clientId: clientInfo.id,
+            notificationPrefs: newPrefs,
+          }),
+        }
+      );
+
+      console.log("Saving notification preferences to server:", {
+        clientId: clientInfo.id,
+        notificationPrefs: newPrefs,
+      });
+
+      // Check if the response was successful
+      if (!response.ok) {
+        const responseText = await response.text();
+        console.log(
+          "Failed to save notification preferences to server:",
+          responseText
+        );
+      }
     } catch (error) {
       console.log("Error saving notification preferences:", error);
     }
@@ -210,7 +247,6 @@ export default function ClientProfile({ onClose }) {
 
   // Actual logout logic
   const handleLogoutConfirmed = async () => {
-    setShowLogoutModal(false);
     setFeedback({ message: "", type: "" });
     try {
       await logout();
@@ -246,7 +282,7 @@ export default function ClientProfile({ onClose }) {
         },
       };
       const response = await axios.put(
-        `http://159.203.58.60:5000/client/${clientInfo.id}`,
+        `https://signup.roostapp.io/client/${clientInfo.id}`,
         payload
       );
       if (response.status === 200) {
@@ -314,7 +350,7 @@ export default function ClientProfile({ onClose }) {
     }
     try {
       const response = await axios.post(
-        `http://159.203.58.60:5000/client/${clientInfo.id}/updatepassword`,
+        `https://signup.roostapp.io/client/${clientInfo.id}/updatepassword`,
         {
           oldPassword: passwordData.oldPassword,
           newPassword: passwordData.newPassword,
@@ -361,14 +397,14 @@ export default function ClientProfile({ onClose }) {
       setEmailError("");
 
       // First check if email already exists
-      await axios.post("http://159.203.58.60:5000/presignup/email", {
+      await axios.post("https://signup.roostapp.io/presignup/email", {
         email: newEmail,
       });
 
       // If we get here, the email is available (doesn't exist yet)
       // Now send OTP to the new email using the correct endpoint
       const otpResponse = await axios.post(
-        "http://159.203.58.60:5000/otp/email/generate",
+        "https://signup.roostapp.io/otp/email/generate",
         { email: newEmail }
       );
 
@@ -408,7 +444,7 @@ export default function ClientProfile({ onClose }) {
 
       // First verify the OTP using the correct endpoint
       const verifyResponse = await axios.post(
-        "http://159.203.58.60:5000/otp/email/verify",
+        "https://signup.roostapp.io/otp/email/verify",
         {
           email: newEmail,
           otp: emailOtp,
@@ -434,7 +470,7 @@ export default function ClientProfile({ onClose }) {
 
         // Use PUT request to update profile
         const updateResponse = await axios.put(
-          `http://159.203.58.60:5000/client/${clientInfo.id}`,
+          `https://signup.roostapp.io/client/${clientInfo.id}`,
           payload
         );
 
@@ -478,7 +514,7 @@ export default function ClientProfile({ onClose }) {
     try {
       setEmailError("");
       const response = await axios.post(
-        "http://159.203.58.60:5000/otp/email/generate",
+        "https://signup.roostapp.io/otp/email/generate",
         { email: newEmail }
       );
 
