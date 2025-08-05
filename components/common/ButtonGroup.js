@@ -33,6 +33,7 @@ const COLORS = {
   background: "#F6F6F6",
   error: "#FF3B30",
   overlay: "rgba(0, 0, 0, 0.5)",
+  shadow: "rgba(0, 0, 0, 0.25)",
 };
 
 const ButtonGroup = ({
@@ -65,22 +66,33 @@ const ButtonGroup = ({
   const isRightSelected = value === rightOption.value || !value; // Default to right if no selection
 
   // Responsive width
-  const screenWidth = Dimensions.get("window").width;
-  const groupWidth = Math.min(screenWidth * 0.92, 310);
-  const optionWidth = groupWidth / 3;
+  // Calculate widths based on container rather than screen
   const highlightAnim = React.useRef(new Animated.Value(0)).current;
+
+  // This will be measured in the component
+  const [measuredWidth, setMeasuredWidth] = React.useState(0);
+
+  // Calculate section width (1/3 of total width)
+  const sectionWidth = measuredWidth > 0 ? measuredWidth / 3 : 0;
+  // Make highlight slightly smaller than section width to make room for shadow
+  const padding = 6;
+  const optionWidth = sectionWidth - padding * 2;
 
   React.useEffect(() => {
     let toValue = 0;
-    if (isMiddleSelected) toValue = optionWidth;
-    else if (isRightSelected) toValue = optionWidth * 2;
+    if (measuredWidth > 0) {
+      if (isLeftSelected) toValue = padding;
+      else if (isMiddleSelected) toValue = sectionWidth + padding;
+      else if (isRightSelected) toValue = sectionWidth * 2 + padding;
+    }
+
     Animated.timing(highlightAnim, {
       toValue,
-      duration: 300,
-      easing: Easing.out(Easing.exp),
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [isLeftSelected, isMiddleSelected, isRightSelected, optionWidth]);
+  }, [isLeftSelected, isMiddleSelected, isRightSelected, measuredWidth]);
 
   return (
     <View style={[styles.container, style]}>
@@ -91,7 +103,13 @@ const ButtonGroup = ({
         </Text>
       )}
       <View style={[styles.buttonContainer, error && styles.errorContainer]}>
-        <View style={[styles.customButtonGroup, { width: groupWidth }]}>
+        <View
+          style={[styles.customButtonGroup, { width: "100%" }]}
+          onLayout={(e) => setMeasuredWidth(e.nativeEvent.layout.width)}
+        >
+          {/* Main button background */}
+          <View style={[styles.buttonBg, { width: "100%" }]} />
+
           {/* Highlight for selected option - animated */}
           <Animated.View
             style={[
@@ -99,16 +117,14 @@ const ButtonGroup = ({
               {
                 left: highlightAnim,
                 width: optionWidth,
-                shadowColor: COLORS.green,
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
+                shadowColor: COLORS.shadow,
+                shadowOpacity: 0.4,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 2 },
                 elevation: 8,
               },
             ]}
           />
-          {/* Main button background */}
-          <View style={[styles.buttonBg, { width: groupWidth }]} />
           {/* Option Labels rendered on top of background */}
           <View style={styles.optionsRow}>
             <TouchableOpacity
@@ -189,18 +205,18 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: "100%",
-    height: 60,
+    height: 50,
     position: "relative",
+    paddingHorizontal: 0,
   },
   errorContainer: {
     borderColor: COLORS.error,
     borderWidth: 1,
-    borderRadius: 16.5,
+    borderRadius: 20,
   },
   customButtonGroup: {
     position: "relative",
     alignSelf: "center",
-    //alignItems: "center",
     justifyContent: "center",
     borderRadius: 20,
     overflow: "hidden",
@@ -210,24 +226,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     top: 0,
-    height: "100%",
-    borderRadius: 33,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: COLORS.white,
-    paddingHorizontal: 12,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+    borderWidth: 0.3,
+    borderColor: COLORS.silver,
   },
   highlight: {
     position: "absolute",
-    top: 2.5,
-    height: 40,
-    borderRadius: 33,
+    top: 2,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: COLORS.green,
     zIndex: 1,
-    opacity: 0.95,
-    borderWidth: 2,
-    borderColor: COLORS.green,
-    shadowColor: COLORS.green,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    opacity: 1,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
     elevation: 8,
   },
   optionsRow: {
@@ -254,17 +275,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: COLORS.gray,
     textAlign: "center",
-
     paddingVertical: 8,
     paddingHorizontal: 2,
-    transition: "color 0.2s",
   },
   selectedOptionText: {
     color: COLORS.white,
-    fontWeight: "bold",
-    textShadowColor: COLORS.green,
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 4,
+    fontWeight: "700",
   },
   errorText: {
     color: COLORS.error,

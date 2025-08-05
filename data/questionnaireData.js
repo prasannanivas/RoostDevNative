@@ -383,7 +383,7 @@ const questions = [
 
         options: [
           { value: "yes", label: "Yes" },
-          { value: "no", label: "Nope" },
+          { value: "no", label: "No" },
         ],
       },
       {
@@ -393,7 +393,7 @@ const questions = [
 
         options: [
           { value: "yes", label: "Yes" },
-          { value: "no", label: "Nope" },
+          { value: "no", label: "No" },
         ],
       },
     ],
@@ -439,7 +439,7 @@ const questions = [
       key: "hasAssets",
       type: "toggleButtonGroup",
       options: [
-        { value: "no", label: "Nope" },
+        { value: "no", label: "No" },
         { value: "yes", label: "Yes" },
       ],
     },
@@ -467,7 +467,7 @@ const questions = [
       key: "hasOtherProperties",
       type: "toggleButtonGroup",
       options: [
-        { value: "no", label: "Nope" },
+        { value: "no", label: "No" },
         { value: "yes", label: "Yes" },
       ],
     },
@@ -724,7 +724,7 @@ const questions = [
         label: "Bonuses or Commissions?",
         type: "toggleButtonGroup",
         options: [
-          { value: "no", label: "Nope" },
+          { value: "no", label: "No" },
           { value: "yes", label: "Yes" },
         ],
       },
@@ -733,7 +733,7 @@ const questions = [
         label: "Benefits?",
         type: "toggleButtonGroup",
         options: [
-          { value: "no", label: "Nope" },
+          { value: "no", label: "No" },
           { value: "yes", label: "Yes" },
         ],
       },
@@ -778,7 +778,7 @@ const questions = [
       key: "hasAssets",
       type: "toggleButtonGroup",
       options: [
-        { value: "no", label: "Nope" },
+        { value: "no", label: "No" },
         { value: "yes", label: "Yes" },
       ],
     },
@@ -805,7 +805,7 @@ const questions = [
       key: "hasOtherProperties",
       type: "toggleButtonGroup",
       options: [
-        { value: "no", label: "Nope" },
+        { value: "no", label: "No" },
         { value: "yes", label: "Yes" },
       ],
     },
@@ -1073,7 +1073,7 @@ const questions = [
         type: "toggleButtonGroup",
         options: [
           { value: "yes", label: "Yes" },
-          { value: "no", label: "Nope" },
+          { value: "no", label: "No" },
         ],
       },
       {
@@ -1082,7 +1082,7 @@ const questions = [
         type: "toggleButtonGroup",
         options: [
           { value: "yes", label: "Yes" },
-          { value: "no", label: "Nope" },
+          { value: "no", label: "No" },
         ],
       },
     ],
@@ -1138,7 +1138,7 @@ const questions = [
       key: "coHasAssets",
       type: "toggleButtonGroup",
       options: [
-        { value: "no", label: "Nope" },
+        { value: "no", label: "No" },
         { value: "yes", label: "Yes" },
       ],
     },
@@ -1165,7 +1165,7 @@ const questions = [
       key: "coHasOtherProperties",
       type: "toggleButtonGroup",
       options: [
-        { value: "no", label: "Nope" },
+        { value: "no", label: "No" },
         { value: "yes", label: "Yes" },
       ],
     },

@@ -22,6 +22,7 @@ import Svg, {
 } from "react-native-svg";
 import TextInput from "../../common/TextInput";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
+import ToggleButtonGroup from "./ToggleButtonGroup";
 
 const COLORS = {
   green: "#377473",
@@ -190,7 +191,8 @@ const ConditionalForm = ({ question, value, onValueChange }) => {
           <View key={field.key} style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>{field.label}</Text>
             <View style={styles.toggleGroup}>
-              <CustomToggleButton
+              <ToggleButtonGroup
+                question={field}
                 options={field.options}
                 value={formData[field.key]}
                 onValueChange={(value) => handleFieldChange(field.key, value)}
@@ -223,7 +225,8 @@ const ConditionalForm = ({ question, value, onValueChange }) => {
         {/* Initial toggle field */}
         <View style={styles.fieldContainer}>
           <View style={styles.toggleGroup}>
-            <CustomToggleButton
+            <ToggleButtonGroup
+              question={question.initialField}
               options={question.initialField.options}
               value={formData[question.initialField.key]}
               onValueChange={handleInitialFieldChange}

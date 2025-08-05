@@ -25,6 +25,7 @@ import Svg, {
 import TextInput from "../../common/TextInput";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
 import { getProfileInitialsForQuestion } from "../../../data/questionnaireData";
+import ToggleButtonGroup from "./ToggleButtonGroup";
 
 const COLORS = {
   green: "#377473",
@@ -258,7 +259,8 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
           {/* Initial toggle field */}
           <View style={styles.fieldContainer}>
             <View style={styles.toggleGroup}>
-              <CustomToggleButton
+              <ToggleButtonGroup
+                question={question.initialField}
                 options={question.initialField.options}
                 value={formData[question.initialField.key]}
                 onValueChange={handleInitialFieldChange}

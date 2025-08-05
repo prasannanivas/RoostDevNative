@@ -31,6 +31,7 @@ import {
 } from "../../../utils/questionnaireUtils";
 import { useQuestionnaire } from "../../../context/QuestionnaireContext";
 import { getProfileInitialsForQuestion } from "../../../data/questionnaireData";
+import ToggleButtonGroup from "./ToggleButtonGroup";
 
 const COLORS = {
   green: "#377473",
@@ -217,7 +218,8 @@ const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
           <View key={field.key} style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>{field.label}</Text>
             <View style={styles.toggleGroup}>
-              <CustomToggleButton
+              <ToggleButtonGroup
+                question={field}
                 options={field.options}
                 value={fieldValue}
                 onValueChange={(value) => handleFieldChange(field.key, value)}
@@ -228,20 +230,22 @@ const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
 
       case "buttonGroup":
         return (
-          <ButtonGroup
-            key={field.key}
-            label={field.label}
-            value={fieldValue}
-            onValueChange={(value) => handleFieldChange(field.key, value)}
-            options={field.options}
-            placeholder={field.placeholder}
-            style={
-              field.accommodateWidth
-                ? { flex: field.accommodateWidth, paddingHorizontal: 2 }
-                : undefined
-            }
-            isRequired={field.required}
-          />
+          <View key={field.key} style={styles.buttonGroupContainer}>
+            <ButtonGroup
+              label={field.label}
+              value={fieldValue}
+              onValueChange={(value) => handleFieldChange(field.key, value)}
+              options={field.options}
+              placeholder={field.placeholder}
+              style={{
+                width: "100%",
+                ...(field.accommodateWidth
+                  ? { flex: field.accommodateWidth }
+                  : {}),
+              }}
+              isRequired={field.required}
+            />
+          </View>
         );
 
       case "text":
@@ -403,6 +407,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Futura",
     marginBottom: 4,
+  },
+  buttonGroupContainer: {
+    width: "100%",
+    paddingHorizontal: 0,
+    marginBottom: 10,
   },
 });
 
