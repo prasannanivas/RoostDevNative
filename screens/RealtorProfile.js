@@ -17,6 +17,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as FileSystem from "expo-file-system";
 import { useRealtor } from "../context/RealtorContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
@@ -42,11 +44,12 @@ const COLORS = {
   coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
 };
 
-export default function RealtorProfile({ onClose }) {
+export default function RealtorProfile({ onClose, preloadedImage }) {
   const { realtorInfo, fetchRefreshData } = useRealtor();
   const { logout } = useAuth();
   const navigation = useNavigation();
   const realtor = realtorInfo;
+  const [imageWasUpdated, setImageWasUpdated] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
   const [error, setError] = useState("");
@@ -405,8 +408,8 @@ export default function RealtorProfile({ onClose }) {
       fetchRefreshData(realtor._id);
     }
 
-    // Call the original onClose prop
-    if (onClose) onClose();
+    // Call the original onClose prop with imageWasUpdated flag
+    if (onClose) onClose(imageWasUpdated);
   };
 
   // Update the handleFieldChange function to capture the latest state value
@@ -824,22 +827,30 @@ export default function RealtorProfile({ onClose }) {
       console.log("Starting image upload process...");
       console.log("Image URI:", imageUri);
 
+      // Compress the image to 1024x1024 max size with quality 0.8
+      console.log("Compressing image...");
+      const compressedImage = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [{ resize: { width: 1024, height: 1024 } }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      console.log("Image compressed successfully");
+      console.log("Compressed URI:", compressedImage.uri);
+
       // Create FormData for image upload
       const formData = new FormData();
 
       // Get file extension from the URI path
-      const uriParts = imageUri.split("/");
+      const uriParts = compressedImage.uri.split("/");
       const fileName = uriParts[uriParts.length - 1];
       const fileNameParts = fileName.split(".");
-      const fileType =
-        fileNameParts.length > 1
-          ? fileNameParts[fileNameParts.length - 1]
-          : "jpg";
+      const fileType = "jpg"; // Since we're forcing JPEG format in compression
 
       console.log("Detected file type:", fileType);
 
       formData.append("profilePicture", {
-        uri: imageUri,
+        uri: compressedImage.uri,
         type: `image/${fileType}`,
         name: `profile-picture.${fileType}`,
       });
@@ -864,10 +875,36 @@ export default function RealtorProfile({ onClose }) {
           message: "Profile picture updated successfully!",
           type: "success",
         });
+
+        try {
+          // Read the compressed file as base64 for local storage
+          const base64Data = await FileSystem.readAsStringAsync(
+            compressedImage.uri,
+            { encoding: FileSystem.EncodingType.Base64 }
+          );
+
+          // Save to local storage with timestamp
+          const imageData = {
+            base64: base64Data,
+            timestamp: Date.now(),
+          };
+
+          await AsyncStorage.setItem(
+            `profileImage_${realtor._id}`,
+            JSON.stringify(imageData)
+          );
+
+          console.log("Profile image saved to local storage");
+        } catch (storageError) {
+          console.error("Error saving image to local storage:", storageError);
+        }
+
         // Refresh realtor data to include the new profile picture
         await fetchRefreshData(realtor._id);
         // Force image refresh by updating the cache-busting key
         setImageRefreshKey(Date.now());
+        // Set flag that image was updated
+        setImageWasUpdated(true);
         // Clear the selected image after successful upload
         setSelectedImage(null);
       } else {
@@ -1017,11 +1054,13 @@ export default function RealtorProfile({ onClose }) {
                     formData.lastName.charAt(0).toUpperCase()
                   : "R"}
               </Text>
-              {(selectedImage || realtor.profilePicture) && (
+              {(selectedImage || realtor.profilePicture || preloadedImage) && (
                 <Image
                   source={
                     selectedImage
                       ? { uri: selectedImage }
+                      : preloadedImage
+                      ? preloadedImage // This will use the base64 data image
                       : {
                           uri: `https://signup.roostapp.io/realtor/profilepic/${realtor._id}?t=${imageRefreshKey}`,
                         }
@@ -1031,6 +1070,8 @@ export default function RealtorProfile({ onClose }) {
                     { position: "absolute", top: 0, left: 0 },
                     uploadingProfilePic && styles.avatarUploading,
                   ]}
+                  // Adding fadeDuration of 0 to make the image appear instantly if it's preloaded
+                  fadeDuration={preloadedImage ? 0 : 300}
                 />
               )}
               {uploadingProfilePic && (

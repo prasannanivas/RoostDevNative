@@ -318,8 +318,8 @@ export default function RealtorRewards({
           <View style={styles.bonusContainer}>
             <Text style={styles.bonusTitle}>BONUS</Text>
             <Text style={styles.bonusText}>
-              Earn an additional 5% pts from any activity from your fellow
-              realtor referrals*
+              Earn an additional 5% from any from realtor that you refer, once
+              one of their clients completes a mortgage.
             </Text>
             <Text style={styles.bonusExample}>
               Example - Realtor B completes a deal they get 300pts, Realtor A

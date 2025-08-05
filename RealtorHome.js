@@ -47,6 +47,7 @@ import RealtorProfile from "./screens/RealtorProfile.js";
 import RealtorRewards from "./screens/RealtorRewards.js";
 import CSVUploadForm from "./screens/AddProfilePic";
 import * as FileSystem from "expo-file-system";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Sharing from "expo-sharing";
 
 // Design System Colors
@@ -209,6 +210,7 @@ const RealtorHome = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
+  const [cachedImageBase64, setCachedImageBase64] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [isMultiple, setIsMultiple] = useState(false); // New state for single/multiple toggle
@@ -354,6 +356,38 @@ const RealtorHome = () => {
       // Reset image load error state and refresh key when realtor data updates
       setImageLoadError(false);
       setImageRefreshKey(Date.now());
+
+      // Try to load profile image from local storage
+      const loadCachedProfileImage = async () => {
+        try {
+          if (realtor && realtor.id) {
+            const cachedImageData = await AsyncStorage.getItem(
+              `profileImage_${realtor.id}`
+            );
+
+            if (cachedImageData) {
+              const { base64, timestamp } = JSON.parse(cachedImageData);
+
+              // Check if cached image is less than 24 hours old
+              const now = Date.now();
+              const isRecent = now - timestamp < 24 * 60 * 60 * 1000; // 24 hours
+
+              if (isRecent && base64) {
+                console.log("Loaded profile image from local storage");
+                setCachedImageBase64(base64);
+              } else {
+                // Clear outdated cache
+                console.log("Cached image is outdated, clearing cache");
+                await AsyncStorage.removeItem(`profileImage_${realtor.id}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error loading cached profile image:", error);
+        }
+      };
+
+      loadCachedProfileImage();
     }
   }, [realtorFromContext?.realtorInfo]);
 
@@ -793,14 +827,56 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 </Text>
                 {!imageLoadError && (
                   <Image
-                    source={{
-                      uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
-                    }}
+                    source={
+                      cachedImageBase64
+                        ? { uri: `data:image/jpeg;base64,${cachedImageBase64}` }
+                        : {
+                            uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
+                          }
+                    }
                     style={[
                       styles.avatar,
                       { position: "absolute", top: 0, left: 0 },
                     ]}
                     onError={() => setImageLoadError(true)}
+                    onLoad={async () => {
+                      try {
+                        // Only download if we don't have cached image
+                        if (!cachedImageBase64) {
+                          const imageUri = `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`;
+                          const localUri =
+                            FileSystem.cacheDirectory +
+                            `profile_${realtor.id}.jpg`;
+
+                          // Download the image to local cache
+                          await FileSystem.downloadAsync(imageUri, localUri);
+
+                          // Read the file as base64
+                          const base64 = await FileSystem.readAsStringAsync(
+                            localUri,
+                            {
+                              encoding: FileSystem.EncodingType.Base64,
+                            }
+                          );
+
+                          // Save to state
+                          setCachedImageBase64(base64);
+
+                          // Also save to AsyncStorage for persistence
+                          const imageData = {
+                            base64: base64,
+                            timestamp: Date.now(),
+                          };
+
+                          await AsyncStorage.setItem(
+                            `profileImage_${realtor.id}`,
+                            JSON.stringify(imageData)
+                          );
+                        }
+                      } catch (error) {
+                        console.log("Error caching profile image:", error);
+                      }
+                    }}
                   />
                 )}
               </View>
@@ -845,8 +921,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
           </TouchableOpacity>
           <Text style={styles.inviteBannerText}>
-            Earn an additional 5% pts from any activity from your fellow realtor
-            referrals*
+            Earn an additional 5% from any from realtor that you refer, once one
+            of their clients completes a mortgage.
           </Text>
         </View>
         {/* ================= TITLE: CLIENTS ================= */}
@@ -1173,7 +1249,82 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         <View style={styles.modalContainer}>
           <RealtorProfile
             realtor={realtorFromContext.realtorInfo || {}}
-            onClose={() => setShowProfile(false)}
+            onClose={async (imageWasUpdated) => {
+              // If the profile picture was updated, refresh our cached image
+              if (imageWasUpdated) {
+                try {
+                  // Reset the image load error flag
+                  setImageLoadError(false);
+                  // Update the timestamp to force a refresh
+                  setImageRefreshKey(Date.now());
+
+                  // Try to load the updated image from AsyncStorage first
+                  const cachedImageData = await AsyncStorage.getItem(
+                    `profileImage_${realtor.id}`
+                  );
+
+                  if (cachedImageData) {
+                    const { base64 } = JSON.parse(cachedImageData);
+                    if (base64) {
+                      // Use the freshly saved image immediately
+                      setCachedImageBase64(base64);
+                      console.log(
+                        "Using freshly updated image from AsyncStorage"
+                      );
+                    } else {
+                      // If somehow we don't have base64 data, trigger a re-download
+                      setCachedImageBase64(null);
+                    }
+                  } else {
+                    // If no cached image exists yet, trigger a download
+                    setCachedImageBase64(null);
+
+                    // Download the image directly
+                    const imageUri = `http://159.203.58.60:5000/realtor/profilepic/${
+                      realtor.id
+                    }?t=${Date.now()}`;
+                    const localUri =
+                      FileSystem.cacheDirectory + `profile_${realtor.id}.jpg`;
+
+                    await FileSystem.downloadAsync(imageUri, localUri);
+
+                    // Read the file as base64
+                    const base64 = await FileSystem.readAsStringAsync(
+                      localUri,
+                      {
+                        encoding: FileSystem.EncodingType.Base64,
+                      }
+                    );
+
+                    // Save to state
+                    setCachedImageBase64(base64);
+
+                    // Also save to AsyncStorage
+                    const imageData = {
+                      base64: base64,
+                      timestamp: Date.now(),
+                    };
+
+                    await AsyncStorage.setItem(
+                      `profileImage_${realtor.id}`,
+                      JSON.stringify(imageData)
+                    );
+                  }
+                } catch (error) {
+                  console.error("Error handling profile image update:", error);
+                  // Clear the cached image so it will be re-downloaded on next render
+                  setCachedImageBase64(null);
+                }
+              }
+              setShowProfile(false);
+            }}
+            preloadedImage={
+              cachedImageBase64
+                ? {
+                    uri: `data:image/jpeg;base64,${cachedImageBase64}`,
+                  }
+                : null
+            }
           />
         </View>
       </ReactNativeModal>
