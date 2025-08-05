@@ -116,6 +116,9 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const placeholderFadeAnim = useRef(new Animated.Value(1)).current;
+  const imageFadeAnim = useRef(new Animated.Value(0)).current;
 
   // Field validation error states
   const [fieldErrors, setFieldErrors] = useState({
@@ -1041,21 +1044,26 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             disabled={uploadingProfilePic}
             style={styles.avatarContainer}
           >
-            <View
-              style={[
-                styles.avatarPlaceholder,
-                uploadingProfilePic && styles.avatarUploading,
-                { position: "relative" },
-              ]}
-            >
-              <Text style={styles.avatarInitial}>
-                {formData.firstName
-                  ? formData.firstName.charAt(0).toUpperCase() +
-                    formData.lastName.charAt(0).toUpperCase()
-                  : "R"}
-              </Text>
+            <View style={{ position: "relative", width: 120, height: 120 }}>
+              {/* Blue Circle Background - This will fade out */}
+              <Animated.View
+                style={[
+                  styles.avatarPlaceholder,
+                  uploadingProfilePic && styles.avatarUploading,
+                  { opacity: placeholderFadeAnim, position: "absolute" },
+                ]}
+              >
+                <Text style={styles.avatarInitial}>
+                  {formData.firstName
+                    ? formData.firstName.charAt(0).toUpperCase() +
+                      formData.lastName.charAt(0).toUpperCase()
+                    : "R"}
+                </Text>
+              </Animated.View>
+
+              {/* Profile Image - This will fade in when loaded */}
               {(selectedImage || realtor.profilePicture || preloadedImage) && (
-                <Image
+                <Animated.Image
                   source={
                     selectedImage
                       ? { uri: selectedImage }
@@ -1067,11 +1075,35 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
                   }
                   style={[
                     styles.avatar,
-                    { position: "absolute", top: 0, left: 0 },
+                    {
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      zIndex: 2,
+                      opacity: imageFadeAnim,
+                    },
                     uploadingProfilePic && styles.avatarUploading,
                   ]}
                   // Adding fadeDuration of 0 to make the image appear instantly if it's preloaded
                   fadeDuration={preloadedImage ? 0 : 300}
+                  onLoad={() => {
+                    setImageLoaded(true);
+                    // Run parallel animations for a smooth transition
+                    Animated.parallel([
+                      // Fade out the placeholder
+                      Animated.timing(placeholderFadeAnim, {
+                        toValue: 0,
+                        duration: 1300,
+                        useNativeDriver: true,
+                      }),
+                      // Fade in the actual image
+                      Animated.timing(imageFadeAnim, {
+                        toValue: 1,
+                        duration: 400,
+                        useNativeDriver: true,
+                      }),
+                    ]).start();
+                  }}
                 />
               )}
               {uploadingProfilePic && (
