@@ -279,9 +279,8 @@ export default function RealtorRewards({
           </TouchableOpacity>
           <View style={styles.pointsRow}>
             <Text style={styles.pointsNum}>{currentPoints}</Text>
-            <Text style={styles.pointsLbl}>p</Text>
             <Text style={[styles.pointsLbl, { top: "-6", left: -2 }]}>
-              oints
+              points
             </Text>
           </View>
         </View>
@@ -341,8 +340,9 @@ export default function RealtorRewards({
           {/* Client Rewards */}
           <Text style={styles.rewardsSubTitle}>FOR YOUR CLIENTS</Text>
           <Text style={styles.rewardsDescription}>
-            These rewards go straight to you clients as a gift, we include your
-            photo, details and a thank you for using you as their realtor.
+            These rewards are sent directly to your clients as a gift. We
+            include your photo, contact details, and a thank-you message for
+            choosing you as their realtor.
           </Text>
           {fetchingRewards ? (
             <ActivityIndicator />
@@ -393,9 +393,9 @@ export default function RealtorRewards({
           {/* Realtor Rewards */}
           <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
           <Text style={styles.rewardsDescription}>
-            We will mail you all rewards to Address that is in your Profile
-            section. Make sure it is up to date. As we will send you a referral
-            document for your record and RECO
+            Rewards will be mailed to the address listed in your profile. Make
+            sure it’s up to date — we’ll also send a referral document for your
+            records.
           </Text>
           {fetchingRewards ? (
             <ActivityIndicator />
@@ -446,8 +446,8 @@ export default function RealtorRewards({
 
           <Text style={styles.rewardsSubTitle}>FOR CHARITY</Text>
           <Text style={styles.rewardsDescription}>
-            These rewards are considered charitable donations, you will receive
-            a receipt for your taxes.
+            These rewards are considered charitable donations. You'll receive a
+            receipt for tax purposes.
           </Text>
           {fetchingRewards ? (
             <ActivityIndicator />

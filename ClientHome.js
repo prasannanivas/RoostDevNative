@@ -187,7 +187,7 @@ const ClientHome = ({ questionnaireData }) => {
 
   // Help button logic
   const handleHelpPress = async () => {
-    const phoneNumber = "+16475730423";
+    const phoneNumber = "+14374349705";
     const message = "Can you help me with my mortgage application?";
 
     // Try SMS first
@@ -486,9 +486,8 @@ const ClientHome = ({ questionnaireData }) => {
                 <>
                   <Text style={styles.bigTitle}>Just Hang in there</Text>
                   <Text style={styles.subTitle}>
-                    One of our mortgage specialists will reach out soon, usually
-                    less then 24 hours. However you can get started by sharing
-                    some needed documents.
+                    A mortgage specialist will reach out within 24 hours. In the
+                    meantime, you can get started by uploading your documents.
                   </Text>
                 </>
               )
