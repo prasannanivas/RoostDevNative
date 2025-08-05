@@ -1,23 +1,104 @@
-import React from "react";
-import { Modal, View, Text, TouchableOpacity } from "react-native";
+import React, { useRef, useEffect, useState } from "react";
+import { Modal, View, Text, TouchableOpacity, Animated } from "react-native";
 
 // Pass COLORS as a prop for theme consistency
 const LogoutConfirmationModal = ({ visible, onConfirm, onCancel, COLORS }) => {
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(1000)).current;
+  const [modalVisible, setModalVisible] = useState(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setModalVisible(true);
+      // Start animations when modal becomes visible
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Fade out animations when modal is to be hidden
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 1000,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // After fade out animation is complete, hide the modal
+        setModalVisible(false);
+      });
+    }
+  }, [visible, fadeAnim, slideAnim]);
+
+  // Custom handlers for cancel and confirm to include animation
+  const handleCancel = () => {
+    // Run the animations before actually closing the modal
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 1000,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Call the original onCancel after animation completes
+      onCancel();
+    });
+  };
+
+  const handleConfirm = () => {
+    // Run the animations before actually confirming logout
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 1000,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Call the original onConfirm after animation completes
+      onConfirm();
+    });
+  };
+
   return (
     <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onCancel}
+      visible={modalVisible}
+      animationType="none"
+      transparent={true}
+      onRequestClose={handleCancel}
     >
-      <View
+      <Animated.View
         style={{
           flex: 1,
           justifyContent: "flex-end",
-          backgroundColor: "rgba(0,0,0,0.3)",
+          backgroundColor: "rgba(0,0,0,0.5)",
+          opacity: fadeAnim,
         }}
       >
-        <View
+        <Animated.View
           style={{
             backgroundColor: COLORS.white,
             borderTopLeftRadius: 20,
@@ -31,6 +112,7 @@ const LogoutConfirmationModal = ({ visible, onConfirm, onCancel, COLORS }) => {
             shadowOpacity: 0.15,
             shadowRadius: 8,
             elevation: 8,
+            transform: [{ translateY: slideAnim }],
           }}
         >
           <Text
@@ -61,7 +143,7 @@ const LogoutConfirmationModal = ({ visible, onConfirm, onCancel, COLORS }) => {
                 marginRight: 8,
                 alignItems: "center",
               }}
-              onPress={onConfirm}
+              onPress={handleConfirm}
             >
               <Text
                 style={{
@@ -72,20 +154,21 @@ const LogoutConfirmationModal = ({ visible, onConfirm, onCancel, COLORS }) => {
                   fontFamily: "Futura",
                 }}
               >
-                Log Out
+                Logout
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{
                 flex: 1,
                 backgroundColor: COLORS.white,
+                borderColor: COLORS.green,
                 paddingVertical: 12,
                 borderRadius: 33,
-                borderWidth: 1,
+                borderWidth: 2,
                 marginLeft: 8,
                 alignItems: "center",
               }}
-              onPress={onCancel}
+              onPress={handleCancel}
             >
               <Text
                 style={{
@@ -99,8 +182,8 @@ const LogoutConfirmationModal = ({ visible, onConfirm, onCancel, COLORS }) => {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 };
