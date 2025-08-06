@@ -25,7 +25,10 @@ import * as Contacts from "expo-contacts";
 import Svg, { Rect, Path, Circle } from "react-native-svg";
 import { useAuth } from "./context/AuthContext";
 import { useRealtor } from "./context/RealtorContext";
+import { useNotification } from "./context/NotificationContext";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import NotificationBell from "./components/icons/NotificationBell";
+import NotificationComponent from "./NotificationComponent";
 import {
   FontAwesome,
   Ionicons,
@@ -76,6 +79,8 @@ const RealtorHome = () => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
   const realtorFromContext = useRealtor();
+  const { unreadCount, notifications, refreshNotifications } =
+    useNotification();
 
   const invited = realtorFromContext?.invitedClients || [];
   const completedReferrals =
@@ -89,6 +94,9 @@ const RealtorHome = () => {
   );
 
   const navigation = useNavigation();
+  // Notification state
+  const [showNotifications, setShowNotifications] = useState(false);
+
   // Local state
   const [showForm, setShowForm] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -593,10 +601,14 @@ const RealtorHome = () => {
     setShowRewards(true);
   };
 
-  // Update the onRefresh function to also fetch realtor data
+  // Update the onRefresh function to also fetch realtor data and notifications
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    Promise.all([auth.refetch?.(), realtorFromContext?.fetchLatestRealtor()])
+    Promise.all([
+      auth.refetch?.(),
+      realtorFromContext?.fetchLatestRealtor(),
+      refreshNotifications && refreshNotifications(),
+    ])
       .then(() => {
         // After fetching realtor data, update needed documents counts
         updateNeededDocumentsCounts();
@@ -604,7 +616,7 @@ const RealtorHome = () => {
       .finally(() => {
         setRefreshing(false);
       });
-  }, [auth, realtorFromContext]);
+  }, [auth, realtorFromContext, refreshNotifications]);
   const pickContact = async () => {
     try {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -799,6 +811,13 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
   return (
     <View style={styles.container}>
+      {/* Notification Component */}
+      <NotificationComponent
+        visible={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        userId={realtor.id}
+      />
+
       {/* ================= TOP HEADER ================= */}
       <View style={styles.headerContainer}>
         <TouchableOpacity
@@ -893,14 +912,25 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             </Text>
           </View>
         </TouchableOpacity>
-        <GiftIcon
-          onPress={handleRewardsClick}
-          width={46}
-          height={46}
-          backgroundColor="#1D2327"
-          strokeColor="#377473"
-          pathColor="#FDFDFD"
-        />
+        <View style={styles.iconsContainer}>
+          <NotificationBell
+            size={26}
+            bellColor="#ffffff"
+            badgeColor="#F0913A"
+            showBadge={unreadCount > 0}
+            badgeCount={unreadCount}
+            style={styles.notificationBell}
+            onPress={() => setShowNotifications(true)}
+          />
+          <GiftIcon
+            onPress={handleRewardsClick}
+            width={46}
+            height={46}
+            backgroundColor="#1D2327"
+            strokeColor="#377473"
+            pathColor="#FDFDFD"
+          />
+        </View>
       </View>
       {/* ================= INVITE REALTORS BANNER ================= */}
       <ScrollView
@@ -2137,6 +2167,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.black,
     // Content area is 64px high starting at top: 68px
   },
+  iconsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  notificationBell: {
+    marginRight: 15,
+  },
   userInfoContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -2333,7 +2370,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    zIndex: 1000,
+    zIndex: 10,
     justifyContent: "center",
     alignItems: "center",
   },

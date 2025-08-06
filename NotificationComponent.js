@@ -131,11 +131,22 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
 
   // Determine notification type based on the notification data
   let notificationType = "warning";
-  if (notification.category === "DOCUMENT_REJECTED") {
+  if (
+    notification.category === "DOCUMENT_REJECTED" ||
+    notification.category === ""
+  ) {
     notificationType = "warning-red";
-  } else if (notification.category === "DOCUMENT_REQUESTED") {
+  } else if (
+    notification.category === "DOCUMENT_REQUESTED" ||
+    notification.category === "POINTS_DEDUCTED"
+  ) {
     notificationType = "warning-orange";
-  } else if (notification.category === "DOCUMENT_SUBMITTED") {
+  } else if (
+    notification.category === "DOCUMENT_SUBMITTED" ||
+    notification.category === "NEW_CLIENT" ||
+    notification.category === "POINTS_AWARDED" ||
+    notification.category === "REWARD_APPROVED"
+  ) {
     notificationType = "success-green";
   } else if (notification.category === "DOCUMENT_APPROVED") {
     notificationType = "success-blue";
