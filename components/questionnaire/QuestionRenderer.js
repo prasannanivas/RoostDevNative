@@ -57,6 +57,7 @@ const QuestionRenderer = ({
     case "multipleChoice":
       return (
         <MultipleChoice
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -67,6 +68,7 @@ const QuestionRenderer = ({
     case "numericInput":
       return (
         <NumericInput
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -76,6 +78,7 @@ const QuestionRenderer = ({
     case "form":
       return (
         <Form
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -87,6 +90,7 @@ const QuestionRenderer = ({
     case "complexForm":
       return (
         <ComplexForm
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -97,6 +101,7 @@ const QuestionRenderer = ({
     case "dropdown":
       return (
         <Dropdown
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -106,6 +111,7 @@ const QuestionRenderer = ({
     case "textArea":
       return (
         <TextArea
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -115,6 +121,7 @@ const QuestionRenderer = ({
     case "toggleButtonGroup":
       return (
         <ToggleButtonGroup
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -124,6 +131,7 @@ const QuestionRenderer = ({
     case "conditionalForm":
       return (
         <ConditionalForm
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -132,6 +140,7 @@ const QuestionRenderer = ({
     case "conditionalMultipleItems":
       return (
         <ConditionalMultipleItems
+          key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
@@ -139,7 +148,12 @@ const QuestionRenderer = ({
       );
 
     case "finalStep":
-      return <FinalStep question={processedQuestion} />;
+      return (
+        <FinalStep
+          key={`question-${question.id}`}
+          question={processedQuestion}
+        />
+      );
 
     default:
       return (
