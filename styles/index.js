@@ -13,4 +13,5 @@ export const COLORS = {
   warning: "#FF9800",
   info: "#2196F3",
   transparent: "transparent",
+  slate: "#6B7280", // Medium gray for secondary text
 };

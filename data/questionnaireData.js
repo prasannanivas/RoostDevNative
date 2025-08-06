@@ -77,6 +77,7 @@ const questions = [
   {
     id: 1,
     page: 1,
+    category: "basic",
     text: "Have you found a property yet?",
     type: "multipleChoice",
     options: [
@@ -89,6 +90,7 @@ const questions = [
   {
     id: 2,
     page: 2,
+    category: "basic",
     text: "",
     type: "form",
     fields: [
@@ -117,6 +119,7 @@ const questions = [
   {
     id: 4,
     page: 3,
+    category: "basic",
     text: "Do you plan on",
     type: "multipleChoice",
     options: [
@@ -134,6 +137,7 @@ const questions = [
   {
     id: 5,
     page: 4,
+    category: "choice",
     text: "Is it just you? or another person applying too?",
     type: "multipleChoice",
     options: [
@@ -148,6 +152,7 @@ const questions = [
   {
     id: 6,
     page: 5,
+    category: "personal_details",
     text: "What are your details?",
     type: "form",
     fields: [
@@ -172,6 +177,7 @@ const questions = [
   {
     id: 7,
     page: 6,
+    category: "personal_details",
     text: "What are your details?",
     type: "complexForm",
     profileInitials: "", // Will be dynamically generated from name
@@ -235,6 +241,7 @@ const questions = [
   {
     id: 8,
     page: 7,
+    category: "living_details",
     text: "Where are you currently living?",
     type: "complexForm",
     profileInitials: "", // This could be dynamically generated from name
@@ -282,6 +289,7 @@ const questions = [
   {
     id: 9,
     page: 8,
+    category: "employment_details",
     text: "Currently what type of income do you have?",
     type: "multipleChoice",
     options: [
@@ -302,6 +310,7 @@ const questions = [
   {
     id: 10,
     page: 9,
+    category: "employment_details",
     text: "Where do you work?",
     type: "complexForm",
     sections: [
@@ -365,6 +374,7 @@ const questions = [
 
   {
     id: 11,
+    category: "income_details",
     page: 10,
     text: "Where do you work?",
     type: "complexForm",
@@ -403,6 +413,7 @@ const questions = [
   {
     id: 12,
     page: 8,
+    category: "banking_details",
     text: "Who do you bank with?",
     type: "dropdown",
     profileInitials: "",
@@ -432,6 +443,7 @@ const questions = [
   {
     id: 13,
     page: 13,
+    category: "assets",
     text: "Do you have any assets?",
     type: "conditionalMultipleItems",
     profileInitials: "",
@@ -460,6 +472,7 @@ const questions = [
   {
     id: 14,
     page: 14,
+    category: "properties",
     text: "Do you have any other properties?",
     type: "conditionalForm",
     profileInitials: "",
@@ -517,6 +530,7 @@ const questions = [
   {
     id: 100,
     page: 100,
+    category: "personal_details",
     text: "What are your details?",
     type: "form",
     fields: [
@@ -540,6 +554,7 @@ const questions = [
   {
     id: 102,
     page: 102,
+    category: "personal_details",
     text: "What are your details?",
     type: "complexForm",
     profileInitials: "",
@@ -596,6 +611,7 @@ const questions = [
   {
     id: 104,
     page: 104,
+    category: "living_details",
     text: "Where are you currently living?",
     type: "complexForm",
     profileInitials: "",
@@ -639,6 +655,7 @@ const questions = [
   {
     id: 106,
     page: 106,
+    category: "employment_details",
     text: "Currently what type of income do you have?",
     type: "multipleChoice",
     profileInitials: "",
@@ -658,6 +675,7 @@ const questions = [
   {
     id: 107,
     page: 107,
+    category: "employment_details",
     text: "Where do you work?",
     type: "complexForm",
     profileInitials: "",
@@ -709,6 +727,7 @@ const questions = [
   {
     id: 108,
     page: 108,
+    category: "income_details",
     text: "Where do you work?",
     type: "complexForm",
     profileInitials: "",
@@ -743,6 +762,7 @@ const questions = [
   {
     id: 114,
     page: 114,
+    category: "banking_details",
     text: "Who do you bank with?",
     type: "dropdown",
     profileInitials: "",
@@ -771,6 +791,7 @@ const questions = [
   {
     id: 116,
     page: 116,
+    category: "assets",
     text: "Do you have any assets?",
     type: "conditionalMultipleItems",
     profileInitials: "",
@@ -798,6 +819,7 @@ const questions = [
   {
     id: 118,
     page: 118,
+    category: "properties",
     text: "Do you have any other properties?",
     type: "conditionalForm",
     profileInitials: "",
@@ -854,6 +876,7 @@ const questions = [
   {
     id: 101,
     page: 101,
+    category: "co_personal_details",
     text: "What are your co-signer's details?",
     type: "form",
     fields: [
@@ -887,6 +910,7 @@ const questions = [
   {
     id: 103,
     page: 103,
+    category: "co_personal_details",
     text: "What is [coFirstName]'s details?", // This would be dynamically populated with co-signer's name
     type: "complexForm",
     profileInitials: "", // Would be dynamically generated from co-signer's name
@@ -944,6 +968,7 @@ const questions = [
   {
     id: 105,
     page: 105,
+    category: "co_living_details",
     text: "Where is [coFirstName] currently living?", // Dynamically populated
     type: "complexForm",
     profileInitials: "",
@@ -987,6 +1012,7 @@ const questions = [
   {
     id: 110,
     page: 110,
+    category: "co_employment_details",
     text: "Currently what type of income does [coFirstName] have?",
     type: "multipleChoice",
     profileInitials: "",
@@ -1006,6 +1032,7 @@ const questions = [
   {
     id: 111,
     page: 111,
+    category: "co_employment_details",
     text: "Where does [coFirstName] work?",
     type: "complexForm",
     profileInitials: "",
@@ -1057,6 +1084,7 @@ const questions = [
   {
     id: 112,
     page: 112,
+    category: "co_income_details",
     text: "Where does [coFirstName] work?",
     type: "complexForm",
     profileInitials: "",
@@ -1091,6 +1119,7 @@ const questions = [
   {
     id: 113,
     page: 113,
+    category: "co_income_details",
     text: "What is [coFirstName]'s monthly income?",
     type: "numericInput",
     profileInitials: "",
@@ -1102,6 +1131,7 @@ const questions = [
   {
     id: 115,
     page: 115,
+    category: "co_banking_details",
     text: "Who does [coFirstName] bank with?",
     type: "dropdown",
     profileInitials: "",
@@ -1131,6 +1161,7 @@ const questions = [
   {
     id: 117,
     page: 117,
+    category: "co_assets",
     text: "Does [coFirstName] have any assets?",
     type: "conditionalMultipleItems",
     profileInitials: "",
@@ -1158,6 +1189,7 @@ const questions = [
   {
     id: 119,
     page: 119,
+    category: "co_properties",
     text: "Does [coFirstName] have any other properties?",
     type: "conditionalForm",
     profileInitials: "",

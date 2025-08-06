@@ -13,6 +13,7 @@ import {
   Platform,
   RefreshControl,
   Linking,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "./context/AuthContext";
@@ -30,6 +31,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import UploadModal from "./components/modals/UploadModal";
 import SubmittedDocumentModal from "./components/modals/SubmittedDocumentModal";
 import CompleteDocumentModal from "./components/modals/CompleteDocumentModal";
+import CategorySelectionModal from "./components/modals/CategorySelectionModal";
 
 /**
  * Color palette from UX team design system
@@ -64,6 +66,7 @@ const ClientHome = ({ questionnaireData }) => {
     fetchRefreshData,
     loadingClient,
   } = useClient();
+
   const { unreadCount } = useNotification();
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -71,6 +74,9 @@ const ClientHome = ({ questionnaireData }) => {
   const [showQuestionnairePreview, setShowQuestionnairePreview] =
     useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [showChangeOptions, setShowChangeOptions] = useState(false);
+  const [showCategorySelection, setShowCategorySelection] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -218,6 +224,20 @@ const ClientHome = ({ questionnaireData }) => {
   const handleNotifications = () => {
     setShowNotifications(true);
   };
+
+  // Handle category selection for questionnaire sections
+  // The category selection is now handled directly within the modal
+  const handleCategorySelect = (categoryId, startQuestionId) => {
+    console.log(
+      `Selected category: ${categoryId}, starting at question: ${startQuestionId}`
+    );
+    // No need to set the selected category or navigate elsewhere
+    // The CategorySelectionModal now handles question rendering internally
+
+    // We keep this function for backward compatibility
+    // but it won't be called with our updated CategorySelectionModal
+    // unless we intentionally want to navigate away from the modal
+  };
   // Render notification button with badge
   const renderNotificationButton = () => {
     return (
@@ -239,7 +259,7 @@ const ClientHome = ({ questionnaireData }) => {
       <View style={styles.questionnaireButtonContainer}>
         <TouchableOpacity
           style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
-          onPress={() => setShowQuestionnaire(true)}
+          onPress={() => setShowChangeOptions(true)}
         >
           {/* <Ionicons name="play" size={24} color={COLORS.white} /> */}
           <Text style={styles.questionnaireButtonText}>Change Application</Text>
@@ -598,6 +618,52 @@ const ClientHome = ({ questionnaireData }) => {
           setShowSubmittedModal(false);
         }}
       />
+      {/* Modal for change application options */}
+      <Modal
+        visible={showChangeOptions}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowChangeOptions(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.changeOptionsModalContent}>
+            <Text style={styles.changeOptionsTitle}>Change Application</Text>
+            <Text style={styles.changeOptionsSubTitle}>
+              How would you like to update your application?
+            </Text>
+
+            <TouchableOpacity
+              style={styles.changeOptionButton}
+              onPress={() => {
+                setShowChangeOptions(false);
+                setShowQuestionnaire(true);
+              }}
+            >
+              <Text style={styles.changeOptionButtonText}>Start Over</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.changeOptionButton, styles.secondOptionButton]}
+              onPress={() => {
+                setShowChangeOptions(false);
+                setShowCategorySelection(true);
+              }}
+            >
+              <Text style={styles.changeOptionButtonText}>
+                Change only Specific Info
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowChangeOptions(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Modal for questionnaire preview */}
       {/* <QuestionnairePreview /> */}
       {/* Modal for testing the actual questionnaire */}
@@ -605,15 +671,25 @@ const ClientHome = ({ questionnaireData }) => {
         visible={showQuestionnaire}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowQuestionnaire(false)}
+        onRequestClose={() => {
+          setShowQuestionnaire(false);
+          // Reset the selected category when closing the questionnaire
+          setSelectedCategory(null);
+        }}
       >
         <QuestionnaireProvider>
           <Questionnaire
+            key={`questionnaire-${Date.now()}`}
             navigation={{
-              goBack: () => setShowQuestionnaire(false),
+              goBack: () => {
+                setShowQuestionnaire(false);
+                setSelectedCategory(null);
+              },
             }}
             questionnaireData={questionnaireData}
             showCloseButton={true}
+            selectedCategory={selectedCategory}
+            startQuestionId={selectedCategory?.startQuestionId}
           />
         </QuestionnaireProvider>
       </Modal>
@@ -622,6 +698,28 @@ const ClientHome = ({ questionnaireData }) => {
         onClose={() => setShowNotifications(false)}
         userId={clientFromContext.id}
       />
+
+      {/* Category Selection Modal - Using key to force remount and reset state */}
+      {showCategorySelection && (
+        <QuestionnaireProvider>
+          <CategorySelectionModal
+            key={`category-selection-${Date.now()}`}
+            visible={showCategorySelection}
+            questionnaireData={questionnaireData}
+            onClose={() => {
+              onRefresh();
+              setShowCategorySelection(false);
+            }}
+            onSelectCategory={handleCategorySelect}
+            logo={
+              <Image
+                source={require("./assets/Roost_Logo_V1_Logo-text-black.svg")}
+                style={{ width: 150, height: 60, resizeMode: "contain" }}
+              />
+            }
+          />
+        </QuestionnaireProvider>
+      )}
     </View>
   );
 };
@@ -1225,6 +1323,68 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 12, // H4 size
     fontWeight: "700", // H4 weight
+    fontFamily: "Futura",
+  },
+  // Change Application Modal Styles
+  changeOptionsModalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  changeOptionsTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.black,
+    marginBottom: 12,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  changeOptionsSubTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.slate,
+    marginBottom: 24,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  changeOptionButton: {
+    backgroundColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  secondOptionButton: {
+    backgroundColor: COLORS.blue,
+  },
+  changeOptionButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: COLORS.slate,
+    fontSize: 14,
+    fontWeight: "500",
     fontFamily: "Futura",
   },
 });
