@@ -157,14 +157,18 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
   }
 
   return (
-    <NotificationMessage
-      type={notificationType}
-      date={notification.time} // Using the time field from the new format
-      title={notification.title}
-      message={notification.message}
-      onPress={handleNotificationPress}
-      read={notification.read}
-    />
+    <>
+      {notification.category === "DOCUMENT_SUBMITTED" ? null : (
+        <NotificationMessage
+          type={notificationType}
+          date={notification.time} // Using the time field from the new format
+          title={notification.title}
+          message={notification.message}
+          onPress={handleNotificationPress}
+          read={notification.read}
+        />
+      )}
+    </>
   );
 };
 

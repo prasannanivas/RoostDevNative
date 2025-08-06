@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import Logo from "../components/Logo";
 import AnimatedDropdown from "../components/common/AnimatedDropdown";
+import Svg, { Path } from "react-native-svg";
 
 /**
  * Color palette from UX team design system
@@ -334,6 +335,14 @@ const PasswordScreen = React.forwardRef(
                 />
               </TouchableOpacity>
             </View>
+
+            <View style={styles.passwordInstruction}>
+              <Text style={styles.passwordInstructionText}>
+                The password should be 8 characters long including a number and
+                upper case
+              </Text>
+            </View>
+
             {/* Ask for Invite Code if needed */}
             {inviteCodeRequired && (
               <View style={styles.inviteCodeSection}>
@@ -445,17 +454,32 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   passwordInstruction: {
-    fontSize: 12, // Sub-p size
+    fontSize: 14, // Sub-p size
     fontWeight: "500", // Sub-p weight
-    color: COLORS.slate,
+    color: COLORS.black,
+    backgroundColor: "#3774734D",
     marginTop: 4,
     marginBottom: 16,
-    alignSelf: "flex-start",
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 36,
+    borderRadius: 8,
     fontFamily: "Futura",
+    textAlign: "center",
   },
   inviteCodeSection: {
     width: "100%",
     marginTop: 24,
+  },
+  passwordInstructionText: {
+    fontSize: 14, // Sub-p size
+    fontWeight: "500", // Sub-p weight
+    color: COLORS.black,
+
+    alignSelf: "center",
+    fontFamily: "Futura",
   },
   inviteCodeMessage: {
     flexDirection: "row",
