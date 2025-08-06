@@ -660,7 +660,7 @@ const RealtorHome = () => {
       }`;
     const smsMessage = `Hi ${formData.firstName},
 
-I'm sending you an invite to get a mortgage with Roost, here is the link to sign up ${signupLink}.`;
+I'm sending you an invite to get a mortgage with Roost, here is the link to sign up: ${signupLink}`;
 
     const smsUrl = `sms:${formData.phone}?body=${encodeURIComponent(
       smsMessage
@@ -684,9 +684,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         realtorFromContext?.realtorInfo?.inviteCode || ""
       }`;
     const emailSubject = "Invitation to get a mortgage with Roost";
-    const emailBody = `Hi ${formData.firstName}
+    const emailBody = `Hi ${formData.firstName},
 
-I'm sending you an invite to get a mortgage with Roost, here is the link to sign up ${signupLink}. If you have any questions just ask.`;
+I'm sending you an invite to get a mortgage with Roost, here is the link to sign up: ${signupLink}. If you have any questions just ask.`;
 
     const mailtoUrl = `mailto:${formData.email}?subject=${encodeURIComponent(
       emailSubject

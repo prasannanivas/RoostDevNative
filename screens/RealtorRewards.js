@@ -279,7 +279,7 @@ export default function RealtorRewards({
           </TouchableOpacity>
           <View style={styles.pointsRow}>
             <Text style={styles.pointsNum}>{currentPoints}</Text>
-            <Text style={[styles.pointsLbl, { top: "-6", left: -2 }]}>
+            <Text style={[styles.pointsLbl, { top: "-3", left: -2 }]}>
               points
             </Text>
           </View>
@@ -798,11 +798,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   pointsLbl: {
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: "medium",
     fontFamily: "Futura",
     position: "relative",
-    top: -12,
     color: COLORS.black,
   },
   pointsRow: {
