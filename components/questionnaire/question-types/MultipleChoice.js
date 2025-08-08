@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import AnimatedDropdown from "../../common/AnimatedDropdown";
 
 const COLORS = {
   green: "#377473",
@@ -14,7 +15,13 @@ const COLORS = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-const MultipleChoice = ({ question, value, onValueChange, onAutoNavigate }) => {
+const MultipleChoice = ({
+  question,
+  value,
+  onValueChange,
+  onAutoNavigate,
+  fieldErrors,
+}) => {
   const handleSelect = (selectedValue) => {
     console.log("MultipleChoice: Option selected:", selectedValue);
     onValueChange(selectedValue);
@@ -55,6 +62,17 @@ const MultipleChoice = ({ question, value, onValueChange, onAutoNavigate }) => {
             </Text>
           </TouchableOpacity>
         ))}
+
+        {fieldErrors[question.id] && (
+          <AnimatedDropdown
+            visible={true}
+            style={styles.errorBox}
+            maxHeight={100}
+            contentKey={fieldErrors[question.id]}
+          >
+            <Text style={styles.errorText}>{fieldErrors[question.id]}</Text>
+          </AnimatedDropdown>
+        )}
       </View>
     </View>
   );
@@ -112,6 +130,18 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     color: COLORS.white,
+  },
+  errorBox: {
+    backgroundColor: "#F0913A80", // Using notice container background with 25% opacity
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 12, // P size
+    fontWeight: "700", // P weight
+    color: "#707070",
+    fontFamily: "Futura",
   },
 });
 

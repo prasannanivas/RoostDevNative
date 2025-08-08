@@ -60,6 +60,7 @@ const QuestionRenderer = ({
           key={`question-${question.id}`}
           question={processedQuestion}
           value={value}
+          fieldErrors={fieldErrors}
           onValueChange={onValueChange}
           onAutoNavigate={onAutoNavigate}
         />

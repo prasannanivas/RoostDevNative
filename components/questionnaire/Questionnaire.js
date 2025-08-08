@@ -490,6 +490,38 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
     return Object.keys(errors).length === 0;
   };
 
+  const validateRequiredFields = () => {
+    const errors = {};
+
+    // Check if this is a required question
+    if (currentQuestion?.id === 5) {
+      // Validate text fields
+      if (!currentResponse) {
+        console.log("5: cr", currentResponse);
+        // Set errors in state
+        setFieldErrors({
+          5: "Your selection is missing, don’t worry you can always add a co-signer later",
+        });
+        return false; // No response yet, allow empty
+      }
+    }
+    if ([9, "9", 106, "106", 110, "110"].includes(currentQuestion?.id)) {
+      // Validate text fields
+      if (!currentResponse) {
+        console.log("101-103: cr", currentResponse);
+        // Set errors in state
+        setFieldErrors({
+          [currentQuestion?.id]:
+            "Your selection is missing, this field is mandatory for your application",
+        });
+        return false; // No response yet, allow empty
+      }
+    }
+
+    // Return true if no errors, false if there are errors
+    return true;
+  };
+
   const handleNext = async () => {
     // First validate name fields if applicable
     if (!validateNameFields()) {
@@ -498,6 +530,10 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
 
     // Validate email, phone, and SIN fields
     if (!validateContactFields()) {
+      return; // Stop if validation fails
+    }
+
+    if (!validateRequiredFields()) {
       return; // Stop if validation fails
     }
 
