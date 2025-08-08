@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -14,10 +14,38 @@ import NetworkStatusIndicator from "./components/NetworkStatusIndicator";
 import OfflineGame from "./components/OfflineGame";
 import PasswordResetScreen from "./screens/PasswordResetScreen";
 import { StatusBar } from "expo-status-bar";
+import SplashScreen from "./components/SplashScreen";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [isSplashVisible, setSplashVisible] = useState(true);
+  const [isAppReady, setAppReady] = useState(false);
+
+  // This function will be called when the splash screen animation finishes
+  const hideSplash = () => {
+    setSplashVisible(false);
+  };
+
+  // We use this effect to simulate loading of initial app resources
+  useEffect(() => {
+    // Set app as ready when splash screen is no longer visible
+    if (!isSplashVisible) {
+      setAppReady(true);
+    }
+  }, [isSplashVisible]);
+
+  // Render only splash screen initially
+  if (isSplashVisible) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <SplashScreen onFinish={hideSplash} />
+      </SafeAreaProvider>
+    );
+  }
+
+  // Render full app once splash screen is gone
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />

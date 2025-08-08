@@ -19,7 +19,7 @@
     "category": "PRODUCTIVITY",
     "privacy": "https://roostapp.io/privacy",
     "splash": {
-      "image": "./assets/favicon.png",
+      "image": "./assets/app-icon-main.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
