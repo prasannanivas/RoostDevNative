@@ -1735,7 +1735,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     You can always email a file (Excel or .CSV) to us at
                     <Text style={{ fontWeight: "bold" }}>
                       {" "}
-                      files@roostapp.io
+                      files@roostapp.io{" "}
                     </Text>
                     and we can take care of it for you
                   </Text>

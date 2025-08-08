@@ -160,6 +160,12 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
     <>
       {notification.category === "DOCUMENT_SUBMITTED" ? null : (
         <NotificationMessage
+          key={
+            notificationType +
+            notification.time +
+            notification.title +
+            notification.message
+          }
           type={notificationType}
           date={notification.time} // Using the time field from the new format
           title={notification.title}
