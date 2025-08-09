@@ -435,7 +435,7 @@ const CategorySelectionModal = ({
       : primaryCategories;
 
   const handleAddCoSigner = () => {
-    setIsFirstTimeCoSigner(true);
+    // setIsFirstTimeCoSigner(true);
     // 1. Change response for question 5 from "just_me" to "co_signer"
     const updatedResponses = {
       ...localResponses,
@@ -550,36 +550,36 @@ const CategorySelectionModal = ({
       nextQuestionId = currentQuestion.nextQuestion;
     }
 
-    if (
-      isFirstTimeCoSigner &&
-      nextQuestionId &&
-      [
-        "101",
-        101,
-        "103",
-        103,
-        "105",
-        105,
-        "110",
-        110,
-        "111",
-        111,
-        "113",
-        113,
-        "115",
-        115,
-        "117",
-        117,
-        "119",
-        119,
-      ].includes(nextQuestionId)
-    ) {
-      if (nextQuestionId === "121") {
-        setIsFirstTimeCoSigner(false);
-        return null;
-      }
-      return nextQuestionId;
-    }
+    // if (
+    //   isFirstTimeCoSigner &&
+    //   nextQuestionId &&
+    //   [
+    //     "101",
+    //     101,
+    //     "103",
+    //     103,
+    //     "105",
+    //     105,
+    //     "110",
+    //     110,
+    //     "111",
+    //     111,
+    //     "113",
+    //     113,
+    //     "115",
+    //     115,
+    //     "117",
+    //     117,
+    //     "119",
+    //     119,
+    //   ].includes(nextQuestionId)
+    // ) {
+    //   if (nextQuestionId === "121") {
+    //     setIsFirstTimeCoSigner(false);
+    //     return null;
+    //   }
+    //   return nextQuestionId;
+    // }
 
     // If we have a next question ID, check if it belongs to the same category
     if (nextQuestionId) {
@@ -1089,10 +1089,10 @@ const CategorySelectionModal = ({
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={styles.navigationButton}
+                style={styles.nextButton}
                 onPress={handleSaveSection}
               >
-                <Text style={styles.navigationButtonText}>Update</Text>
+                <Text style={styles.nextButtonText}>Update</Text>
               </TouchableOpacity>
             )}
           </View>

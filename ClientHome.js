@@ -539,7 +539,9 @@ const ClientHome = ({ questionnaireData }) => {
                     <View>
                       <Text style={styles.sectionHeader}>
                         {"WHAT'S NEEDED FOR " +
-                          (clientFromContext.otherDetails?.name || "")}
+                          (
+                            clientFromContext.otherDetails?.name || ""
+                          )?.toUpperCase()}
                       </Text>
                       <View style={styles.docsContainer}>
                         {docsRequested.length > 0 ? (
