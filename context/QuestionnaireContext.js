@@ -59,8 +59,8 @@ export const QuestionnaireProvider = ({ children }) => {
 
         // Clear responses and visited questions for questions that don't belong to the new flow
         const newResponses = defaultResponses;
-        const newVisitedQuestions = new Set();
-        const newQuestionHistory = [];
+        const newVisitedQuestions = new Set([1]);
+        const newQuestionHistory = [1];
 
         // Keep responses that are valid for the new flow
         Object.keys(responses).forEach((key) => {
@@ -70,7 +70,7 @@ export const QuestionnaireProvider = ({ children }) => {
           }
         });
 
-        // Keep visited questions that are valid for the new flow
+        // Keep visited questions that are valid for the new flow (only if they were actually visited)
         visitedQuestions.forEach((qId) => {
           if (qId <= 5 || isQuestionInFlow(qId, newFlowType)) {
             newVisitedQuestions.add(qId);
@@ -110,12 +110,13 @@ export const QuestionnaireProvider = ({ children }) => {
   };
 
   const goToNextQuestion = (nextQuestionId) => {
-    if (nextQuestionId) {
+    if (nextQuestionId && nextQuestionId !== currentQuestionId) {
       setCurrentQuestionId(nextQuestionId);
       setVisitedQuestions((prev) => new Set([...prev, nextQuestionId]));
       setQuestionHistory((prev) => [...prev, nextQuestionId]);
     }
   };
+
   const goToPreviousQuestion = () => {
     if (questionHistory.length > 1) {
       const newHistory = [...questionHistory];
@@ -133,12 +134,50 @@ export const QuestionnaireProvider = ({ children }) => {
   const markAsCompleted = () => {
     setIsCompleted(true);
   };
+
   const resetQuestionnaire = () => {
     setCurrentQuestionId(1);
     setResponses(defaultResponses);
     setIsCompleted(false);
     setVisitedQuestions(new Set([1]));
     setQuestionHistory([1]);
+  };
+
+  // New: restore previously saved progress (responses + current question + navigation state)
+  const restoreProgress = ({
+    currentQuestionId: toQuestionId = 1,
+    responses: savedResponses = {},
+    visitedQuestions: savedVisited = [],
+    questionHistory: savedHistory = [],
+  }) => {
+    try {
+      const mergedResponses = { ...defaultResponses, ...savedResponses };
+      setResponses(mergedResponses);
+
+      const qId =
+        typeof toQuestionId === "string"
+          ? parseInt(toQuestionId, 10)
+          : toQuestionId;
+      const targetQ = qId || 1;
+      setCurrentQuestionId(targetQ);
+
+      // Use saved visited/history if provided; do not infer from responses to avoid progress inflation
+      const visited =
+        Array.isArray(savedVisited) && savedVisited.length > 0
+          ? new Set(savedVisited)
+          : new Set([1, targetQ]);
+      setVisitedQuestions(visited);
+
+      const history =
+        Array.isArray(savedHistory) && savedHistory.length > 0
+          ? savedHistory
+          : [1, targetQ];
+      setQuestionHistory(history);
+
+      setIsCompleted(false);
+    } catch (e) {
+      console.warn("Failed to restore questionnaire progress:", e);
+    }
   };
 
   const getProgress = () => {
@@ -158,6 +197,10 @@ export const QuestionnaireProvider = ({ children }) => {
         setResponses,
         resetQuestionnaire,
         getProgress,
+        restoreProgress,
+        // Expose navigation state for persistence (read-only)
+        visitedQuestions,
+        questionHistory,
         canGoBack: questionHistory.length > 1 && !isCompleted,
       }}
     >

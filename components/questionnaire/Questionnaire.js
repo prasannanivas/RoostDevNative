@@ -29,6 +29,7 @@ import {
 import { processDynamicText } from "../../utils/questionnaireUtils";
 import Logo from "../Logo";
 import CloseIconSvg from "../icons/CloseIconSvg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const COLORS = {
   green: "#377473",
@@ -58,10 +59,104 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
     getProgress,
     canGoBack,
     isCompleted,
+    restoreProgress,
+    visitedQuestions,
+    questionHistory,
   } = useQuestionnaire();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({}); // Add state for field errors
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isFirstTime, setIsFirstTime] = useState(true);
+  const [storageReady, setStorageReady] = useState(false);
+
+  // Keys builder
+  const getKeys = () => {
+    const clientId = auth?.client?.id;
+    return {
+      draftKey: clientId ? `questionnaire:draft:${clientId}` : null,
+      firstTimeKey: clientId ? `questionnaire:firstTime:${clientId}` : null,
+    };
+  };
+
+  // Load first-time flag and any saved draft
+  useEffect(() => {
+    const initFromStorage = async () => {
+      if (!auth?.client?.id) return;
+      const { draftKey, firstTimeKey } = getKeys();
+      try {
+        // Determine if this is first time for this client
+        const ft = await AsyncStorage.getItem(firstTimeKey);
+        let firstTime = true;
+        if (ft === null) {
+          // default to true on first ever open
+          await AsyncStorage.setItem(firstTimeKey, "true");
+          firstTime = true;
+        } else {
+          firstTime = ft === "true";
+        }
+        setIsFirstTime(firstTime);
+
+        // If first time and there is a draft, restore it
+        if (firstTime) {
+          const draftRaw = await AsyncStorage.getItem(draftKey);
+          if (draftRaw) {
+            try {
+              const draft = JSON.parse(draftRaw);
+              if (draft && (draft.responses || draft.currentQuestionId)) {
+                restoreProgress({
+                  currentQuestionId: draft.currentQuestionId ?? 1,
+                  responses: draft.responses ?? {},
+                  visitedQuestions: draft.visitedQuestions ?? [],
+                  questionHistory: draft.questionHistory ?? [],
+                });
+              }
+            } catch (e) {
+              console.warn("Failed to parse questionnaire draft:", e);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load questionnaire state:", e);
+      } finally {
+        setStorageReady(true);
+      }
+    };
+
+    initFromStorage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth?.client?.id]);
+
+  // Persist draft whenever responses or question changes (only when first time)
+  useEffect(() => {
+    const persistDraft = async () => {
+      if (!storageReady || !isFirstTime) return;
+      const { draftKey } = getKeys();
+      if (!draftKey) return;
+      try {
+        await AsyncStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            responses,
+            currentQuestionId,
+            visitedQuestions: Array.from(visitedQuestions || []),
+            questionHistory: questionHistory || [],
+          })
+        );
+      } catch (e) {
+        console.warn("Failed to persist questionnaire draft:", e);
+      }
+    };
+
+    persistDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    responses,
+    currentQuestionId,
+    isFirstTime,
+    storageReady,
+    visitedQuestions,
+    questionHistory,
+  ]);
 
   // Handle initial questionnaire data loading
   useEffect(() => {
@@ -712,6 +807,16 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
       );
 
       markAsCompleted();
+
+      // On successful submit, clear any first-time draft and mark first-time as false
+      try {
+        const { draftKey, firstTimeKey } = getKeys();
+        if (draftKey) await AsyncStorage.removeItem(draftKey);
+        if (firstTimeKey) await AsyncStorage.removeItem(firstTimeKey);
+        setIsFirstTime(true);
+      } catch (e) {
+        console.warn("Failed to clear draft or update first-time flag:", e);
+      }
       // Alert.alert("Success", "Questionnaire submitted successfully!", [
       //   {
       //     text: "OK",
