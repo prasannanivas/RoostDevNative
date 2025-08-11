@@ -259,7 +259,11 @@ const ClientHome = ({ questionnaireData }) => {
       <View style={styles.questionnaireButtonContainer}>
         <TouchableOpacity
           style={[styles.questionnaireButton, styles.testQuestionnaireButton]}
-          onPress={() => setShowChangeOptions(true)}
+          // onPress={() => setShowChangeOptions(true)} // use for testing
+          onPress={() => {
+            setShowChangeOptions(false);
+            setShowCategorySelection(true);
+          }}
         >
           {/* <Ionicons name="play" size={24} color={COLORS.white} /> */}
           <Text style={styles.questionnaireButtonText}>Change Application</Text>

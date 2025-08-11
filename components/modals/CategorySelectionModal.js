@@ -987,14 +987,14 @@ const CategorySelectionModal = ({
 
               {/* Back button and logo for question view */}
               <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={handleBackToCategories} style={{}}>
+                {/* <TouchableOpacity onPress={handleBackToCategories} style={{}}>
                   <Ionicons
                     name="arrow-back-outline"
                     size={24}
                     color={COLORS.black}
                   />
-                </TouchableOpacity>
-
+                </TouchableOpacity> */}
+                {/* <View style={{ width: 24 }} /> */}
                 <View style={styles.logoContainer}>
                   <Logo
                     width={120}
@@ -1003,8 +1003,6 @@ const CategorySelectionModal = ({
                     style={styles.brandLogo}
                   />
                 </View>
-
-                <View style={{ width: 24 }} />
               </View>
 
               {/* Question content */}
@@ -1160,6 +1158,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginVertical: 20,
+    alignSelf: "center",
   },
   logoText: {
     fontFamily: "Futura",
@@ -1356,7 +1355,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 16,
