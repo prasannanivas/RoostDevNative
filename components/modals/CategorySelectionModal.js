@@ -435,7 +435,7 @@ const CategorySelectionModal = ({
       : primaryCategories;
 
   const handleAddCoSigner = () => {
-    // setIsFirstTimeCoSigner(true);
+    setIsFirstTimeCoSigner(true);
     // 1. Change response for question 5 from "just_me" to "co_signer"
     const updatedResponses = {
       ...localResponses,
@@ -550,36 +550,36 @@ const CategorySelectionModal = ({
       nextQuestionId = currentQuestion.nextQuestion;
     }
 
-    // if (
-    //   isFirstTimeCoSigner &&
-    //   nextQuestionId &&
-    //   [
-    //     "101",
-    //     101,
-    //     "103",
-    //     103,
-    //     "105",
-    //     105,
-    //     "110",
-    //     110,
-    //     "111",
-    //     111,
-    //     "113",
-    //     113,
-    //     "115",
-    //     115,
-    //     "117",
-    //     117,
-    //     "119",
-    //     119,
-    //   ].includes(nextQuestionId)
-    // ) {
-    //   if (nextQuestionId === "121") {
-    //     setIsFirstTimeCoSigner(false);
-    //     return null;
-    //   }
-    //   return nextQuestionId;
-    // }
+    if (
+      isFirstTimeCoSigner &&
+      nextQuestionId &&
+      [
+        "101",
+        101,
+        "103",
+        103,
+        "105",
+        105,
+        "110",
+        110,
+        "111",
+        111,
+        "113",
+        113,
+        "115",
+        115,
+        "117",
+        117,
+        "119",
+        119,
+      ].includes(nextQuestionId)
+    ) {
+      if (nextQuestionId === "121") {
+        setIsFirstTimeCoSigner(false);
+        return null;
+      }
+      return nextQuestionId;
+    }
 
     // If we have a next question ID, check if it belongs to the same category
     if (nextQuestionId) {
@@ -664,8 +664,12 @@ const CategorySelectionModal = ({
   };
 
   // Save and complete this section
-  const handleSaveSection = async () => {
+  const handleSaveSection = async (arg = false) => {
+    // Support being called as an event handler (first arg is event) or with a boolean flag
+    const withoutAlert = typeof arg === "boolean" ? arg : false;
     // Get auth context properly
+
+    console.log("handleSaveSection withoutAlert:", withoutAlert);
 
     if (!auth?.client?.id) {
       console.log("No client ID available, cannot submit questionnaire");
@@ -673,7 +677,9 @@ const CategorySelectionModal = ({
       if (setResponses && Object.keys(localResponses).length > 0) {
         setResponses(localResponses);
       }
-      handleBackToCategories();
+      if (!withoutAlert) {
+        handleBackToCategories();
+      }
       return;
     }
     console.log("Submitting questionnaire with responses:", localResponses);
@@ -731,12 +737,6 @@ const CategorySelectionModal = ({
         JSON.stringify(submissionData, null, 2)
       );
 
-      // Log specific key values to debug
-      console.log("Specific question values in submission:");
-      console.log("Question 5 value:", submissionData.responses["5"]);
-      console.log("Employment status:", submissionData.employmentStatus);
-      console.log("Own another property:", submissionData.ownAnotherProperty);
-
       const response = await fetch(apiEndpoint, {
         method: "PUT", // Using PUT as specified in your example
         headers: {
@@ -754,18 +754,25 @@ const CategorySelectionModal = ({
       const data = await response.json();
       console.log("Questionnaire responses saved successfully:", data);
 
-      // Show success message
-      Alert.alert("Success", "Your changes have been saved successfully!");
+      // Show success message (only when not silent)
+      if (!withoutAlert) {
+        Alert.alert("Success", "Your changes have been saved successfully!");
+      }
     } catch (error) {
       console.error("Error saving questionnaire responses:", error);
+      // Keep error alert so users know if background save fails
       Alert.alert(
         "Error",
         "There was a problem saving your responses. Please try again."
       );
     } finally {
       setIsSubmitting(false);
-      console.log("Returning to category selection after save attempt");
-      handleBackToCategories();
+      if (!withoutAlert) {
+        console.log("Returning to category selection after save attempt");
+        handleBackToCategories();
+      } else {
+        console.log("Silent save finished; staying on current screen.");
+      }
     }
   };
 
@@ -800,6 +807,17 @@ const CategorySelectionModal = ({
 
     const nextQuestionId = getNextQuestionId(currentResponse);
     if (nextQuestionId) {
+      if (
+        isFirstTimeCoSigner &&
+        !(nextQuestionId === "121" || nextQuestionId === 121)
+      ) {
+        console.log(
+          "First time co-signer, saving silently and going to next question:",
+          nextQuestionId
+        );
+        // Silent save for each step in first-time co-signer flow
+        handleSaveSection(true);
+      }
       goToNextQuestion(nextQuestionId);
     } else {
       // No more questions in this category - save changes and go back
@@ -1089,10 +1107,24 @@ const CategorySelectionModal = ({
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={styles.nextButton}
-                onPress={handleSaveSection}
+                style={[styles.nextButton, isSubmitting && { opacity: 0.6 }]}
+                onPress={() => {
+                  if (!isSubmitting) handleSaveSection(false);
+                }}
+                disabled={isSubmitting}
               >
-                <Text style={styles.nextButtonText}>Update</Text>
+                {isSubmitting ? (
+                  <>
+                    <ActivityIndicator
+                      color={COLORS.white}
+                      size="small"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={styles.nextButtonText}>Saving...</Text>
+                  </>
+                ) : (
+                  <Text style={styles.nextButtonText}>Update</Text>
+                )}
               </TouchableOpacity>
             )}
           </View>
