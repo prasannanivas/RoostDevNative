@@ -119,8 +119,8 @@ export default function RealtorInviteFirstClient() {
 
         {/* Subheading */}
         <Text style={styles.subheading}>
-          This will contact your client to join the app, so that you can get
-          started finding them their perfect place
+          This will invite your client to join the app, so you can start helping
+          them find their perfect home.
         </Text>
 
         {/* Client Form */}
@@ -159,7 +159,7 @@ export default function RealtorInviteFirstClient() {
         <View style={styles.disclaimerContainer}>
           <Text style={styles.disclaimerText}>
             You can invite more later in the client tab, just click "add client"
-            button
+            button.
           </Text>
           <View style={styles.iconContainer}>
             <Svg width="57" height="56" viewBox="0 0 57 56" fill="none">
@@ -206,7 +206,7 @@ export default function RealtorInviteFirstClient() {
           <Ionicons name="arrow-back" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Next</Text>
+          <Text style={styles.nextButtonText}>Skip</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -329,6 +329,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 33,
     borderColor: COLORS.white,
+    opacity: 0,
   },
   nextButton: {
     backgroundColor: COLORS.green,
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

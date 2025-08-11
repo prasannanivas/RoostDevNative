@@ -180,7 +180,7 @@ export default function RealtorFirstLoginAddProfilePic() {
         {/* Subheading */}
         <Text style={styles.subheading}>
           Give your clients the confidence that it's you by including your
-          picture
+          picture.
         </Text>
         {/* Image Preview */}
         {image && (
@@ -242,7 +242,10 @@ export default function RealtorFirstLoginAddProfilePic() {
               <Text style={styles.nextButtonText}>Processing</Text>
             </View>
           ) : (
-            <Text style={styles.nextButtonText}>Next</Text>
+            <Text style={styles.nextButtonText}>
+              {" "}
+              {image ? "Next" : "Skip"}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -336,6 +339,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 3,
+    opacity: 0,
   },
   nextButton: {
     backgroundColor: COLORS.green,
