@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput as RNTextInput, StyleSheet } from "react-native";
 import AnimatedDropdown from "./AnimatedDropdown";
+import { trimLeft } from "../../utils/stringUtils";
+import {
+  formatPhoneNumber,
+  unFormatPhoneNumber,
+} from "../../utils/phoneFormatUtils";
 
 // Helper function to format SIN number with dashes (xxx-xxx-xxx)
 const formatSinNumber = (text) => {
@@ -54,6 +59,7 @@ const TextInput = ({
 
   // Determine if this is a SIN number field based on props or key name
   const isSinField = isSinNumber || isSinNumberField(fieldKey);
+  const isPhoneNumberField = keyboardType === "phone-pad";
 
   // Format SIN number on initial value if needed
   useEffect(() => {
@@ -68,7 +74,11 @@ const TextInput = ({
 
   const handleChangeText = (text) => {
     // Apply formatting for SIN numbers
-    if (isSinField) {
+    if (isPhoneNumberField) {
+      const formattedPhoneNumber = formatPhoneNumber(text);
+      setLocalValue(formattedPhoneNumber);
+      onChangeText && onChangeText(unFormatPhoneNumber(formattedPhoneNumber));
+    } else if (isSinField) {
       const formattedText = formatSinNumber(text);
       setLocalValue(formattedText);
       onChangeText && onChangeText(formattedText);
@@ -102,8 +112,10 @@ const TextInput = ({
             multiline && styles.multilineInput,
             prefix && styles.inputWithPrefix,
           ]}
-          value={localValue}
-          onChangeText={handleChangeText}
+          value={
+            isPhoneNumberField ? formatPhoneNumber(localValue) : localValue
+          }
+          onChangeText={(text) => handleChangeText(trimLeft(text))}
           placeholder={
             isRequired ? `${placeholder || "Required"}` : placeholder
           }

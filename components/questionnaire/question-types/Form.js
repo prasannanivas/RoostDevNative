@@ -76,6 +76,7 @@ const Form = ({
   }, [formData, onValueChange]);
 
   const handleFieldChange = (fieldKey, fieldValue) => {
+    console.log(`Field changed: ${fieldKey} = ${fieldValue}`);
     setFormData((prev) => ({
       ...prev,
       [fieldKey]: fieldValue,

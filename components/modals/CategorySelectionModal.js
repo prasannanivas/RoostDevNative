@@ -665,6 +665,10 @@ const CategorySelectionModal = ({
 
   // Save and complete this section
   const handleSaveSection = async (arg = false) => {
+    if (!validateNameFields()) return;
+    if (!validateContactFields()) return;
+    if (!validateRequiredFields()) return;
+
     // Support being called as an event handler (first arg is event) or with a boolean flag
     const withoutAlert = typeof arg === "boolean" ? arg : false;
     // Get auth context properly
@@ -778,6 +782,130 @@ const CategorySelectionModal = ({
 
   // Handle next button click
 
+  // Helper function to validate name fields for form questions (mirrors Questionnaire.js)
+  const validateNameFields = () => {
+    const isNameCollectionQuestion =
+      currentQuestionId === "6" ||
+      currentQuestionId === 6 ||
+      currentQuestionId === "100" ||
+      currentQuestionId === 100 ||
+      currentQuestionId === "101" ||
+      currentQuestionId === 101;
+
+    if (!isNameCollectionQuestion) return true;
+
+    // For question 6 or 100 (primary applicant details)
+    if (
+      currentQuestionId === "6" ||
+      currentQuestionId === 6 ||
+      currentQuestionId === "100" ||
+      currentQuestionId === 100
+    ) {
+      if (!currentResponse?.firstName || !currentResponse?.lastName) {
+        Alert.alert(
+          "Required Fields",
+          "Please enter both first name and last name to continue."
+        );
+        return false;
+      }
+    }
+
+    // For question 101 (co-signer details)
+    if (currentQuestionId === "101" || currentQuestionId === 101) {
+      const hasCoFirstName = currentResponse?.coFirstName;
+      const hasCoLastName = currentResponse?.coLastName;
+
+      if (!hasCoFirstName || !hasCoLastName) {
+        Alert.alert(
+          "Required Fields",
+          "Please enter both first name and last name for your co-signer to continue."
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Helper function to validate email, phone, and SIN fields (mirrors Questionnaire.js)
+  const validateContactFields = () => {
+    const errors = {};
+
+    if (
+      currentQuestion?.type !== "form" &&
+      currentQuestion?.type !== "complexForm"
+    ) {
+      return true;
+    }
+
+    if (!currentResponse) return true;
+
+    if (currentQuestion?.type === "form") {
+      // Email fields
+      const emailFields = ["email", "coEmail"];
+      for (const field of emailFields) {
+        if (currentResponse[field]) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(currentResponse[field])) {
+            errors[field] = "Please enter a valid email address.";
+          }
+        }
+      }
+
+      // Phone fields
+      const phoneFields = ["phone", "coPhone"];
+      for (const field of phoneFields) {
+        if (currentResponse[field]) {
+          const cleanPhone = String(currentResponse[field]).replace(/\D/g, "");
+          if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+            errors[field] = "Please enter a valid phone number (10-11 digits).";
+          }
+        }
+      }
+    }
+
+    if (currentQuestion?.type === "complexForm") {
+      // SIN fields
+      const sinFields = ["sinNumber", "coSinNumber"];
+      for (const field of sinFields) {
+        if (currentResponse[field]) {
+          const cleanSIN = String(currentResponse[field]).replace(/\D/g, "");
+          if (cleanSIN.length !== 9) {
+            errors[field] = "SIN number must be exactly 9 digits.";
+          }
+        }
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Helper for required questions (mirrors Questionnaire.js)
+  const validateRequiredFields = () => {
+    const errors = {};
+
+    if (currentQuestion?.id === 5) {
+      if (!currentResponse) {
+        setFieldErrors({
+          5: "Your selection is missing, don’t worry you can always add a co-signer later",
+        });
+        return false;
+      }
+    }
+
+    if ([9, "9", 106, "106", 110, "110"].includes(currentQuestion?.id)) {
+      if (!currentResponse) {
+        errors[currentQuestion?.id] =
+          "Your selection is missing, this field is mandatory for your application";
+        setFieldErrors(errors);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const hasNext = () => {
     if (!currentQuestion) return false;
     return !!getNextQuestionId(currentResponse);
@@ -785,6 +913,11 @@ const CategorySelectionModal = ({
 
   const handleNext = () => {
     if (!currentQuestion) return;
+
+    // Run the same three validations as in Questionnaire.js
+    if (!validateNameFields()) return;
+    if (!validateContactFields()) return;
+    if (!validateRequiredFields()) return;
 
     // First update the context with our local changes
     if (setResponses && Object.keys(localResponses).length > 0) {
@@ -801,8 +934,7 @@ const CategorySelectionModal = ({
       currentQuestion.type === "conditionalForm";
 
     if (isFormQuestion) {
-      // For form questions, we should validate the input
-      // But for this simplified version, we'll just proceed
+      // Additional per-field validation could go here if needed.
     }
 
     const nextQuestionId = getNextQuestionId(currentResponse);
