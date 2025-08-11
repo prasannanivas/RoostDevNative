@@ -26,6 +26,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Circle, Path } from "react-native-svg";
 import { formatPhoneNumber } from "../utils/phoneFormatUtils";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
+import { trimLeft, trimFull } from "../utils/stringUtils";
 
 // Design System Colors
 const COLORS = {
@@ -1171,7 +1172,15 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               style={styles.input}
               value={formData.rewardsAddress}
               placeholder="Address"
-              onChangeText={(text) => handleFieldChange("rewardsAddress", text)}
+              onChangeText={(text) =>
+                handleFieldChange("rewardsAddress", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "rewardsAddress",
+                  trimFull(formData.rewardsAddress)
+                )
+              }
               returnKeyType="done"
             />
           </View>
@@ -1181,7 +1190,12 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               value={formData.rewardsCity}
               placeholder="City"
               returnKeyType="done"
-              onChangeText={(text) => handleFieldChange("rewardsCity", text)}
+              onChangeText={(text) =>
+                handleFieldChange("rewardsCity", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange("rewardsCity", trimFull(formData.rewardsCity))
+              }
             />
           </View>
           <View style={styles.formGroup}>
@@ -1190,7 +1204,13 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               value={formData.rewardsPostalCode}
               placeholder="Postal Code"
               onChangeText={(text) =>
-                handleFieldChange("rewardsPostalCode", text)
+                handleFieldChange("rewardsPostalCode", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "rewardsPostalCode",
+                  trimFull(formData.rewardsPostalCode)
+                )
               }
             />
           </View>
@@ -1203,20 +1223,18 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           </Text>
           <View style={styles.formGroup}>
             <TextInput
-              style={[
-                styles.input,
-                { backgroundColor: "#E4E4E4", borderColor: "#707070" },
-              ]}
-              value={"RECO ID - " + formData.licenseNumber}
-              editable={false}
-            />
-          </View>
-          <View style={styles.formGroup}>
-            <TextInput
               style={styles.input}
               value={formData.brokerageName}
               placeholder="Brokerage Name"
-              onChangeText={(text) => handleFieldChange("brokerageName", text)}
+              onChangeText={(text) =>
+                handleFieldChange("brokerageName", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "brokerageName",
+                  trimFull(formData.brokerageName)
+                )
+              }
             />
           </View>
           <View style={styles.formGroup}>
@@ -1225,7 +1243,13 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               placeholder="Brokerage Address"
               value={formData.brokerageAddress}
               onChangeText={(text) =>
-                handleFieldChange("brokerageAddress", text)
+                handleFieldChange("brokerageAddress", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "brokerageAddress",
+                  trimFull(formData.brokerageAddress)
+                )
               }
             />
           </View>
@@ -1234,7 +1258,15 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               style={styles.input}
               value={formData.brokerageCity}
               placeholder="Brokerage City"
-              onChangeText={(text) => handleFieldChange("brokerageCity", text)}
+              onChangeText={(text) =>
+                handleFieldChange("brokerageCity", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "brokerageCity",
+                  trimFull(formData.brokerageCity)
+                )
+              }
             />
           </View>
           <View style={styles.formGroup}>
@@ -1243,7 +1275,13 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               style={styles.input}
               value={formData.brokeragePostalCode}
               onChangeText={(text) =>
-                handleFieldChange("brokeragePostalCode", text)
+                handleFieldChange("brokeragePostalCode", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "brokeragePostalCode",
+                  trimFull(formData.brokeragePostalCode)
+                )
               }
             />
           </View>
@@ -1256,7 +1294,15 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               value={formData.brokeragePhone}
               placeholder="Brokerage Phone"
               keyboardType="phone-pad"
-              onChangeText={(text) => handleFieldChange("brokeragePhone", text)}
+              onChangeText={(text) =>
+                handleFieldChange("brokeragePhone", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "brokeragePhone",
+                  trimFull(formData.brokeragePhone)
+                )
+              }
             />
             {fieldErrorMessages.brokeragePhone ? (
               <Text style={styles.fieldErrorText}>
@@ -1273,7 +1319,15 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               value={formData.brokerageEmail}
               placeholder="Brokerage Email"
               keyboardType="email-address"
-              onChangeText={(text) => handleFieldChange("brokerageEmail", text)}
+              onChangeText={(text) =>
+                handleFieldChange("brokerageEmail", trimLeft(text))
+              }
+              onBlur={() =>
+                handleFieldChange(
+                  "brokerageEmail",
+                  trimFull(formData.brokerageEmail)
+                )
+              }
             />
             {fieldErrorMessages.brokerageEmail ? (
               <Text style={styles.fieldErrorText}>

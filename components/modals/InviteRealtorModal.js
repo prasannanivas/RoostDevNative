@@ -20,6 +20,7 @@ import {
   formatPhoneNumber,
   unFormatPhoneNumber,
 } from "../../utils/phoneFormatUtils";
+import { trimLeft, trimFull } from "../../utils/stringUtils";
 
 const COLORS = {
   primary: "#377473", // Updated to green color as specified
@@ -271,9 +272,15 @@ Looking forward to working with you!`;
                 setInviteFeedback({ msg: "", type: "" });
                 setInviteData((prev) => ({
                   ...prev,
-                  firstName: t,
+                  firstName: trimLeft(t),
                 }));
               }}
+              onBlur={() =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  firstName: trimFull(prev.firstName),
+                }))
+              }
               placeholder="First Name"
               placeholderTextColor="#999"
             />
@@ -287,9 +294,15 @@ Looking forward to working with you!`;
                 setInviteFeedback({ msg: "", type: "" });
                 setInviteData((prev) => ({
                   ...prev,
-                  lastName: t,
+                  lastName: trimLeft(t),
                 }));
               }}
+              onBlur={() =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  lastName: trimFull(prev.lastName),
+                }))
+              }
               placeholder="Last Name"
               placeholderTextColor="#999"
             />
@@ -303,7 +316,13 @@ Looking forward to working with you!`;
               onChangeText={(t) =>
                 setInviteData((prev) => ({
                   ...prev,
-                  email: t,
+                  email: trimLeft(t),
+                }))
+              }
+              onBlur={() =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  email: trimFull(prev.email),
                 }))
               }
               placeholder="Email"
@@ -321,7 +340,13 @@ Looking forward to working with you!`;
               onChangeText={(t) =>
                 setInviteData((prev) => ({
                   ...prev,
-                  phone: unFormatPhoneNumber(t),
+                  phone: unFormatPhoneNumber(trimLeft(t)),
+                }))
+              }
+              onBlur={() =>
+                setInviteData((prev) => ({
+                  ...prev,
+                  phone: unFormatPhoneNumber(trimFull(prev.phone)),
                 }))
               }
               placeholder="Phone"

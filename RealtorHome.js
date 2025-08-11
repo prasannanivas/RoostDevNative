@@ -52,6 +52,7 @@ import CSVUploadForm from "./screens/AddProfilePic";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Sharing from "expo-sharing";
+import { trimLeft, trimFull } from "./utils/stringUtils";
 
 // Design System Colors
 const COLORS = {
@@ -1551,13 +1552,19 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       placeholderTextColor={COLORS.gray}
                       value={formData.firstName}
                       onChangeText={(text) => {
-                        setFormData({ ...formData, firstName: text });
+                        setFormData({ ...formData, firstName: trimLeft(text) });
                         if (fieldErrors.firstName)
                           setFieldErrors({
                             ...fieldErrors,
                             firstName: "",
                           });
                       }}
+                      onBlur={() =>
+                        setFormData({
+                          ...formData,
+                          firstName: trimFull(formData.firstName),
+                        })
+                      }
                       returnKeyType="next"
                       blurOnSubmit={false}
                       onSubmitEditing={() => lastNameInputRef.current?.focus()}
@@ -1569,7 +1576,13 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       placeholderTextColor={COLORS.gray}
                       value={formData.lastName}
                       onChangeText={(text) =>
-                        setFormData({ ...formData, lastName: text })
+                        setFormData({ ...formData, lastName: trimLeft(text) })
+                      }
+                      onBlur={() =>
+                        setFormData({
+                          ...formData,
+                          lastName: trimFull(formData.lastName),
+                        })
                       }
                       returnKeyType="next"
                       blurOnSubmit={false}
@@ -1583,13 +1596,19 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       keyboardType="email-address"
                       value={formData.email}
                       onChangeText={(text) => {
-                        setFormData({ ...formData, email: text });
+                        setFormData({ ...formData, email: trimLeft(text) });
                         if (fieldErrors.emailPhone)
                           setFieldErrors({
                             ...fieldErrors,
                             emailPhone: "",
                           });
                       }}
+                      onBlur={() =>
+                        setFormData({
+                          ...formData,
+                          email: trimFull(formData.email),
+                        })
+                      }
                       returnKeyType="next"
                       blurOnSubmit={false}
                       onSubmitEditing={() => phoneInputRef.current?.focus()}
@@ -1603,10 +1622,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       value={formatPhoneNumber(formData.phone)}
                       onChangeText={(text) => {
                         // Only allow digits, max 10
-
                         setFormData({
                           ...formData,
-                          phone: unFormatPhoneNumber(text),
+                          phone: unFormatPhoneNumber(trimLeft(text)),
                         });
                         if (fieldErrors.emailPhone)
                           setFieldErrors({
@@ -1614,6 +1632,12 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                             emailPhone: "",
                           });
                       }}
+                      onBlur={() =>
+                        setFormData({
+                          ...formData,
+                          phone: unFormatPhoneNumber(trimFull(formData.phone)),
+                        })
+                      }
                       maxLength={14} // (xxx)-xxx-xxxx is 14 chars
                       returnKeyType="done"
                       onSubmitEditing={Keyboard.dismiss}
@@ -2682,7 +2706,7 @@ const styles = StyleSheet.create({
   },
   contactsButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 33,
+    borderRadius: 6,
     paddingVertical: 13,
     paddingHorizontal: 24,
     alignItems: "center",

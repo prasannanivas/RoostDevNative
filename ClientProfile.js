@@ -24,6 +24,7 @@ import {
   formatPhoneNumber,
   unFormatPhoneNumber,
 } from "./utils/phoneFormatUtils";
+import { trimLeft, trimFull } from "./utils/stringUtils";
 import LogoutConfirmationModal from "./components/LogoutConfirmationModal";
 
 // Design System Colors
@@ -574,14 +575,20 @@ export default function ClientProfile({ onClose }) {
                 placeholder="First Name"
                 placeholderTextColor={COLORS.gray}
                 value={formData.firstName}
-                onChangeText={(text) => handleChange("firstName", text)}
+                onChangeText={(t) => handleChange("firstName", trimLeft(t))}
+                onBlur={() =>
+                  handleChange("firstName", trimFull(formData.firstName))
+                }
               />
               <TextInput
                 style={styles.input}
                 placeholder="Last Name"
                 placeholderTextColor={COLORS.gray}
                 value={formData.lastName}
-                onChangeText={(text) => handleChange("lastName", text)}
+                onChangeText={(t) => handleChange("lastName", trimLeft(t))}
+                onBlur={() =>
+                  handleChange("lastName", trimFull(formData.lastName))
+                }
               />
               <TextInput
                 style={styles.input}
@@ -620,7 +627,7 @@ export default function ClientProfile({ onClose }) {
             </Text>
             <View style={styles.formGroup}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: COLORS.silver }]}
                 placeholder="Name"
                 placeholderTextColor={COLORS.gray}
                 value={formData.firstName + " " + formData.lastName}
@@ -631,21 +638,30 @@ export default function ClientProfile({ onClose }) {
                 placeholder="Address"
                 placeholderTextColor={COLORS.gray}
                 value={formData.address}
-                onChangeText={(text) => handleChange("address", text)}
+                onChangeText={(text) => handleChange("address", trimLeft(text))}
+                onBlur={() =>
+                  handleChange("address", trimFull(formData.address))
+                }
               />
               <TextInput
                 style={styles.input}
                 placeholder="City"
                 placeholderTextColor={COLORS.gray}
                 value={formData.city}
-                onChangeText={(text) => handleChange("city", text)}
+                onChangeText={(text) => handleChange("city", trimLeft(text))}
+                onBlur={() => handleChange("city", trimFull(formData.city))}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Postal Code"
                 placeholderTextColor={COLORS.gray}
                 value={formData.postalCode}
-                onChangeText={(text) => handleChange("postalCode", text)}
+                onChangeText={(text) =>
+                  handleChange("postalCode", trimLeft(text))
+                }
+                onBlur={() =>
+                  handleChange("postalCode", trimFull(formData.postalCode))
+                }
               />
             </View>
           </View>
