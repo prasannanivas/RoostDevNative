@@ -760,7 +760,7 @@ const CategorySelectionModal = ({
 
       // Show success message (only when not silent)
       if (!withoutAlert) {
-        Alert.alert("Success", "Your changes have been saved successfully!");
+        // Alert.alert("Success", "Your changes have been saved successfully!");
       }
     } catch (error) {
       console.error("Error saving questionnaire responses:", error);
