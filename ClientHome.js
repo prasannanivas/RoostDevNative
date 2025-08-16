@@ -441,7 +441,6 @@ const ClientHome = ({ questionnaireData }) => {
                           ).toLocaleString()}
                         </Text>
                       </View>
-
                       <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Mortgage Amount:</Text>
                         <Text style={styles.detailValue}>
@@ -453,7 +452,7 @@ const ClientHome = ({ questionnaireData }) => {
                         </Text>
                       </View>
 
-                      <View style={styles.detailRow}>
+                      {/* <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Realtor Award:</Text>
                         <Text style={styles.detailValue}>
                           $
@@ -502,7 +501,7 @@ const ClientHome = ({ questionnaireData }) => {
                               })
                             : "N/A"}
                         </Text>
-                      </View>
+                      </View> */}
                     </View>
                   )}
                 </>
@@ -1275,28 +1274,30 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   completionDetailsContainer: {
-    backgroundColor: COLORS.black,
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 16,
     marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.2)",
+    borderBottomColor: "#E6E6E6",
   },
   detailLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: COLORS.white,
+    color: COLORS.black,
     fontFamily: "Futura",
   },
   detailValue: {
     fontSize: 14,
     fontWeight: "500",
-    color: COLORS.white,
+    color: COLORS.black,
     fontFamily: "Futura",
     textAlign: "right",
     flex: 1,

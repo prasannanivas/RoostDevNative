@@ -1411,7 +1411,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
 
           {/* Terms of Service Updates */}
           <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Terms of Service Updates</Text>
+            <Text style={styles.switchLabel}>Client Accept</Text>
             <TouchableOpacity
               onPress={() => toggleNotificationPref("termsOfServiceEmails")}
               style={[

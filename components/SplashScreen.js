@@ -1,60 +1,48 @@
-import React, { useEffect } from "react";
-import { View, Image, StyleSheet, Dimensions, Animated } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, StyleSheet, Dimensions, Animated, Easing } from "react-native";
 import Svg, { ClipPath, Defs, G, Path, Rect } from "react-native-svg";
 
 const SplashScreen = ({ onFinish }) => {
-  // Create animated values
-  const opacity = new Animated.Value(1);
-  const scale = new Animated.Value(0.8);
+  // Animated values (stable refs so they aren't recreated)
+  const opacity = useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    // Initial animation - scale up the logo
+    // Entrance scale pop
     Animated.spring(scale, {
       toValue: 1,
-      friction: 4,
-      tension: 10,
+      friction: 5,
+      tension: 60,
       useNativeDriver: true,
     }).start();
 
-    // Timer for 3 seconds
+    // After visible delay, scale up further while fading out
     const timer = setTimeout(() => {
-      // Fade out animation
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 500, // 500ms fade-out
-        useNativeDriver: true,
-      }).start(() => {
-        // Call onFinish when animation completes
-        if (onFinish) {
-          onFinish();
-        }
+      Animated.parallel([
+        Animated.timing(scale, {
+          toValue: 1.25,
+          duration: 550,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 550,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        if (onFinish) onFinish();
       });
-    }, 2500); // 2.5 seconds visible + 0.5 seconds fade out = 3 seconds total
+    }, 2500); // Visible ~2s before exit animation
 
     // Clean up timer
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <Animated.View style={[styles.container, { opacity }]}>
-      <Animated.View style={{ transform: [{ scale }] }}>
-        <Svg
-          width="430"
-          height="932"
-          viewBox="0 0 430 932"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <Rect
-            x="-63"
-            y="-65"
-            width="555"
-            height="1062"
-            rx="82"
-            fill="#CB003F"
-          />
-        </Svg>
-
+    <Animated.View style={[styles.container, { opacity }]} pointerEvents="none">
+      <Animated.View style={[styles.logoWrapper, { transform: [{ scale }] }]}>
         <View style={styles.logoContainer}>
           <Svg
             width="127"
@@ -98,7 +86,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#cc3d51",
+    backgroundColor: "#CB003F",
     position: "absolute",
     top: 0,
     left: 0,
@@ -106,10 +94,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 10, // Ensure it's above other components
   },
+  logoWrapper: {
+    justifyContent: "center",
+    alignItems: "center",
+    // No extra size so scaling remains around actual logo center
+  },
   logoContainer: {
-    position: "absolute",
-    top: "35%",
-    left: "35%",
     justifyContent: "center",
     alignItems: "center",
   },

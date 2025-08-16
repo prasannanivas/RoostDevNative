@@ -19,33 +19,10 @@ import SplashScreen from "./components/SplashScreen";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  // Splash only acts as an overlay; underlying app renders immediately
   const [isSplashVisible, setSplashVisible] = useState(true);
-  const [isAppReady, setAppReady] = useState(false);
+  const hideSplash = () => setSplashVisible(false);
 
-  // This function will be called when the splash screen animation finishes
-  const hideSplash = () => {
-    setSplashVisible(false);
-  };
-
-  // We use this effect to simulate loading of initial app resources
-  useEffect(() => {
-    // Set app as ready when splash screen is no longer visible
-    if (!isSplashVisible) {
-      setAppReady(true);
-    }
-  }, [isSplashVisible]);
-
-  // Render only splash screen initially
-  if (isSplashVisible) {
-    return (
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <SplashScreen onFinish={hideSplash} />
-      </SafeAreaProvider>
-    );
-  }
-
-  // Render full app once splash screen is gone
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
@@ -88,6 +65,7 @@ export default function App() {
           </NetworkProvider>
         </AuthProvider>
       </NavigationContainer>
+      {isSplashVisible && <SplashScreen onFinish={hideSplash} />}
     </SafeAreaProvider>
   );
 }
