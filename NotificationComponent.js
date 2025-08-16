@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   },
   notificationMessageContainer: {
     flexDirection: "row",
-    height: 105,
+    minHeight: 105,
     borderRadius: 12,
     marginVertical: 8,
     marginHorizontal: 16,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2271B11A",
   },
   unreadNotificationMessage: {
-    backgroundColor: "rgba(1,155,142,0.04)",
+    transform: [{ scale: 1.05 }],
   },
   notificationMessageContent: {
     flex: 1,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   notificationMessageIcon: {
     width: 50,
-    height: "100%",
+    //height: "100%",
     justifyContent: "center",
     alignItems: "center",
     overflow: "visible",
