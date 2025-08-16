@@ -385,6 +385,8 @@ const UploadModal = ({
             </Text>
           )}
 
+          <Text style={styles.infotext}>{selectedDocType?.description}</Text>
+
           {capturedImages.length > 0 ? (
             <>
               <ScrollView style={styles.imageScrollView}>

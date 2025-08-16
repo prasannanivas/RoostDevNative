@@ -305,7 +305,7 @@ export default function RealtorRewards({
 
           <View style={styles.rewardItem}>
             <Text style={styles.rewardPoints}>
-              10 <Text style={styles.rewardPointsText}>PTS</Text>
+              5 <Text style={styles.rewardPointsText}>PTS</Text>
             </Text>
 
             <Text style={styles.rewardText}>
