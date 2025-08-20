@@ -96,6 +96,8 @@ export default function RealtorRewards({
   const POINTS_TO_DOLLARS = 1;
   const MIN_CASHOUT_DOLLAR = 250;
   const currentPoints = realtor?.points || 0;
+  const MAXIMUM_CLIENTS_INVITE_LIMIT = 20;
+  const MAXIMUM_REALTORS_INVITE_LIMIT = 10;
 
   const fetchRewards = async () => {
     setFetchingRewards(true);
@@ -335,6 +337,20 @@ export default function RealtorRewards({
           </TouchableOpacity>
         </View>
         {/* Rewards Section */}
+        {(realtor.acceptedClients?.length || 0) >=
+          MAXIMUM_CLIENTS_INVITE_LIMIT &&
+        (realtor.acceptedRealtors?.length || 0) >=
+          MAXIMUM_REALTORS_INVITE_LIMIT ? (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.limitHit}>
+              Amazing job referring client and realtors, you have reached the
+              maximum points. However you will still receive the 5% bonus from
+              any Realtor you refer
+            </Text>
+          </View>
+        ) : (
+          <></>
+        )}
         <View style={styles.rewardsContainer}>
           <Text style={styles.rewardsTitle}>Rewards</Text>
           {/* Client Rewards */}
@@ -760,6 +776,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
+  },
+
+  limitHit: {
+    color: "#797979",
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "700",
+    padding: 12,
+    borderRadius: 8,
+    lineHeight: 16,
   },
   headerContent: {
     flexDirection: "row",
