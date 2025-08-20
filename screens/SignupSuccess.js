@@ -199,7 +199,7 @@ export default function SignupSuccessScreen({
           {/* Subheading */}
           <Text style={styles.subheading}>Before you start</Text>
           <Text style={styles.subheadingsub}>
-            You can watch a few tutorials
+            you can watch a few tutorials
           </Text>
           {/* Tutorial Buttons */}
           {!isRealtor ? (
@@ -219,7 +219,7 @@ export default function SignupSuccessScreen({
                 onPress={() => handleTutorial("mortgage")}
               >
                 <Text style={styles.tutorialButtonText}>
-                  What is the Process of getting a mortgage?
+                  What is the process of getting a mortgage?
                 </Text>
               </TouchableOpacity>
 

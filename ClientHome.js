@@ -421,7 +421,7 @@ const ClientHome = ({ questionnaireData }) => {
                   </Text>
                   <Text style={styles.subTitlePreApproved}>
                     For the full approval we will need the following documents.
-                    by the way if you need more we might be able to help. Click
+                    By the way if you need more we might be able to help. Click
                     the help button above.
                   </Text>
                 </>

@@ -263,7 +263,7 @@ const questions = [
         ],
       },
       {
-        title: "How long have you lived here?",
+        title: "You've been living here since?",
         accommodateAllInOneLine: true,
         fields: [
           {
@@ -376,7 +376,7 @@ const questions = [
     id: 11,
     category: "income_details",
     page: 10,
-    text: "Where do you work?",
+    text: "How much do you make?",
     type: "complexForm",
     fields: [
       {
@@ -632,7 +632,7 @@ const questions = [
         ],
       },
       {
-        title: "How long have you lived here?",
+        title: "You've been living here since?",
         accommodateAllInOneLine: true,
         fields: [
           {
@@ -728,7 +728,7 @@ const questions = [
     id: 108,
     page: 108,
     category: "income_details",
-    text: "Where do you work?",
+    text: "How much do you make?",
     type: "complexForm",
     profileInitials: "",
     fields: [
@@ -1085,7 +1085,7 @@ const questions = [
     id: 112,
     page: 112,
     category: "co_income_details",
-    text: "Where does [coFirstName] work?",
+    text: "How much does [coFirstName] make?",
     type: "complexForm",
     profileInitials: "",
     fields: [
