@@ -95,7 +95,7 @@ export default function RealtorRewards({
 
   const POINTS_TO_DOLLARS = 1;
   const MIN_CASHOUT_DOLLAR = 250;
-  const currentPoints = realtor?.points || 0;
+  const currentPoints = parseInt(realtor?.points || 0, 10);
   const MAXIMUM_CLIENTS_INVITE_LIMIT = 20;
   const MAXIMUM_REALTORS_INVITE_LIMIT = 10;
 

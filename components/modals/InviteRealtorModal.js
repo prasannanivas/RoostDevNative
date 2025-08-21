@@ -10,6 +10,7 @@ import {
   Alert,
   Linking,
   Clipboard, // Add Clipboard import
+  Platform,
 } from "react-native";
 import {
   MaterialCommunityIcons,
@@ -51,7 +52,10 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     email: "",
     phone: "",
   });
+  // Legacy inline contact options (replaced by separate share modal)
   const [showContactOptions, setShowContactOptions] = useState(false);
+  // New share options modal (mirrors ClientInviteModal pattern)
+  const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
   const [inviteLink, setInviteLink] = useState(""); // Store the invite link from API response
   const [copied, setCopied] = useState(false); // Add state for copy feedback
@@ -107,7 +111,10 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
 
         // Instead of automatically opening apps, show contact option icons
-        setShowContactOptions(true);
+        // OLD: inline contact options
+        // setShowContactOptions(true);
+        // NEW: open dedicated share modal like ClientInviteModal
+        setShowShareOptionsModal(true);
 
         // Don't automatically close the form so the user can use the contact options
         // The user can manually close the form when they're done
@@ -209,6 +216,7 @@ Looking forward to working with you!`;
   // Reset the form when closing
   const handleClose = () => {
     setShowContactOptions(false);
+    setShowShareOptionsModal(false);
     setInviteData({
       firstName: "",
       lastName: "",
@@ -238,211 +246,248 @@ Looking forward to working with you!`;
     }, 2000);
   };
 
+  // Handlers for new share options modal (reuse existing openSMS / openEmail)
+  const handlePersonalText = () => {
+    openSMS();
+    setShowShareOptionsModal(false);
+  };
+  const handlePersonalEmail = () => {
+    openEmail();
+    setShowShareOptionsModal(false);
+  };
+  const handleNoneOption = () => {
+    // Simply close; fallback (e.g., scheduled transactional email) could be added here
+    handleClose();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Entypo name="cross" size={24} color="#999" />
-          </TouchableOpacity>
+    <>
+      <Modal
+        visible={visible && !showShareOptionsModal}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <Entypo name="cross" size={24} color="#999" />
+            </TouchableOpacity>
 
-          <Text style={styles.modalTitle}>REFER A REALTOR</Text>
-          <Text style={styles.modalSubtitle}>
-            Invite your Realtor friends to use Roost
-          </Text>
-
-          {inviteFeedback.msg ? (
-            <Text
-              style={[
-                styles.feedbackMsg,
-                inviteFeedback.type === "success"
-                  ? styles.success
-                  : styles.error,
-              ]}
-            >
-              {inviteFeedback.msg}
+            <Text style={styles.modalTitle}>REFER A REALTOR</Text>
+            <Text style={styles.modalSubtitle}>
+              Invite your Realtor friends to use Roost
             </Text>
-          ) : null}
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              value={inviteData.firstName}
-              onChangeText={(t) => {
-                setInviteFeedback({ msg: "", type: "" });
-                setInviteData((prev) => ({
-                  ...prev,
-                  firstName: trimLeft(t),
-                }));
-              }}
-              onBlur={() =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  firstName: trimFull(prev.firstName),
-                }))
-              }
-              placeholder="First Name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              value={inviteData.lastName}
-              onChangeText={(t) => {
-                setInviteFeedback({ msg: "", type: "" });
-                setInviteData((prev) => ({
-                  ...prev,
-                  lastName: trimLeft(t),
-                }));
-              }}
-              onBlur={() =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  lastName: trimFull(prev.lastName),
-                }))
-              }
-              placeholder="Last Name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              keyboardType="email-address"
-              value={inviteData.email}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  email: trimLeft(t),
-                }))
-              }
-              onBlur={() =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  email: trimFull(prev.email),
-                }))
-              }
-              placeholder="Email"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              keyboardType="phone-pad"
-              returnKeyType="done"
-              returnKeyLabel="close"
-              value={formatPhoneNumber(inviteData.phone)}
-              onChangeText={(t) =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  phone: unFormatPhoneNumber(trimLeft(t)),
-                }))
-              }
-              onBlur={() =>
-                setInviteData((prev) => ({
-                  ...prev,
-                  phone: unFormatPhoneNumber(trimFull(prev.phone)),
-                }))
-              }
-              placeholder="Phone"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          {showContactOptions && inviteFeedback.type === "success" ? (
-            <View style={styles.contactOptions}>
-              <Text style={styles.contactOptionsTitle}>Contact via:</Text>
-              <View style={styles.contactIcons}>
-                {inviteData.phone && (
-                  <>
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openWhatsApp}
-                    >
-                      <MaterialCommunityIcons
-                        name="whatsapp"
-                        size={32}
-                        color={COLORS.success}
-                      />
-                      <Text style={styles.contactIconText}>WhatsApp</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.contactIconBtn}
-                      onPress={openSMS}
-                    >
-                      <MaterialIcons name="sms" size={32} color={COLORS.info} />
-                      <Text style={styles.contactIconText}>SMS</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-                {inviteData.email && (
-                  <TouchableOpacity
-                    style={styles.contactIconBtn}
-                    onPress={openEmail}
-                  >
-                    <Entypo name="mail" size={32} color={COLORS.error} />
-                    <Text style={styles.contactIconText}>Email</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <TouchableOpacity
-                style={styles.sendInviteBtn}
-                onPress={handleClose}
+            {inviteFeedback.msg ? (
+              <Text
+                style={[
+                  styles.feedbackMsg,
+                  inviteFeedback.type === "success"
+                    ? styles.success
+                    : styles.error,
+                ]}
               >
-                <Text style={styles.sendInviteBtnText}>Done</Text>
+                {inviteFeedback.msg}
+              </Text>
+            ) : null}
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={inviteData.firstName}
+                onChangeText={(t) => {
+                  setInviteFeedback({ msg: "", type: "" });
+                  setInviteData((prev) => ({
+                    ...prev,
+                    firstName: trimLeft(t),
+                  }));
+                }}
+                onBlur={() =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    firstName: trimFull(prev.firstName),
+                  }))
+                }
+                placeholder="First Name"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={inviteData.lastName}
+                onChangeText={(t) => {
+                  setInviteFeedback({ msg: "", type: "" });
+                  setInviteData((prev) => ({
+                    ...prev,
+                    lastName: trimLeft(t),
+                  }));
+                }}
+                onBlur={() =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    lastName: trimFull(prev.lastName),
+                  }))
+                }
+                placeholder="Last Name"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                keyboardType="email-address"
+                value={inviteData.email}
+                onChangeText={(t) =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    email: trimLeft(t),
+                  }))
+                }
+                onBlur={() =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    email: trimFull(prev.email),
+                  }))
+                }
+                placeholder="Email"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                keyboardType="phone-pad"
+                returnKeyType="done"
+                returnKeyLabel="close"
+                value={formatPhoneNumber(inviteData.phone)}
+                onChangeText={(t) =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    phone: unFormatPhoneNumber(trimLeft(t)),
+                  }))
+                }
+                onBlur={() =>
+                  setInviteData((prev) => ({
+                    ...prev,
+                    phone: unFormatPhoneNumber(trimFull(prev.phone)),
+                  }))
+                }
+                placeholder="Phone"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            {/* Always show main action area unless share modal takes over */}
+            <TouchableOpacity
+              style={[
+                styles.sendInviteBtn,
+                inviteLoading && styles.modalBtnDisabled,
+              ]}
+              disabled={inviteLoading}
+              onPress={handleInviteRealtor}
+            >
+              {inviteLoading ? (
+                <ActivityIndicator color={COLORS.white} />
+              ) : (
+                <Text style={styles.sendInviteBtnText}>Send Invite</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.orDivider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.orText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <View style={styles.shareLinkContainer}>
+              <Text style={styles.shareLinkText}>
+                Share this link with them
+              </Text>
+              <Text style={styles.linkText}>
+                {inviteLink ||
+                  "http://signup.roostapp.io/?realtorCode=" +
+                    (realtorInfo?.inviteCode || "")}
+              </Text>
+              <TouchableOpacity
+                style={styles.copyButton}
+                onPress={handleCopyLink}
+              >
+                <Text style={styles.copyButtonText}>
+                  {copied ? "Copied!" : "Copy"}
+                </Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <>
-              <TouchableOpacity
-                style={[
-                  styles.sendInviteBtn,
-                  inviteLoading && styles.modalBtnDisabled,
-                ]}
-                disabled={inviteLoading}
-                onPress={handleInviteRealtor}
-              >
-                {inviteLoading ? (
-                  <ActivityIndicator color={COLORS.white} />
-                ) : (
-                  <Text style={styles.sendInviteBtnText}>Send Invite</Text>
-                )}
-              </TouchableOpacity>
-
-              <View style={styles.orDivider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.orText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <View style={styles.shareLinkContainer}>
-                <Text style={styles.shareLinkText}>
-                  Share this link with them
-                </Text>
-                <Text style={styles.linkText}>
-                  {inviteLink ||
-                    "http://signup.roostapp.io/?realtorCode=" +
-                      (realtorInfo?.inviteCode || "")}
-                </Text>
-                <TouchableOpacity
-                  style={styles.copyButton}
-                  onPress={handleCopyLink}
-                >
-                  <Text style={styles.copyButtonText}>
-                    {copied ? "Copied!" : "Copy"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      {/* Share Options Modal (mirrors ClientInviteModal pattern) */}
+      <Modal
+        visible={showShareOptionsModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleClose}
+      >
+        <View style={styles.shareOptionsOverlay}>
+          <View style={styles.shareOptionsContainer}>
+            <TouchableOpacity
+              style={styles.shareOptionsCloseBtn}
+              onPress={handleClose}
+            >
+              <Entypo name="cross" size={24} color="#999" />
+            </TouchableOpacity>
+            <Text style={styles.shareOptionsTitle}>Realtor invite via</Text>
+            <Text style={styles.shareOptionsSubtitle}>
+              It's always best to send a custom invite directly from you by text
+              or email. Or have us send it
+            </Text>
+            <View style={styles.sharePrimaryOptions}>
+              {inviteData.phone ? (
+                <TouchableOpacity
+                  style={styles.primaryShareBtn}
+                  onPress={handlePersonalText}
+                >
+                  {/* <MaterialIcons name="sms" size={32} color="#2196F3" /> */}
+                  <Text style={styles.primaryShareBtnText}>Personal Text</Text>
+                </TouchableOpacity>
+              ) : null}
+              {inviteData.email ? (
+                <TouchableOpacity
+                  style={styles.primaryShareBtn}
+                  onPress={handlePersonalEmail}
+                >
+                  {/* <Entypo name="mail" size={32} color="#F44336" /> */}
+                  <Text style={styles.primaryShareBtnText}>Personal Email</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            {/* {inviteData.phone ? (
+              <TouchableOpacity
+                style={styles.secondaryShareBtn}
+                onPress={openWhatsApp}
+              >
+                <MaterialCommunityIcons
+                  name="whatsapp"
+                  size={28}
+                  color={COLORS.success}
+                />
+                <Text style={styles.secondaryShareBtnText}>WhatsApp</Text>
+              </TouchableOpacity>
+            ) : null} */}
+            <TouchableOpacity
+              style={styles.noneShareBtn}
+              onPress={handleNoneOption}
+            >
+              <Text style={styles.noneShareBtnText}>Invite</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -604,6 +649,101 @@ const styles = StyleSheet.create({
   contactIconText: {
     marginTop: 5,
     fontSize: 14,
+  },
+  /* Share Options Modal Styles */
+  shareOptionsOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    zIndex: 1000,
+  },
+  shareOptionsContainer: {
+    backgroundColor: COLORS.white,
+    width: "100%",
+    maxWidth: 500,
+    borderRadius: 15,
+    padding: 28,
+    position: "relative",
+  },
+  shareOptionsCloseBtn: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 1,
+    padding: 5,
+  },
+  shareOptionsTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 8,
+    textAlign: "center",
+    color: COLORS.black,
+    fontFamily: "futura",
+  },
+  shareOptionsSubtitle: {
+    fontSize: 14,
+    color: COLORS.secondary,
+    textAlign: "center",
+    marginBottom: 24,
+    fontFamily: "futura",
+  },
+  sharePrimaryOptions: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 24,
+    marginBottom: 24,
+  },
+  primaryShareBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    alignItems: "center",
+    minWidth: 140,
+  },
+  primaryShareBtnText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
+    //marginTop: 8,
+    fontFamily: "futura",
+    textAlign: "center",
+  },
+  secondaryShareBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    backgroundColor: "#f0f0f0",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 50,
+    marginBottom: 24,
+    gap: 10,
+  },
+  secondaryShareBtnText: {
+    color: COLORS.secondary,
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "futura",
+  },
+  noneShareBtn: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    borderRadius: 33,
+    alignItems: "center",
+    alignSelf: "center",
+    minWidth: 100,
+  },
+  noneShareBtnText: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "futura",
   },
 });
 

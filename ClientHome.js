@@ -32,6 +32,7 @@ import UploadModal from "./components/modals/UploadModal";
 import SubmittedDocumentModal from "./components/modals/SubmittedDocumentModal";
 import CompleteDocumentModal from "./components/modals/CompleteDocumentModal";
 import CategorySelectionModal from "./components/modals/CategorySelectionModal";
+import FullyApprovedModal from "./components/modals/FullyApprovedModal";
 
 /**
  * Color palette from UX team design system
@@ -99,6 +100,8 @@ const ClientHome = ({ questionnaireData }) => {
   // Submitted modal state
   const [showSubmittedModal, setShowSubmittedModal] = useState(false);
   const [selectedSubmittedDoc, setSelectedSubmittedDoc] = useState(null); // Keep client docs updated from context
+  // Fully Approved modal state
+  const [showFullyApprovedModal, setShowFullyApprovedModal] = useState(false);
   useEffect(() => {
     if (contextDocuments && contextDocuments.length > 0) {
       console.log(
@@ -404,55 +407,64 @@ const ClientHome = ({ questionnaireData }) => {
       >
         <View style={styles.contentContainer}>
           <View style={styles.statusContainer}>
-            {
-              /* Status */
-              clientFromContext.status === "PreApproved" ? (
-                <>
-                  <Text style={styles.bigTitlePreApproved}>Pre-Approved!</Text>
-                  <Text style={styles.moneyPreApproved}>
-                    {(clientFromContext?.preApprovalAmount || 0).toLocaleString(
-                      "en-US",
-                      {
-                        style: "currency",
-                        currency: "USD",
-                        minimumFractionDigits: 0,
-                      }
-                    )}
-                  </Text>
-                  <Text style={styles.subTitlePreApproved}>
-                    For the full approval we will need the following documents.
-                    By the way if you need more we might be able to help. Click
-                    the help button above.
-                  </Text>
-                </>
-              ) : clientFromContext.status === "Completed" ? (
-                <>
-                  <Text style={styles.bigTitlePreApproved}>Approved!</Text>
+            {clientFromContext.status === "PreApproved" ? (
+              <>
+                <Text style={styles.bigTitlePreApproved}>Pre-Approved!</Text>
+                <Text style={styles.moneyPreApproved}>
+                  {(clientFromContext?.preApprovalAmount || 0).toLocaleString(
+                    "en-US",
+                    {
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 0,
+                    }
+                  )}
+                </Text>
+                <Text style={styles.subTitlePreApproved}>
+                  For the full approval we will need the following documents. By
+                  the way if you need more we might be able to help. Click the
+                  help button above.
+                </Text>
+              </>
+            ) : clientFromContext.status === "FullyApproved" ? (
+              <>
+                <FullyApprovedModal
+                  visible={true}
+                  onClose={() => setShowFullyApprovedModal(false)}
+                  details={clientFromContext.fullyApprovedDetails || {}}
+                  onPurchasedPress={() => {
+                    // Placeholder: potential navigation or action when user indicates purchase intent
+                    setShowFullyApprovedModal(false);
+                  }}
+                />
+              </>
+            ) : clientFromContext.status === "Completed" ? (
+              <>
+                <Text style={styles.bigTitlePreApproved}>Approved!</Text>
 
-                  {clientFromContext.completionDetails && (
-                    <View style={styles.completionDetailsContainer}>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Property Price:</Text>
-                        <Text style={styles.detailValue}>
-                          $
-                          {Number(
-                            clientFromContext.completionDetails.propertyPrice ||
-                              0
-                          ).toLocaleString()}
-                        </Text>
-                      </View>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Mortgage Amount:</Text>
-                        <Text style={styles.detailValue}>
-                          $
-                          {Number(
-                            clientFromContext.completionDetails
-                              .mortgageAmount || 0
-                          ).toLocaleString()}
-                        </Text>
-                      </View>
+                {clientFromContext.completionDetails && (
+                  <View style={styles.completionDetailsContainer}>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Property Price:</Text>
+                      <Text style={styles.detailValue}>
+                        $
+                        {Number(
+                          clientFromContext.completionDetails.propertyPrice || 0
+                        ).toLocaleString()}
+                      </Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Mortgage Amount:</Text>
+                      <Text style={styles.detailValue}>
+                        $
+                        {Number(
+                          clientFromContext.completionDetails.mortgageAmount ||
+                            0
+                        ).toLocaleString()}
+                      </Text>
+                    </View>
 
-                      {/* <View style={styles.detailRow}>
+                    {/* <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Realtor Award:</Text>
                         <Text style={styles.detailValue}>
                           $
@@ -502,19 +514,18 @@ const ClientHome = ({ questionnaireData }) => {
                             : "N/A"}
                         </Text>
                       </View> */}
-                    </View>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Text style={styles.bigTitle}>Just Hang in there</Text>
-                  <Text style={styles.subTitle}>
-                    A mortgage specialist will reach out within 24 hours. In the
-                    meantime, you can get started by uploading your documents.
-                  </Text>
-                </>
-              )
-            }
+                  </View>
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={styles.bigTitle}>Just Hang in there</Text>
+                <Text style={styles.subTitle}>
+                  A mortgage specialist will reach out within 24 hours. In the
+                  meantime, you can get started by uploading your documents.
+                </Text>
+              </>
+            )}
           </View>
           {loadingDocuments ? (
             <ActivityIndicator
@@ -523,7 +534,9 @@ const ClientHome = ({ questionnaireData }) => {
               style={styles.loadingIndicator}
             />
           ) : (
-            clientFromContext.status !== "Completed" && (
+            !["FullyApproved", "Completed"].includes(
+              clientFromContext.status
+            ) && (
               <View>
                 {/* Needed */}
                 <Text style={styles.sectionHeader}>WHAT’S NEEDED FOR YOU</Text>
@@ -563,7 +576,10 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </ScrollView>
 
-      {clientFromContext.status !== "Completed" && renderQuestionnaireButton()}
+      {!(
+        clientFromContext.status === "Completed" ||
+        clientFromContext.status === "FullyApproved"
+      ) && renderQuestionnaireButton()}
 
       {/* Profile Panel */}
       <ReactNativeModal

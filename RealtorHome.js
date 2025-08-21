@@ -792,6 +792,16 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
   };
   const [completedClients, setCompletedClients] = useState([]);
   const [activeClients, setActiveClients] = useState([]);
+  // Fully Approved Modal state
+  const [showFullyApprovedModal, setShowFullyApprovedModal] = useState(false);
+  const [selectedFullyApprovedClient, setSelectedFullyApprovedClient] =
+    useState(null);
+  // Hardcoded documents list for Fully Approved modal (no API call)
+  const fullyApprovedDocs = [
+    "Agreement of Purchase and Sale",
+    "MLS Data Sheet",
+    "Receipt of Funds",
+  ];
 
   // Add this useEffect to segregate clients
   useEffect(() => {
@@ -802,13 +812,26 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       const active = invited.filter(
         (client) => client.clientStatus !== "Completed"
       );
+      // Sort active so FullyApproved always on top
+      const sortedActive = [...active].sort((a, b) => {
+        const aFA = a.clientStatus === "FullyApproved" ? 1 : 0;
+        const bFA = b.clientStatus === "FullyApproved" ? 1 : 0;
+        if (aFA !== bFA) return bFA - aFA; // put FullyApproved (1) first
+        // fallback alphabetical by referenceName
+        return (a.referenceName || "").localeCompare(b.referenceName || "");
+      });
       setCompletedClients(completed);
-      setActiveClients(active);
+      setActiveClients(sortedActive);
     } else {
       setCompletedClients([]);
       setActiveClients([]);
     }
   }, [invited]);
+
+  const openFullyApprovedModal = (client) => {
+    setSelectedFullyApprovedClient(client);
+    setShowFullyApprovedModal(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -1018,7 +1041,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               const totalNeeded = neededDocumentsCount[client.inviteeId] || 10;
 
               const statusText =
-                client?.clientStatus === "Completed"
+                client?.clientStatus === "FullyApproved"
+                  ? "Share Documents"
+                  : client?.clientStatus === "Completed"
                   ? "Completed"
                   : client.status === "PENDING"
                   ? "Invited"
@@ -1039,7 +1064,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 <TouchableOpacity
                   key={client.id || client._id || client.inviteeId}
                   style={styles.clientCard}
-                  onPress={() => handleClientClick(client)}
+                  onPress={() =>
+                    client.clientStatus === "FullyApproved"
+                      ? openFullyApprovedModal(client)
+                      : handleClientClick(client)
+                  }
                   activeOpacity={0.8}
                 >
                   <View style={styles.initialsCircle}>
@@ -1051,7 +1080,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     <Text style={styles.clientName}>
                       {client.referenceName}
                     </Text>
-                    {client.clientStatus === "Completed" ? (
+                    {client.clientStatus === "FullyApproved" ? (
+                      <CompleteProgressBar text="Share Documents" />
+                    ) : client.clientStatus === "Completed" ? (
                       <CompleteProgressBar
                         text="COMPLETED"
                         points={client?.completionDetails?.realtorAward || ""}
@@ -1110,7 +1141,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     neededDocumentsCount[client.inviteeId] || 10;
 
                   const statusText =
-                    client?.clientStatus === "Completed"
+                    client?.clientStatus === "FullyApproved"
+                      ? "Share Documents"
+                      : client?.clientStatus === "Completed"
                       ? "Completed"
                       : client.status === "PENDING"
                       ? "Invited"
@@ -1132,7 +1165,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     <TouchableOpacity
                       key={client.id || client._id || client.inviteeId}
                       style={styles.clientCard}
-                      onPress={() => handleClientClick(client)}
+                      onPress={() =>
+                        client.clientStatus === "FullyApproved"
+                          ? openFullyApprovedModal(client)
+                          : handleClientClick(client)
+                      }
                       activeOpacity={0.8}
                     >
                       <View style={styles.initialsCircle}>
@@ -1161,6 +1198,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                                   })
                                 : ""
                             }
+                          />
+                        ) : client.clientStatus === "FullyApproved" ? (
+                          <CompleteProgressBar
+                            text="Share Documentsss"
+                            points="100"
                           />
                         ) : client.status === "ACCEPTED" &&
                           client.documents &&
@@ -1399,6 +1441,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         />
       </Modal>
       <InviteRealtorModal
+        key={Date.now()} // Force remount on each open
         visible={showInviteForm}
         onClose={() => setShowInviteForm(false)}
         realtorInfo={realtorFromContext?.realtorInfo}
@@ -1434,8 +1477,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
               <Text style={styles.inviteOptionsTitle}>Client invite via</Text>
               <Text style={styles.inviteOptionsSubtitle}>
-                Its always best to send personal invite to your client, if you
-                choose none we will just send them an email in 5 minutes
+                It's always best to send a custom invite directly from you by
+                text or email. Or have us send it
               </Text>
 
               <View style={styles.contactOptions}>
@@ -1444,7 +1487,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     style={styles.primaryOptionBtn}
                     onPress={handlePersonalText}
                   >
-                    <MaterialIcons name="sms" size={32} color="#2196F3" />
+                    {/* <MaterialIcons name="sms" size={32} color="#2196F3" /> */}
                     <Text style={styles.primaryOptionText}>Personal Text</Text>
                   </TouchableOpacity>
                 )}
@@ -1454,7 +1497,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     style={styles.primaryOptionBtn}
                     onPress={handlePersonalEmail}
                   >
-                    <Entypo name="mail" size={32} color="#F44336" />
+                    {/* <Entypo name="mail" size={32} color="#F44336" /> */}
                     <Text style={styles.primaryOptionText}>Personal Email</Text>
                   </TouchableOpacity>
                 )}
@@ -1465,7 +1508,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   style={styles.noneButton}
                   onPress={handleNoneOption}
                 >
-                  <Text style={styles.noneButtonText}>None</Text>
+                  <Text style={styles.noneButtonText}>Invite</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1765,74 +1808,6 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   </Text>
                 </>
               )}
-            </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      {/* New Invite Options Modal */}
-      <Modal
-        visible={showInviteOptionsModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowInviteOptionsModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.formOverlay}
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.inviteOptionsContainer}>
-              <TouchableOpacity
-                style={styles.closeFormButton}
-                onPress={() => setShowInviteOptionsModal(false)}
-              >
-                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
-                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
-                  <Path
-                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                    fill="#A9A9A9"
-                  />
-                </Svg>
-              </TouchableOpacity>
-
-              <Text style={styles.inviteOptionsTitle}>Client invite via</Text>
-              <Text style={styles.inviteOptionsSubtitle}>
-                Its always best to send personal invite to your client, if you
-                choose none we will just send them an email in 5 minutes
-              </Text>
-
-              <View style={styles.contactOptions}>
-                {formData.phone && (
-                  <TouchableOpacity
-                    style={styles.primaryOptionBtn}
-                    onPress={handlePersonalText}
-                  >
-                    <MaterialIcons name="sms" size={32} color="#2196F3" />
-                    <Text style={styles.primaryOptionText}>Personal Text</Text>
-                  </TouchableOpacity>
-                )}
-
-                {formData.email && (
-                  <TouchableOpacity
-                    style={styles.primaryOptionBtn}
-                    onPress={handlePersonalEmail}
-                  >
-                    <Entypo name="mail" size={32} color="#F44336" />
-                    <Text style={styles.primaryOptionText}>Personal Email</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <View style={styles.noneOptionContainer}>
-                <TouchableOpacity
-                  style={styles.noneButton}
-                  onPress={handleNoneOption}
-                >
-                  <Text style={styles.noneButtonText}>None</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
@@ -2166,6 +2141,78 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               )}
             </View>
           </Animated.View>
+        </Animated.View>
+      </Modal>
+      {/* Fully Approved Client Modal */}
+      <Modal
+        visible={showFullyApprovedModal}
+        animationType="none"
+        transparent={true}
+        onRequestClose={() => setShowFullyApprovedModal(false)}
+      >
+        <Animated.View style={[styles.modalOverlay]}>
+          <View style={styles.fullyApprovedModalContent}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowFullyApprovedModal(false)}
+            >
+              <Ionicons name="close" size={24} color={COLORS.black} />
+            </TouchableOpacity>
+            {selectedFullyApprovedClient && (
+              <View style={{ width: "100%", alignItems: "center" }}>
+                <View style={styles.fullyApprovedHeaderInitialsRow}>
+                  <View style={styles.initialsCircle}>
+                    <Text style={styles.initialsText}>
+                      {getInitials(selectedFullyApprovedClient.referenceName)}
+                    </Text>
+                  </View>
+                  <Text style={styles.fullyApprovedClientName}>
+                    {selectedFullyApprovedClient.referenceName}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.fullyApprovedDivider}
+                  onPress={() => {
+                    setShowFullyApprovedModal(false);
+                    navigation.navigate("ClientDetails", {
+                      clientId: selectedFullyApprovedClient.inviteeId,
+                      client: selectedFullyApprovedClient,
+                      inviteId: selectedFullyApprovedClient.inviteId,
+                      onDelete: onRefresh,
+                      statusText: "Fully Approved",
+                    });
+                  }}
+                >
+                  <Text style={styles.fullyApprovedDividerTextButton}>
+                    View Details
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.fullyApprovedSubtitle}>
+                  These documents are needed to complete the mortgage process
+                </Text>
+                <View style={{ marginTop: 24, width: "100%" }}>
+                  {fullyApprovedDocs.map((doc, idx) => (
+                    <Text
+                      key={idx}
+                      style={styles.fullyApprovedDocItem}
+                      numberOfLines={2}
+                    >
+                      {doc}
+                    </Text>
+                  ))}
+                </View>
+                <Text style={styles.fullyApprovedFooterInfo}>
+                  from your computer you can send the documents to
+                </Text>
+                <Text style={styles.fullyApprovedEmail}>files@roostapp.io</Text>
+                <TouchableOpacity style={styles.fullyApprovedPrimaryButton}>
+                  <Text style={styles.fullyApprovedPrimaryButtonText}>
+                    Send from my phone
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </Animated.View>
       </Modal>
     </View>
@@ -2777,9 +2824,9 @@ const styles = StyleSheet.create({
   },
   primaryOptionBtn: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 23,
     alignItems: "center",
     minWidth: 120,
     elevation: 2,
@@ -2789,7 +2836,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
   },
   primaryOptionText: {
-    marginTop: 8,
+    //  marginTop: 8,
     fontSize: 12,
     fontWeight: "bold",
     color: COLORS.white,
@@ -2802,18 +2849,18 @@ const styles = StyleSheet.create({
   },
   noneButton: {
     backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: COLORS.gray,
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    borderWidth: 1,
+    borderColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 13,
+    paddingHorizontal: 12,
     alignItems: "center",
     width: "80%",
   },
   noneButtonText: {
-    color: COLORS.gray,
-    fontSize: 16,
-    fontWeight: "500",
+    color: COLORS.green,
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   contactIconBtn: {
@@ -3080,6 +3127,97 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  /* Fully Approved Modal Styles */
+  fullyApprovedModalContent: {
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 24,
+    width: "90%",
+    maxWidth: 520,
+    alignItems: "center",
+  },
+  fullyApprovedHeaderInitialsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 8,
+  },
+  fullyApprovedClientName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.black,
+    fontFamily: "Futura",
+  },
+  fullyApprovedDivider: {
+    marginTop: 12,
+    height: 48,
+    width: "100%",
+    backgroundColor: COLORS.green,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullyApprovedDividerTextButton: {
+    fontSize: 12,
+    color: COLORS.white,
+    textAlign: "center",
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  fullyApprovedDividerText: {
+    fontSize: 14,
+    color: COLORS.white,
+    textAlign: "center",
+    fontWeight: "500",
+    fontFamily: "Futura",
+  },
+  fullyApprovedSubtitle: {
+    marginTop: 24,
+    fontSize: 14,
+    textAlign: "center",
+    color: COLORS.slate,
+    fontWeight: "500",
+    fontFamily: "Futura",
+  },
+  fullyApprovedDocItem: {
+    fontSize: 18,
+    color: COLORS.black,
+    textAlign: "center",
+    fontWeight: "500",
+    marginBottom: 8,
+    fontFamily: "Futura",
+  },
+  fullyApprovedFooterInfo: {
+    marginTop: 32,
+    fontSize: 12,
+    color: COLORS.slate,
+    textAlign: "center",
+    fontWeight: "500",
+    fontFamily: "Futura",
+  },
+  fullyApprovedEmail: {
+    marginTop: 8,
+    fontSize: 18,
+    color: COLORS.black,
+    textAlign: "center",
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  fullyApprovedPrimaryButton: {
+    marginTop: 32,
+    backgroundColor: COLORS.orange,
+    borderRadius: 40,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    width: "100%",
+    alignItems: "center",
+  },
+  fullyApprovedPrimaryButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
   },
 });
 

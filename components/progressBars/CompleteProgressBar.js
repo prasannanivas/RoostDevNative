@@ -16,8 +16,23 @@ const CompleteProgressBar = ({ text, points, date }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.background}>
-        <View style={[styles.fill]} />
+      <View
+        style={[
+          styles.background,
+          {
+            backgroundColor: text !== "Completed" ? COLORS.orange : COLORS.blue,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.fill,
+            {
+              backgroundColor:
+                text !== "Completed" ? COLORS.orange : COLORS.blue,
+            },
+          ]}
+        />
         <Text style={styles.barText}>{`${text} ${
           points ? ` - ${points} PTS` : ""
         }${date ? ` - ${date}` : ""}`}</Text>
@@ -32,7 +47,7 @@ const styles = StyleSheet.create({
   },
   background: {
     height: 21,
-    backgroundColor: "#2271B1", // Blue for completed
+    //  backgroundColor: "#2271B1", // Blue for completed
     borderRadius: 10.5,
     overflow: "hidden",
     position: "relative",
@@ -44,7 +59,7 @@ const styles = StyleSheet.create({
     top: 0,
     height: "100%",
     width: "100%",
-    backgroundColor: "#2271B1", // Blue for completed
+    //  backgroundColor: "#2271B1", // Blue for completed
     borderRadius: 10.5,
   },
   barText: {
