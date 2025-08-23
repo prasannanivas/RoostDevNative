@@ -33,8 +33,7 @@ const COLORS = {
 import { useClient } from "../../context/ClientContext";
 
 const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
-  const { amount, rate, lender, terms } = details || {};
-  const paperworkRequested = details?.PeperWorkRequested === true; // using provided key spelling
+  const { amount, rate, lender, terms, paperWorkRequested } = details || {};
   const [showFullTerms, setShowFullTerms] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [requesting, setRequesting] = useState(false);
@@ -66,8 +65,8 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
         <Text style={styles.termsText}>{terms}</Text>
       </ScrollView>
 
-      {paperworkRequested ? (
-        <>
+      {paperWorkRequested ? (
+        <View style={styles.disabledButtonContainer}>
           <View style={styles.disabledButton} pointerEvents="none">
             <Text style={styles.disabledButtonText}>
               We are working on your paperwork
@@ -77,7 +76,7 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
             We have requested some documents from your realtor, once we have
             them you’ll receive an email requesting signatures.
           </Text>
-        </>
+        </View>
       ) : (
         <>
           <TouchableOpacity
@@ -260,6 +259,9 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginBottom: 4,
   },
+  disabledButtonContainer: {
+    padding: 16,
+  },
   termsWrapper: {
     marginTop: 16,
     maxHeight: 140,
@@ -305,7 +307,10 @@ const styles = StyleSheet.create({
   },
   infoMessage: {
     marginTop: 16,
-    fontSize: 12,
+    fontSize: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
     fontFamily: "Futura",
     color: COLORS.gray,
   },

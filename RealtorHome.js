@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import * as MailComposer from "expo-mail-composer";
 import * as DocumentPicker from "expo-document-picker";
 import {
   View,
@@ -2205,7 +2206,48 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   from your computer you can send the documents to
                 </Text>
                 <Text style={styles.fullyApprovedEmail}>files@roostapp.io</Text>
-                <TouchableOpacity style={styles.fullyApprovedPrimaryButton}>
+                <TouchableOpacity
+                  style={styles.fullyApprovedPrimaryButton}
+                  onPress={async () => {
+                    const email =
+                      selectedFullyApprovedClient?.email ||
+                      selectedFullyApprovedClient?.clientEmail;
+                    if (!email) {
+                      Alert.alert(
+                        "No email",
+                        "No email address available for this client."
+                      );
+                      return;
+                    }
+                    const subject = `Mortgage documents for ${
+                      selectedFullyApprovedClient?.referenceName || ""
+                    }`;
+                    const body = `Please attach the documents for your client here. 
+                    We need APS, MLS Data Sheet and Receipt of Funds. 
+                    Alternatively you can send them from your computer to this address`;
+                    try {
+                      const available = await MailComposer.isAvailableAsync();
+                      if (available) {
+                        await MailComposer.composeAsync({
+                          recipients: [email],
+                          subject,
+                          body,
+                        });
+                      } else {
+                        // Fallback to mailto
+                        const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
+                          subject
+                        )}&body=${encodeURIComponent(body)}`;
+                        Linking.openURL(mailtoUrl);
+                      }
+                    } catch (e) {
+                      Alert.alert(
+                        "Email composer error",
+                        "Please try again or send an email manually."
+                      );
+                    }
+                  }}
+                >
                   <Text style={styles.fullyApprovedPrimaryButtonText}>
                     Send from my phone
                   </Text>
@@ -3157,6 +3199,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
+  },
+  fullyApprovedDividerTextButton: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "Futura",
   },
   fullyApprovedDividerTextButton: {
     fontSize: 12,
