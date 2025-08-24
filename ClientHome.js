@@ -16,6 +16,8 @@ import {
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
 import { useNotification } from "./context/NotificationContext";
@@ -72,8 +74,8 @@ const ClientHome = ({ questionnaireData }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showQuestionnairePreview, setShowQuestionnairePreview] =
-    useState(false);
+  // const [showQuestionnairePreview, setShowQuestionnairePreview] =
+  //   useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showChangeOptions, setShowChangeOptions] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
@@ -101,7 +103,11 @@ const ClientHome = ({ questionnaireData }) => {
   const [showSubmittedModal, setShowSubmittedModal] = useState(false);
   const [selectedSubmittedDoc, setSelectedSubmittedDoc] = useState(null); // Keep client docs updated from context
   // Fully Approved modal state
-  const [showFullyApprovedModal, setShowFullyApprovedModal] = useState(false);
+  const [downloadingMortgageDoc, setDownloadingMortgageDoc] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadedFileUri, setDownloadedFileUri] = useState(null);
+  const [indeterminateDownload, setIndeterminateDownload] = useState(false);
+
   useEffect(() => {
     if (contextDocuments && contextDocuments.length > 0) {
       console.log(
@@ -348,6 +354,90 @@ const ClientHome = ({ questionnaireData }) => {
     );
   };
 
+  // Download mortgage document
+  const handleDownloadMortgageDocument = async () => {
+    if (!clientFromContext.completionDetails?.mortgageDocument?._id) return;
+    setDownloadingMortgageDoc(true);
+    setDownloadProgress(0);
+    setIndeterminateDownload(false);
+    try {
+      const docId = clientFromContext.completionDetails.mortgageDocument._id;
+      const fileName =
+        clientFromContext.completionDetails.mortgageDocument.fileName ||
+        "mortgage-document.pdf";
+      const url = `https://signup.roostapp.io/admin/client/${clientId}/mortgage-document/${docId}`;
+      console.log("Downloading mortgage document from:", url);
+
+      const fileUri =
+        FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        fileUri,
+        {},
+        (progress) => {
+          const written = progress.totalBytesWritten || 0;
+          const expected = progress.totalBytesExpectedToWrite || 0;
+          if (expected <= 0) {
+            // Unknown size; switch to indeterminate if some data arrives
+            if (written > 0) {
+              setIndeterminateDownload(true);
+            }
+          } else {
+            setIndeterminateDownload(false);
+            const raw = (written / expected) * 100;
+            if (isFinite(raw)) {
+              const pct = Math.min(100, Math.max(0, Math.round(raw)));
+              setDownloadProgress(pct);
+            }
+          }
+        }
+      );
+
+      const result = await downloadResumable.downloadAsync();
+      if (result && result.status === 200) {
+        setDownloadedFileUri(result.uri);
+        // Ensure we finalize at 100%
+        setDownloadProgress(100);
+        setTimeout(() => setDownloadingMortgageDoc(false), 250);
+        setIndeterminateDownload(false);
+        // Auto open share sheet if available
+        if (await Sharing.isAvailableAsync()) {
+          try {
+            await Sharing.shareAsync(result.uri, {
+              dialogTitle: "Share Mortgage Document",
+            });
+          } catch (shareErr) {
+            console.warn("Share cancelled or failed", shareErr);
+          }
+        } else {
+          Alert.alert("Download Complete", `Saved to: ${result.uri}`);
+        }
+      } else {
+        Alert.alert("Download Failed", "Unable to download document.");
+        setDownloadingMortgageDoc(false);
+        setDownloadProgress(0);
+      }
+    } catch (err) {
+      console.error("Download error", err);
+      Alert.alert("Error", "Failed to download document.");
+      setDownloadingMortgageDoc(false);
+      setDownloadProgress(0);
+      setIndeterminateDownload(false);
+    }
+  };
+
+  // Fallback: if after 1500ms still at 0% and downloading, mark indeterminate
+  useEffect(() => {
+    if (downloadingMortgageDoc) {
+      const t = setTimeout(() => {
+        if (downloadProgress === 0 && downloadingMortgageDoc) {
+          setIndeterminateDownload(true);
+        }
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [downloadingMortgageDoc, downloadProgress]);
+
   return (
     <View style={styles.safeArea}>
       {/* Main Header - Bottom 63px */}
@@ -430,17 +520,44 @@ const ClientHome = ({ questionnaireData }) => {
               <>
                 <FullyApprovedModal
                   visible={true}
-                  onClose={() => setShowFullyApprovedModal(false)}
                   details={clientFromContext.fullyApprovedDetails || {}}
                   onPurchasedPress={() => {
                     // Placeholder: potential navigation or action when user indicates purchase intent
-                    setShowFullyApprovedModal(false);
                   }}
                 />
               </>
             ) : clientFromContext.status === "Completed" ? (
               <>
                 <Text style={styles.bigTitlePreApproved}>Approved!</Text>
+
+                {clientFromContext.completionDetails.mortgageDocument && (
+                  <View style={{ alignItems: "center" }}>
+                    <TouchableOpacity
+                      style={styles.downloadButton}
+                      onPress={handleDownloadMortgageDocument}
+                      disabled={downloadingMortgageDoc}
+                    >
+                      <Text style={styles.downloadButtonText}>
+                        {downloadingMortgageDoc
+                          ? "Downloading..."
+                          : "Download Mortgage Document"}
+                      </Text>
+                    </TouchableOpacity>
+                    {downloadingMortgageDoc && (
+                      <View style={{ marginTop: 10 }}>
+                        {indeterminateDownload ? (
+                          <Text style={styles.downloadProgressText}>
+                            Downloading...
+                          </Text>
+                        ) : (
+                          <Text style={styles.downloadProgressText}>
+                            Downloading: {downloadProgress}%
+                          </Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                )}
 
                 {clientFromContext.completionDetails && (
                   <View style={styles.completionDetailsContainer}>
@@ -463,57 +580,6 @@ const ClientHome = ({ questionnaireData }) => {
                         ).toLocaleString()}
                       </Text>
                     </View>
-
-                    {/* <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Realtor Award:</Text>
-                        <Text style={styles.detailValue}>
-                          $
-                          {Number(
-                            clientFromContext.completionDetails.realtorAward ||
-                              0
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </Text>
-                      </View>
-
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Referral Reward:</Text>
-                        <Text style={styles.detailValue}>
-                          $
-                          {Number(
-                            clientFromContext.completionDetails
-                              .referralReward || 0
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </Text>
-                      </View>
-
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Address:</Text>
-                        <Text style={styles.detailValue}>
-                          {clientFromContext.completionDetails.clientAddress ||
-                            "N/A"}
-                        </Text>
-                      </View>
-
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Approval Date:</Text>
-                        <Text style={styles.detailValue}>
-                          {clientFromContext.completionDetails.date
-                            ? new Date(
-                                clientFromContext.completionDetails.date
-                              ).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })
-                            : "N/A"}
-                        </Text>
-                      </View> */}
                   </View>
                 )}
               </>
@@ -1409,5 +1475,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
+  },
+  downloadButton: {
+    backgroundColor: COLORS.blue,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 33,
+  },
+  downloadButtonText: {
+    color: COLORS.white,
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  downloadProgressText: {
+    color: COLORS.slate,
+    fontSize: 15,
+    marginTop: 4,
   },
 });
