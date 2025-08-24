@@ -361,65 +361,93 @@ const ClientHome = ({ questionnaireData }) => {
     setDownloadProgress(0);
     setIndeterminateDownload(false);
     try {
-      const docId = clientFromContext.completionDetails.mortgageDocument._id;
-      const fileName =
-        clientFromContext.completionDetails.mortgageDocument.fileName ||
-        "mortgage-document.pdf";
+      const docMeta = clientFromContext.completionDetails.mortgageDocument;
+      const docId = docMeta._id;
+      const originalName = docMeta.fileName || "mortgage-document.pdf";
+      const safeFileName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
       const url = `https://signup.roostapp.io/admin/client/${clientId}/mortgage-document/${docId}`;
-      console.log("Downloading mortgage document from:", url);
+      console.log("Downloading mortgage document (XHR) from:", url);
 
-      const fileUri =
-        FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const downloadResumable = FileSystem.createDownloadResumable(
-        url,
-        fileUri,
-        {},
-        (progress) => {
-          const written = progress.totalBytesWritten || 0;
-          const expected = progress.totalBytesExpectedToWrite || 0;
-          if (expected <= 0) {
-            // Unknown size; switch to indeterminate if some data arrives
-            if (written > 0) {
-              setIndeterminateDownload(true);
-            }
-          } else {
-            setIndeterminateDownload(false);
-            const raw = (written / expected) * 100;
-            if (isFinite(raw)) {
-              const pct = Math.min(100, Math.max(0, Math.round(raw)));
-              setDownloadProgress(pct);
-            }
-          }
-        }
-      );
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.responseType = "blob"; // Ensure we get binary data
 
-      const result = await downloadResumable.downloadAsync();
-      if (result && result.status === 200) {
-        setDownloadedFileUri(result.uri);
-        // Ensure we finalize at 100%
-        setDownloadProgress(100);
-        setTimeout(() => setDownloadingMortgageDoc(false), 250);
-        setIndeterminateDownload(false);
-        // Auto open share sheet if available
-        if (await Sharing.isAvailableAsync()) {
-          try {
-            await Sharing.shareAsync(result.uri, {
-              dialogTitle: "Share Mortgage Document",
-            });
-          } catch (shareErr) {
-            console.warn("Share cancelled or failed", shareErr);
-          }
+      xhr.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          // Avoid jumping straight to 100% before write/share finishes
+          setIndeterminateDownload(false);
+          setDownloadProgress(Math.min(pct, 99));
         } else {
-          Alert.alert("Download Complete", `Saved to: ${result.uri}`);
+          // Server didn't send content-length header
+          if (event.loaded > 0) {
+            setIndeterminateDownload(true);
+          }
         }
-      } else {
-        Alert.alert("Download Failed", "Unable to download document.");
+      };
+
+      xhr.onerror = () => {
+        console.error("XHR download error");
+        Alert.alert("Error", "Failed to download document.");
         setDownloadingMortgageDoc(false);
         setDownloadProgress(0);
-      }
+        setIndeterminateDownload(false);
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status === 200) {
+          try {
+            const blob = xhr.response;
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+              try {
+                const base64data = reader.result.split(",")[1];
+                const fileUri = FileSystem.cacheDirectory + safeFileName;
+                await FileSystem.writeAsStringAsync(fileUri, base64data, {
+                  encoding: FileSystem.EncodingType.Base64,
+                });
+                setDownloadedFileUri(fileUri);
+                setDownloadProgress(100);
+                setIndeterminateDownload(false);
+                setTimeout(() => setDownloadingMortgageDoc(false), 200);
+                if (await Sharing.isAvailableAsync()) {
+                  try {
+                    await Sharing.shareAsync(fileUri, {
+                      dialogTitle: "Share Mortgage Document",
+                    });
+                  } catch (shareErr) {
+                    console.warn("Share cancelled or failed", shareErr);
+                  }
+                } else {
+                  Alert.alert("Download Complete", `Saved to: ${fileUri}`);
+                }
+              } catch (writeErr) {
+                console.error("File write/share error", writeErr);
+                Alert.alert("Error", "Failed to save downloaded file.");
+                setDownloadingMortgageDoc(false);
+                setDownloadProgress(0);
+              }
+            };
+            reader.readAsDataURL(blob);
+          } catch (blobErr) {
+            console.error("Blob handling error", blobErr);
+            Alert.alert("Error", "Failed to process downloaded file.");
+            setDownloadingMortgageDoc(false);
+            setDownloadProgress(0);
+            setIndeterminateDownload(false);
+          }
+        } else {
+          Alert.alert("Download Failed", "Unable to download document.");
+          setDownloadingMortgageDoc(false);
+          setDownloadProgress(0);
+          setIndeterminateDownload(false);
+        }
+      };
+
+      xhr.send();
     } catch (err) {
-      console.error("Download error", err);
-      Alert.alert("Error", "Failed to download document.");
+      console.error("Download setup error", err);
+      Alert.alert("Error", "Failed to start download.");
       setDownloadingMortgageDoc(false);
       setDownloadProgress(0);
       setIndeterminateDownload(false);
@@ -539,11 +567,14 @@ const ClientHome = ({ questionnaireData }) => {
                     >
                       <Text style={styles.downloadButtonText}>
                         {downloadingMortgageDoc
-                          ? "Downloading..."
+                          ? `Downloading: ${downloadProgress}%`
                           : "Download Mortgage Document"}
                       </Text>
+                      {downloadingMortgageDoc && (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                      )}
                     </TouchableOpacity>
-                    {downloadingMortgageDoc && (
+                    {/* {downloadingMortgageDoc && (
                       <View style={{ marginTop: 10 }}>
                         {indeterminateDownload ? (
                           <Text style={styles.downloadProgressText}>
@@ -555,7 +586,7 @@ const ClientHome = ({ questionnaireData }) => {
                           </Text>
                         )}
                       </View>
-                    )}
+                    )} */}
                   </View>
                 )}
 
@@ -1478,14 +1509,20 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     backgroundColor: COLORS.blue,
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 24,
     borderRadius: 33,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minWidth: 220,
   },
   downloadButtonText: {
     color: COLORS.white,
     fontWeight: "700",
     fontSize: 12,
+    fontFamily: "Futura",
+    marginRight: 8,
   },
   downloadProgressText: {
     color: COLORS.slate,
