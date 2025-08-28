@@ -626,13 +626,13 @@ export default function ClientProfile({ onClose }) {
               Make sure thing info is complete and up to date.
             </Text>
             <View style={styles.formGroup}>
-              <TextInput
+              {/* <TextInput
                 style={[styles.input, { backgroundColor: COLORS.silver }]}
                 placeholder="Name"
                 placeholderTextColor={COLORS.gray}
                 value={formData.firstName + " " + formData.lastName}
                 editable={false}
-              />
+              /> */}
               <TextInput
                 style={styles.input}
                 placeholder="Address"

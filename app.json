@@ -51,7 +51,7 @@
       },
       "icon": "./assets/android/mipmap-xxxhdpi/ic_launcher.png",
       "package": "com.roostapp.roost",
-      "versionCode": 5,
+      "versionCode": 6,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

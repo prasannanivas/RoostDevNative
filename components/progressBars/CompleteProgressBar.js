@@ -20,7 +20,7 @@ const CompleteProgressBar = ({ text, points, date }) => {
         style={[
           styles.background,
           {
-            backgroundColor: text !== "Completed" ? COLORS.orange : COLORS.blue,
+            backgroundColor: text !== "COMPLETED" ? COLORS.orange : COLORS.blue,
           },
         ]}
       >
@@ -29,7 +29,7 @@ const CompleteProgressBar = ({ text, points, date }) => {
             styles.fill,
             {
               backgroundColor:
-                text !== "Completed" ? COLORS.orange : COLORS.blue,
+                text !== "COMPLETED" ? COLORS.orange : COLORS.blue,
             },
           ]}
         />

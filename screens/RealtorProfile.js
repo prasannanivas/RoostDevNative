@@ -24,7 +24,10 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Circle, Path } from "react-native-svg";
-import { formatPhoneNumber } from "../utils/phoneFormatUtils";
+import {
+  formatPhoneNumber,
+  unFormatPhoneNumber,
+} from "../utils/phoneFormatUtils";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
 import { trimLeft, trimFull } from "../utils/stringUtils";
 
@@ -1291,11 +1294,11 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
                 styles.input,
                 fieldErrors.brokeragePhone && styles.inputError,
               ]}
-              value={formData.brokeragePhone}
+              value={formatPhoneNumber(formData.brokeragePhone)}
               placeholder="Brokerage Phone"
               keyboardType="phone-pad"
               onChangeText={(text) =>
-                handleFieldChange("brokeragePhone", trimLeft(text))
+                handleFieldChange("brokeragePhone", unFormatPhoneNumber(text))
               }
               onBlur={() =>
                 handleFieldChange(
