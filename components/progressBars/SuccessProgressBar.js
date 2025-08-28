@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   barText: {
     color: "#FDFDFD", // White color for text
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     fontFamily: "Futura",
     textAlign: "center",

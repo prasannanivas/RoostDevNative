@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   },
   barText: {
     color: "#1D2327",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     fontFamily: "Futura",
     textAlign: "center",

@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 10.5,
   },
   barText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     fontFamily: "Futura",
     textAlign: "center",

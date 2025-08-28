@@ -815,9 +815,12 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       );
       // Sort active so FullyApproved always on top
       const sortedActive = [...active].sort((a, b) => {
-        const aFA = a.clientStatus === "FullyApproved" ? 1 : 0;
-        const bFA = b.clientStatus === "FullyApproved" ? 1 : 0;
-        if (aFA !== bFA) return bFA - aFA; // put FullyApproved (1) first
+        const aFA = a.clientStatus === "FullyApproved" ? 2 : 0;
+        const aPA = a.clientStatus === "PreApproved" ? 1 : 0;
+        const bFA = b.clientStatus === "FullyApproved" ? 2 : 0;
+        const bPA = b.clientStatus === "PreApproved" ? 1 : 0;
+        const pref = bFA - aFA || bPA - aPA; // put FullyApproved (2) first, then PreApproved (1)
+        if (pref !== 0) return pref;
         // fallback alphabetical by referenceName
         return (a.referenceName || "").localeCompare(b.referenceName || "");
       });
@@ -1046,6 +1049,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   ? "Share Documents"
                   : client?.clientStatus === "Completed"
                   ? "Completed"
+                  : client?.clientStatus === "PreApproved"
+                  ? "Pre Approved"
                   : client.status === "PENDING"
                   ? "Invited"
                   : client.clientAddress === null
@@ -1099,6 +1104,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                             : ""
                         }
                       />
+                    ) : client.clientStatus === "PreApproved" ? (
+                      <MidProgressBar text="PRE APPROVED" progress={100} />
                     ) : client.status === "ACCEPTED" &&
                       client.documents &&
                       client.documents.length > 0 ? (
@@ -1146,6 +1153,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       ? "Share Documents"
                       : client?.clientStatus === "Completed"
                       ? "Completed"
+                      : client?.clientStatus === "PreApproved"
+                      ? "Pre Approved"
                       : client.status === "PENDING"
                       ? "Invited"
                       : client.clientAddress === null
@@ -1200,9 +1209,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                                 : ""
                             }
                           />
+                        ) : client.clientStatus === "PreApproved" ? (
+                          <CompleteProgressBar
+                            text="Pre Approved"
+                            points="100"
+                          />
                         ) : client.clientStatus === "FullyApproved" ? (
                           <CompleteProgressBar
-                            text="Share Documentsss"
+                            text="Share Documents"
                             points="100"
                           />
                         ) : client.status === "ACCEPTED" &&
@@ -1938,6 +1952,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           statusText:
                             selectedClientCard.clientStatus === "Completed"
                               ? "Completed"
+                              : selectedClientCard.clientStatus ===
+                                "PreApproved"
+                              ? "Pre Approved"
                               : selectedClientCard.status === "PENDING"
                               ? "Client Invited"
                               : selectedClientCard.clientAddress === null
