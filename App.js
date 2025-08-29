@@ -24,8 +24,8 @@ export default function App() {
   const hideSplash = () => setSplashVisible(false);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: "#CB003F" }}>
+      <StatusBar style="light" backgroundColor="#CB003F" />
       <NavigationContainer>
         <AuthProvider>
           <NetworkProvider>
