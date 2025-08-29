@@ -618,8 +618,9 @@ const ClientHome = ({ questionnaireData }) => {
               <>
                 <Text style={styles.bigTitle}>Just Hang in there</Text>
                 <Text style={styles.subTitle}>
-                  A mortgage specialist will reach out within 24 hours. In the
-                  meantime, you can get started by uploading your documents.
+                  We’re working on your pre-approval amount. This usually takes
+                  about an hour, depending on volume and the details you’ve
+                  provided.
                 </Text>
               </>
             )}

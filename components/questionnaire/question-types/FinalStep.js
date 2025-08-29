@@ -28,9 +28,9 @@ const FinalStep = ({ question }) => {
         />
         <Text style={styles.successText}>{question.text}</Text>
         <Text style={styles.subtitle}>
-          Your answers have been submitted, a representative will reach out
-          shortly with your pre-approval. In the mean time you can get started
-          by submitting documents.
+          We're working to get your pre-approval within the hour. In the
+          meantime, you can get started by submitting your documents on the next
+          page
         </Text>
       </View>
     </View>

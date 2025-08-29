@@ -1245,7 +1245,7 @@ const questions = [
   {
     id: 121,
     page: 121,
-    text: "Thanks! We'll be in touch shortly",
+    text: "Thanks! Your application has been submitted.",
     type: "finalStep",
     submitButtonText: "Submit Application",
   },

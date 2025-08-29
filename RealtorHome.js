@@ -1046,6 +1046,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
               const statusText =
                 client?.clientStatus === "FullyApproved"
+                  ? `Fully Approved - $${parseFloat(
+                      client.fullyApprovedDetails?.amount
+                    ).toFixed(2)}`
+                  : client?.clientStatus === "FullyApproved" &&
+                    client?.fullyApprovedDetails?.paperWorkRequested
                   ? "Share Documents"
                   : client?.clientStatus === "Completed"
                   ? "Completed"
@@ -1071,7 +1076,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   key={client.id || client._id || client.inviteeId}
                   style={styles.clientCard}
                   onPress={() =>
-                    client.clientStatus === "FullyApproved"
+                    client.clientStatus === "FullyApproved" &&
+                    client?.fullyApprovedDetails?.paperWorkRequested
                       ? openFullyApprovedModal(client)
                       : handleClientClick(client)
                   }
@@ -1086,8 +1092,15 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     <Text style={styles.clientName}>
                       {client.referenceName}
                     </Text>
-                    {client.clientStatus === "FullyApproved" ? (
+                    {client.clientStatus === "FullyApproved" &&
+                    client.fullyApprovedDetails?.paperWorkRequested ? (
                       <CompleteProgressBar text="Share Documents" />
+                    ) : client.clientStatus === "FullyApproved" ? (
+                      <CompleteProgressBar
+                        text={`Fully Approved - $${parseFloat(
+                          client.fullyApprovedDetails?.amount
+                        ).toFixed(2)}`}
+                      />
                     ) : client.clientStatus === "Completed" ? (
                       <CompleteProgressBar
                         text="COMPLETED"
@@ -1141,45 +1154,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             {completedClients.length > 0 ? (
               <>
                 {completedClients.map((client) => {
-                  const docCount = client.documents
-                    ? getDocumentCounts(client.documents)
-                    : { approved: 0, pending: 0 };
-
-                  const totalNeeded =
-                    neededDocumentsCount[client.inviteeId] || 10;
-
-                  const statusText =
-                    client?.clientStatus === "FullyApproved"
-                      ? "Share Documents"
-                      : client?.clientStatus === "Completed"
-                      ? "Completed"
-                      : client?.clientStatus === "PreApproved"
-                      ? "Pre Approved"
-                      : client.status === "PENDING"
-                      ? "Invited"
-                      : client.clientAddress === null
-                      ? "Account Deleted"
-                      : client.status === "ACCEPTED" &&
-                        (!client.documents ||
-                          client.documents.length === 0 ||
-                          client?.clientAddress !== null)
-                      ? "Signed Up"
-                      : client.status === "ACCEPTED" &&
-                        client.documents.length > 0
-                      ? `${docCount.approved}/${totalNeeded} Documents`
-                      : client.clientAddress === null
-                      ? "Account Deleted"
-                      : client.status;
-
                   return (
                     <TouchableOpacity
                       key={client.id || client._id || client.inviteeId}
                       style={styles.clientCard}
-                      onPress={() =>
-                        client.clientStatus === "FullyApproved"
-                          ? openFullyApprovedModal(client)
-                          : handleClientClick(client)
-                      }
+                      onPress={() => handleClientClick(client)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.initialsCircle}>
@@ -1191,55 +1170,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         <Text style={styles.clientName}>
                           {client.referenceName}
                         </Text>
-                        {client.clientStatus === "Completed" ? (
-                          <CompleteProgressBar
-                            text="COMPLETED"
-                            points={
-                              client?.completionDetails?.realtorAward || ""
-                            }
-                            date={
-                              client?.completionDetails?.date
-                                ? new Date(
-                                    client.completionDetails.date
-                                  ).toLocaleDateString("en-US", {
-                                    month: "2-digit",
-                                    day: "2-digit",
-                                    year: "numeric",
-                                  })
-                                : ""
-                            }
-                          />
-                        ) : client.clientStatus === "PreApproved" ? (
-                          <CompleteProgressBar
-                            text="Pre Approved"
-                            points="100"
-                          />
-                        ) : client.clientStatus === "FullyApproved" ? (
-                          <CompleteProgressBar
-                            text="Share Documents"
-                            points="100"
-                          />
-                        ) : client.status === "ACCEPTED" &&
-                          client.documents &&
-                          client.documents.length > 0 ? (
-                          <MidProgressBar
-                            text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
-                            progress={(docCount.approved / totalNeeded) * 100}
-                            style={styles.statusProgressBar}
-                          />
-                        ) : (
-                          <EmptyProgressBar
-                            text={statusText.toUpperCase()}
-                            progress={
-                              client.status === "PENDING"
-                                ? 10
-                                : client.status === "ACCEPTED"
-                                ? 30
-                                : 50
-                            }
-                            style={styles.statusProgressBar}
-                          />
-                        )}
+
+                        <CompleteProgressBar
+                          text="COMPLETED"
+                          points={client?.completionDetails?.realtorAward || ""}
+                          date={
+                            client?.completionDetails?.date
+                              ? new Date(
+                                  client.completionDetails.date
+                                ).toLocaleDateString("en-US", {
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  year: "numeric",
+                                })
+                              : ""
+                          }
+                        />
                       </View>
                     </TouchableOpacity>
                   );
@@ -1898,6 +1844,17 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                                   })
                                 : ""
                             }
+                          />
+                        ) : selectedClientCard.clientStatus ===
+                          "FullyApproved" ? (
+                          <CompleteProgressBar
+                            text={`FULLY APPROVED - $${selectedClientCard.fullyApprovedDetails?.amount}`}
+                          />
+                        ) : selectedClientCard.clientStatus ===
+                          "PreApproved" ? (
+                          <MidProgressBar
+                            text={`PRE APPROVED`}
+                            progress={100}
                           />
                         ) : selectedClientCard.status === "ACCEPTED" &&
                           selectedClientCard.documents &&
