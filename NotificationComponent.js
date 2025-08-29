@@ -154,6 +154,8 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
     notificationType = "success-blue";
   } else if (notification.category === "PRE_APPROVED") {
     notificationType = "success-blue";
+  } else if (notification.category === "FULLY_APPROVED") {
+    notificationType = "success-green";
   }
 
   return (

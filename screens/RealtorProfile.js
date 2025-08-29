@@ -515,6 +515,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: fullName, // Send the combined name to maintain API compatibility
+          phone: currentFormData.phone,
           rewardsAddress: currentFormData.rewardsAddress,
           rewardsCity: currentFormData.rewardsCity,
           rewardsPostalCode: currentFormData.rewardsPostalCode,
@@ -1163,9 +1164,13 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           </View>
           <View style={styles.formGroup}>
             <TextInput
-              style={[styles.input, { backgroundColor: COLORS.silver }]}
+              style={[styles.input, { backgroundColor: COLORS.white }]}
               value={formatPhoneNumber(formData.phone)}
-              editable={false}
+              keyboardType="phone-pad"
+              onChangeText={(text) =>
+                handleFieldChange("phone", unFormatPhoneNumber(text))
+              }
+              editable={true}
               placeholder="Phone"
             />
           </View>
