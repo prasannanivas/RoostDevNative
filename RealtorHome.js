@@ -28,6 +28,7 @@ import { useAuth } from "./context/AuthContext";
 import { useRealtor } from "./context/RealtorContext";
 import { useNotification } from "./context/NotificationContext";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import ProfileUpdateModal from "./components/modals/ProfileUpdateModal";
 import NotificationBell from "./components/icons/NotificationBell";
 import NotificationComponent from "./NotificationComponent";
 import {
@@ -87,13 +88,33 @@ const RealtorHome = () => {
   const invited = realtorFromContext?.invitedClients || [];
   const completedReferrals =
     realtorFromContext?.completedReferrals?.completedInvites || [];
+  const [showProfileUpdateModal, setShowProfileUpdateModal] = useState(false);
 
-  console.log(
-    "Realtor Home invited clients:",
-    invited,
-    "completed referrals:",
-    completedReferrals
-  );
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      try {
+        const profileChecked = await AsyncStorage.getItem(
+          `profileChecked_${realtor.id}`
+        );
+        console.log("Profile checked status:", profileChecked);
+        if (profileChecked === "false") {
+          // Check if there's at least one fully approved client
+          const hasFullyApprovedClient = invited.some(
+            (client) => client.clientStatus === "FullyApproved"
+          );
+          console.log("Has fully approved client:", hasFullyApprovedClient);
+
+          if (hasFullyApprovedClient) {
+            setShowProfileUpdateModal(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking profile status:", error);
+      }
+    };
+
+    checkProfileStatus();
+  }, [realtor, invited]);
 
   const navigation = useNavigation();
   // Notification state
@@ -839,6 +860,12 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
   return (
     <View style={styles.container}>
+      <ProfileUpdateModal
+        isVisible={showProfileUpdateModal}
+        onClose={() => setShowProfileUpdateModal(false)}
+        realtorId={realtor.id}
+      />
+
       {/* Notification Component */}
       <NotificationComponent
         visible={showNotifications}
@@ -2236,6 +2263,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 };
 
 const styles = StyleSheet.create({
+  // Styles removed and moved to ProfileUpdateModal component
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
