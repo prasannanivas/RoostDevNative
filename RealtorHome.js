@@ -46,6 +46,7 @@ import {
   CompleteProgressBar,
 } from "./components/progressBars";
 import InviteRealtorModal from "./components/modals/InviteRealtorModal";
+import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -114,6 +115,7 @@ const RealtorHome = () => {
     };
 
     checkProfileStatus();
+    fetchCustomMessages();
   }, [realtor, invited]);
 
   const navigation = useNavigation();
@@ -817,6 +819,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
   const [showFullyApprovedModal, setShowFullyApprovedModal] = useState(false);
   const [selectedFullyApprovedClient, setSelectedFullyApprovedClient] =
     useState(null);
+  // Custom admin messages modal state (re-added)
+  const [customMessages, setCustomMessages] = useState([]);
+  const [currentCustomMsgIndex, setCurrentCustomMsgIndex] = useState(0);
+  const [showCustomMessageModal, setShowCustomMessageModal] = useState(false);
+  const [ackLoading, setAckLoading] = useState(false);
   // Hardcoded documents list for Fully Approved modal (no API call)
   const fullyApprovedDocs = [
     "Agreement of Purchase and Sale",
@@ -857,6 +864,60 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
     setShowFullyApprovedModal(true);
   };
 
+  // Fetch custom messages for realtor
+  const fetchCustomMessages = async () => {
+    console.log("Fetching custom messages for realtor:", realtor.id);
+    if (!realtor?.id) return;
+    try {
+      const res = await fetch(
+        `https://signup.roostapp.io/admin/custom-messages?userId=${realtor.id}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const unread = (data.messages || []).filter((m) => !m.read);
+        console.log("Fetched custom messages:", data.messages);
+        if (unread.length > 0) {
+          setCustomMessages(unread);
+          setCurrentCustomMsgIndex(0);
+          setShowCustomMessageModal(true);
+        }
+      } else {
+        console.log("Failed to fetch custom messages", res.status);
+      }
+    } catch (e) {
+      console.log("Error fetching custom messages", e.message);
+    }
+  };
+
+  const acknowledgeCurrentMessage = async () => {
+    if (!customMessages.length) return;
+    const msg = customMessages[currentCustomMsgIndex];
+    if (!msg?._id) return;
+    setAckLoading(true);
+    try {
+      await fetch(
+        `https://signup.roostapp.io/admin/custom-messages/${msg._id}/read`,
+        { method: "PUT" }
+      );
+    } catch (e) {
+      console.log("Error marking message read", e.message);
+    } finally {
+      setAckLoading(false);
+      const next = currentCustomMsgIndex + 1;
+      if (next < customMessages.length) {
+        // Close then reopen for next message to avoid showing a counter
+        setShowCustomMessageModal(false);
+        setTimeout(() => {
+          setCurrentCustomMsgIndex(next);
+          setShowCustomMessageModal(true);
+        }, 50);
+      } else {
+        setShowCustomMessageModal(false);
+        setCustomMessages([]);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ProfileUpdateModal
@@ -870,6 +931,23 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
         userId={realtor.id}
+      />
+      <CustomAdminMessagesModal
+        visible={showCustomMessageModal}
+        messages={customMessages}
+        currentIndex={currentCustomMsgIndex}
+        onAcknowledge={acknowledgeCurrentMessage}
+        onRequestClose={() => setShowCustomMessageModal(false)}
+        loading={ackLoading}
+        colors={{
+          backdrop: "rgba(0,0,0,0.5)",
+          surface: COLORS.white,
+          title: COLORS.black,
+          body: COLORS.black,
+          primary: COLORS.green,
+          primaryText: COLORS.white,
+          counter: COLORS.slate,
+        }}
       />
 
       {/* ================= TOP HEADER ================= */}

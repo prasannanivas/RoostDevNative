@@ -58,7 +58,6 @@ export default function RealtorRewards({
   onClose,
   useFixedHeader = false,
 }) {
-  console.log("realtor in rewards", realtor);
   // console.log("invitedClients", invitedClients);
   // console.log("invitedRealtors", invitedRealtors);
   const [showInviteForm, setShowInviteForm] = useState(false);

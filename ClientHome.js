@@ -35,6 +35,7 @@ import SubmittedDocumentModal from "./components/modals/SubmittedDocumentModal";
 import CompleteDocumentModal from "./components/modals/CompleteDocumentModal";
 import CategorySelectionModal from "./components/modals/CategorySelectionModal";
 import FullyApprovedModal from "./components/modals/FullyApprovedModal";
+import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
 
 /**
  * Color palette from UX team design system
@@ -108,6 +109,12 @@ const ClientHome = ({ questionnaireData }) => {
   const [downloadedFileUri, setDownloadedFileUri] = useState(null);
   const [indeterminateDownload, setIndeterminateDownload] = useState(false);
 
+  // Custom admin messages state
+  const [customMessages, setCustomMessages] = useState([]);
+  const [currentCustomMsgIndex, setCurrentCustomMsgIndex] = useState(0);
+  const [showCustomMessageModal, setShowCustomMessageModal] = useState(false);
+  const [ackLoading, setAckLoading] = useState(false);
+
   useEffect(() => {
     if (contextDocuments && contextDocuments.length > 0) {
       console.log(
@@ -133,8 +140,64 @@ const ClientHome = ({ questionnaireData }) => {
           setDocumentsFromApi(result.neededDocsResponse.documents_needed);
         }
       });
+      // Fetch any custom admin messages
+      fetchCustomMessages();
     }
   }, [clientId]);
+
+  // Fetch custom admin messages for the client
+  const fetchCustomMessages = async () => {
+    if (!clientId) return;
+    try {
+      const res = await fetch(
+        `https://signup.roostapp.io/admin/custom-messages?userId=${clientId}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const unread = (data.messages || []).filter((m) => !m.read);
+        if (unread.length > 0) {
+          setCustomMessages(unread);
+          setCurrentCustomMsgIndex(0);
+          setShowCustomMessageModal(true);
+        }
+      } else {
+        console.log("Failed to fetch custom messages", res.status);
+      }
+    } catch (e) {
+      console.log("Error fetching custom messages", e.message);
+    }
+  };
+
+  // Acknowledge (mark read) current custom message
+  const acknowledgeCurrentMessage = async () => {
+    if (!customMessages.length) return;
+    const msg = customMessages[currentCustomMsgIndex];
+    if (!msg?._id) return;
+    setAckLoading(true);
+    try {
+      // Mark as read (default to POST; adjust if backend expects different method)
+      await fetch(
+        `https://signup.roostapp.io/admin/custom-messages/${msg._id}/read`,
+        { method: "POST" }
+      );
+    } catch (e) {
+      console.log("Error marking message read", e.message);
+    } finally {
+      setAckLoading(false);
+      const next = currentCustomMsgIndex + 1;
+      if (next < customMessages.length) {
+        // Close then reopen with next message (no visible counter)
+        setShowCustomMessageModal(false);
+        setTimeout(() => {
+          setCurrentCustomMsgIndex(next);
+          setShowCustomMessageModal(true);
+        }, 50);
+      } else {
+        setShowCustomMessageModal(false);
+        setCustomMessages([]);
+      }
+    }
+  };
   // Merge API + client uploads with proper logging
   const merged = React.useMemo(() => {
     if (documentsFromApi.length === 0) {
@@ -816,6 +879,23 @@ const ClientHome = ({ questionnaireData }) => {
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
         userId={clientFromContext.id}
+      />
+      <CustomAdminMessagesModal
+        visible={showCustomMessageModal}
+        messages={customMessages}
+        currentIndex={currentCustomMsgIndex}
+        onAcknowledge={acknowledgeCurrentMessage}
+        onRequestClose={() => setShowCustomMessageModal(false)}
+        loading={ackLoading}
+        colors={{
+          backdrop: "rgba(0,0,0,0.5)",
+          surface: COLORS.white,
+          title: COLORS.black,
+          body: COLORS.black,
+          primary: COLORS.green,
+          primaryText: COLORS.white,
+          counter: COLORS.slate,
+        }}
       />
 
       {/* Category Selection Modal - Using key to force remount and reset state */}
@@ -1530,4 +1610,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginTop: 4,
   },
+  // Removed old custom message modal specific styles (now in shared component)
 });
