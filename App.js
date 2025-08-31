@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import SignupStackWithFixedBar from "./navigation/SignupStackWithFixedBar";
@@ -23,10 +23,15 @@ export default function App() {
   const [isSplashVisible, setSplashVisible] = useState(true);
   const hideSplash = () => setSplashVisible(false);
 
+  const navTheme = {
+    ...DefaultTheme,
+    colors: { ...DefaultTheme.colors, background: "#CB003F" },
+  };
+
   return (
     <SafeAreaProvider style={{ flex: 1, backgroundColor: "#CB003F" }}>
       <StatusBar style="light" backgroundColor="#CB003F" />
-      <NavigationContainer>
+      <NavigationContainer theme={navTheme}>
         <AuthProvider>
           <NetworkProvider>
             <RealtorProvider>
