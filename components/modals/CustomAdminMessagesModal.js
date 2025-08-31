@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  Image,
 } from "react-native";
+import LottieView from "lottie-react-native";
 
 const CustomAdminMessagesModal = ({
   visible,
@@ -39,6 +41,9 @@ const CustomAdminMessagesModal = ({
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           {msg && (
             <>
+              {/* Optional Lottie animation (JSON object) */}
+
+              {/* Optional image (supports base64 data URI) */}
               {msg.title ? (
                 <Text style={[styles.title, { color: colors.title }]}>
                   {" "}
@@ -51,8 +56,27 @@ const CustomAdminMessagesModal = ({
                   {msg.message}{" "}
                 </Text>
               ) : null}
+
+              {msg.lottieJson || msg.lottieJSON ? (
+                <LottieView
+                  source={msg.lottieJson || msg.lottieJSON}
+                  autoPlay
+                  loop={true}
+                  style={styles.lottie}
+                />
+              ) : null}
+              {msg.imageUrl || msg.imageURL ? (
+                <Image
+                  source={{ uri: msg.imageUrl || msg.imageURL }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              ) : null}
               <TouchableOpacity
-                style={[styles.ackBtn, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.ackBtn,
+                  { backgroundColor: msg.ackButtonColor || "#377473" },
+                ]}
                 onPress={onAcknowledge}
                 disabled={loading}
                 activeOpacity={0.8}
@@ -116,6 +140,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
+  },
+  image: {
+    width: "100%",
+    height: 180,
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: "#f2f2f2",
+  },
+  lottie: {
+    width: "100%",
+    height: 180,
+    marginBottom: 16,
+    alignSelf: "center",
   },
   // counter style retained (commented) in case reintroduced later
   // counter: {

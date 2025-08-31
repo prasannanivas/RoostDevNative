@@ -875,7 +875,6 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       if (res.ok) {
         const data = await res.json();
         const unread = (data.messages || []).filter((m) => !m.read);
-        console.log("Fetched custom messages:", data.messages);
         if (unread.length > 0) {
           setCustomMessages(unread);
           setCurrentCustomMsgIndex(0);
@@ -890,6 +889,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
   };
 
   const acknowledgeCurrentMessage = async () => {
+    setShowCustomMessageModal(false);
     if (!customMessages.length) return;
     const msg = customMessages[currentCustomMsgIndex];
     if (!msg?._id) return;
