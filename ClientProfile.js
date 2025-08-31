@@ -81,8 +81,8 @@ export default function ClientProfile({ onClose }) {
     // Push notifications
     documentReminders:
       clientInfo?.notificationPreferences?.documentReminders || true,
-    documentApprovals:
-      clientInfo?.notificationPreferences?.documentApprovals || true,
+    documentUpdates:
+      clientInfo?.notificationPreferences?.documentUpdates || true,
     statusUpdates: clientInfo?.notificationPreferences?.statusUpdates || true,
     marketingNotifications:
       clientInfo?.notificationPreferences?.marketingNotifications || true,
@@ -90,8 +90,8 @@ export default function ClientProfile({ onClose }) {
     // Email notifications
     documentReminderEmails:
       clientInfo?.notificationPreferences?.documentReminderEmails || true,
-    documentApprovalEmails:
-      clientInfo?.notificationPreferences?.documentApprovalEmails || true,
+    documentUpdatesEmails:
+      clientInfo?.notificationPreferences?.documentUpdatesEmails || true,
     statusUpdateEmails:
       clientInfo?.notificationPreferences?.statusUpdateEmails || true,
     marketingEmails: true,
@@ -176,10 +176,6 @@ export default function ClientProfile({ onClose }) {
   const saveNotificationPreferences = async (newPrefs) => {
     try {
       // Save to local storage
-      await AsyncStorage.setItem(
-        "notificationPreferences" + clientInfo.id,
-        JSON.stringify(newPrefs)
-      );
 
       // Save to backend
       const response = await fetch(
@@ -207,6 +203,11 @@ export default function ClientProfile({ onClose }) {
         console.log(
           "Failed to save notification preferences to server:",
           responseText
+        );
+      } else {
+        await AsyncStorage.setItem(
+          "notificationPreferences" + clientInfo.id,
+          JSON.stringify(newPrefs)
         );
       }
     } catch (error) {
@@ -691,16 +692,16 @@ export default function ClientProfile({ onClose }) {
             <View style={styles.switchRow}>
               <Text style={styles.switchLabel}>Document Updates</Text>
               <TouchableOpacity
-                onPress={() => toggleNotificationPref("documentApprovals")}
+                onPress={() => toggleNotificationPref("documentUpdates")}
                 style={[
                   styles.toggleSwitch,
-                  notificationPrefs.documentApprovals && styles.toggleSwitchOn,
+                  notificationPrefs.documentUpdates && styles.toggleSwitchOn,
                 ]}
               >
                 <View
                   style={[
                     styles.toggleThumb,
-                    notificationPrefs.documentApprovals && styles.toggleThumbOn,
+                    notificationPrefs.documentUpdates && styles.toggleThumbOn,
                   ]}
                 />
               </TouchableOpacity>
@@ -799,17 +800,17 @@ export default function ClientProfile({ onClose }) {
             <View style={styles.switchRow}>
               <Text style={styles.switchLabel}>Document Updates</Text>
               <TouchableOpacity
-                onPress={() => toggleNotificationPref("documentApprovalEmails")}
+                onPress={() => toggleNotificationPref("documentUpdatesEmails")}
                 style={[
                   styles.toggleSwitch,
-                  notificationPrefs.documentApprovalEmails &&
+                  notificationPrefs.documentUpdatesEmails &&
                     styles.toggleSwitchOn,
                 ]}
               >
                 <View
                   style={[
                     styles.toggleThumb,
-                    notificationPrefs.documentApprovalEmails &&
+                    notificationPrefs.documentUpdatesEmails &&
                       styles.toggleThumbOn,
                   ]}
                 />

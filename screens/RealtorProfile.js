@@ -97,18 +97,19 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
     // Push notifications
-    clientAccept: realtor?.notificationPreferences?.clientAccept || true,
+    // Use nullish coalescing so an explicit false from backend is preserved
+    clientAccept: realtor?.notificationPreferences?.clientAccept ?? true,
     clientPreApproval:
-      realtor?.notificationPreferences?.clientPreApproval || true,
+      realtor?.notificationPreferences?.clientPreApproval ?? true,
     marketingNotifications:
-      realtor?.notificationPreferences?.marketingNotifications || true,
+      realtor?.notificationPreferences?.marketingNotifications ?? true,
 
     // Email notifications
-    termsOfServiceEmails:
-      realtor?.notificationPreferences?.termsOfServiceEmails || true,
+    clientAcceptEmails:
+      realtor?.notificationPreferences?.clientAcceptEmails ?? true,
     clientPreApprovalEmails:
-      realtor?.notificationPreferences?.clientPreApprovalEmails || true,
-    marketingEmails: realtor?.notificationPreferences?.marketingEmails || true,
+      realtor?.notificationPreferences?.clientPreApprovalEmails ?? true,
+    marketingEmails: realtor?.notificationPreferences?.marketingEmails ?? true,
   });
 
   // Add these state variables at the top of your component with the other state declarations
@@ -200,16 +201,16 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   // Save notification preferences to AsyncStorage
   const saveNotificationPreferences = async (newPrefs) => {
     try {
-      await AsyncStorage.setItem(
-        "realtorNotificationPreferences" + realtor._id,
-        JSON.stringify(newPrefs)
-      );
-
       // Save to backend
+      console.log("Notification prefs", newPrefs);
       const response = await fetch(
         `https://signup.roostapp.io/notifications/preferences`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify({
             realtorId: realtor._id,
             notificationPrefs: newPrefs,
@@ -218,9 +219,20 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
       );
 
       if (!response.ok) {
+        let errorText;
+        try {
+          errorText = await response.text();
+        } catch (e) {
+          errorText = "<no body>";
+        }
         console.log(
           "Failed to save notification preferences to server:",
-          await response.text()
+          errorText
+        );
+      } else {
+        await AsyncStorage.setItem(
+          "realtorNotificationPreferences" + realtor._id,
+          JSON.stringify(newPrefs)
         );
       }
     } catch (error) {
@@ -1421,17 +1433,16 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Client Accept</Text>
             <TouchableOpacity
-              onPress={() => toggleNotificationPref("termsOfServiceEmails")}
+              onPress={() => toggleNotificationPref("clientAcceptEmails")}
               style={[
                 styles.toggleSwitch,
-                notificationPrefs.termsOfServiceEmails && styles.toggleSwitchOn,
+                notificationPrefs.clientAcceptEmails && styles.toggleSwitchOn,
               ]}
             >
               <View
                 style={[
                   styles.toggleThumb,
-                  notificationPrefs.termsOfServiceEmails &&
-                    styles.toggleThumbOn,
+                  notificationPrefs.clientAcceptEmails && styles.toggleThumbOn,
                 ]}
               />
             </TouchableOpacity>

@@ -191,7 +191,7 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
     refreshNotifications,
   } = useNotification();
 
-  console.log("Notificatioons", notifications);
+  //  console.log("Notificatioons", notifications);
 
   const [unreadCount, setUnreadCount] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;

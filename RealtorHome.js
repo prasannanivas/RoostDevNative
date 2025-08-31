@@ -258,7 +258,6 @@ const RealtorHome = () => {
   // For bottom slide (client card), start at 1000 (off-screen to the bottom)
   const bottomSlideAnim = useRef(new Animated.Value(1000)).current;
 
-  console.log("sss", selectedClientCard);
   // Track whether we're in the middle of animations
   const isAnimating = useRef({
     profile: false,
