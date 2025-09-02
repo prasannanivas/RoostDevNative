@@ -142,7 +142,7 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
                       setRequestResult(null);
                       try {
                         await axios.post(
-                          `http://159.203.58.60:5000/admin/client/${clientId}/request-paperwork`
+                          `https://signup.roostapp.io/admin/client/${clientId}/request-paperwork`
                         );
                         setRequestResult("success");
                         // Optionally invoke callback

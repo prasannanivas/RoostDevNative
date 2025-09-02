@@ -220,7 +220,7 @@ const EmailVerificationScreen = React.forwardRef(
 
           try {
             const response = await axios.post(
-              "http://159.203.58.60:5000/otp/email/generate",
+              "https://signup.roostapp.io/otp/email/generate",
               {
                 email: userData.email,
               }
@@ -291,7 +291,7 @@ const EmailVerificationScreen = React.forwardRef(
 
         // Make the API request with proper payload
         const response = await axios.post(
-          "http://159.203.58.60:5000/otp/email/verify",
+          "https://signup.roostapp.io/otp/email/verify",
           {
             email: userData.email,
             otp,

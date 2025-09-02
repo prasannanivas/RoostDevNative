@@ -72,7 +72,7 @@ export async function registerDeviceOnServer(
 ) {
   try {
     const response = await axios.post(
-      "http://159.203.58.60:5000/notifications/register-device",
+      "https://signup.roostapp.io/notifications/register-device",
       {
         userId,
         token,

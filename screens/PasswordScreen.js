@@ -86,8 +86,8 @@ const PasswordScreen = React.forwardRef(
     const registerUser = async (userData) => {
       try {
         const endpoint = userData.isRealtor
-          ? "http://159.203.58.60:5000/realtor/signup"
-          : "http://159.203.58.60:5000/client/signup";
+          ? "https://signup.roostapp.io/realtor/signup"
+          : "https://signup.roostapp.io/client/signup";
 
         const payload = {
           name: `${userData.firstName} ${userData.lastName}`,

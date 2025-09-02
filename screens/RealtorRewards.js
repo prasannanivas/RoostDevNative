@@ -101,7 +101,7 @@ export default function RealtorRewards({
   const fetchRewards = async () => {
     setFetchingRewards(true);
     try {
-      const resp = await fetch("http://159.203.58.60:5000/admin/rewards");
+      const resp = await fetch("https://signup.roostapp.io/admin/rewards");
       console.log("Rewards response", resp);
       const data = await resp.json();
       setRewards(data);
@@ -202,7 +202,7 @@ export default function RealtorRewards({
       }
 
       const resp = await fetch(
-        `http://159.203.58.60:5000/realtor/claimRewards`,
+        `https://signup.roostapp.io/realtor/claimRewards`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -213,7 +213,7 @@ export default function RealtorRewards({
       if (resp.ok) {
         // Refresh rewards
         const fresh = await fetch(
-          "http://159.203.58.60:5000/admin/rewards"
+          "https://signup.roostapp.io/admin/rewards"
         ).then((r) => r.json());
         console.log("Claim successful", fresh);
         setRewards(fresh);
@@ -378,7 +378,7 @@ export default function RealtorRewards({
                     {reward.imageUrl ? (
                       <Image
                         source={{
-                          uri: `http://159.203.58.60:5000${reward.imageUrl}`,
+                          uri: `https://signup.roostapp.io${reward.imageUrl}`,
                         }}
                         style={styles.rewardImage}
                       />
@@ -431,7 +431,7 @@ export default function RealtorRewards({
                     {reward.imageUrl ? (
                       <Image
                         source={{
-                          uri: `http://159.203.58.60:5000${reward.imageUrl}`,
+                          uri: `https://signup.roostapp.io${reward.imageUrl}`,
                         }}
                         style={styles.rewardImage}
                       />
@@ -483,7 +483,7 @@ export default function RealtorRewards({
                     {reward.imageUrl ? (
                       <Image
                         source={{
-                          uri: `http://159.203.58.60:5000${reward.imageUrl}`,
+                          uri: `https://signup.roostapp.io${reward.imageUrl}`,
                         }}
                         style={styles.rewardImage}
                       />
@@ -592,7 +592,7 @@ export default function RealtorRewards({
                 };
                 try {
                   const resp = await fetch(
-                    `http://159.203.58.60:5000/realtor/claimRewards`,
+                    `https://signup.roostapp.io/realtor/claimRewards`,
                     {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },

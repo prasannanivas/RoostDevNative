@@ -93,7 +93,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
         type: "Realtor",
       }; // Send the invite via the API - keep loading indicator showing
       const resp = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtorId}/invite-realtor`,
+        `https://signup.roostapp.io/realtor/${realtorId}/invite-realtor`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

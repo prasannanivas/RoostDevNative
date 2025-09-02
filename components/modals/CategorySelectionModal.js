@@ -705,7 +705,7 @@ const CategorySelectionModal = ({
       }
 
       // Make the actual API call to save the questionnaire data with the correct endpoint
-      const apiEndpoint = `http://159.203.58.60:5000/client/questionnaire/${auth.client.id}`;
+      const apiEndpoint = `https://signup.roostapp.io/client/questionnaire/${auth.client.id}`;
 
       // Create a fresh copy of responses to ensure we're using the most up-to-date data
       // Use the most recent localResponses state which should contain all changes

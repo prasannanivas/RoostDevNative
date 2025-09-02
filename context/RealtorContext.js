@@ -18,7 +18,7 @@ export const RealtorProvider = ({ children }) => {
       // Fetch realtor info
       try {
         const realtorResponse = await fetch(
-          `http://159.203.58.60:5000/realtor/${realtor.id}`,
+          `https://signup.roostapp.io/realtor/${realtor.id}`,
           {
             method: "GET",
             headers: {
@@ -38,7 +38,7 @@ export const RealtorProvider = ({ children }) => {
       try {
         setLoadingRealtor(true);
         const invitedResponse = await fetch(
-          `http://159.203.58.60:5000/realtor/invited/${realtor.id}`,
+          `https://signup.roostapp.io/realtor/invited/${realtor.id}`,
           {
             method: "GET",
             headers: {
@@ -63,7 +63,7 @@ export const RealtorProvider = ({ children }) => {
       try {
         // Fetch completed referrals
         const completedResponse = await fetch(
-          `http://159.203.58.60:5000/realtor/completedReferrals/${realtor.id}`,
+          `https://signup.roostapp.io/realtor/completedReferrals/${realtor.id}`,
           {
             method: "GET",
             headers: {
@@ -84,7 +84,7 @@ export const RealtorProvider = ({ children }) => {
   const fetchRefreshData = async (realtorId) => {
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtorId}`,
+        `https://signup.roostapp.io/realtor/${realtorId}`,
         {
           method: "GET",
           headers: {

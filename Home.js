@@ -51,7 +51,7 @@ const Home = () => {
     console.log(auth.client);
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/client/${auth.client.id}`
+        `https://signup.roostapp.io/client/${auth.client.id}`
       );
       const data = await response.json();
       setClientQuestionaire({

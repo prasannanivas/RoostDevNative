@@ -303,7 +303,7 @@ const UploadModal = ({
 
     try {
       const resp = await fetch(
-        `http://159.203.58.60:5000/documents/${clientId}/documents`,
+        `https://signup.roostapp.io/documents/${clientId}/documents`,
         {
           method: "POST",
           body: data,

@@ -15,7 +15,7 @@ export const ClientProvider = ({ children }) => {
     try {
       // Replace 159.203.58.60 with your computer's IP or an accessible URL
       const response = await fetch(
-        `http://159.203.58.60:5000/documents/${clientID}/documents`,
+        `https://signup.roostapp.io/documents/${clientID}/documents`,
         {
           method: "GET",
           headers: {
@@ -35,7 +35,7 @@ export const ClientProvider = ({ children }) => {
     try {
       // Replace 159.203.58.60 with your computer's IP or an accessible URL
       const response = await fetch(
-        `http://159.203.58.60:5000/client/${clientID}`,
+        `https://signup.roostapp.io/client/${clientID}`,
         {
           method: "GET",
           headers: {
@@ -69,22 +69,25 @@ export const ClientProvider = ({ children }) => {
       const [documentsResponse, clientResponse, neededDocsResponse] =
         await Promise.all([
           // Get client uploaded documents
-          fetch(`http://159.203.58.60:5000/documents/${clientID}/documents`, {
+          fetch(`https://signup.roostapp.io/documents/${clientID}/documents`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           }),
 
           // Get client profile data
-          fetch(`http://159.203.58.60:5000/client/${clientID}`, {
+          fetch(`https://signup.roostapp.io/client/${clientID}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           }),
 
           // Get needed documents list
-          fetch(`http://159.203.58.60:5000/client/neededdocument/${clientID}`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          }),
+          fetch(
+            `https://signup.roostapp.io/client/neededdocument/${clientID}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            }
+          ),
         ]);
 
       // Process responses

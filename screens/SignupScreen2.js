@@ -91,7 +91,7 @@ const SignUpDetailsScreen = React.forwardRef(
         if (email) {
           try {
             const response = await axios.post(
-              "http://159.203.58.60:5000/presignup/email",
+              "https://signup.roostapp.io/presignup/email",
               {
                 email: email,
               }
@@ -126,7 +126,7 @@ const SignUpDetailsScreen = React.forwardRef(
         if (phone) {
           try {
             const response = await axios.post(
-              "http://159.203.58.60:5000/presignup/phone",
+              "https://signup.roostapp.io/presignup/phone",
               {
                 phone: formattedPhone,
               }

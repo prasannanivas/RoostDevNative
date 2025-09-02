@@ -59,7 +59,7 @@ const SubmittedDocumentModal = ({
       }
 
       const response = await fetch(
-        `http://159.203.58.60:5000/documents/${clientId}/documents/${document._id}`,
+        `https://signup.roostapp.io/documents/${clientId}/documents/${document._id}`,
         {
           method: "DELETE",
         }

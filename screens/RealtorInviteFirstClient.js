@@ -67,7 +67,7 @@ export default function RealtorInviteFirstClient() {
       }; // Use the realtor ID from the context
       const realtorId = realtorInfo?.id || auth?.realtor?.id;
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtorId}/invite-client`,
+        `https://signup.roostapp.io/realtor/${realtorId}/invite-client`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

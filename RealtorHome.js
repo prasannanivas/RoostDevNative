@@ -206,7 +206,7 @@ const RealtorHome = () => {
         formData.append("file", selectedInviteFile);
       }
       const resp = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor.id}/invite-client-csv`,
+        `https://signup.roostapp.io/realtor/${realtor.id}/invite-client-csv`,
         {
           method: "POST",
           body: formData,
@@ -468,7 +468,7 @@ const RealtorHome = () => {
       console.log("Sending invite for:", payload);
 
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor.id}/invite-client`,
+        `https://signup.roostapp.io/realtor/${realtor.id}/invite-client`,
         {
           method: "POST",
           headers: {
@@ -569,7 +569,7 @@ const RealtorHome = () => {
   const fetchNeededDocumentsCount = async (clientId) => {
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/client/neededdocument/${clientId}`
+        `https://signup.roostapp.io/client/neededdocument/${clientId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -792,7 +792,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
     try {
       // Call backend API to send transactional email
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/${realtor.id}/send-transactional-email`,
+        `https://signup.roostapp.io/realtor/${realtor.id}/send-transactional-email`,
         {
           method: "POST",
           headers: {
@@ -982,7 +982,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       cachedImageBase64
                         ? { uri: `data:image/jpeg;base64,${cachedImageBase64}` }
                         : {
-                            uri: `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
+                            uri: `https://signup.roostapp.io/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
                           }
                     }
                     style={[
@@ -994,7 +994,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       try {
                         // Only download if we don't have cached image
                         if (!cachedImageBase64) {
-                          const imageUri = `http://159.203.58.60:5000/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`;
+                          const imageUri = `https://signup.roostapp.io/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`;
                           const localUri =
                             FileSystem.cacheDirectory +
                             `profile_${realtor.id}.jpg`;
@@ -1418,7 +1418,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     setCachedImageBase64(null);
 
                     // Download the image directly
-                    const imageUri = `http://159.203.58.60:5000/realtor/profilepic/${
+                    const imageUri = `https://signup.roostapp.io/realtor/profilepic/${
                       realtor.id
                     }?t=${Date.now()}`;
                     const localUri =
@@ -2123,7 +2123,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           const xhr = new XMLHttpRequest();
                           xhr.open(
                             "POST",
-                            "http://159.203.58.60:5000/pdf/download-filled-pdf",
+                            "https://signup.roostapp.io/pdf/download-filled-pdf",
                             true
                           );
                           xhr.setRequestHeader(

@@ -131,7 +131,7 @@ export default function RealtorFirstLoginAddProfilePic() {
         throw new Error("Could not determine realtor ID for upload");
       }
 
-      const uploadUrl = `http://159.203.58.60:5000/realtor/profilepic/${realtorId}`;
+      const uploadUrl = `https://signup.roostapp.io/realtor/profilepic/${realtorId}`;
       console.log("Uploading to URL:", uploadUrl);
 
       const response = await fetch(uploadUrl, {

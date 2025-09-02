@@ -89,7 +89,7 @@ const ClaimRewardsModal = ({
                   {selectedReward.imageUrl ? (
                     <Image
                       source={{
-                        uri: `http://159.203.58.60:5000${selectedReward.imageUrl}`,
+                        uri: `https://signup.roostapp.io${selectedReward.imageUrl}`,
                       }}
                       style={localStyles.giftImage}
                       resizeMode="cover"

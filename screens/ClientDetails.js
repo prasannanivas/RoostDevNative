@@ -56,7 +56,7 @@ const ClientDetails = () => {
   const fetchClientDetails = async () => {
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/client/${clientId}`
+        `https://signup.roostapp.io/client/${clientId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -70,7 +70,7 @@ const ClientDetails = () => {
   const fetchRequestedDocuments = async () => {
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/requesteddocument/${realtorId}`,
+        `https://signup.roostapp.io/realtor/requesteddocument/${realtorId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -100,7 +100,7 @@ const ClientDetails = () => {
   const handleRequestDocument = async ({ docType, description }) => {
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/realtor/requestdocument/${realtorId}`,
+        `https://signup.roostapp.io/realtor/requestdocument/${realtorId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -132,7 +132,7 @@ const ClientDetails = () => {
     setIsProcessing(true);
     try {
       const response = await fetch(
-        `http://159.203.58.60:5000/admin/documents/${clientId}/${docId}/review`,
+        `https://signup.roostapp.io/admin/documents/${clientId}/${docId}/review`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -162,7 +162,7 @@ const ClientDetails = () => {
     console.log("viewing doc", doc);
     if (doc.fileId) {
       Linking.openURL(
-        `http://159.203.58.60:5000/documents/${clientId}/documents/${doc.fileId}`
+        `https://signup.roostapp.io/documents/${clientId}/documents/${doc.fileId}`
       );
     }
   };
@@ -202,7 +202,7 @@ const ClientDetails = () => {
                     try {
                       setLoading(true);
                       const response = await fetch(
-                        `http://159.203.58.60:5000/Realtor/DeleteClient`,
+                        `https://signup.roostapp.io/Realtor/DeleteClient`,
                         {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
@@ -382,7 +382,7 @@ const ClientDetails = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.open(
                   "POST",
-                  "http://159.203.58.60:5000/pdf/download-filled-pdf",
+                  "https://signup.roostapp.io/pdf/download-filled-pdf",
                   true
                 );
                 xhr.setRequestHeader("Content-Type", "application/json");
@@ -636,6 +636,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingContainer: {
+    backgroundColor: COLORS.background,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -646,6 +647,7 @@ const styles = StyleSheet.create({
     color: "#23231A",
   },
   errorContainer: {
+    backgroundColor: COLORS.background,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
