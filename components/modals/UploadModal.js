@@ -310,7 +310,7 @@ const UploadModal = ({
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      if (!resp.ok) throw new Error("upload failed");
+      if (!resp.ok) throw new Error("upload failed" + (await resp.text()));
 
       Alert.alert("Success", "Document uploaded successfully");
 

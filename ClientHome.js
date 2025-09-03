@@ -84,7 +84,8 @@ const ClientHome = ({ questionnaireData }) => {
 
   const clientFromContext = clientInfo || auth.client;
 
-  const clientId = clientFromContext.id;
+  const clientId =
+    clientFromContext.id || auth.client.id || clientFromContext._id;
   const [documentsFromApi, setDocumentsFromApi] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [clientDocs, setClientDocs] = useState(contextDocuments || []);
@@ -147,6 +148,7 @@ const ClientHome = ({ questionnaireData }) => {
 
   // Fetch custom admin messages for the client
   const fetchCustomMessages = async () => {
+    console.log("Fetching custom messages for client:", clientId);
     if (!clientId) return;
     try {
       const res = await fetch(
@@ -156,6 +158,7 @@ const ClientHome = ({ questionnaireData }) => {
         const data = await res.json();
         const unread = (data.messages || []).filter((m) => !m.read);
         if (unread.length > 0) {
+          console.log("Found unread custom messages:", unread.length);
           setCustomMessages(unread);
           setCurrentCustomMsgIndex(0);
           setShowCustomMessageModal(true);
@@ -178,7 +181,7 @@ const ClientHome = ({ questionnaireData }) => {
       // Mark as read (default to POST; adjust if backend expects different method)
       await fetch(
         `https://signup.roostapp.io/admin/custom-messages/${msg._id}/read`,
-        { method: "POST" }
+        { method: "PUT" }
       );
     } catch (e) {
       console.log("Error marking message read", e.message);
@@ -220,9 +223,24 @@ const ClientHome = ({ questionnaireData }) => {
     return result;
   }, [documentsFromApi, clientDocs]);
 
+  // Adjust statuses: if API still reports 'submitted' but no actual client upload exists, treat as 'pending'
+  const mergedWithStatusFix = React.useMemo(() => {
+    return merged.map((doc) => {
+      const hasLocal = clientDocs.some(
+        (d) => d.docType?.toLowerCase() === doc.docType?.toLowerCase()
+      );
+      if (!hasLocal && doc.status && doc.status.toLowerCase() === "submitted") {
+        return { ...doc, status: "pending" };
+      }
+      return doc;
+    });
+  }, [merged, clientDocs]);
+
   // Sections
-  const docsNeeded = merged.filter((d) => d.type === "Needed");
-  const docsRequested = merged.filter((d) => d.type === "Needed-other");
+  const docsNeeded = mergedWithStatusFix.filter((d) => d.type === "Needed");
+  const docsRequested = mergedWithStatusFix.filter(
+    (d) => d.type === "Needed-other"
+  );
   // Open upload modal
   const handleAdd = (doc) => {
     setSelectedDocType(doc);
@@ -261,6 +279,7 @@ const ClientHome = ({ questionnaireData }) => {
       setRefreshing(false);
       setActionLoading(false);
     }
+    fetchCustomMessages();
   }, [auth, clientId, refreshing]);
 
   // Help button logic
@@ -797,6 +816,16 @@ const ClientHome = ({ questionnaireData }) => {
               setDocumentsFromApi(result.neededDocsResponse.documents_needed);
             }
           });
+          // Optimistically remove from local clientDocs so status updates immediately
+          if (selectedSubmittedDoc?.docType) {
+            setClientDocs((prev) =>
+              prev.filter(
+                (d) =>
+                  d.docType?.toLowerCase() !==
+                  selectedSubmittedDoc.docType?.toLowerCase()
+              )
+            );
+          }
           setShowSubmittedModal(false);
         }}
       />

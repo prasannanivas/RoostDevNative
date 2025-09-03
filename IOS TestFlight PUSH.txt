@@ -1,0 +1,9 @@
+IOS TestFlight PUSH
+
+eas build --platform ios --profile production
+eas submit --platform ios --profile production
+
+Android Test Release
+eas build --platform android --profile production
+-- then Upload .aab file Play Console > Release > (Production / Internal / Closed) > Your release
+

@@ -372,8 +372,10 @@ const ClientDetails = () => {
               {
                 backgroundColor: COLORS.blue,
                 borderRadius: 33,
+                opacity: loadingDownload ? 0.6 : 1,
               },
             ]}
+            disabled={loadingDownload}
             onPress={async () => {
               setLoadingDownload(true);
               setDownloadProgress(0);
