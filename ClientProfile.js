@@ -26,6 +26,7 @@ import {
 } from "./utils/phoneFormatUtils";
 import { trimLeft, trimFull } from "./utils/stringUtils";
 import LogoutConfirmationModal from "./components/LogoutConfirmationModal";
+import DeleteAccountModal from "./components/DeleteAccountModal";
 
 // Design System Colors
 const COLORS = {
@@ -126,6 +127,7 @@ export default function ClientProfile({ onClose }) {
   // Countdown state for OTP resend
   const [countdown, setCountdown] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     // Load client info
@@ -873,6 +875,12 @@ export default function ClientProfile({ onClose }) {
             >
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => setShowDeleteModal(true)}
+            >
+              <Text style={styles.deleteButtonText}>Delete my Account</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
         <LogoutConfirmationModal
@@ -881,6 +889,20 @@ export default function ClientProfile({ onClose }) {
           onCancel={() => setShowLogoutModal(false)}
           COLORS={COLORS}
         />
+
+        <DeleteAccountModal
+          visible={showDeleteModal}
+          onCancel={() => setShowDeleteModal(false)}
+          onDeleted={() => {
+            setShowDeleteModal(false);
+            if (onClose) onClose();
+          }}
+          type="client"
+          id={clientInfo?.id}
+          COLORS={COLORS}
+          onLogout={logout}
+        />
+
         {/* Email Change Modal */}
         <Modal visible={showEmailModal} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
@@ -1299,6 +1321,22 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: COLORS.green,
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: "Futura",
+  },
+  deleteButton: {
+    width: "100%",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: COLORS.red,
+    borderRadius: 50,
+    paddingVertical: 36,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  deleteButtonText: {
+    color: COLORS.red,
     fontSize: 12,
     fontWeight: 700,
     fontFamily: "Futura",

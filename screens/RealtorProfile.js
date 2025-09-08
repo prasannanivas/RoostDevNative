@@ -29,6 +29,7 @@ import {
   unFormatPhoneNumber,
 } from "../utils/phoneFormatUtils";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
+import DeleteAccountModal from "../components/DeleteAccountModal";
 import { trimLeft, trimFull } from "../utils/stringUtils";
 
 // Design System Colors
@@ -93,6 +94,9 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const otpInputRef = useRef(null);
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
@@ -1555,6 +1559,12 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           >
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => setShowDeleteModal(true)}
+          >
+            <Text style={styles.deleteButtonText}>Delete my Account</Text>
+          </TouchableOpacity>
           <LogoutConfirmationModal
             visible={showLogoutModal}
             onConfirm={handleLogoutConfirmed}
@@ -1563,6 +1573,19 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           />
         </View>
       </ScrollView>
+
+      <DeleteAccountModal
+        visible={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        onDeleted={() => {
+          setShowDeleteModal(false);
+          if (onClose) onClose();
+        }}
+        type="realtor"
+        id={realtor.id || realtor._id}
+        COLORS={COLORS}
+        onLogout={handleLogoutConfirmed}
+      />
 
       {/* Password Modal */}
       <Modal visible={isPasswordModalOpen} animationType="slide" transparent>
@@ -2013,6 +2036,22 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: COLORS.green,
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: "Futura",
+  },
+  deleteButton: {
+    width: "100%",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: COLORS.red,
+    borderRadius: 50,
+    paddingVertical: 36,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  deleteButtonText: {
+    color: COLORS.red,
     fontSize: 12,
     fontWeight: 700,
     fontFamily: "Futura",
