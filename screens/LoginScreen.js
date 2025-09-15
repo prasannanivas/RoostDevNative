@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   View,
@@ -12,10 +12,23 @@ import {
   Platform,
   Keyboard,
   Linking,
+  Alert,
+  Modal,
+  FlatList,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Logo from "../components/Logo";
 import { StatusBar } from "expo-status-bar";
+import {
+  isBiometricAvailable,
+  getStoredAccounts,
+  authenticateBiometric,
+  getCredential,
+  saveCredential,
+} from "../utils/biometricUtils";
+import QuickBiometricLoginModal from "../components/QuickBiometricLoginModal";
+import { Ionicons } from "@expo/vector-icons";
 
 /**
  * Color palette from UX team design system
@@ -48,6 +61,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [bioSupported, setBioSupported] = useState(false);
+  const [storedAccounts, setStoredAccounts] = useState([]); // [{identifier, role}]
+  const [bioChecking, setBioChecking] = useState(true);
+  const [bioError, setBioError] = useState(null);
+  const [showQuickLoginModal, setShowQuickLoginModal] = useState(false);
+  const [supportedBioTypes, setSupportedBioTypes] = useState([]); // numeric codes from expo-local-authentication
 
   // Create refs for form inputs
   const passwordInputRef = useRef(null);
@@ -80,40 +99,142 @@ export default function LoginScreen() {
     Keyboard.dismiss();
   };
 
-  const handleLogin = async () => {
+  // REFACTORED: handleLogin now accepts options object to avoid relying on async state when using biometrics
+  const handleLogin = async (opts = {}) => {
+    // Backward compatibility if boolean passed (old signature skipBiometricPrompt)
+    if (typeof opts === "boolean") {
+      opts = { skipPrompt: opts };
+    }
+    const {
+      identifier = email,
+      secret = password,
+      skipPrompt = false,
+      roleHint, // optional 'client' | 'realtor'
+    } = opts;
+
+    if (!identifier || !secret) {
+      setError("Email and password required.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Try client login first
-      let response = await fetch("https://signup.roostapp.io/client/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: email, password }),
-      });
+      // Decide order based on role hint to reduce one failing request
+      const order =
+        roleHint === "realtor" ? ["realtor", "client"] : ["client", "realtor"];
+      let data = null;
+      let role = null;
 
-      let data = await response.json();
-
-      // If client login fails, try realtor login
-      if (!data.client) {
-        response = await fetch("https://signup.roostapp.io/realtor/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier: email, password }),
-        });
-        data = await response.json();
+      for (const kind of order) {
+        try {
+          const endpoint = kind === "client" ? "client/login" : "realtor/login";
+          const resp = await fetch(`https://signup.roostapp.io/${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier, password: secret }),
+          });
+          const json = await resp.json();
+          if (
+            (kind === "client" && json.client) ||
+            (kind === "realtor" && json.realtor)
+          ) {
+            data = json;
+            role = kind;
+            break;
+          }
+        } catch (inner) {
+          console.warn("Auth attempt failed for", kind, inner);
+        }
       }
 
-      if (data.client || data.realtor) {
-        console.log("Login successful:", data);
-        login(data);
+      if (data) {
+        console.log("Login successful (role=" + role + ")");
+        console.log("AccessToken:", data.accessToken);
+        console.log("RefreshToken:", data.refreshToken);
+        // Persist tokens for later use (unlimited expiry as requested)
+        try {
+          if (data.accessToken) {
+            await AsyncStorage.setItem("accessToken", data.accessToken);
+          }
+          if (data.refreshToken) {
+            await AsyncStorage.setItem("refreshToken", data.refreshToken);
+          }
+        } catch (e) {
+          console.warn("Failed to persist tokens", e);
+        }
+
+        await login(data);
         navigation.navigate("Home");
+        // Only prompt to save when this was a manual credential login AND biometrics supported AND not already saved
+        const alreadyStored = storedAccounts.some(
+          (a) => a.identifier === identifier.toLowerCase()
+        );
+        if (
+          bioSupported &&
+          !skipPrompt &&
+          identifier === email &&
+          !alreadyStored
+        ) {
+          Alert.alert(
+            "Enable Quick Login",
+            "Would you like to use Face ID / Fingerprint for future logins?",
+            [
+              { text: "Not Now", style: "cancel" },
+              {
+                text: "Enable",
+                onPress: async () => {
+                  // Attempt to derive a friendly display name from returned login data
+                  // 'data' may contain client or realtor object based on role
+                  let displayName = undefined;
+                  const id =
+                    role === "client" ? data.client?.id : data.realtor?.id;
+                  try {
+                    if (role === "client" && data?.client) {
+                      displayName =
+                        data.client.name ||
+                        data.client.fullName ||
+                        data.client.firstName;
+                    } else if (role === "realtor" && data?.realtor) {
+                      displayName =
+                        data.realtor.name ||
+                        data.realtor.fullName ||
+                        data.realtor.firstName;
+                    }
+                  } catch (_) {}
+                  // Fallbacks
+                  if (!displayName) {
+                    displayName =
+                      role === "realtor"
+                        ? "Realtor Account"
+                        : role === "client"
+                        ? "Client Account"
+                        : "Account";
+                  }
+                  const ok = await saveCredential({
+                    id,
+                    identifier,
+                    password: secret,
+                    role,
+                    displayName,
+                    biometricType: undefined, // will be set on first biometric usage if desired
+                  });
+                  if (ok) {
+                    const accounts = await getStoredAccounts();
+                    setStoredAccounts(accounts);
+                  }
+                },
+              },
+            ]
+          );
+        }
       } else {
         setError("Check the account information you entered and try again.");
       }
-    } catch (error) {
+    } catch (e) {
+      console.error("Login error", e);
       setError("Network error. Please try again.");
-      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }
@@ -126,6 +247,61 @@ export default function LoginScreen() {
   const handleResetPassword = () => {
     // Navigate to the password reset screen
     navigation.navigate("PasswordReset");
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const avail = await isBiometricAvailable();
+      if (!mounted) return;
+      if (avail.available) {
+        setBioSupported(true);
+        if (Array.isArray(avail.types)) setSupportedBioTypes(avail.types);
+        const accounts = await getStoredAccounts();
+        if (mounted) setStoredAccounts(accounts);
+        // don't open modal here; wait for accounts to be applied in state
+      } else {
+        setBioError(avail.reason || "Biometric unavailable");
+      }
+      setBioChecking(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Open quick-login modal only after storedAccounts is populated and biometrics supported.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!bioSupported) return;
+      // wait for storedAccounts to settle (small tick)
+      await new Promise((r) => setTimeout(r, 80));
+      if (!active) return;
+      if (storedAccounts && storedAccounts.length > 0) {
+        // Ensure any open keyboard (e.g., password field) is dismissed before opening modal
+        Keyboard.dismiss();
+        setShowQuickLoginModal(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [bioSupported, storedAccounts]);
+
+  const openQuickModalIfNeeded = (accounts) => {
+    if (bioSupported && accounts.length > 0) {
+      setShowQuickLoginModal(true);
+    }
+  };
+
+  const handleBiometricAuthenticated = async (cred) => {
+    await handleLogin({
+      identifier: cred.identifier,
+      secret: cred.password,
+      skipPrompt: true,
+      roleHint: cred.role,
+    });
   };
 
   return (
@@ -209,7 +385,7 @@ export default function LoginScreen() {
           {/* Log In Button */}
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
+            onPress={() => handleLogin({ skipPrompt: false })}
             disabled={loading}
             accessible={true}
             accessibilityLabel="Log in"
@@ -219,6 +395,34 @@ export default function LoginScreen() {
               {loading ? "Logging in..." : "Log In"}
             </Text>
           </TouchableOpacity>
+          {/* Biometric quick-login trigger (shows Face / Finger / Lock based on supported types) */}
+          {bioSupported && storedAccounts.length > 0 && (
+            <TouchableOpacity
+              style={styles.fingerprintButton}
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowQuickLoginModal(true);
+              }}
+              accessibilityLabel="Open biometric quick login"
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name={
+                  Array.isArray(supportedBioTypes) &&
+                  supportedBioTypes.includes(2)
+                    ? "person-circle-outline"
+                    : Array.isArray(supportedBioTypes) &&
+                      supportedBioTypes.includes(1)
+                    ? "finger-print"
+                    : "lock-closed"
+                }
+                size={28}
+                color={COLORS.green}
+                style={{ opacity: loading ? 0.6 : 1 }}
+              />
+              <Text style={styles.fingerprintLabel}>Quick Login</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
       {/* Sign Up Section moved to bottom above footer */}
@@ -241,7 +445,16 @@ export default function LoginScreen() {
       <View style={styles.footerContainer}>
         <Text style={styles.footerText}>
           By logging in, you agree to Roost's{" "}
-          <Text style={styles.linkText}>Terms of Use</Text> and{" "}
+          <Text
+            style={styles.linkText}
+            onPress={() => {
+              Linking.openURL("https://roostapp.io/terms-of-service");
+            }}
+            accessibilityRole="link"
+          >
+            Terms of Use
+          </Text>{" "}
+          and{" "}
           <Text
             style={styles.linkText}
             onPress={() => {
@@ -258,6 +471,27 @@ export default function LoginScreen() {
           communications from Roost. You can opt-out anytime.
         </Text>
       </View>
+
+      <QuickBiometricLoginModal
+        visible={
+          showQuickLoginModal && bioSupported && storedAccounts.length > 0
+        }
+        accounts={storedAccounts}
+        onClose={() => setShowQuickLoginModal(false)}
+        onAuthenticated={handleBiometricAuthenticated}
+        prefillEmail={setEmail}
+        supportedTypes={supportedBioTypes}
+        onUsePassword={() => {
+          // ensure modal closed state already triggered; focus password after small delay
+          if (passwordInputRef.current) {
+            try {
+              passwordInputRef.current.focus();
+            } catch (e) {}
+          }
+        }}
+        onForgotPassword={handleResetPassword}
+        onRegister={handleSignUp}
+      />
     </SafeAreaView>
   );
 }
@@ -328,6 +562,18 @@ const styles = StyleSheet.create({
   },
   loginButtonDisabled: {
     opacity: 0.7,
+  },
+  fingerprintButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 24,
+  },
+  fingerprintLabel: {
+    fontSize: 12,
+    color: COLORS.green,
+    fontWeight: 700,
+    fontFamily: "Futura",
   },
   errorText: {
     color: COLORS.red,

@@ -34,6 +34,7 @@
         "NSPhotoLibraryUsageDescription": "Roost needs photo library access to allow you to select and upload documents from your device.",
         "NSContactsUsageDescription": "Roost needs contacts access to help you invite clients and realtors more easily.",
         "NSUserNotificationsUsageDescription": "Roost sends notifications to keep you updated on document status, client interactions, and important transaction milestones.",
+        "NSFaceIDUsageDescription": "Roost uses Face ID to let you log in quickly and securely without entering your password.",
         "NSAppTransportSecurity": {
           "NSExceptionDomains": {
             "159.203.58.60": {

@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingVertical: 48,
     alignItems: "center",
     justifyContent: "center",
   },

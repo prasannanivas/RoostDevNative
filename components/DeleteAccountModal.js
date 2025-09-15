@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import axios from "axios";
+import getAuthHeaders from "../utils/authHeaders";
 
 export default function DeleteAccountModal({
   visible,
@@ -39,8 +40,15 @@ export default function DeleteAccountModal({
     try {
       const url = `${base}/admin/${type}/${id}`;
       console.log(`Sending DELETE request to: ${url}`);
+      // Read authorization header (if token stored) and send with request
+      const authHeaders = await getAuthHeaders();
+      if (!authHeaders.Authorization) {
+        console.warn(
+          "No access token found; proceeding without Authorization header"
+        );
+      }
       // Use axios to allow consistency with clients that use axios
-      await axios.delete(url);
+      await axios.delete(url, { headers: authHeaders });
 
       if (onLogout) await onLogout();
       if (onDeleted) onDeleted();
