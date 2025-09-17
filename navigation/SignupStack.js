@@ -54,7 +54,7 @@ const FixedBottomBarLayout = ({ children, navigation, route }) => {
       // Handle completion of signup flow
       navigation.reset({
         index: 0,
-        routes: [{ name: "Login" }],
+        routes: [{ name: "Home" }],
       });
     } else {
       // Extract the ref from the child element

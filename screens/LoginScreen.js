@@ -428,7 +428,7 @@ export default function LoginScreen() {
       {/* Sign Up Section moved to bottom above footer */}
       <View style={styles.signUpContainer}>
         <Text style={styles.signUpPrompt}>
-          Don't have An Account? Sign Up for Free
+          Don't have an account? Sign up for free
         </Text>
         <TouchableOpacity
           style={styles.signUpButton}

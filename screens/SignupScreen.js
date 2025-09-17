@@ -9,6 +9,7 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../components/Logo";
@@ -40,7 +41,7 @@ const COLORS = {
 };
 
 const AccountTypeScreen = React.forwardRef(
-  ({ navigation, setBottomBarLoading }, ref) => {
+  ({ navigation, setBottomBarLoading, onExitToLogin }, ref) => {
     const [accountType, setAccountType] = useState("mortgage"); // Default selection
     const [recoId, setRecoId] = useState("");
     const [recoError, setRecoError] = useState(false);
@@ -86,11 +87,28 @@ const AccountTypeScreen = React.forwardRef(
     // so it can be called by the parent component via ref
 
     const handleLogin = () => {
-      // Navigate to the Login screen outside the signup flow
-      // using the parent navigation passed from App.js
-      if (navigation.getParent()) {
-        navigation.getParent().navigate("Login");
+      // If parent provided an exit handler (best path), use it
+      if (typeof onExitToLogin === "function") {
+        onExitToLogin();
+        return;
       }
+      // Otherwise, attempt safe parent-first navigation
+      const parent = navigation?.getParent?.();
+      if (parent?.canGoBack?.()) {
+        try {
+          parent.goBack();
+          return;
+        } catch (_) {}
+      }
+      try {
+        parent?.navigate?.("Home");
+        return;
+      } catch (_) {}
+      try {
+        navigation.navigate("Login");
+        return;
+      } catch (_) {}
+      if (navigation?.canGoBack?.()) navigation.goBack();
     };
 
     return (
@@ -211,7 +229,7 @@ const AccountTypeScreen = React.forwardRef(
 
             {/* Already have an account? Log in here */}
             <Text style={styles.alreadyHaveAccount}>
-              Already have an account?
+              Already have an account?{" "}
               <Text style={styles.loginLink} onPress={handleLogin}>
                 Log in here
               </Text>
@@ -219,11 +237,28 @@ const AccountTypeScreen = React.forwardRef(
 
             {/* Footer Text */}
             <Text style={styles.footerText}>
-              By signing up, you agree to Roost's
-              <Text style={styles.linkText}>Terms of Use</Text> and
-              <Text style={styles.linkText}>Privacy Policy</Text>. By providing
-              your email & phone number, you consent to receive communications
-              from Roost. You can opt-out anytime.
+              By signing up, you agree to Roost's{" "}
+              <Text
+                style={styles.linkText}
+                onPress={() => {
+                  Linking.openURL("https://roostapp.io/terms-of-service");
+                }}
+                accessibilityRole="link"
+              >
+                Terms of Use
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={styles.linkText}
+                onPress={() => {
+                  Linking.openURL("https://roostapp.io/privacy");
+                }}
+                accessibilityRole="link"
+              >
+                Privacy Policy
+              </Text>
+              . By providing your email & phone number, you consent to receive
+              communications from Roost. You can opt-out anytime.
             </Text>
           </ScrollView>
         </KeyboardAvoidingView>

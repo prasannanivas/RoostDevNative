@@ -198,6 +198,19 @@ export default function SignupStackWithFixedBar({
                     {...props}
                     ref={accountTypeRef}
                     setIsLoading={setIsLoading}
+                    onExitToLogin={() => {
+                      // Prefer going back to the previous screen on the parent navigator (likely Login/Home)
+                      if (parentNavigation?.canGoBack?.()) {
+                        try {
+                          parentNavigation.goBack();
+                          return;
+                        } catch (_) {}
+                      }
+                      // Fallback: navigate explicitly to Home (which renders Login when unauthenticated)
+                      try {
+                        parentNavigation?.navigate?.("Home");
+                      } catch (_) {}
+                    }}
                   />
                 )}
               </Stack.Screen>
