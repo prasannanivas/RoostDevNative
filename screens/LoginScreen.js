@@ -13,22 +13,15 @@ import {
   Keyboard,
   Linking,
   Alert,
-  Modal,
-  FlatList,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Logo from "../components/Logo";
 import { StatusBar } from "expo-status-bar";
-import {
-  isBiometricAvailable,
-  getStoredAccounts,
-  authenticateBiometric,
-  getCredential,
-  saveCredential,
-} from "../utils/biometricUtils";
-import QuickBiometricLoginModal from "../components/QuickBiometricLoginModal";
 import { Ionicons } from "@expo/vector-icons";
+import { getAccounts, upsertAccount } from "../utils/accountStore";
+import { authenticateBiometric, getCredential } from "../utils/biometricUtils";
+import Svg, { Defs, Image, Pattern, Rect, Use } from "react-native-svg";
 
 /**
  * Color palette from UX team design system
@@ -61,15 +54,15 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [bioSupported, setBioSupported] = useState(false);
-  const [storedAccounts, setStoredAccounts] = useState([]); // [{identifier, role}]
-  const [bioChecking, setBioChecking] = useState(true);
-  const [bioError, setBioError] = useState(null);
-  const [showQuickLoginModal, setShowQuickLoginModal] = useState(false);
-  const [supportedBioTypes, setSupportedBioTypes] = useState([]); // numeric codes from expo-local-authentication
+  const [accounts, setAccounts] = useState([]); // suggestions: {id, displayName, role, identifiers}
+  const [idDropdownOpen, setIdDropdownOpen] = useState(false);
+  const [showSavedOnly, setShowSavedOnly] = useState(false); // When true: only show saved user + Face ID + different account
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [showSavedPassword, setShowSavedPassword] = useState(false); // Reveal password+login in saved-only mode
 
   // Create refs for form inputs
   const passwordInputRef = useRef(null);
+  const emailInputRef = useRef(null);
   // Handle input submission and focus next field
   const focusNextInput = (nextInput) => {
     // Safe focus method that handles TextInputMask and normal TextInput
@@ -97,6 +90,71 @@ export default function LoginScreen() {
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
+  };
+
+  // Choose a preferred identifier to use (email if present, else first)
+  const pickPreferredIdentifier = (acc) => {
+    const ids = Array.isArray(acc?.identifiers) ? acc.identifiers : [];
+    const emailLike = ids.find((s) => typeof s === "string" && s.includes("@"));
+    return emailLike || ids[0] || "";
+  };
+
+  const attemptFaceIdLogin = async (acc) => {
+    try {
+      // find a stored credential for any of the identifiers
+      const ids = Array.isArray(acc?.identifiers) ? acc.identifiers : [];
+      let cred = null;
+      for (const idf of ids) {
+        const c = await getCredential(idf);
+        if (c && c.identifier && c.password) {
+          cred = c;
+          break;
+        }
+      }
+      if (!cred) {
+        Alert.alert(
+          "Face ID not set up",
+          "No saved biometric credential found for this account. Please use your password to sign in.",
+          [
+            {
+              text: "Use Password",
+              onPress: () => {
+                const idToUse = pickPreferredIdentifier(acc);
+                setEmail(idToUse);
+                setIdDropdownOpen(false);
+                setShowSavedOnly(true);
+                setShowSavedPassword(true);
+                setTimeout(() => focusNextInput(passwordInputRef), 50);
+              },
+            },
+            { text: "Cancel", style: "cancel" },
+          ]
+        );
+        return;
+      }
+
+      const prompt = `Sign in as ${acc.displayName || "User"}`;
+      const res = await authenticateBiometric(prompt);
+      if (res?.success) {
+        await handleLogin({
+          identifier: cred.identifier,
+          secret: cred.password,
+          skipPrompt: true,
+          roleHint: cred.role,
+        });
+      } else if (res?.error) {
+        Alert.alert("Authentication failed", res.error);
+      }
+    } catch (e) {
+      console.warn("Face ID login error", e);
+      Alert.alert("Authentication error", "Please try again.");
+    }
+  };
+
+  const handleAccountSelection = (acc) => {
+    // In saved-only mode, selecting just changes the selected account without prompting
+    setIdDropdownOpen(false);
+    setSelectedAccount(acc);
   };
 
   // REFACTORED: handleLogin now accepts options object to avoid relying on async state when using biometrics
@@ -167,67 +225,18 @@ export default function LoginScreen() {
 
         await login(data);
         navigation.navigate("Home");
-        // Only prompt to save when this was a manual credential login AND biometrics supported AND not already saved
-        const alreadyStored = storedAccounts.some(
-          (a) => a.identifier === identifier.toLowerCase()
-        );
-        if (
-          bioSupported &&
-          !skipPrompt &&
-          identifier === email &&
-          !alreadyStored
-        ) {
-          Alert.alert(
-            "Enable Quick Login",
-            "Would you like to use Face ID / Fingerprint for future logins?",
-            [
-              { text: "Not Now", style: "cancel" },
-              {
-                text: "Enable",
-                onPress: async () => {
-                  // Attempt to derive a friendly display name from returned login data
-                  // 'data' may contain client or realtor object based on role
-                  let displayName = undefined;
-                  const id =
-                    role === "client" ? data.client?.id : data.realtor?.id;
-                  try {
-                    if (role === "client" && data?.client) {
-                      displayName =
-                        data.client.name ||
-                        data.client.fullName ||
-                        data.client.firstName;
-                    } else if (role === "realtor" && data?.realtor) {
-                      displayName =
-                        data.realtor.name ||
-                        data.realtor.fullName ||
-                        data.realtor.firstName;
-                    }
-                  } catch (_) {}
-                  // Fallbacks
-                  if (!displayName) {
-                    displayName =
-                      role === "realtor"
-                        ? "Realtor Account"
-                        : role === "client"
-                        ? "Client Account"
-                        : "Account";
-                  }
-                  const ok = await saveCredential({
-                    id,
-                    identifier,
-                    password: secret,
-                    role,
-                    displayName,
-                    biometricType: undefined, // will be set on first biometric usage if desired
-                  });
-                  if (ok) {
-                    const accounts = await getStoredAccounts();
-                    setStoredAccounts(accounts);
-                  }
-                },
-              },
-            ]
-          );
+
+        // Update local identifier store keyed by backend ID to avoid duplicates
+        try {
+          const entity = role === "client" ? data.client : data.realtor;
+          const id = entity?.id;
+          const displayName =
+            entity?.name || entity?.fullName || entity?.firstName || undefined;
+          await upsertAccount({ id, role, displayName, identifier });
+          const list = await getAccounts();
+          setAccounts(list);
+        } catch (e) {
+          console.warn("Failed to update identifier suggestions", e);
         }
       } else {
         setError("Check the account information you entered and try again.");
@@ -249,60 +258,26 @@ export default function LoginScreen() {
     navigation.navigate("PasswordReset");
   };
 
+  // Load saved identifiers for dropdown suggestions
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const avail = await isBiometricAvailable();
-      if (!mounted) return;
-      if (avail.available) {
-        setBioSupported(true);
-        if (Array.isArray(avail.types)) setSupportedBioTypes(avail.types);
-        const accounts = await getStoredAccounts();
-        if (mounted) setStoredAccounts(accounts);
-        // don't open modal here; wait for accounts to be applied in state
-      } else {
-        setBioError(avail.reason || "Biometric unavailable");
+      const list = await getAccounts();
+      if (mounted) {
+        setAccounts(list);
+        if (list && list.length > 0) {
+          setSelectedAccount((prev) => prev || list[0]);
+          setShowSavedOnly(true);
+        } else {
+          setSelectedAccount(null);
+          setShowSavedOnly(false);
+        }
       }
-      setBioChecking(false);
     })();
     return () => {
       mounted = false;
     };
   }, []);
-
-  // Open quick-login modal only after storedAccounts is populated and biometrics supported.
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!bioSupported) return;
-      // wait for storedAccounts to settle (small tick)
-      await new Promise((r) => setTimeout(r, 80));
-      if (!active) return;
-      if (storedAccounts && storedAccounts.length > 0) {
-        // Ensure any open keyboard (e.g., password field) is dismissed before opening modal
-        Keyboard.dismiss();
-        setShowQuickLoginModal(true);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [bioSupported, storedAccounts]);
-
-  const openQuickModalIfNeeded = (accounts) => {
-    if (bioSupported && accounts.length > 0) {
-      setShowQuickLoginModal(true);
-    }
-  };
-
-  const handleBiometricAuthenticated = async (cred) => {
-    await handleLogin({
-      identifier: cred.identifier,
-      secret: cred.password,
-      skipPrompt: true,
-      roleHint: cred.role,
-    });
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -337,109 +312,312 @@ export default function LoginScreen() {
               {error}
             </Text>
           )}
-          {/* Email Input */}
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            placeholderTextColor={COLORS.gray}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-            textContentType="emailAddress"
-            autoComplete="email"
-            autoCorrect={false}
-            accessible={true}
-            accessibilityLabel="Email input"
-            returnKeyType="next"
-            onSubmitEditing={() => focusNextInput(passwordInputRef)}
-            blurOnSubmit={false}
-          />
-          {/* Password Input */}
-          <TextInput
-            ref={passwordInputRef}
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor={COLORS.gray}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            textContentType="password"
-            autoComplete="password"
-            autoCorrect={false}
-            accessible={true}
-            accessibilityLabel="Password input"
-            returnKeyType="done"
-            onSubmitEditing={() => dismissKeyboard()}
-          />
-          {/* Reset Password */}
-          <TouchableOpacity
-            onPress={handleResetPassword}
-            accessible={true}
-            accessibilityLabel="Reset password"
-            accessibilityRole="button"
-            style={styles.resetPasswordButton}
-          >
-            <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
-          </TouchableOpacity>
-          {/* Log In Button */}
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={() => handleLogin({ skipPrompt: false })}
-            disabled={loading}
-            accessible={true}
-            accessibilityLabel="Log in"
-            accessibilityRole="button"
-          >
-            <Text style={styles.loginButtonText}>
-              {loading ? "Logging in..." : "Log In"}
-            </Text>
-          </TouchableOpacity>
-          {/* Biometric quick-login trigger (shows Face / Finger / Lock based on supported types) */}
-          {bioSupported && storedAccounts.length > 0 && (
-            <TouchableOpacity
-              style={styles.fingerprintButton}
-              onPress={() => {
-                Keyboard.dismiss();
-                setShowQuickLoginModal(true);
-              }}
-              accessibilityLabel="Open biometric quick login"
-              accessibilityRole="button"
-            >
-              <Ionicons
-                name={
-                  Array.isArray(supportedBioTypes) &&
-                  supportedBioTypes.includes(2)
-                    ? "person-circle-outline"
-                    : Array.isArray(supportedBioTypes) &&
-                      supportedBioTypes.includes(1)
-                    ? "finger-print"
-                    : "lock-closed"
-                }
-                size={28}
-                color={COLORS.green}
-                style={{ opacity: loading ? 0.6 : 1 }}
+
+          {showSavedOnly ? (
+            <>
+              {/* Saved Account Selector */}
+              {selectedAccount && (
+                <View style={styles.savedAccountContainer}>
+                  <TouchableOpacity
+                    style={styles.savedAccountSelector}
+                    onPress={() =>
+                      accounts.length > 1 && setIdDropdownOpen((v) => !v)
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel="Select saved account"
+                  >
+                    <Text style={styles.savedAccountText}>
+                      {selectedAccount.displayName || "Account"}
+                    </Text>
+                    {accounts.length > 1 && (
+                      <Ionicons
+                        name={idDropdownOpen ? "chevron-up" : "chevron-down"}
+                        size={20}
+                        color={COLORS.slate}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {idDropdownOpen && accounts.length > 1 && (
+                    <View style={styles.dropdownContainer}>
+                      {accounts.map((item) => {
+                        const roleLabel =
+                          item.role === "realtor"
+                            ? "Realtor"
+                            : item.role === "client"
+                            ? "Client"
+                            : (item.role || "").toString();
+                        const label = `${
+                          item.displayName || "Account"
+                        } (${roleLabel})`;
+                        return (
+                          <TouchableOpacity
+                            key={String(item.id)}
+                            style={styles.dropdownItem}
+                            onPress={() => handleAccountSelection(item)}
+                          >
+                            <Text style={styles.dropdownItemText}>{label}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              )}
+              {/* Face ID Login Button (hidden when using password mode) */}
+              {!showSavedPassword && (
+                <TouchableOpacity
+                  style={[
+                    styles.loginButton,
+                    loading && styles.loginButtonDisabled,
+                  ]}
+                  onPress={() =>
+                    selectedAccount && attemptFaceIdLogin(selectedAccount)
+                  }
+                  disabled={loading || !selectedAccount}
+                  accessible={true}
+                  accessibilityLabel="Log in with Face ID"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.loginButtonText}>
+                    {loading ? "Authenticating..." : "Continue with Face ID  "}
+                  </Text>
+                  <Svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 22 22"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xlinkHref="http://www.w3.org/1999/xlink"
+                  >
+                    <Rect
+                      width="22"
+                      height="22"
+                      fill="url(#pattern0_2911_3412)"
+                    />
+                    <Defs>
+                      <Pattern
+                        id="pattern0_2911_3412"
+                        patternContentUnits="objectBoundingBox"
+                        width="1"
+                        height="1"
+                      >
+                        <Use
+                          xlinkHref="#image0_2911_3412"
+                          transform="scale(0.0166667)"
+                        />
+                      </Pattern>
+                      <Image
+                        id="image0_2911_3412"
+                        width="60"
+                        height="60"
+                        preserveAspectRatio="none"
+                        xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAACXBIWXMAAAsTAAALEwEAmpwYAAACBklEQVR4nO2au04CQRSGp9HGhoJG8SEoraws1EIeQwz0NryDr2GnUV9BJSoUVlZixEvUxgvWn5kwRlgXw8wsy+x6vmQTwg7n/D+7WQ5zjlKCIAhChgFmgTrQBHqMpgOsTSD/uok9Cq3pFKhprb7JFoA249NNzOmPhjuL/C1g3ufKti2STcpw11LDBTDjkqhumegaWJ2A4TUT24Ytl0TNSJADfYurwABKwGFE64lLoI9IkJIKFGAxovXdJcgQKnC89eIbIGXEsC2I4bARw7YwXL9eq8Dx1ku/wumaI/EKKmmyplcIHqACPANPwEZa66YGcD/w0LhLa13wPwskvG5qIIbjEcMZNtwZp9KxMBx2pceYlY6F4XxUToR+qybNvzFMfAfhVeUV4jsIuyqv8LuD8BLiPvckOghv+srm2qyQR4Bl4FY/iYHGX71b06lsmNv9EVhRWYN+23KQG2AbKANz5iib9/S5QS6nIbjis+MAnOFOK229ynfHAVgCHhzM6s8spa1XRVVYB+jHKAA7wOcYRntmbcExl59eEjA8EKsIbAL7wJUx1zOv98y5omeOcAyngRi2BTGcf8Pv/22opRkJchiiaWP2KImxpRp2TGvWMo6qS6JZM7tIhmYtMSXtjGuy+Zg/ASHPWp47D5d+o78tPbsIHMdM54Uwa/lhtFWdr6wgCIKgwuALNFnvqx5lOWAAAAAASUVORK5CYII="
+                      />
+                    </Defs>
+                  </Svg>
+                </TouchableOpacity>
+              )}
+              {showSavedPassword && (
+                <>
+                  <TextInput
+                    ref={passwordInputRef}
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor={COLORS.gray}
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                    textContentType="password"
+                    autoComplete="password"
+                    autoCorrect={false}
+                    accessible={true}
+                    accessibilityLabel="Password input"
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      const identifier = selectedAccount
+                        ? pickPreferredIdentifier(selectedAccount)
+                        : email;
+                      handleLogin({
+                        identifier,
+                        secret: password,
+                        roleHint: selectedAccount?.role,
+                      });
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.loginButton,
+                      loading && styles.loginButtonDisabled,
+                    ]}
+                    onPress={() => {
+                      const identifier = selectedAccount
+                        ? pickPreferredIdentifier(selectedAccount)
+                        : email;
+                      handleLogin({
+                        identifier,
+                        secret: password,
+                        roleHint: selectedAccount?.role,
+                      });
+                    }}
+                    disabled={loading}
+                    accessible={true}
+                    accessibilityLabel="Log in"
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.loginButtonText}>
+                      {loading ? "Logging in..." : "Log In"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {/* Toggle control: Use Password  <->  Sign in with Face ID (same place) */}
+              {(!showSavedPassword && (
+                <TouchableOpacity
+                  style={styles.usePasswordButton}
+                  onPress={() => {
+                    const idToUse = selectedAccount
+                      ? pickPreferredIdentifier(selectedAccount)
+                      : "";
+                    if (idToUse) setEmail(idToUse);
+                    setShowSavedPassword(true);
+                    setTimeout(() => focusNextInput(passwordInputRef), 50);
+                  }}
+                  accessible={true}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.usePasswordButtonText}>Use Password</Text>
+                </TouchableOpacity>
+              )) || (
+                <TouchableOpacity
+                  style={styles.usePasswordButton}
+                  onPress={() =>
+                    selectedAccount && attemptFaceIdLogin(selectedAccount)
+                  }
+                  accessible={true}
+                  accessibilityRole="button"
+                >
+                  {" "}
+                  <Text style={styles.usePasswordButtonText}>
+                    Sign in with Face ID
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Sign in with a different account */}
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowSavedOnly(false);
+                  setIdDropdownOpen(false);
+                  setEmail("");
+                  setPassword("");
+                  setShowSavedPassword(false);
+                }}
+                accessible={true}
+                accessibilityRole="button"
+                style={styles.differentAccountButton}
+              >
+                <Text style={styles.differentAccountText}>
+                  Log in with a different account
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {/* Identifier Input with dropdown (full mode) */}
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  ref={emailInputRef}
+                  style={styles.input}
+                  placeholder="Email or Phone"
+                  placeholderTextColor={COLORS.gray}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={(t) => {
+                    setEmail(t);
+                    if (!idDropdownOpen) setIdDropdownOpen(true);
+                  }}
+                  textContentType="username"
+                  autoComplete="username"
+                  autoCorrect={false}
+                  accessible={true}
+                  accessibilityLabel="Identifier input"
+                  returnKeyType="next"
+                  onFocus={() => {
+                    if (accounts.length > 0) setIdDropdownOpen(true);
+                  }}
+                  onSubmitEditing={() => {
+                    setIdDropdownOpen(false);
+                    focusNextInput(passwordInputRef);
+                  }}
+                  blurOnSubmit={false}
+                />
+              </View>
+              {/* Password Input */}
+              <TextInput
+                ref={passwordInputRef}
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={COLORS.gray}
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                textContentType="password"
+                autoComplete="password"
+                autoCorrect={false}
+                accessible={true}
+                accessibilityLabel="Password input"
+                returnKeyType="done"
+                onSubmitEditing={() => dismissKeyboard()}
               />
-              <Text style={styles.fingerprintLabel}>Quick Login</Text>
-            </TouchableOpacity>
+              {/* Reset Password */}
+              <TouchableOpacity
+                onPress={handleResetPassword}
+                accessible={true}
+                accessibilityLabel="Reset password"
+                accessibilityRole="button"
+                style={styles.resetPasswordButton}
+              >
+                <Text style={styles.resetPasswordText}>RESET PASSWORD</Text>
+              </TouchableOpacity>
+              {/* Log In Button */}
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  loading && styles.loginButtonDisabled,
+                ]}
+                onPress={() => handleLogin({ skipPrompt: false })}
+                disabled={loading}
+                accessible={true}
+                accessibilityLabel="Log in"
+                accessibilityRole="button"
+              >
+                <Text style={styles.loginButtonText}>
+                  {loading ? "Logging in..." : "Log In"}
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-      {/* Sign Up Section moved to bottom above footer */}
-      <View style={styles.signUpContainer}>
-        <Text style={styles.signUpPrompt}>
-          Don't have an account? Sign up for free
-        </Text>
-        <TouchableOpacity
-          style={styles.signUpButton}
-          onPress={handleSignUp}
-          accessible={true}
-          accessibilityLabel="Sign up for a new account"
-          accessibilityRole="button"
-        >
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Sign Up Section moved to bottom above footer (hidden in saved-only mode) */}
+      {!showSavedOnly && (
+        <View style={styles.signUpContainer}>
+          <Text style={styles.signUpPrompt}>
+            Don't have an account? Sign up for free
+          </Text>
+          <TouchableOpacity
+            style={styles.signUpButton}
+            onPress={handleSignUp}
+            accessible={true}
+            accessibilityLabel="Sign up for a new account"
+            accessibilityRole="button"
+          >
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Footer (dark background) */}
       <View style={styles.footerContainer}>
@@ -471,27 +649,6 @@ export default function LoginScreen() {
           communications from Roost. You can opt-out anytime.
         </Text>
       </View>
-
-      <QuickBiometricLoginModal
-        visible={
-          showQuickLoginModal && bioSupported && storedAccounts.length > 0
-        }
-        accounts={storedAccounts}
-        onClose={() => setShowQuickLoginModal(false)}
-        onAuthenticated={handleBiometricAuthenticated}
-        prefillEmail={setEmail}
-        supportedTypes={supportedBioTypes}
-        onUsePassword={() => {
-          // ensure modal closed state already triggered; focus password after small delay
-          if (passwordInputRef.current) {
-            try {
-              passwordInputRef.current.focus();
-            } catch (e) {}
-          }
-        }}
-        onForgotPassword={handleResetPassword}
-        onRegister={handleSignUp}
-      />
     </SafeAreaView>
   );
 }
@@ -533,6 +690,41 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     fontFamily: "Futura",
   },
+  inputWrapper: {
+    width: "100%",
+    position: "relative",
+  },
+  inputRightIcon: {
+    position: "absolute",
+    right: 12,
+    top: 0,
+    bottom: 16,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dropdownContainer: {
+    width: "100%",
+    maxHeight: 180,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    marginTop: -8,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.silver,
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontFamily: "Futura",
+  },
 
   resetPasswordButton: {
     alignSelf: "flex-end",
@@ -551,13 +743,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
     borderRadius: 50,
     justifyContent: "center",
+    display: "flex",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 24,
   },
   loginButtonText: {
     color: COLORS.white,
     fontSize: 12, // H3 size
-    fontWeight: 700, // H3 weight (medium)
+    fontWeight: "700", // H3 weight (medium)
     fontFamily: "Futura",
   },
   loginButtonDisabled: {
@@ -572,7 +766,7 @@ const styles = StyleSheet.create({
   fingerprintLabel: {
     fontSize: 12,
     color: COLORS.green,
-    fontWeight: 700,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   errorText: {
@@ -592,7 +786,7 @@ const styles = StyleSheet.create({
   },
   signUpPrompt: {
     fontSize: 12, // P size
-    fontWeight: 700, // P weight
+    fontWeight: "700", // P weight
     color: COLORS.slate,
     marginBottom: 16,
     fontFamily: "Futura",
@@ -611,7 +805,7 @@ const styles = StyleSheet.create({
   signUpButtonText: {
     color: COLORS.green,
     fontSize: 12, // H3 size
-    fontWeight: 700, // H3 weight
+    fontWeight: "700", // H3 weight
     fontFamily: "Futura",
   },
   realtorButton: {
@@ -641,7 +835,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12, // Sub-p size
-    fontWeight: 500, // Sub-p weight
+    fontWeight: "500", // Sub-p weight
     color: COLORS.gray,
     marginBottom: 4,
     textAlign: "center",
@@ -651,5 +845,50 @@ const styles = StyleSheet.create({
   linkText: {
     color: COLORS.gray,
     textDecorationLine: "underline",
+  },
+  // Saved-only mode styles
+  savedAccountContainer: {
+    width: "100%",
+  },
+  savedAccountSelector: {
+    width: "100%",
+    height: 48,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: COLORS.white,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  savedAccountText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.black,
+    fontFamily: "Futura",
+  },
+  differentAccountButton: {
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  differentAccountText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.slate,
+    fontFamily: "Futura",
+  },
+  usePasswordButton: {
+    marginBottom: 8,
+    alignSelf: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  usePasswordButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLORS.green,
+    fontFamily: "Futura",
   },
 });

@@ -196,13 +196,13 @@ export default function SignupSuccessScreen({
             loop={false}
             style={styles.confettiIcon}
           />
-          {/* Subheading */}
+          {/* Subheading
           <Text style={styles.subheading}>Before you start</Text>
           <Text style={styles.subheadingsub}>
             you can watch a few tutorials
           </Text>
           {/* Tutorial Buttons */}
-          {!isRealtor ? (
+          {/* {!isRealtor ? (
             // Client tutorial buttons
             <>
               <TouchableOpacity
@@ -268,7 +268,7 @@ export default function SignupSuccessScreen({
                 </Text>
               </TouchableOpacity>
             </>
-          )}
+          )}  */}
         </ScrollView>
       </View>
     </SafeAreaView>
