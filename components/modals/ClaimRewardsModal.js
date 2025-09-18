@@ -10,6 +10,8 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../styles/index";
@@ -156,16 +158,35 @@ const ClaimRewardsModal = ({
                     ) + " "}
                     PTS
                   </Text>
-                  <View style={localStyles.descriptionContainer}>
-                    {selectedReward.description &&
-                      selectedReward.description
-                        .split("\n")
-                        .map((item, index) => (
-                          <Text key={index} style={localStyles.descriptionItem}>
-                            {item.trim() || "Heritage Bee Soap"}
-                          </Text>
-                        ))}
-                  </View>
+                  {(() => {
+                    const windowHeight = Dimensions.get("window").height;
+                    const maxDescHeight = Math.max(
+                      120,
+                      Math.floor(windowHeight * 0.25)
+                    );
+                    return (
+                      <ScrollView
+                        style={[
+                          localStyles.descriptionScroll,
+                          { maxHeight: maxDescHeight },
+                        ]}
+                        contentContainerStyle={localStyles.descriptionContainer}
+                        showsVerticalScrollIndicator={true}
+                      >
+                        {selectedReward.description &&
+                          selectedReward.description
+                            .split("\n")
+                            .map((item, index) => (
+                              <Text
+                                key={index}
+                                style={localStyles.descriptionItem}
+                              >
+                                {item.trim() || "Heritage Bee Soap"}
+                              </Text>
+                            ))}
+                      </ScrollView>
+                    );
+                  })()}
                   {selectedReward.rewardFor === "Clients" && (
                     <View style={localStyles.clientSelectorWrapper}>
                       <ClientSelector
@@ -358,7 +379,7 @@ const localStyles = StyleSheet.create({
     position: "absolute",
     top: -8, // Half of the circle height (37/2) to position it 50% outside
     right: -8, // Half of the circle width (37/2) to position it 50% outside
-    zIndex: 10,
+    zIndex: 150,
   },
 
   addressModalTitle: {
@@ -401,6 +422,9 @@ const localStyles = StyleSheet.create({
     maxHeight: "90%",
     overflow: "visible",
     marginTop: 18.5, // Add top margin to account for close button overlay
+  },
+  descriptionScroll: {
+    width: "100%",
   },
   giftTitle: {
     fontSize: 22,

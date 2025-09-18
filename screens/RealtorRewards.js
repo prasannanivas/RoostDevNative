@@ -443,7 +443,7 @@ export default function RealtorRewards({
                       </View>
                     )}
                     <View style={styles.rewardCardContent}>
-                      <Text style={styles.rewardType}>Cash</Text>
+                      <Text style={styles.rewardType}>{reward.rewardName}</Text>
                       <Text style={styles.rewardName}>
                         {reward.rewardAmount}
                       </Text>
@@ -459,7 +459,7 @@ export default function RealtorRewards({
             </View>
           )}
 
-          <Text style={styles.rewardsSubTitle}>FOR CHARITY</Text>
+          {/* <Text style={styles.rewardsSubTitle}>FOR CHARITY</Text>
           <Text style={styles.rewardsDescription}>
             These rewards are considered charitable donations. You'll receive a
             receipt for tax purposes.
@@ -509,7 +509,7 @@ export default function RealtorRewards({
                   </TouchableOpacity>
                 ))}
             </View>
-          )}
+          )} */}
 
           {/* CASH OUT SECTION */}
           <Text style={styles.rewardsSubTitle}>CASH OUT</Text>
