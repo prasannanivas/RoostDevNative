@@ -61,9 +61,9 @@ const ButtonGroup = ({
   const rightOption = options[2]; // Seasonal
 
   // Determine which option is selected
-  const isLeftSelected = value === leftOption.value;
+  const isLeftSelected = value === leftOption.value || !value; // Default to left if no selection
   const isMiddleSelected = value === middleOption.value;
-  const isRightSelected = value === rightOption.value || !value; // Default to right if no selection
+  const isRightSelected = value === rightOption.value;
 
   // Responsive width
   // Calculate widths based on container rather than screen

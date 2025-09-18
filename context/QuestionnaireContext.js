@@ -1,14 +1,23 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import {
   calculateQuestionnaireProgress,
   isQuestionInFlow,
 } from "../utils/questionnaireUtils";
 import { useClient } from "./ClientContext";
+import { useAuth } from "./AuthContext";
 
 const QuestionnaireContext = createContext();
 
 export const QuestionnaireProvider = ({ children }) => {
   const { clientInfo } = useClient();
+  const { auth } = useAuth();
+
+  console.log(
+    "clientInfo:",
+    auth.client,
+    clientInfo?.name.split(" ")[0],
+    clientInfo?.name.split(" ")[1] || ""
+  );
 
   const defaultResponses = {
     11: { bonuses: "no", benefits: "no" }, // Default value for question 10
@@ -16,16 +25,20 @@ export const QuestionnaireProvider = ({ children }) => {
     14: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 14
     13: { hasAssets: "no", items: [] }, // Default value for question 15
     6: {
-      firstName: clientInfo?.name.split(" ")[0],
-      lastName: clientInfo?.name.split(" ")[1] || "",
-      email: clientInfo?.email || "",
-      phone: clientInfo?.phone || "",
+      firstName:
+        clientInfo?.name.split(" ")[0] || auth.client.name.split(" ")[0] || "",
+      lastName:
+        clientInfo?.name.split(" ")[1] || auth.client.name.split(" ")[1] || "",
+      email: clientInfo?.email || auth?.client?.email || "",
+      phone: clientInfo?.phone || auth?.client?.phone || "",
     }, // Default value for question 6
     100: {
-      firstName: clientInfo?.name.split(" ")[0],
-      lastName: clientInfo?.name.split(" ")[1] || "",
-      email: clientInfo?.email || "",
-      phone: clientInfo?.phone || "",
+      firstName:
+        clientInfo?.name.split(" ")[0] || auth.client.name.split(" ")[0] || "",
+      lastName:
+        clientInfo?.name.split(" ")[1] || auth.client.name.split(" ")[1] || "",
+      email: clientInfo?.email || auth.client.email || "",
+      phone: clientInfo?.phone || auth.client.phone || "",
     }, // Default value for question 100
     108: { bonuses: "no", benefits: "no" }, // Default value for question 108
     116: { hasAssets: "no", items: [] }, // Default value for question 116
@@ -58,7 +71,8 @@ export const QuestionnaireProvider = ({ children }) => {
         const newFlowType = response; // "just_me" or "co_signer"
 
         // Clear responses and visited questions for questions that don't belong to the new flow
-        const newResponses = defaultResponses;
+        // Start from a fresh clone of defaults to avoid mutating the template
+        const newResponses = { ...defaultResponses };
         const newVisitedQuestions = new Set([1]);
         const newQuestionHistory = [1];
 
@@ -137,7 +151,7 @@ export const QuestionnaireProvider = ({ children }) => {
 
   const resetQuestionnaire = () => {
     setCurrentQuestionId(1);
-    setResponses(defaultResponses);
+    setResponses({ ...defaultResponses });
     setIsCompleted(false);
     setVisitedQuestions(new Set([1]));
     setQuestionHistory([1]);
@@ -179,6 +193,58 @@ export const QuestionnaireProvider = ({ children }) => {
       console.warn("Failed to restore questionnaire progress:", e);
     }
   };
+
+  // When client/auth info arrives or changes, backfill primary applicant defaults
+  // for questions 6 and 100 only if those fields are empty. Never overwrite user input.
+  useEffect(() => {
+    try {
+      const name = clientInfo?.name || auth?.client?.name || "";
+      const parts = typeof name === "string" ? name.trim().split(/\s+/) : [];
+      const first = parts[0] || "";
+      const last = parts.slice(1).join(" ") || "";
+      const email = clientInfo?.email || auth?.client?.email || "";
+      const phone = clientInfo?.phone || auth?.client?.phone || "";
+
+      const fillIfEmpty = (obj, key, val) => {
+        const cur = obj?.[key];
+        return cur === undefined || cur === null || cur === "" ? val : cur;
+      };
+
+      setResponses((prev) => {
+        const next = { ...prev };
+        // Question 6
+        const q6 = { ...(prev[6] || prev["6"] || {}) };
+        const q6Filled = {
+          ...q6,
+          firstName: fillIfEmpty(q6, "firstName", first),
+          lastName: fillIfEmpty(q6, "lastName", last),
+          email: fillIfEmpty(q6, "email", email),
+          phone: fillIfEmpty(q6, "phone", phone),
+        };
+        if (JSON.stringify(q6) !== JSON.stringify(q6Filled)) {
+          next[6] = q6Filled;
+        }
+
+        // Question 100
+        const q100 = { ...(prev[100] || prev["100"] || {}) };
+        const q100Filled = {
+          ...q100,
+          firstName: fillIfEmpty(q100, "firstName", first),
+          lastName: fillIfEmpty(q100, "lastName", last),
+          email: fillIfEmpty(q100, "email", email),
+          phone: fillIfEmpty(q100, "phone", phone),
+        };
+        if (JSON.stringify(q100) !== JSON.stringify(q100Filled)) {
+          next[100] = q100Filled;
+        }
+
+        return next;
+      });
+    } catch (e) {
+      console.warn("Failed to backfill defaults from client/auth info:", e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientInfo, auth?.client]);
 
   const getProgress = () => {
     return calculateQuestionnaireProgress(visitedQuestions, responses);

@@ -173,7 +173,24 @@ const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
       [fieldKey]: fieldValue,
     }));
   };
+  const isConditionMet = (field) => {
+    if (!field || !field.condition) return true;
+    const cond = field.condition;
+    // Support anyOf (OR) and allOf (AND) arrays, and simple {key,value}
+    if (Array.isArray(cond.anyOf)) {
+      return cond.anyOf.some((c) => formData[c.key] === c.value);
+    }
+    if (Array.isArray(cond.allOf)) {
+      return cond.allOf.every((c) => formData[c.key] === c.value);
+    }
+    if (cond.key !== undefined) {
+      return formData[cond.key] === cond.value;
+    }
+    return true;
+  };
   const renderField = (field) => {
+    // Respect conditional visibility
+    if (!isConditionMet(field)) return null;
     // Handle fields that have their own fields (nested structure)
     if (field.fields && field.title) {
       return renderSection(field, field.title);

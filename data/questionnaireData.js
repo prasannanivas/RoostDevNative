@@ -376,12 +376,14 @@ const questions = [
     id: 11,
     category: "income_details",
     page: 10,
+
     text: "How much do you make?",
     type: "complexForm",
     fields: [
       {
+        prefix: "$",
         key: "income",
-        placeholder: "Income",
+        placeholder: "Annual Income",
         label: "",
         type: "text",
         keyboard: "numeric",
@@ -405,6 +407,19 @@ const questions = [
           { value: "yes", label: "Yes" },
           { value: "no", label: "No" },
         ],
+      },
+      {
+        key: "bonusComissionAnnualAmount",
+        placeholder: "Annual Amount",
+        prefix: "$",
+        type: "text",
+        keyboard: "numeric",
+        condition: {
+          anyOf: [
+            { key: "bonuses", value: "yes" },
+            { key: "benefits", value: "yes" },
+          ],
+        },
       },
     ],
 
@@ -734,7 +749,8 @@ const questions = [
     fields: [
       {
         key: "income",
-        placeholder: "Income",
+        prefix: "$",
+        placeholder: "Annual Income",
         type: "text",
         keyboard: "numeric",
       },
@@ -755,6 +771,19 @@ const questions = [
           { value: "no", label: "No" },
           { value: "yes", label: "Yes" },
         ],
+      },
+      {
+        key: "bonusComissionAnnualAmount",
+        placeholder: "Annual Amount",
+        prefix: "$",
+        type: "text",
+        keyboard: "numeric",
+        condition: {
+          anyOf: [
+            { key: "bonuses", value: "yes" },
+            { key: "benefits", value: "yes" },
+          ],
+        },
       },
     ],
     nextQuestion: 114, // Skip to co-signer income question
@@ -1091,7 +1120,8 @@ const questions = [
     fields: [
       {
         key: "coIncome",
-        placeholder: "Income",
+        placeholder: "Annual Income",
+        prefix: "$",
         type: "text",
         keyboard: "numeric",
       },
@@ -1112,6 +1142,19 @@ const questions = [
           { value: "yes", label: "Yes" },
           { value: "no", label: "No" },
         ],
+      },
+      {
+        key: "coBonusComissionAnnualAmount",
+        placeholder: "Annual Amount",
+        prefix: "$",
+        type: "text",
+        keyboard: "numeric",
+        condition: {
+          anyOf: [
+            { key: "coBonuses", value: "yes" },
+            { key: "coBenefits", value: "yes" },
+          ],
+        },
       },
     ],
     nextQuestion: 115, // Continue with banking questions

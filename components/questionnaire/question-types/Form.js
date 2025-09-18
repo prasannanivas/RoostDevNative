@@ -26,9 +26,23 @@ const Form = ({
   const [formData, setFormData] = useState(value || {});
   const [localFieldErrors, setLocalFieldErrors] = useState({});
   const previousFormData = useRef(value || {});
+  const previousValueProp = useRef(value || {});
 
   // Merge external field errors with local errors
   const allErrors = { ...localFieldErrors, ...fieldErrors };
+
+  console.log("Form render", { question, value });
+
+  // Keep internal state in sync when parent value prop changes (e.g., navigation/back or late defaults)
+  useEffect(() => {
+    const nextVal = value || {};
+    if (JSON.stringify(nextVal) !== JSON.stringify(previousValueProp.current)) {
+      setFormData(nextVal);
+      previousFormData.current = nextVal;
+      previousValueProp.current = nextVal;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   // Expose validation method to parent
   useEffect(() => {
@@ -97,6 +111,7 @@ const Form = ({
         {question.fields.map((field) => (
           <View key={field.key} style={styles.fieldContainer}>
             <TextInput
+              key={field.key}
               label={getLabelWithRequired(field)}
               prefix={field.prefix}
               value={formData[field.key] || ""}
