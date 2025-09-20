@@ -9,7 +9,10 @@ import {
   Linking,
   Alert,
   Button,
+  Platform,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import RequestDocumentModal from "./RequestDocumentModal.js"; // Ensure this is a React Native component
@@ -37,8 +40,9 @@ const COLORS = {
 const ClientDetails = () => {
   const navigation = useNavigation();
   // Get clientId from navigation route parameters
-  const { clientId, statusText, inviteId, onDelete } = useRoute().params;
-  console.log("Invite ID:", inviteId, onDelete); // Debugging line to check inviteId
+  const { clientId, statusText, inviteId, onDelete, clientData } =
+    useRoute().params;
+  console.log("Client Data:", clientData); // Debugging line to check clientData
   const { auth } = useAuth();
   const { realtor } = auth;
   const realtorId = realtor.id; // Keep this line as it is the correct declaration
@@ -96,6 +100,66 @@ const ClientDetails = () => {
   useEffect(() => {
     refreshData();
   }, [clientId, realtorId]);
+
+  // Helpers for invite actions (copy/send)
+  const getInviteLink = () => clientData?.inviteLink || "";
+  const buildInviteMessage = () =>
+    `Please accept my invitation to sign up and complete your details: ${getInviteLink()}`;
+
+  const copyLink = async () => {
+    const link = getInviteLink();
+    if (!link) {
+      Alert.alert("No Link", "No invite link available to copy.");
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(link);
+      Toast.show({ type: "success", text1: "Invite link copied" });
+    } catch (e) {
+      Alert.alert("Copy Failed", "Unable to copy the invite link.");
+    }
+  };
+
+  const handleSendEmail = async () => {
+    const email = clientData?.email;
+    const body = encodeURIComponent(buildInviteMessage());
+    const subject = encodeURIComponent("Invitation from Roost");
+    if (!email) {
+      Alert.alert("No Email", "This client does not have an email on file.");
+      return;
+    }
+    const url = `mailto:${email}?subject=${subject}&body=${body}`;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) await Linking.openURL(url);
+      else
+        Alert.alert("Not Supported", "Email is not available on this device.");
+    } catch (e) {
+      Alert.alert("Error", "Unable to open email composer.");
+    }
+  };
+
+  const handleSendSms = async () => {
+    const phone = clientData?.phone || "";
+    const body = encodeURIComponent(buildInviteMessage());
+    if (!phone) {
+      Alert.alert(
+        "No Phone",
+        "This client does not have a phone number on file."
+      );
+      return;
+    }
+    // iOS uses '&body=' when number is present; Android uses '?body='
+    const delimiter = Platform.OS === "ios" ? "&" : "?";
+    const url = `sms:${phone}${delimiter}body=${body}`;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) await Linking.openURL(url);
+      else Alert.alert("Not Supported", "SMS is not available on this device.");
+    } catch (e) {
+      Alert.alert("Error", "Unable to open SMS composer.");
+    }
+  };
 
   const handleRequestDocument = async ({ docType, description }) => {
     try {
@@ -247,6 +311,87 @@ const ClientDetails = () => {
           <Text style={styles.deleteButtonText}>Delete Client</Text>
         </TouchableOpacity>
         <Text style={styles.errorText}>{statusText || "Client not found"}</Text>
+        <View style={styles.detailsCard}>
+          {clientData?.referenceName && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Name</Text>
+              <Text style={styles.infoValue}>{clientData.referenceName}</Text>
+            </View>
+          )}
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email</Text>
+            <View style={styles.infoValueWithActions}>
+              <Text
+                style={styles.infoValue}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {clientData?.email || "—"}
+              </Text>
+              {clientData?.email ? (
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleSendEmail}
+                  accessibilityLabel="Send email invitation"
+                >
+                  <Ionicons name="send" size={18} color="#2271B1" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Phone</Text>
+            <View style={styles.infoValueWithActions}>
+              <Text
+                style={styles.infoValue}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {clientData?.phone || "—"}
+              </Text>
+              {clientData?.phone ? (
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleSendSms}
+                  accessibilityLabel="Send SMS invitation"
+                >
+                  <Ionicons name="send" size={18} color="#2271B1" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Invite Link</Text>
+            <View style={styles.infoValueWithActions}>
+              <Text
+                style={[styles.infoValue, styles.linkValue]}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {clientData?.inviteLink || "—"}
+              </Text>
+              {clientData?.inviteLink ? (
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={copyLink}
+                  accessibilityLabel="Copy invite link"
+                >
+                  <Ionicons name="copy" size={18} color="#2271B1" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+
+          {!!clientData?.status && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Status</Text>
+              <Text style={styles.infoValue}>{clientData.status}</Text>
+            </View>
+          )}
+        </View>
       </View>
     );
   }
@@ -657,6 +802,54 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     color: "#dc3545",
+  },
+  // Error details card styling
+  detailsCard: {
+    width: "90%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#ECECEC",
+  },
+  infoLabel: {
+    color: "#707070",
+    fontSize: 14,
+    width: 95,
+  },
+  infoValueWithActions: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    minWidth: 0,
+  },
+  infoValue: {
+    color: "#1D2327",
+    fontSize: 15,
+    maxWidth: "85%",
+  },
+  linkValue: {
+    color: "#2271B1",
+  },
+  iconButton: {
+    marginLeft: 10,
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: "#F1F6FB",
   },
   // Modal styles
   formOverlay: {

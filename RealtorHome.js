@@ -2007,7 +2007,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         setShowClientCardModal(false);
                         navigation.navigate("ClientDetails", {
                           clientId: selectedClientCard.inviteeId,
-                          client: selectedClientCard,
+                          clientData: selectedClientCard,
                           inviteId: selectedClientCard.inviteId,
                           onDelete: onRefresh,
                           statusText:

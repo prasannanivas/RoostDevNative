@@ -47,12 +47,18 @@ export const RealtorProvider = ({ children }) => {
           }
         );
         const invitedData = await invitedResponse.json();
-        setInvited(invitedData);
+        setInvited(
+          invitedData.map((invite) => {
+            if (invite !== null) {
+              return invite;
+            }
+          })
+        );
         setInvitedClients(
-          invitedData.filter((invite) => invite.inviteType === "client")
+          invitedData.filter((invite) => invite?.inviteType === "client")
         );
         setInvitedRealtors(
-          invitedData.filter((invite) => invite.inviteType === "realtor")
+          invitedData.filter((invite) => invite?.inviteType === "realtor")
         );
       } catch (error) {
         console.error("Error fetching invited clients:", error);
