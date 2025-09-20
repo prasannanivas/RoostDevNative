@@ -103,6 +103,9 @@ const styles = StyleSheet.create({
   secondaryText: {
     color: "#377473",
   },
+  grayText: {
+    color: "#707070",
+  },
   outlineText: {
     color: "#FFFFFF",
   },
