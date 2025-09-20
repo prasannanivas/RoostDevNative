@@ -20,7 +20,12 @@ import Logo from "../components/Logo";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { getAccounts, upsertAccount } from "../utils/accountStore";
-import { authenticateBiometric, getCredential } from "../utils/biometricUtils";
+import {
+  authenticateBiometric,
+  getCredential,
+  saveCredential,
+  isBiometricAvailable,
+} from "../utils/biometricUtils";
 import Svg, { Defs, Image, Pattern, Rect, Use } from "react-native-svg";
 
 /**
@@ -112,24 +117,18 @@ export default function LoginScreen() {
         }
       }
       if (!cred) {
+        // If no credential is saved, don't keep this account in quick list
+        // Fall back to password entry for this session
         Alert.alert(
           "Face ID not set up",
-          "No saved biometric credential found for this account. Please use your password to sign in.",
-          [
-            {
-              text: "Use Password",
-              onPress: () => {
-                const idToUse = pickPreferredIdentifier(acc);
-                setEmail(idToUse);
-                setIdDropdownOpen(false);
-                setShowSavedOnly(true);
-                setShowSavedPassword(true);
-                setTimeout(() => focusNextInput(passwordInputRef), 50);
-              },
-            },
-            { text: "Cancel", style: "cancel" },
-          ]
+          "Please use your password to sign in."
         );
+        const idToUse = pickPreferredIdentifier(acc);
+        if (idToUse) setEmail(idToUse);
+        setIdDropdownOpen(false);
+        setShowSavedOnly(false); // go back to full login so we don't keep showing non-quick accounts
+        setShowSavedPassword(false);
+        setTimeout(() => focusNextInput(passwordInputRef), 50);
         return;
       }
 
@@ -223,21 +222,92 @@ export default function LoginScreen() {
           console.warn("Failed to persist tokens", e);
         }
 
-        await login(data);
-        navigation.navigate("Home");
+        // Prepare account details
+        const entity = role === "client" ? data.client : data.realtor;
+        const backendId = String(entity?.id || "");
+        const displayName =
+          entity?.name || entity?.fullName || entity?.firstName || undefined;
+
+        // Check if this is the first login for this backend user (not in local store yet)
+        let isFirstLoginForThisDevice = false;
+        try {
+          const existing = await getAccounts();
+          isFirstLoginForThisDevice = !existing.some((a) => a.id === backendId);
+        } catch {}
 
         // Update local identifier store keyed by backend ID to avoid duplicates
         try {
-          const entity = role === "client" ? data.client : data.realtor;
-          const id = entity?.id;
-          const displayName =
-            entity?.name || entity?.fullName || entity?.firstName || undefined;
-          await upsertAccount({ id, role, displayName, identifier });
-          const list = await getAccounts();
-          setAccounts(list);
+          await upsertAccount({ id: backendId, role, displayName, identifier });
         } catch (e) {
           console.warn("Failed to update identifier suggestions", e);
         }
+
+        // Ask to enable quick login if this is the first device login OR if this account has no saved credential yet
+        try {
+          // Determine if any credential exists for this backend user across known identifiers
+          const listAfter = await getAccounts();
+          const thisAcc = listAfter.find((a) => a.id === backendId);
+          const idSet = new Set([identifier, ...(thisAcc?.identifiers || [])]);
+          let hasCredential = false;
+          for (const idf of idSet) {
+            const cred = await getCredential(idf);
+            if (cred && cred.password) {
+              hasCredential = true;
+              break;
+            }
+          }
+
+          if (isFirstLoginForThisDevice || !hasCredential) {
+            const bio = await isBiometricAvailable();
+            if (bio?.available) {
+              const wantsQuickLogin = await new Promise((resolve) => {
+                Alert.alert(
+                  "Enable Quick Login",
+                  "Would you like to use Face ID / biometrics to sign in faster next time?",
+                  [
+                    {
+                      text: "Not now",
+                      style: "cancel",
+                      onPress: () => resolve(false),
+                    },
+                    { text: "Yes", onPress: () => resolve(true) },
+                  ],
+                  { cancelable: true, onDismiss: () => resolve(false) }
+                );
+              });
+              if (wantsQuickLogin) {
+                const saved = await saveCredential({
+                  identifier,
+                  password: secret,
+                  role,
+                  displayName,
+                });
+                if (!saved) {
+                  console.warn("Failed to save quick login credential");
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Quick login prompt check failed", e);
+        }
+
+        // Refresh quick-login account list to only include accounts with saved credentials
+        try {
+          const all = await getAccounts();
+          const filtered = await filterAccountsWithCredentials(all);
+          setAccounts(filtered);
+          if (filtered.length > 0) {
+            setSelectedAccount(filtered[0]);
+            setShowSavedOnly(true);
+          } else {
+            setSelectedAccount(null);
+            setShowSavedOnly(false);
+          }
+        } catch {}
+
+        await login(data);
+        navigation.navigate("Home");
       } else {
         setError("Check the account information you entered and try again.");
       }
@@ -259,19 +329,34 @@ export default function LoginScreen() {
   };
 
   // Load saved identifiers for dropdown suggestions
+  // Only show accounts that have a saved credential for quick login
+  const filterAccountsWithCredentials = async (list) => {
+    const results = await Promise.all(
+      list.map(async (acc) => {
+        const ids = Array.isArray(acc?.identifiers) ? acc.identifiers : [];
+        for (const idf of ids) {
+          const cred = await getCredential(idf);
+          if (cred && cred.password) return acc;
+        }
+        return null;
+      })
+    );
+    return results.filter(Boolean);
+  };
+
   useEffect(() => {
     let mounted = true;
     (async () => {
       const list = await getAccounts();
-      if (mounted) {
-        setAccounts(list);
-        if (list && list.length > 0) {
-          setSelectedAccount((prev) => prev || list[0]);
-          setShowSavedOnly(true);
-        } else {
-          setSelectedAccount(null);
-          setShowSavedOnly(false);
-        }
+      const quick = await filterAccountsWithCredentials(list);
+      if (!mounted) return;
+      setAccounts(quick);
+      if (quick && quick.length > 0) {
+        setSelectedAccount((prev) => prev || quick[0]);
+        setShowSavedOnly(true);
+      } else {
+        setSelectedAccount(null);
+        setShowSavedOnly(false);
       }
     })();
     return () => {
@@ -496,7 +581,6 @@ export default function LoginScreen() {
                   accessible={true}
                   accessibilityRole="button"
                 >
-                  {" "}
                   <Text style={styles.usePasswordButtonText}>
                     Sign in with Face ID
                   </Text>

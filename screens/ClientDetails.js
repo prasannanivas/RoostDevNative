@@ -122,6 +122,14 @@ const ClientDetails = () => {
 
   const handleSendEmail = async () => {
     const email = clientData?.email;
+    const link = getInviteLink();
+    if (!link) {
+      Alert.alert(
+        "No Link",
+        "No invite link available to include in the email."
+      );
+      return;
+    }
     const body = encodeURIComponent(buildInviteMessage());
     const subject = encodeURIComponent("Invitation from Roost");
     if (!email) {
@@ -141,6 +149,14 @@ const ClientDetails = () => {
 
   const handleSendSms = async () => {
     const phone = clientData?.phone || "";
+    const link = getInviteLink();
+    if (!link) {
+      Alert.alert(
+        "No Link",
+        "No invite link available to include in the message."
+      );
+      return;
+    }
     const body = encodeURIComponent(buildInviteMessage());
     if (!phone) {
       Alert.alert(
@@ -329,7 +345,7 @@ const ClientDetails = () => {
               >
                 {clientData?.email || "—"}
               </Text>
-              {clientData?.email ? (
+              {clientData?.email && clientData?.inviteLink ? (
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={handleSendEmail}
@@ -351,7 +367,7 @@ const ClientDetails = () => {
               >
                 {clientData?.phone || "—"}
               </Text>
-              {clientData?.phone ? (
+              {clientData?.phone && clientData?.inviteLink ? (
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={handleSendSms}
