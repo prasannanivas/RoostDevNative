@@ -36,10 +36,61 @@ export const AuthProvider = ({ children }) => {
     setAuth(null);
     try {
       await AsyncStorage.removeItem("authroost");
+      // Also clear any persisted tokens to avoid stale auth on relaunch
+      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.removeItem("refreshToken");
     } catch (error) {
       console.error("Failed to remove auth data", error);
     }
   };
+
+  // Verify that the saved user still exists on the server. If not, force logout.
+  useEffect(() => {
+    const verifyUserExists = async () => {
+      if (!auth) return;
+      try {
+        const userId = auth?.client?.id || auth?.realtor?.id;
+        const role = auth?.client ? "client" : auth?.realtor ? "realtor" : null;
+        if (!userId || !role) return;
+
+        const resp = await fetch(
+          `https://signup.roostapp.io/${role}/${userId}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        if (!resp.ok) {
+          console.warn(
+            `Auth verification failed for ${role} ${userId} (status ${resp.status}). Logging out.`
+          );
+          await logout();
+          return;
+        }
+
+        // Optionally validate the shape
+        const data = await resp.json();
+        const exists =
+          data && (data.id || data._id || data.email || data.phone);
+        if (!exists) {
+          console.warn(
+            `Auth verification: ${role} ${userId} appears missing. Logging out.`
+          );
+          await logout();
+        }
+      } catch (err) {
+        // Network errors shouldn't forcibly log out; just log and continue.
+        console.warn(
+          "Auth verification error (non-fatal):",
+          err?.message || err
+        );
+      }
+    };
+
+    verifyUserExists();
+    // Only re-verify when the concrete logged-in identity changes
+  }, [auth?.client?.id, auth?.realtor?.id]);
 
   return (
     <AuthContext.Provider value={{ auth, login, logout }}>

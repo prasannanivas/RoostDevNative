@@ -4,7 +4,7 @@ import { useAuth } from "./AuthContext";
 const ClientContext = createContext(null);
 
 export const ClientProvider = ({ children }) => {
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
   const client = auth?.client; // Ensure we safely access client
 
   const [documents, setDocuments] = useState([]);
@@ -23,6 +23,13 @@ export const ClientProvider = ({ children }) => {
           },
         }
       );
+      if (!response.ok) {
+        console.warn(
+          `Client documents fetch failed for ${clientID} (status ${response.status}). Logging out.`
+        );
+        await logout();
+        return;
+      }
       const data = await response.json();
       setDocuments(data);
     } catch (error) {
@@ -43,7 +50,19 @@ export const ClientProvider = ({ children }) => {
           },
         }
       );
+      if (!response.ok) {
+        console.warn(
+          `Client fetch failed for ${clientID} (status ${response.status}). Logging out.`
+        );
+        await logout();
+        return;
+      }
       const data = await response.json();
+      if (!data || (!data.id && !data._id)) {
+        console.warn("Client not found in response. Logging out.");
+        await logout();
+        return;
+      }
       setClientInfo(data);
     } catch (error) {
       console.error("Error fetching client:", error);
@@ -101,6 +120,12 @@ export const ClientProvider = ({ children }) => {
         const clientData = await clientResponse.json();
         console.log("Client data refreshed");
         setClientInfo(clientData);
+      } else {
+        console.warn(
+          `Client refresh failed for ${clientID} (status ${clientResponse.status}). Logging out.`
+        );
+        await logout();
+        return { success: false, error: "client missing" };
       }
 
       // The needed documents response is handled directly by the component

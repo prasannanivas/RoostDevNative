@@ -4,7 +4,7 @@ import { useAuth } from "./AuthContext";
 const RealtorContext = createContext(null);
 
 export const RealtorProvider = ({ children }) => {
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
   const realtor = auth?.realtor; // Safely access realtor
   const [loadingRealtor, setLoadingRealtor] = useState(true);
   const [realtorInfo, setRealtorInfo] = useState(null);
@@ -26,7 +26,21 @@ export const RealtorProvider = ({ children }) => {
             },
           }
         );
+        if (!realtorResponse.ok) {
+          console.warn(
+            `Realtor fetch failed for ${realtor.id} (status ${realtorResponse.status}). Logging out.`
+          );
+          await logout();
+          setLoadingRealtor(false);
+          return;
+        }
         const realtorData = await realtorResponse.json();
+        if (!realtorData || (!realtorData.id && !realtorData._id)) {
+          console.warn("Realtor not found in response. Logging out.");
+          await logout();
+          setLoadingRealtor(false);
+          return;
+        }
         setRealtorInfo(realtorData);
       } catch (error) {
         console.error("Error fetching realtor:", error);

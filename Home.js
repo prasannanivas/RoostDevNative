@@ -11,7 +11,7 @@ import { RealtorProvider } from "./context/RealtorContext.js";
 import RealtorOnboardingCheck from "./components/RealtorOnboardingCheck.js";
 
 const Home = () => {
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
   const navigation = useNavigation();
   const [isPending, startTransition] = useTransition();
   const [clientQuestionaire, setClientQuestionaire] = useState({});
@@ -53,7 +53,19 @@ const Home = () => {
       const response = await fetch(
         `https://signup.roostapp.io/client/${auth.client.id}`
       );
+      if (!response.ok) {
+        console.warn(
+          `Client fetch failed for ${auth.client.id} (status ${response.status}). Will log out to avoid crash.`
+        );
+        await logout();
+        return;
+      }
       const data = await response.json();
+      if (!data || (!data.id && !data._id)) {
+        console.warn("Client not found in response. Logging out.");
+        await logout();
+        return;
+      }
       setClientQuestionaire({
         responses: data?.questionnaire?.responses,
         applyingbehalf: data.applyingbehalf,
