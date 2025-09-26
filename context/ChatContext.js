@@ -63,7 +63,7 @@ export const ChatProvider = ({ children, userId }) => {
       // Update unread count
       setUnreadCount((prev) => Math.max(0, prev - messageIds.length));
     } catch (error) {
-      console.error("Error marking messages as read:", error);
+      console.log("Error marking messages as read:", error);
     }
   };
 

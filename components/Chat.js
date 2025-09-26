@@ -179,8 +179,71 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         // For pagination, prepend older messages
         setMessages((prev) => [...transformedMessages, ...prev]);
       } else {
-        // For initial load or refresh, replace all messages
-        setMessages(transformedMessages);
+        // For initial load or refresh, intelligently merge messages
+        setMessages((prevMessages) => {
+          // If we have previous messages, merge intelligently
+          if (prevMessages.length > 0) {
+            console.log("=== MESSAGE MERGE DEBUG ===");
+            console.log("Previous messages count:", prevMessages.length);
+            console.log("Server messages count:", transformedMessages.length);
+            console.log(
+              "Previous message IDs:",
+              prevMessages.map((m) => m.id)
+            );
+            console.log(
+              "Server message IDs:",
+              transformedMessages.map((m) => m.id)
+            );
+
+            // Create a map of server messages by ID
+            const serverMessagesMap = new Map();
+            transformedMessages.forEach((msg) => {
+              serverMessagesMap.set(msg.id, msg);
+            });
+
+            // Update existing messages with server data, keep local messages not yet on server
+            const mergedMessages = prevMessages.map((localMsg) => {
+              const serverMsg = serverMessagesMap.get(localMsg.id);
+              if (serverMsg) {
+                console.log(`Updating message ${localMsg.id} with server data`);
+                // Update local message with server data (better status, readBy, etc.)
+                return {
+                  ...localMsg,
+                  ...serverMsg,
+                  // Keep local timestamp if server timestamp is weird
+                  timestamp: serverMsg.timestamp || localMsg.timestamp,
+                };
+              } else {
+                console.log(
+                  `Keeping local message ${localMsg.id} (not found on server)`
+                );
+              }
+              return localMsg; // Keep local message if not found on server
+            });
+
+            // Add any new server messages that aren't in local state
+            const existingIds = new Set(prevMessages.map((msg) => msg.id));
+            const newServerMessages = transformedMessages.filter(
+              (msg) => !existingIds.has(msg.id)
+            );
+
+            console.log(
+              "New server messages to add:",
+              newServerMessages.length
+            );
+            console.log(
+              "Final merged messages count:",
+              mergedMessages.length + newServerMessages.length
+            );
+            console.log("=== END MESSAGE MERGE DEBUG ===");
+
+            return [...mergedMessages, ...newServerMessages];
+          } else {
+            // No previous messages, use server messages as-is
+            console.log("No previous messages, using server messages as-is");
+            return transformedMessages;
+          }
+        });
       }
 
       setConnectionStatus("connected");
@@ -261,7 +324,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
             );
           })
           .catch((error) => {
-            console.error("Error marking messages as read:", error);
+            console.log("Error marking messages as read:", error);
           });
       }
     }
@@ -656,10 +719,27 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
                 );
               }
 
-              // Also refresh messages as backup
+              // Only refresh if the message status wasn't updated successfully
               setTimeout(() => {
-                loadMessages(1, false);
-              }, 500);
+                setMessages((currentMessages) => {
+                  const messageStillSent = currentMessages.find(
+                    (msg) => msg.id === sentMessageId && msg.status === "sent"
+                  );
+
+                  if (messageStillSent) {
+                    console.log(
+                      "Message still shows 'sent' status, doing backup refresh"
+                    );
+                    loadMessages(1, false);
+                  } else {
+                    console.log(
+                      "Message status updated successfully, skipping backup refresh"
+                    );
+                  }
+
+                  return currentMessages; // No change to messages
+                });
+              }, 1000);
             });
 
             // Fallback: refresh anyway after 3 seconds if callback didn't fire

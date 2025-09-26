@@ -127,7 +127,7 @@ class ChatService {
 
       return await response.json();
     } catch (error) {
-      console.error("Error marking messages as read:", error);
+      console.log("Error marking messages as read:", error);
       throw error;
     }
   }
