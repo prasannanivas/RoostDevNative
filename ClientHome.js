@@ -36,6 +36,7 @@ import CompleteDocumentModal from "./components/modals/CompleteDocumentModal";
 import CategorySelectionModal from "./components/modals/CategorySelectionModal";
 import FullyApprovedModal from "./components/modals/FullyApprovedModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
+import ChatModal from "./components/ChatModal";
 
 /**
  * Color palette from UX team design system
@@ -81,6 +82,7 @@ const ClientHome = ({ questionnaireData }) => {
   const [showChangeOptions, setShowChangeOptions] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showChat, setShowChat] = useState(false);
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -282,38 +284,14 @@ const ClientHome = ({ questionnaireData }) => {
     fetchCustomMessages();
   }, [auth, clientId, refreshing]);
 
-  // Help button logic
-  const handleHelpPress = async () => {
-    const phoneNumber = "+14374349705";
-    const message = "Can you help me with my mortgage application?";
-
-    // Try SMS first
-    const smsUrl = `sms:${phoneNumber}${
-      Platform.OS === "ios" ? "&" : "?"
-    }body=${encodeURIComponent(message)}`;
-    const canOpenSms = await Linking.canOpenURL(smsUrl);
-
-    if (canOpenSms) {
-      await Linking.openURL(smsUrl);
-    } else {
-      // If SMS fails, try WhatsApp
-      const whatsappUrl = `whatsapp://send?phone=${phoneNumber.replace(
-        "+",
-        ""
-      )}&text=${encodeURIComponent(message)}`;
-      const canOpenWhatsapp = await Linking.canOpenURL(whatsappUrl);
-
-      if (canOpenWhatsapp) {
-        await Linking.openURL(whatsappUrl);
-      } else {
-        Alert.alert("Error", "No messaging app available");
-      }
-    }
+  // Help button logic - now opens chat
+  const handleHelpPress = () => {
+    setShowChat(true);
   };
 
-  // Notifications button logic
+  // Notifications button logic - now opens chat instead
   const handleNotifications = () => {
-    setShowNotifications(true);
+    setShowChat(true);
   };
 
   // Handle category selection for questionnaire sections
@@ -925,6 +903,14 @@ const ClientHome = ({ questionnaireData }) => {
           primaryText: COLORS.white,
           counter: COLORS.slate,
         }}
+      />
+
+      {/* Chat Modal */}
+      <ChatModal
+        visible={showChat}
+        onClose={() => setShowChat(false)}
+        userId={clientId}
+        userName={clientFromContext.name}
       />
 
       {/* Category Selection Modal - Using key to force remount and reset state */}

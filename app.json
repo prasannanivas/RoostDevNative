@@ -2,7 +2,7 @@
   "expo": {
     "name": "Roost",
     "slug": "RoostDevNative",
-    "version": "2.0.1",
+    "version": "3.0.1",
     "orientation": "portrait",
     "icon": "./assets/app-icon-main.png",
     "userInterfaceStyle": "light",
@@ -52,7 +52,7 @@
       },
       "icon": "./assets/android/mipmap-xxxhdpi/ic_launcher.png",
       "package": "com.roostapp.roost",
-      "versionCode": 9,
+      "versionCode": 10,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
