@@ -69,6 +69,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
   const [wsConnected, setWsConnected] = useState(false);
 
   const scrollViewRef = useRef(null);
+  const wsConnectionRef = useRef(null);
   const textInputRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -88,12 +89,37 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
     }
 
     try {
-      console.log("Loading messages for user:", userId, "page:", page);
+      console.log(
+        "Loading messages for user:",
+        userId,
+        "page:",
+        page,
+        "append:",
+        append
+      );
       const response = await ChatService.getMessages(userId, 50, page);
       console.log("Loaded messages response:", response);
 
       const apiMessages = response.messages || [];
       setPagination(response.pagination);
+
+      // If no messages and this is initial load, show welcome message
+      if (apiMessages.length === 0 && !append) {
+        console.log(
+          "No existing messages found, showing welcome message for new client"
+        );
+        setMessages([
+          {
+            id: "welcome",
+            text: `Hello ${clientName}! Welcome to Roost Support. How can I help you today?`,
+            sender: "support",
+            timestamp: new Date(),
+            status: "delivered",
+          },
+        ]);
+        setConnectionStatus("connected");
+        return;
+      }
 
       // Transform API messages to component format
       const transformedMessages = apiMessages
@@ -161,7 +187,8 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
     } catch (error) {
       console.error("Error loading messages:", error);
       setConnectionStatus("error");
-      // Set some fallback messages for better UX only on initial load
+
+      // Set fallback welcome message only for initial load failures
       if (!append) {
         setMessages([
           {
@@ -446,6 +473,9 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         handleTypingIndicator,
         handleConnectionChange
       );
+
+      // Store connection reference for later use
+      wsConnectionRef.current = wsConnection;
     } catch (error) {
       console.error("Error setting up Socket.IO connection:", error);
       setConnectionStatus("error");
@@ -461,6 +491,8 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
           wsConnection.close();
         }
       }
+      // Clear the reference
+      wsConnectionRef.current = null;
     };
   }, [visible, userId]);
 
@@ -590,6 +622,53 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
             msg.id === tempId ? { ...msg, status: "sent" } : msg
           )
         );
+      }
+
+      // For new clients, after first message is sent, ensure WebSocket rejoins the chat
+      if (messages.length === 1) {
+        // If this was the first message (welcome + this message)
+        console.log(
+          "First message sent for new client, ensuring WebSocket connection"
+        );
+        const sentMessageId = response && (response.id || response._id);
+
+        setTimeout(() => {
+          // Trigger WebSocket to rejoin chats
+          if (
+            wsConnectionRef.current &&
+            typeof wsConnectionRef.current.rejoinChats === "function"
+          ) {
+            console.log("Rejoining chats after first message for new client");
+            wsConnectionRef.current.rejoinChats((data) => {
+              // Callback triggered when rejoin is successful
+              console.log(
+                "WebSocket successfully rejoined, updating message status to delivered"
+              );
+
+              // Update the sent message to delivered status immediately
+              if (sentMessageId) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === sentMessageId
+                      ? { ...msg, status: "delivered" }
+                      : msg
+                  )
+                );
+              }
+
+              // Also refresh messages as backup
+              setTimeout(() => {
+                loadMessages(1, false);
+              }, 500);
+            });
+
+            // Fallback: refresh anyway after 3 seconds if callback didn't fire
+            setTimeout(() => {
+              console.log("Fallback refresh after first message");
+              loadMessages(1, false);
+            }, 3000);
+          }
+        }, 1000);
       }
 
       // Refocus input after sending
@@ -962,10 +1041,10 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
                   return isValid;
                 })
                 .map((msg, index) => {
-                  console.log(
-                    `Rendering message ${index}:`,
-                    msg.text?.substring(0, 20) + "..."
-                  );
+                  // console.log(
+                  //   `Rendering message ${index}:`,
+                  //   msg.text?.substring(0, 20) + "..."
+                  // );
                   return renderMessage(msg);
                 })}
               {renderTypingIndicator()}

@@ -43,6 +43,16 @@ class ChatService {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          // 404 is expected for new clients with no chat history
+          console.log(
+            `No chat history found for user ${userId} - returning empty messages`
+          );
+          return {
+            messages: [],
+            pagination: null,
+          };
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -182,7 +192,8 @@ class ChatService {
       console.log("✅ Socket.IO connected:", socket.id);
       if (onConnectionChange) onConnectionChange(true);
 
-      // Join chats automatically
+      // Join chats automatically (may be empty for new clients, but still attempt)
+      console.log("🏠 Attempting to join chats for user:", userId);
       socket.emit("join_chats");
     });
 
@@ -227,6 +238,11 @@ class ChatService {
     // Listen for successful chat joining
     socket.on("joined_chats", (data) => {
       console.log("🏠 Joined chats:", data);
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        console.log(
+          "📝 No existing chats found for user - this is normal for new users"
+        );
+      }
     });
 
     socket.on("joined_chat", (data) => {
@@ -235,6 +251,11 @@ class ChatService {
 
     socket.on("left_chat", (data) => {
       console.log("🚪 Left chat:", data);
+    });
+
+    // Handle case where joining chats fails (no chats exist yet)
+    socket.on("join_chats_error", (error) => {
+      console.log("⚠️ Could not join chats (likely new user):", error);
     });
 
     // Listen for user status changes
@@ -271,6 +292,22 @@ class ChatService {
     socket.setOnline = () => {
       console.log("🟢 Setting user online");
       socket.emit("user_online");
+    };
+
+    socket.rejoinChats = (onSuccess) => {
+      console.log("🔄 Manually rejoining chats for user:", userId);
+
+      // Set up one-time listener for successful join
+      if (onSuccess && typeof onSuccess === "function") {
+        const handleJoinSuccess = (data) => {
+          console.log("✅ Successfully rejoined chats, triggering callback");
+          socket.off("joined_chats", handleJoinSuccess); // Remove listener
+          onSuccess(data);
+        };
+        socket.once("joined_chats", handleJoinSuccess);
+      }
+
+      socket.emit("join_chats");
     };
 
     return socket;
