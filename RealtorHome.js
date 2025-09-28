@@ -47,12 +47,13 @@ import {
 } from "./components/progressBars";
 import InviteRealtorModal from "./components/modals/InviteRealtorModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
+import ChatModal from "./components/ChatModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
 import RealtorRewards from "./screens/RealtorRewards.js";
 import CSVUploadForm from "./screens/AddProfilePic";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Sharing from "expo-sharing";
 import { trimLeft, trimFull } from "./utils/stringUtils";
@@ -602,6 +603,7 @@ const RealtorHome = () => {
     return name
       ?.split(" ")
       .map((word) => word[0])
+      .slice(0, 2)
       .join("")
       .toUpperCase();
   };
@@ -824,6 +826,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
   const [currentCustomMsgIndex, setCurrentCustomMsgIndex] = useState(0);
   const [showCustomMessageModal, setShowCustomMessageModal] = useState(false);
   const [ackLoading, setAckLoading] = useState(false);
+  // Chat modal state
+  const [showChat, setShowChat] = useState(false);
   // Hardcoded documents list for Fully Approved modal (no API call)
   const fullyApprovedDocs = [
     "Agreement of Purchase and Sale",
@@ -916,6 +920,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         setCustomMessages([]);
       }
     }
+  };
+
+  // Chat handler
+  const handleChatPress = () => {
+    setShowChat(true);
   };
 
   return (
@@ -1034,10 +1043,18 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             </>
           )}
           <View style={styles.nameAgencyContainer}>
-            <Text style={styles.realtorName}>
+            <Text
+              style={styles.realtorName}
+              numberOfLines={1}
+              ellipsizeMode="clip"
+            >
               {realtorFromContext?.realtorInfo?.name || realtor.name}
             </Text>
-            <Text style={styles.agencyName}>
+            <Text
+              style={styles.agencyName}
+              numberOfLines={1}
+              ellipsizeMode="clip"
+            >
               {realtorFromContext?.realtorInfo?.brokerageInfo?.brokerageName ||
                 realtor?.brokerageInfo?.brokerageName ||
                 null}
@@ -1054,6 +1071,17 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             style={styles.notificationBell}
             onPress={() => setShowNotifications(true)}
           />
+          <TouchableOpacity
+            style={styles.chatIconContainer}
+            onPress={handleChatPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="chatbubble-outline"
+              size={24}
+              color={COLORS.white}
+            />
+          </TouchableOpacity>
           <GiftIcon
             onPress={handleRewardsClick}
             width={46}
@@ -2335,6 +2363,15 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           </View>
         </Animated.View>
       </Modal>
+
+      {/* Chat Modal */}
+      <ChatModal
+        visible={showChat}
+        onClose={() => setShowChat(false)}
+        userId={realtor.id}
+        userName={realtorFromContext?.realtorInfo?.name || realtor.name}
+        userType="realtor"
+      />
     </View>
   );
 };
@@ -2366,6 +2403,17 @@ const styles = StyleSheet.create({
   notificationBell: {
     marginRight: 15,
   },
+  chatIconContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: COLORS.green,
+    backgroundColor: COLORS.black,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
   userInfoContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -2384,6 +2432,8 @@ const styles = StyleSheet.create({
   },
   nameAgencyContainer: {
     flexDirection: "column",
+    flex: 1,
+    maxWidth: 140,
   },
   realtorName: {
     fontSize: 16, // H3 size

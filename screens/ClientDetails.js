@@ -18,7 +18,7 @@ import { useAuth } from "../context/AuthContext";
 import RequestDocumentModal from "./RequestDocumentModal.js"; // Ensure this is a React Native component
 import Toast from "react-native-toast-message"; // Make sure to set up this library if used
 import { generateInitialsFromFullName } from "../utils/initialsUtils";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 
 const COLORS = {

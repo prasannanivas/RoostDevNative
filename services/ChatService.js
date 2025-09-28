@@ -29,12 +29,14 @@ class ChatService {
    * Fetch chat messages for a user
    * @param {string} userId - The user ID
    * @param {number} limit - Number of messages to fetch
-   * @param {string} before - Fetch messages before this timestamp (for pagination)
+   * @param {number} page - Page number for pagination
+   * @param {string} userType - Type of user ('client' or 'realtor')
    * @returns {Promise} - Promise resolving to messages array
    */
-  async getMessages(userId, limit = 50, page = 1) {
+  async getMessages(userId, limit = 50, page = 1, userType = "client") {
     try {
-      let url = `${this.baseUrl}/client/chat/${userId}/messages?limit=${limit}&page=${page}`;
+      const endpoint = userType === "realtor" ? "realtor" : "client";
+      let url = `${this.baseUrl}/${endpoint}/chat/${userId}/messages?limit=${limit}&page=${page}`;
       const headers = await this.getAuthHeaders();
 
       const response = await fetch(url, {
@@ -71,14 +73,16 @@ class ChatService {
    * Send a new message
    * @param {string} userId - The user ID
    * @param {string} message - The message text
+   * @param {string} userType - Type of user ('client' or 'realtor')
    * @returns {Promise} - Promise resolving to the sent message
    */
-  async sendMessage(userId, message) {
+  async sendMessage(userId, message, userType = "client") {
     try {
       const headers = await this.getAuthHeaders();
+      const endpoint = userType === "realtor" ? "realtor" : "client";
 
       const response = await fetch(
-        `${this.baseUrl}/client/chat/${userId}/messages`,
+        `${this.baseUrl}/${endpoint}/chat/${userId}/messages`,
         {
           method: "POST",
           headers,
@@ -104,14 +108,16 @@ class ChatService {
    * Mark messages as read
    * @param {string} userId - The user ID
    * @param {string[]} messageIds - Array of message IDs to mark as read
+   * @param {string} userType - Type of user ('client' or 'realtor')
    * @returns {Promise} - Promise resolving to success status
    */
-  async markMessagesAsRead(userId, messageIds) {
+  async markMessagesAsRead(userId, messageIds, userType = "client") {
     try {
       const headers = await this.getAuthHeaders();
+      const endpoint = userType === "realtor" ? "realtor" : "client";
 
       const response = await fetch(
-        `${this.baseUrl}/client/chat/${userId}/read`,
+        `${this.baseUrl}/${endpoint}/chat/${userId}/read`,
         {
           method: "POST",
           headers,
@@ -171,12 +177,23 @@ class ChatService {
   /**
    * Subscribe to real-time chat updates using Socket.IO
    */
-  subscribeToChat(userId, onMessage, onTyping, onConnectionChange) {
-    console.log("🔌 Setting up Socket.IO connection for user:", userId);
+  subscribeToChat(
+    userId,
+    onMessage,
+    onTyping,
+    onConnectionChange,
+    userType = "client"
+  ) {
+    console.log(
+      "🔌 Setting up Socket.IO connection for user:",
+      userId,
+      "userType:",
+      userType
+    );
 
     const socket = io(this.baseUrl, {
       auth: {
-        userType: "client",
+        userType: userType,
         userId: userId,
       },
       transports: ["websocket", "polling"],

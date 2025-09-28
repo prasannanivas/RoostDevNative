@@ -19,9 +19,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
-import { useClient } from "../context/ClientContext";
 import ChatService from "../services/ChatService";
 import TypingIndicator from "./TypingIndicator";
+import { generateInitials } from "../utils/initialsUtils";
 
 /**
  * Color palette from UX team design system
@@ -53,9 +53,44 @@ const COLORS = {
 
 const { width: screenWidth } = Dimensions.get("window");
 
-const Chat = ({ visible, onClose, userId, userName = "User" }) => {
+const Chat = ({
+  visible,
+  onClose,
+  userId,
+  userName = "User",
+  userType = "client",
+}) => {
   const { auth } = useAuth();
-  const { clientInfo } = useClient();
+
+  // Get context data based on userType
+  let contextInfo = null;
+  let contextName = userName;
+
+  if (userType === "client") {
+    // Try to use client context if available (for client screens)
+    try {
+      const { useClient } = require("../context/ClientContext");
+      const clientContext = useClient();
+      contextInfo = clientContext?.clientInfo || auth.client;
+      contextName = contextInfo?.name || userName;
+    } catch (error) {
+      // Client context not available
+      contextInfo = auth.client;
+      contextName = contextInfo?.name || userName;
+    }
+  } else if (userType === "realtor") {
+    // Try to use realtor context if available (for realtor screens)
+    try {
+      const { useRealtor } = require("../context/RealtorContext");
+      const realtorContext = useRealtor();
+      contextInfo = realtorContext?.realtorInfo || auth.realtor;
+      contextName = contextInfo?.name || userName;
+    } catch (error) {
+      // Realtor context not available
+      contextInfo = auth.realtor;
+      contextName = contextInfo?.name || userName;
+    }
+  }
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -74,8 +109,9 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
-  const clientFromContext = clientInfo || auth.client;
-  const clientName = clientFromContext?.name || userName;
+  // Use dynamic context data based on userType
+  const userFromContext = contextInfo;
+  const displayName = contextName;
 
   // Load messages from API
   const loadMessages = async (page = 1, append = false) => {
@@ -95,9 +131,16 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         "page:",
         page,
         "append:",
-        append
+        append,
+        "userType:",
+        userType
       );
-      const response = await ChatService.getMessages(userId, 50, page);
+      const response = await ChatService.getMessages(
+        userId,
+        50,
+        page,
+        userType
+      );
       console.log("Loaded messages response:", response);
 
       const apiMessages = response.messages || [];
@@ -111,7 +154,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         setMessages([
           {
             id: "welcome",
-            text: `Hello ${clientName}! Welcome to Roost Support. How can I help you today?`,
+            text: `Hello ${displayName}! Welcome to Roost Support. How can I help you today?`,
             sender: "support",
             timestamp: new Date(),
             status: "delivered",
@@ -136,12 +179,12 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         })
         .map((msg) => {
           // Determine if message is from support (admin/realtor) or user (client)
-          const isFromSupport =
-            msg.sender === "admin" || msg.sender === "realtor";
-          const isFromUser = msg.sender === "client";
+          const isFromSupport = msg.sender === "admin";
+          const isFromUser =
+            msg.sender === "client" || msg.sender === "realtor";
 
           // Determine read status for the current user
-          const isRead = msg.readBy?.client?.isRead || false;
+          const isRead = msg.readBy?.[userType]?.isRead || false;
 
           // Create a valid timestamp
           let timestamp = new Date();
@@ -256,7 +299,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         setMessages([
           {
             id: "welcome",
-            text: `Hello ${clientName}! Welcome to Roost Support. How can I help you today?`,
+            text: `Hello ${displayName}! Welcome to Roost Support. How can I help you today?`,
             sender: "support",
             timestamp: new Date(),
             status: "delivered",
@@ -297,13 +340,13 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
     if (visible && messages.length > 0 && userId) {
       const unreadMessageIds = messages
         .filter(
-          (msg) => msg.sender === "support" && !msg.readBy?.client?.isRead
+          (msg) => msg.sender === "support" && !msg.readBy?.[userType]?.isRead
         )
         .map((msg) => msg.id);
 
       if (unreadMessageIds.length > 0) {
         console.log("Marking messages as read:", unreadMessageIds);
-        ChatService.markMessagesAsRead(userId, unreadMessageIds)
+        ChatService.markMessagesAsRead(userId, unreadMessageIds, userType)
           .then(() => {
             // Update local state to reflect read status
             setMessages((prev) =>
@@ -313,7 +356,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
                       ...msg,
                       readBy: {
                         ...msg.readBy,
-                        client: {
+                        [userType]: {
                           isRead: true,
                           readAt: new Date().toISOString(),
                         },
@@ -442,10 +485,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         const transformedMessage = {
           id: messageId,
           text: messageContent,
-          sender:
-            message.sender === "admin" || message.sender === "realtor"
-              ? "support"
-              : "user",
+          sender: message.sender === "admin" ? "support" : "user",
           timestamp: timestamp,
           status: "delivered",
           messageType: message.messageType || "text",
@@ -464,7 +504,11 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         // If it's a support message and chat is visible, mark it as read immediately
         if (transformedMessage.sender === "support" && visible) {
           setTimeout(() => {
-            ChatService.markMessagesAsRead(userId, [transformedMessage.id])
+            ChatService.markMessagesAsRead(
+              userId,
+              [transformedMessage.id],
+              userType
+            )
               .then(() => {
                 console.log(
                   "Marked new message as read:",
@@ -478,7 +522,7 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
                           ...msg,
                           readBy: {
                             ...msg.readBy,
-                            client: {
+                            [userType]: {
                               isRead: true,
                               readAt: new Date().toISOString(),
                             },
@@ -534,7 +578,8 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         userId,
         handleNewMessage,
         handleTypingIndicator,
-        handleConnectionChange
+        handleConnectionChange,
+        userType
       );
 
       // Store connection reference for later use
@@ -659,7 +704,11 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
       console.log("Sending message:", messageText, "for user:", userId);
 
       // Send message via API
-      const response = await ChatService.sendMessage(userId, messageText);
+      const response = await ChatService.sendMessage(
+        userId,
+        messageText,
+        userType
+      );
       console.log("Message sent successfully:", response);
 
       // Update message with server response - only if we have a valid response
@@ -964,11 +1013,10 @@ const Chat = ({ visible, onClose, userId, userName = "User" }) => {
         {isUser && (
           <View style={styles.userAvatar}>
             <Text style={styles.userAvatarText}>
-              {clientName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
+              {generateInitials(
+                displayName.split(" ")[0],
+                displayName.split(" ")[1]
+              )}
             </Text>
           </View>
         )}

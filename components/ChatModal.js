@@ -3,7 +3,13 @@ import React from "react";
 import { Modal, StyleSheet } from "react-native";
 import Chat from "./Chat";
 
-const ChatModal = ({ visible, onClose, userId, userName }) => {
+const ChatModal = ({
+  visible,
+  onClose,
+  userId,
+  userName,
+  userType = "client",
+}) => {
   return (
     <Modal
       visible={visible}
@@ -16,6 +22,7 @@ const ChatModal = ({ visible, onClose, userId, userName }) => {
         onClose={onClose}
         userId={userId}
         userName={userName}
+        userType={userType}
       />
     </Modal>
   );
