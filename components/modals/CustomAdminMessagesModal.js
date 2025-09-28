@@ -36,7 +36,6 @@ const CustomAdminMessagesModal = ({
   const hasMessages = messages.length > 0;
   const msg = hasMessages ? messages[currentIndex] : null;
   const htmlContent = msg?.HTMLContent;
-  console.log("HTMLContent:", htmlContent);
   return (
     <Modal
       visible={visible && hasMessages}
