@@ -168,6 +168,111 @@ class ChatService {
   }
 
   /**
+   * Get or create mortgage broker chat
+   * @param {string} userId - The client user ID
+   * @returns {Promise} - Promise resolving to chat data
+   */
+  async getMortgageBrokerChat(userId) {
+    try {
+      const headers = await this.getAuthHeaders();
+
+      const response = await fetch(
+        `${this.baseUrl}/client/mortgage-broker-chat/${userId}`,
+        {
+          method: "GET",
+          headers,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching mortgage broker chat:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get mortgage broker chat messages
+   * @param {string} userId - The client user ID
+   * @param {number} limit - Number of messages to fetch
+   * @param {number} page - Page number for pagination
+   * @returns {Promise} - Promise resolving to messages array
+   */
+  async getMortgageBrokerMessages(userId, limit = 50, page = 1) {
+    try {
+      const headers = await this.getAuthHeaders();
+
+      const response = await fetch(
+        `${this.baseUrl}/client/mortgage-broker-chat/${userId}/messages?limit=${limit}&page=${page}`,
+        {
+          method: "GET",
+          headers,
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return {
+            messages: [],
+            pagination: null,
+            available: false,
+          };
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        messages: data.messages || [],
+        pagination: data.pagination || null,
+        available: data.available !== false,
+        chat: data.chat,
+      };
+    } catch (error) {
+      console.error("Error fetching mortgage broker messages:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send message to mortgage broker
+   * @param {string} userId - The client user ID
+   * @param {string} message - The message text
+   * @returns {Promise} - Promise resolving to the sent message
+   */
+  async sendMortgageBrokerMessage(userId, message) {
+    try {
+      const headers = await this.getAuthHeaders();
+
+      const response = await fetch(
+        `${this.baseUrl}/client/mortgage-broker-message/${userId}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            content: message,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.message || data;
+    } catch (error) {
+      console.error("Error sending mortgage broker message:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Subscribe to real-time chat updates (WebSocket)
    * @param {string} userId - The user ID
    * @param {function} onMessage - Callback for new messages

@@ -83,6 +83,11 @@ const ClientHome = ({ questionnaireData }) => {
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const [showChatTypeSelection, setShowChatTypeSelection] = useState(false);
+  const [selectedChatType, setSelectedChatType] = useState("admin");
+  const [mortgageBrokerAvailable, setMortgageBrokerAvailable] = useState(false);
+  const [checkingBrokerAvailability, setCheckingBrokerAvailability] =
+    useState(false);
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -145,6 +150,8 @@ const ClientHome = ({ questionnaireData }) => {
       });
       // Fetch any custom admin messages
       fetchCustomMessages();
+      // Check mortgage broker availability on mount
+      checkMortgageBrokerAvailability();
     }
   }, [clientId]);
 
@@ -284,13 +291,87 @@ const ClientHome = ({ questionnaireData }) => {
     fetchCustomMessages();
   }, [auth, clientId, refreshing]);
 
-  // Help button logic - now opens chat
-  const handleHelpPress = () => {
-    setShowChat(true);
+  // Check if mortgage broker is available
+  const checkMortgageBrokerAvailability = async () => {
+    if (checkingBrokerAvailability) return false;
+
+    setCheckingBrokerAvailability(true);
+
+    try {
+      const ChatService = require("./services/ChatService").default;
+      const headers = await ChatService.getAuthHeaders();
+
+      const response = await fetch(
+        `https://signup.roostapp.io/client/mortgage-broker-chat/${clientId}`,
+        {
+          method: "GET",
+          headers,
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const available = data.available || false;
+        setMortgageBrokerAvailable(available);
+        console.log("Mortgage broker availability checked:", available);
+        return available;
+      } else if (response.status === 404) {
+        setMortgageBrokerAvailable(false);
+        console.log("No mortgage broker assigned to client");
+        return false;
+      } else {
+        // For temporary errors, be optimistic
+        setMortgageBrokerAvailable(true);
+        console.warn(
+          "Temporary error checking mortgage broker availability, allowing access"
+        );
+        return true;
+      }
+    } catch (error) {
+      console.error("Error checking mortgage broker availability:", error);
+      // On network errors, be optimistic
+      setMortgageBrokerAvailable(true);
+      console.warn("Network error - allowing mortgage broker chat attempt");
+      return true;
+    } finally {
+      setCheckingBrokerAvailability(false);
+    }
   };
 
-  // Notifications button logic - now opens chat instead
-  const handleNotifications = () => {
+  // Help button logic - now opens chat type selection
+  const handleHelpPress = async () => {
+    // Check mortgage broker availability first
+    await checkMortgageBrokerAvailability();
+
+    // If mortgage broker is available, show selection modal
+    if (mortgageBrokerAvailable) {
+      setShowChatTypeSelection(true);
+    } else {
+      // If no mortgage broker, go directly to general support
+      setSelectedChatType("admin");
+      setShowChat(true);
+    }
+  };
+
+  // Notifications button logic - now opens chat type selection
+  const handleNotifications = async () => {
+    // Check mortgage broker availability first
+    await checkMortgageBrokerAvailability();
+
+    // If mortgage broker is available, show selection modal
+    if (mortgageBrokerAvailable) {
+      setShowChatTypeSelection(true);
+    } else {
+      // If no mortgage broker, go directly to general support
+      setSelectedChatType("admin");
+      setShowChat(true);
+    }
+  };
+
+  // Handle chat type selection
+  const handleChatTypeSelect = (chatType) => {
+    setSelectedChatType(chatType);
+    setShowChatTypeSelection(false);
     setShowChat(true);
   };
 
@@ -905,12 +986,75 @@ const ClientHome = ({ questionnaireData }) => {
         }}
       />
 
+      {/* Chat Type Selection Modal */}
+      <Modal
+        visible={showChatTypeSelection}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowChatTypeSelection(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.chatTypeSelectionModalContent}>
+            <Text style={styles.chatTypeSelectionTitle}>
+              Choose Support Type
+            </Text>
+            <Text style={styles.chatTypeSelectionSubTitle}>
+              Which type of support do you need?
+            </Text>
+
+            <TouchableOpacity
+              style={styles.chatTypeOptionButton}
+              onPress={() => handleChatTypeSelect("admin")}
+            >
+              <Ionicons
+                name="headset-outline"
+                size={24}
+                color={COLORS.green}
+                style={styles.chatTypeOptionIcon}
+              />
+              <View style={styles.chatTypeOptionTextContainer}>
+                <Text style={styles.chatTypeOptionTitle}>General Support</Text>
+                <Text style={styles.chatTypeOptionDescription}>
+                  Help with app, documents, and general questions
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.chatTypeOptionButton}
+              onPress={() => handleChatTypeSelect("mortgage-broker")}
+            >
+              <Ionicons
+                name="business-outline"
+                size={24}
+                color={COLORS.blue}
+                style={styles.chatTypeOptionIcon}
+              />
+              <View style={styles.chatTypeOptionTextContainer}>
+                <Text style={styles.chatTypeOptionTitle}>Mortgage Broker</Text>
+                <Text style={styles.chatTypeOptionDescription}>
+                  Specific questions about your mortgage application
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowChatTypeSelection(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Chat Modal */}
       <ChatModal
         visible={showChat}
         onClose={() => setShowChat(false)}
         userId={clientId}
         userName={clientFromContext.name}
+        chatType={selectedChatType}
       />
 
       {/* Category Selection Modal - Using key to force remount and reset state */}
@@ -1624,6 +1768,70 @@ const styles = StyleSheet.create({
     color: COLORS.slate,
     fontSize: 15,
     marginTop: 4,
+  },
+  // Chat type selection modal styles
+  chatTypeSelectionModalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: "90%",
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  chatTypeSelectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.black,
+    marginBottom: 8,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  chatTypeSelectionSubTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.slate,
+    marginBottom: 24,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  chatTypeOptionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.silver,
+    borderRadius: 12,
+    padding: 16,
+    width: "100%",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E1E5E9",
+  },
+  chatTypeOptionIcon: {
+    marginRight: 16,
+  },
+  chatTypeOptionTextContainer: {
+    flex: 1,
+  },
+  chatTypeOptionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    marginBottom: 4,
+  },
+  chatTypeOptionDescription: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: COLORS.slate,
+    fontFamily: "Futura",
+    lineHeight: 18,
   },
   // Removed old custom message modal specific styles (now in shared component)
 });

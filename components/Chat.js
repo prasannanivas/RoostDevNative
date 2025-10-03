@@ -59,6 +59,7 @@ const Chat = ({
   userId,
   userName = "User",
   userType = "client",
+  chatType = "admin", // "admin" or "mortgage-broker"
 }) => {
   const { auth } = useAuth();
 
@@ -102,16 +103,64 @@ const Chat = ({
   const [pagination, setPagination] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
+  const [isUserTyping, setIsUserTyping] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState(null);
 
   const scrollViewRef = useRef(null);
   const wsConnectionRef = useRef(null);
   const textInputRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
 
   // Use dynamic context data based on userType
   const userFromContext = contextInfo;
   const displayName = contextName;
+
+  // Handle sending typing indicators
+  const handleTypingStart = () => {
+    if (wsConnectionRef.current && currentChatId && !isTypingRef.current) {
+      console.log("🔤 Sending typing_start event for chat:", currentChatId);
+      isTypingRef.current = true;
+      setIsUserTyping(true);
+      wsConnectionRef.current.startTyping(currentChatId);
+    }
+  };
+
+  const handleTypingStop = () => {
+    if (wsConnectionRef.current && currentChatId && isTypingRef.current) {
+      console.log("🔤 Sending typing_stop event for chat:", currentChatId);
+      isTypingRef.current = false;
+      setIsUserTyping(false);
+      wsConnectionRef.current.stopTyping(currentChatId);
+    }
+  };
+
+  const handleInputChange = (text) => {
+    setInputText(text);
+
+    // Handle typing indicators
+    if (text.trim().length > 0) {
+      handleTypingStart();
+
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Set new timeout to stop typing
+      typingTimeoutRef.current = setTimeout(() => {
+        handleTypingStop();
+      }, 1000); // Stop typing after 1 second of inactivity
+    } else {
+      // If input is empty, stop typing immediately
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      handleTypingStop();
+    }
+  };
 
   // Load messages from API
   const loadMessages = async (page = 1, append = false) => {
@@ -135,26 +184,85 @@ const Chat = ({
         "userType:",
         userType
       );
-      const response = await ChatService.getMessages(
-        userId,
-        50,
-        page,
-        userType
-      );
+
+      // First, get or create the chat to get the chatId
+      if (!currentChatId && !append) {
+        try {
+          let chatData;
+          if (chatType === "mortgage-broker") {
+            chatData = await ChatService.getMortgageBrokerChat(userId);
+          } else {
+            const chatResponse = await fetch(
+              `https://signup.roostapp.io/${userType}/chat/${userId}`,
+              {
+                method: "GET",
+                headers: await ChatService.getAuthHeaders(),
+              }
+            );
+            if (chatResponse.ok) {
+              chatData = await chatResponse.json();
+            }
+          }
+
+          if (chatData && chatData.chat && chatData.chat._id) {
+            setCurrentChatId(chatData.chat._id);
+            console.log(
+              "💬 Chat ID obtained for typing indicators:",
+              chatData.chat._id
+            );
+
+            // Join the specific chat room for real-time updates
+            if (wsConnectionRef.current && wsConnectionRef.current.joinChat) {
+              wsConnectionRef.current.joinChat(chatData.chat._id);
+            }
+          }
+        } catch (chatError) {
+          console.warn("Could not get chat ID:", chatError);
+        }
+      }
+
+      let response;
+      if (chatType === "mortgage-broker") {
+        response = await ChatService.getMortgageBrokerMessages(
+          userId,
+          50,
+          page
+        );
+      } else {
+        response = await ChatService.getMessages(userId, 50, page, userType);
+      }
       console.log("Loaded messages response:", response);
 
       const apiMessages = response.messages || [];
       setPagination(response.pagination);
 
+      // Check if mortgage broker chat is available
+      if (chatType === "mortgage-broker" && response && !response.available) {
+        console.log("Mortgage broker chat not available");
+        setMessages([
+          {
+            id: "not-available",
+            text: "You don't have a mortgage broker assigned yet. Your mortgage broker will be assigned soon during the application process. For immediate assistance, please use General Support.",
+            sender: "support",
+            timestamp: new Date(),
+            status: "delivered",
+          },
+        ]);
+        setConnectionStatus("connected");
+        return;
+      }
+
       // If no messages and this is initial load, show welcome message
       if (apiMessages.length === 0 && !append) {
+        const supportType =
+          chatType === "mortgage-broker" ? "Mortgage Broker" : "Roost Support";
         console.log(
           "No existing messages found, showing welcome message for new client"
         );
         setMessages([
           {
             id: "welcome",
-            text: `Hello ${displayName}! Welcome to Roost Support. How can I help you today?`,
+            text: `Hello ${displayName}! Welcome to ${supportType}. How can I help you today?`,
             sender: "support",
             timestamp: new Date(),
             status: "delivered",
@@ -178,8 +286,11 @@ const Chat = ({
           return true;
         })
         .map((msg) => {
-          // Determine if message is from support (admin/realtor) or user (client)
-          const isFromSupport = msg.sender === "admin";
+          // Determine if message is from support (admin/mortgage-broker) or user (client)
+          const isFromSupport =
+            msg.sender === "admin" ||
+            msg.sender === "mortgage-broker" ||
+            msg.sender === "sub-admin";
           const isFromUser =
             msg.sender === "client" || msg.sender === "realtor";
 
@@ -399,6 +510,17 @@ const Chat = ({
         return;
       }
 
+      console.log(
+        "Processing message - ID:",
+        messageId,
+        "SenderId:",
+        message.senderId,
+        "CurrentUserId:",
+        userId,
+        "OriginalSender:",
+        message.sender
+      );
+
       // Check if message already exists to prevent duplicates
       setMessages((prevMessages) => {
         // Check for exact ID match
@@ -426,40 +548,42 @@ const Chat = ({
           );
         }
 
-        // Also check for content and timestamp match for recently sent messages
-        const recentMessage = prevMessages.find(
-          (msg) =>
-            msg.text === messageContent &&
-            msg.sender === "user" &&
-            (msg.status === "sending" || msg.status === "sent") &&
-            Math.abs(
-              new Date(msg.timestamp).getTime() -
-                new Date(
-                  message.createdAt || message.timestamp || new Date()
-                ).getTime()
-            ) < 10000 // Within 10 seconds
-        );
+        // Check for content and timestamp match for recently sent messages (only if from current user)
+        if (message.senderId === userId) {
+          const recentMessage = prevMessages.find(
+            (msg) =>
+              msg.text === messageContent &&
+              msg.sender === "user" &&
+              (msg.status === "sending" || msg.status === "sent") &&
+              Math.abs(
+                new Date(msg.timestamp).getTime() -
+                  new Date(
+                    message.createdAt || message.timestamp || new Date()
+                  ).getTime()
+              ) < 10000 // Within 10 seconds
+          );
 
-        if (recentMessage) {
-          console.log(
-            "Found matching recent message, updating with server data:",
-            messageContent.substring(0, 20)
-          );
-          return prevMessages.map((msg) =>
-            msg === recentMessage
-              ? {
-                  ...msg,
-                  id: messageId, // Update with server ID
-                  status: "delivered",
-                  readBy: message.readBy,
-                  timestamp: message.createdAt
-                    ? new Date(message.createdAt)
-                    : msg.timestamp,
-                  originalSender: message.sender,
-                  senderId: message.senderId,
-                }
-              : msg
-          );
+          if (recentMessage) {
+            console.log(
+              "Found matching recent message from current user, updating with server data:",
+              messageContent.substring(0, 20)
+            );
+            return prevMessages.map((msg) =>
+              msg === recentMessage
+                ? {
+                    ...msg,
+                    id: messageId, // Update with server ID
+                    status: "delivered",
+                    readBy: message.readBy,
+                    timestamp: message.createdAt
+                      ? new Date(message.createdAt)
+                      : msg.timestamp,
+                    originalSender: message.sender,
+                    senderId: message.senderId,
+                  }
+                : msg
+            );
+          }
         }
 
         // Transform the message to component format
@@ -482,10 +606,48 @@ const Chat = ({
           }
         }
 
+        // Determine the correct sender based on message data
+        let messageSender = "user"; // default
+
+        // Check if message is from admin/support
+        if (
+          message.sender === "admin" ||
+          message.sender === "support" ||
+          message.sender === "mortgage-broker"
+        ) {
+          messageSender = "support";
+        }
+        // Check if message is from current user based on senderId
+        else if (message.senderId && message.senderId === userId) {
+          messageSender = "user";
+        }
+        // Check if message is from different user/client (in chat context, non-current user would be support)
+        else if (message.senderId && message.senderId !== userId) {
+          // If it's from a different client or admin, treat as support
+          messageSender = "support";
+        }
+        // Fallback: if no senderId but sender is "client", assume it's current user
+        else if (message.sender === "client") {
+          messageSender = "user";
+        }
+        // Final fallback: admin messages are support, others are user
+        else {
+          messageSender = message.sender === "admin" ? "support" : "user";
+        }
+
+        console.log(
+          "Determined sender:",
+          messageSender,
+          "for message from:",
+          message.sender,
+          "senderId:",
+          message.senderId
+        );
+
         const transformedMessage = {
           id: messageId,
           text: messageContent,
-          sender: message.sender === "admin" ? "support" : "user",
+          sender: messageSender,
           timestamp: timestamp,
           status: "delivered",
           messageType: message.messageType || "text",
@@ -591,6 +753,17 @@ const Chat = ({
 
     // Cleanup function
     return () => {
+      // Clean up typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Send final typing stop if user was typing
+      if (isTypingRef.current && wsConnection && currentChatId) {
+        wsConnection.stopTyping(currentChatId);
+        isTypingRef.current = false;
+      }
+
       if (wsConnection) {
         console.log("Disconnecting Socket.IO connection");
         if (typeof wsConnection.disconnect === "function") {
@@ -601,6 +774,7 @@ const Chat = ({
       }
       // Clear the reference
       wsConnectionRef.current = null;
+      setCurrentChatId(null);
     };
   }, [visible, userId]);
 
@@ -688,6 +862,12 @@ const Chat = ({
     setInputText("");
     setSending(true);
 
+    // Stop typing indicator when message is sent
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    handleTypingStop();
+
     // Create user message for immediate UI feedback
     const tempId = `temp_${Date.now()}`;
     const userMessage = {
@@ -704,11 +884,15 @@ const Chat = ({
       console.log("Sending message:", messageText, "for user:", userId);
 
       // Send message via API
-      const response = await ChatService.sendMessage(
-        userId,
-        messageText,
-        userType
-      );
+      let response;
+      if (chatType === "mortgage-broker") {
+        response = await ChatService.sendMortgageBrokerMessage(
+          userId,
+          messageText
+        );
+      } else {
+        response = await ChatService.sendMessage(userId, messageText, userType);
+      }
       console.log("Message sent successfully:", response);
 
       // Update message with server response - only if we have a valid response
@@ -809,12 +993,28 @@ const Chat = ({
       // Keeping auto-response for now until you implement real-time support responses
     } catch (error) {
       console.error("Error sending message:", error);
-      // Update message status to failed
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempId ? { ...msg, status: "failed" } : msg
-        )
-      );
+
+      // Handle specific mortgage broker errors
+      if (chatType === "mortgage-broker" && error.message.includes("404")) {
+        // Replace the failed message with a helpful system message
+        setMessages((prev) => [
+          ...prev.filter((msg) => msg.id !== tempId),
+          {
+            id: "broker-not-available",
+            text: "Your mortgage broker is not available right now. They will be assigned during your application process. For immediate help, please use General Support.",
+            sender: "support",
+            timestamp: new Date(),
+            status: "delivered",
+          },
+        ]);
+      } else {
+        // Update message status to failed for other errors
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === tempId ? { ...msg, status: "failed" } : msg
+          )
+        );
+      }
       Alert.alert("Error", "Failed to send message. Please try again.");
     } finally {
       setSending(false);
@@ -976,9 +1176,7 @@ const Chat = ({
                 {formatTime(message.timestamp)}
               </Text>
               {isSupport && message.originalSender && (
-                <Text style={styles.senderLabel}>
-                  {message.originalSender === "admin" ? "Admin" : "Support"}
-                </Text>
+                <Text style={styles.senderLabel}>{message.originalSender}</Text>
               )}
             </View>
 
@@ -1061,7 +1259,11 @@ const Chat = ({
           </TouchableOpacity>
 
           <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>Roost Support</Text>
+            <Text style={styles.headerTitle}>
+              {chatType === "mortgage-broker"
+                ? "Mortgage Broker"
+                : "Roost Support"}
+            </Text>
             <View style={styles.statusContainer}>
               <View
                 style={[
@@ -1189,7 +1391,7 @@ const Chat = ({
               ref={textInputRef}
               style={styles.textInput}
               value={inputText}
-              onChangeText={setInputText}
+              onChangeText={handleInputChange}
               placeholder="Type your message..."
               placeholderTextColor={COLORS.gray}
               multiline

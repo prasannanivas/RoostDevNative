@@ -9,6 +9,7 @@ const ChatModal = ({
   userId,
   userName,
   userType = "client",
+  chatType = "admin",
 }) => {
   return (
     <Modal
@@ -23,6 +24,7 @@ const ChatModal = ({
         userId={userId}
         userName={userName}
         userType={userType}
+        chatType={chatType}
       />
     </Modal>
   );
