@@ -24,7 +24,7 @@ const MortgageApplicationModal = ({ visible, onClose, onConfirm }) => {
           </TouchableOpacity>
 
           <Text style={styles.messageText}>
-            Sounds good our mortgage broker will be contacting you in the next
+            Sounds good, our mortgage broker will be contacting you in the next
             24 hours
           </Text>
           <TouchableOpacity
