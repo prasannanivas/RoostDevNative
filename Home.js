@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useTransition } from "react";
+import { View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "./context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import ClientHome from "./ClientHome.js";
-import RealtorHome from "./RealtorHome.js";
+import RealtorBottomTabs from "./navigation/RealtorBottomTabs.js";
 import LoginScreen from "./screens/LoginScreen.js";
 import ClientQuestionaire from "./ClientQuestionaire.js";
 import { ClientProvider } from "./context/ClientContext.js";
@@ -159,12 +160,39 @@ const Home = () => {
               }}
             />
           )}
-          <RealtorHome />
+          <RealtorBottomTabs />
         </RealtorProvider>
       ) : (
-        <PublicHome />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#F6F6F6",
+          }}
+        >
+          <Text style={{ fontSize: 18, color: "#1D2327" }}>
+            Welcome to Roost
+          </Text>
+        </View>
       )}
     </>
+  );
+};
+
+// Simple PublicHome component for when there's no auth
+const PublicHome = () => {
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#F6F6F6",
+      }}
+    >
+      <Text style={{ fontSize: 18, color: "#1D2327" }}>Welcome to Roost</Text>
+    </View>
   );
 };
 

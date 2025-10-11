@@ -48,6 +48,7 @@ import {
 import InviteRealtorModal from "./components/modals/InviteRealtorModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
 import ChatModal from "./components/ChatModal";
+import MortgageApplicationModal from "./components/modals/MortgageApplicationModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -126,6 +127,7 @@ const RealtorHome = () => {
   // Local state
   const [showForm, setShowForm] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [showMortgageModal, setShowMortgageModal] = useState(false);
 
   const [loadingDownload, setLoadingDownload] = useState(false);
   const [showCSVUploadForm, setShowCSVUploadForm] = useState(false);
@@ -627,6 +629,51 @@ const RealtorHome = () => {
     setShowRewards(true);
   };
 
+  // Handler for mortgage application
+  const handleMortgageApplication = () => {
+    setShowMortgageModal(true);
+  };
+
+  const handleMortgageConfirm = async () => {
+    setShowMortgageModal(false);
+
+    // Send email to mortgages@roostapp.io
+    try {
+      const realtorInfo = realtorFromContext?.realtorInfo || realtor;
+      const emailData = {
+        to: "mortgages@roostapp.io",
+        subject: "Private Mortgage Application - Realtor Request",
+        body: `
+New private mortgage application request:
+
+Realtor Name: ${realtorInfo.name || "N/A"}
+Email: ${realtorInfo.email || "N/A"}  
+Phone: ${realtorInfo.phone || "N/A"}
+
+The realtor has applied for private mortgage financing and should be contacted within 24 hours.
+        `.trim(),
+      };
+
+      // Send the email via your backend API
+      const response = await fetch(
+        "https://signup.roostapp.io/send-mortgage-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(emailData),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn("Failed to send mortgage application email");
+      }
+    } catch (error) {
+      console.error("Error sending mortgage application email:", error);
+    }
+  };
+
   // Update the onRefresh function to also fetch realtor data and notifications
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -1113,6 +1160,17 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           <Text style={styles.inviteBannerText}>
             Earn an additional 5% from any from realtor that you refer, once one
             of their clients completes a mortgage.
+          </Text>
+        </View>
+        <View style={styles.inviteBanner}>
+          <TouchableOpacity
+            style={styles.inviteRealtorsButton}
+            onPress={handleMortgageApplication}
+          >
+            <Text style={styles.inviteRealtorsText}>Apply</Text>
+          </TouchableOpacity>
+          <Text style={styles.inviteBannerText}>
+            Realtors need some extra cash? 8% financing available just for you!
           </Text>
         </View>
         {/* ================= TITLE: CLIENTS ================= */}
@@ -2372,6 +2430,13 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         userName={realtorFromContext?.realtorInfo?.name || realtor.name}
         userType="realtor"
       />
+
+      {/* Mortgage Application Modal */}
+      <MortgageApplicationModal
+        visible={showMortgageModal}
+        onClose={() => setShowMortgageModal(false)}
+        onConfirm={handleMortgageConfirm}
+      />
     </View>
   );
 };
@@ -2465,12 +2530,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     minHeight: 80,
     padding: 16,
+    marginHorizontal: 8,
+    marginTop: 8, // To overlap with header
     flexDirection: "row",
     alignItems: "center",
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
+    borderRadius: 16,
     shadowColor: "#1D2327",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
