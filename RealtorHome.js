@@ -635,43 +635,8 @@ const RealtorHome = () => {
   };
 
   const handleMortgageConfirm = async () => {
-    setShowMortgageModal(false);
-
-    // Send email to mortgages@roostapp.io
-    try {
-      const realtorInfo = realtorFromContext?.realtorInfo || realtor;
-      const emailData = {
-        to: "mortgages@roostapp.io",
-        subject: "Private Mortgage Application - Realtor Request",
-        body: `
-New private mortgage application request:
-
-Realtor Name: ${realtorInfo.name || "N/A"}
-Email: ${realtorInfo.email || "N/A"}  
-Phone: ${realtorInfo.phone || "N/A"}
-
-The realtor has applied for private mortgage financing and should be contacted within 24 hours.
-        `.trim(),
-      };
-
-      // Send the email via your backend API
-      const response = await fetch(
-        "https://signup.roostapp.io/send-mortgage-email",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(emailData),
-        }
-      );
-
-      if (!response.ok) {
-        console.warn("Failed to send mortgage application email");
-      }
-    } catch (error) {
-      console.error("Error sending mortgage application email:", error);
-    }
+    // Modal now handles the API call internally
+    console.log("Mortgage application confirmed");
   };
 
   // Update the onRefresh function to also fetch realtor data and notifications
@@ -2436,6 +2401,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         visible={showMortgageModal}
         onClose={() => setShowMortgageModal(false)}
         onConfirm={handleMortgageConfirm}
+        realtorInfo={realtorFromContext?.realtorInfo || realtor}
       />
     </View>
   );
