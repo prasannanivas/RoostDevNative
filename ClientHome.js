@@ -355,17 +355,7 @@ const ClientHome = ({ questionnaireData }) => {
 
   // Notifications button logic - now opens chat type selection
   const handleNotifications = async () => {
-    // Check mortgage broker availability first
-    await checkMortgageBrokerAvailability();
-
-    // If mortgage broker is available, show selection modal
-    if (mortgageBrokerAvailable) {
-      setShowChatTypeSelection(true);
-    } else {
-      // If no mortgage broker, go directly to general support
-      setSelectedChatType("admin");
-      setShowChat(true);
-    }
+    setShowNotifications(true);
   };
 
   // Handle chat type selection
