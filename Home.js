@@ -160,7 +160,7 @@ const Home = () => {
               }}
             />
           )}
-          <RealtorBottomTabs />
+          <RealtorBottomTabs key={Date.now()} />
         </RealtorProvider>
       ) : (
         <View

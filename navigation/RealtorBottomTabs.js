@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   View,
@@ -8,9 +8,11 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
+import { Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { useAuth } from "../context/AuthContext";
@@ -55,6 +57,12 @@ const TagScreen = () => {
 
   // State for mortgage modal
   const [showMortgageModal, setShowMortgageModal] = useState(false);
+  // Splash state - updated to handle multiple splash screens
+  const [splashScreens, setSplashScreens] = useState([]);
+  const [splashLoading, setSplashLoading] = useState(false);
+  // Splash modal state
+  const [showSplashModal, setShowSplashModal] = useState(false);
+  const [selectedSplash, setSelectedSplash] = useState(null);
 
   // Placeholder handlers for header actions
   const handleProfileClick = () => {
@@ -72,6 +80,85 @@ const TagScreen = () => {
   // Handler for mortgage application
   const handleMortgageApplication = () => {
     setShowMortgageModal(true);
+  };
+
+  // API base used by web admin endpoints
+  const API_BASE = "http://159.203.58.60:5000";
+
+  // Fetch realtor splash for current realtor (unread only for this user)
+  useEffect(() => {
+    let mounted = true;
+    const fetchSplash = async () => {
+      if (!realtor?.id) return;
+      setSplashLoading(true);
+      try {
+        const res = await fetch(
+          `${API_BASE}/admin/custom-splash?userId=${realtor.id}`
+        );
+        if (!res.ok) {
+          setSplashLoading(false);
+          return;
+        }
+        const data = await res.json();
+        const list = data.splashScreens || [];
+        if (mounted) {
+          setSplashScreens(list);
+        }
+      } catch (e) {
+        console.log("Error fetching splash:", e);
+      } finally {
+        setSplashLoading(false);
+      }
+    };
+    fetchSplash();
+    return () => {
+      mounted = false;
+    };
+  }, [realtor?.id]);
+
+  const markSplashRead = async (splashId) => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/admin/custom-splash/${splashId}/read`,
+        { method: "PUT" }
+      );
+      if (res.ok) {
+        // Remove the splash from the list
+        setSplashScreens((prev) =>
+          prev.filter((splash) => splash._id !== splashId)
+        );
+      }
+    } catch (e) {
+      console.log("Error marking splash read:", e);
+    }
+  };
+
+  const handleSplashCardClick = (splash) => {
+    setSelectedSplash(splash);
+    setShowSplashModal(true);
+  };
+
+  const handleOpenSplashLink = async (link, splashId) => {
+    if (!link) return;
+    try {
+      const supported = await Linking.canOpenURL(link);
+      if (supported) {
+        await Linking.openURL(link);
+      }
+    } catch (e) {
+      console.log("Error opening link:", e);
+    } finally {
+      // mark read after attempting to open
+      if (splashId) markSplashRead(splashId);
+      // Close modal
+      setShowSplashModal(false);
+      setSelectedSplash(null);
+    }
+  };
+
+  const closeSplashModal = () => {
+    setShowSplashModal(false);
+    setSelectedSplash(null);
   };
 
   const handleMortgageConfirm = async () => {
@@ -238,6 +325,37 @@ const TagScreen = () => {
           <View style={styles.comingSoonCard}>
             <Text style={styles.comingSoonText}>More coming soon</Text>
           </View>
+
+          {/* Custom Splash Cards */}
+          {splashScreens.length > 0 && (
+            <View style={styles.splashGrid}>
+              {splashScreens.map((splash, index) => (
+                <TouchableOpacity
+                  key={splash._id}
+                  style={[
+                    styles.splashCard,
+                    {
+                      backgroundColor: splash.backgroundColor || "#F2EDE6",
+                      width: splash.size === "half" ? "48%" : "100%",
+                    },
+                  ]}
+                  onPress={() => handleSplashCardClick(splash)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.splashContent}>
+                    <Text style={styles.splashTitle}>{splash.title}</Text>
+                    {splash.imageUrl && (
+                      <Image
+                        source={{ uri: splash.imageUrl }}
+                        style={styles.splashImage}
+                        resizeMode="contain"
+                      />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -248,6 +366,67 @@ const TagScreen = () => {
         onConfirm={handleMortgageConfirm}
         realtorInfo={realtorFromContext?.realtorInfo || realtor}
       />
+
+      {/* Splash Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showSplashModal}
+        onRequestClose={closeSplashModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={closeSplashModal}
+            >
+              <Text style={styles.modalCloseText}>×</Text>
+            </TouchableOpacity>
+
+            {selectedSplash && (
+              <>
+                <Text style={styles.modalTitle}>{selectedSplash.title}</Text>
+
+                {/* {selectedSplash.imageUrl && (
+                  <Image
+                    source={{ uri: selectedSplash.imageUrl }}
+                    style={styles.modalImage}
+                    resizeMode="contain"
+                  />
+                )} */}
+
+                {selectedSplash.description && (
+                  <Text style={styles.modalDescription}>
+                    {selectedSplash.description}
+                  </Text>
+                )}
+
+                {selectedSplash.link && (
+                  <TouchableOpacity
+                    style={[
+                      styles.modalActionButton,
+                      {
+                        backgroundColor:
+                          selectedSplash.buttonColor || COLORS.green,
+                      },
+                    ]}
+                    onPress={() =>
+                      handleOpenSplashLink(
+                        selectedSplash.link,
+                        selectedSplash._id
+                      )
+                    }
+                  >
+                    <Text style={styles.modalActionButtonText}>
+                      {selectedSplash.buttonText || "Learn More"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -440,6 +619,69 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontFamily: "Futura",
   },
+  splashSection: {
+    marginBottom: 24,
+  },
+  splashGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 16,
+  },
+  splashCard: {
+    borderRadius: 16,
+    padding: 20,
+    minHeight: 220,
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  splashContent: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  splashTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  splashImage: {
+    width: "100%",
+    height: 80,
+    marginTop: "auto",
+  },
+  splashDesc: {
+    fontSize: 14,
+    color: COLORS.slate,
+  },
+  splashButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  splashButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  splashDismiss: {
+    backgroundColor: "#f3f4f6",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  splashDismissText: {
+    color: COLORS.black,
+    fontWeight: "600",
+  },
   tabIconContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -458,6 +700,77 @@ const styles = StyleSheet.create({
   },
   tabIcon: {
     marginTop: 4,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: "90%",
+    maxWidth: 400,
+    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 12,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f3f4f6",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: COLORS.black,
+    fontWeight: "600",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.black,
+    marginBottom: 16,
+    paddingRight: 40, // Space for close button
+    fontFamily: "Futura",
+  },
+  modalImage: {
+    width: "100%",
+    height: 150,
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: COLORS.slate,
+    lineHeight: 24,
+    marginBottom: 24,
+    fontFamily: "Futura",
+  },
+  modalActionButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalActionButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
   },
 });
 
