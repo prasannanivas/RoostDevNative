@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
@@ -63,6 +65,7 @@ const TagScreen = () => {
   // Splash modal state
   const [showSplashModal, setShowSplashModal] = useState(false);
   const [selectedSplash, setSelectedSplash] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Placeholder handlers for header actions
   const handleProfileClick = () => {
@@ -85,36 +88,37 @@ const TagScreen = () => {
   // API base used by web admin endpoints
   const API_BASE = "http://159.203.58.60:5000";
 
-  // Fetch realtor splash for current realtor (unread only for this user)
-  useEffect(() => {
-    let mounted = true;
-    const fetchSplash = async () => {
-      if (!realtor?.id) return;
-      setSplashLoading(true);
-      try {
-        const res = await fetch(
-          `${API_BASE}/admin/custom-splash?userId=${realtor.id}`
-        );
-        if (!res.ok) {
-          setSplashLoading(false);
-          return;
-        }
-        const data = await res.json();
-        const list = data.splashScreens || [];
-        if (mounted) {
-          setSplashScreens(list);
-        }
-      } catch (e) {
-        console.log("Error fetching splash:", e);
-      } finally {
-        setSplashLoading(false);
+  // Reusable fetch
+  const fetchSplashScreens = async ({ showSpinner = true } = {}) => {
+    if (!realtor?.id) return;
+    if (showSpinner) setSplashLoading(true);
+    try {
+      const res = await fetch(
+        `${API_BASE}/admin/custom-splash?userId=${realtor.id}`
+      );
+      if (!res.ok) {
+        return;
       }
-    };
-    fetchSplash();
-    return () => {
-      mounted = false;
-    };
+      const data = await res.json();
+      const list = data.splashScreens || [];
+      setSplashScreens(list);
+    } catch (e) {
+      console.log("Error fetching splash:", e);
+    } finally {
+      if (showSpinner) setSplashLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchSplashScreens();
   }, [realtor?.id]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchSplashScreens({ showSpinner: false });
+    setRefreshing(false);
+  };
 
   const markSplashRead = async (splashId) => {
     try {
@@ -306,7 +310,20 @@ const TagScreen = () => {
       <ScrollView
         style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.green}
+            colors={[COLORS.green]}
+          />
+        }
       >
+        {splashLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.green} />
+          </View>
+        )}
         <View style={styles.offersSection}>
           <Text style={styles.sectionTitle}>OFFERS FOR YOU</Text>
 
@@ -331,7 +348,7 @@ const TagScreen = () => {
             <View style={styles.splashGrid}>
               {splashScreens.map((splash, index) => (
                 <TouchableOpacity
-                  key={splash._id}
+                  key={splash._id + Date.now()}
                   style={[
                     styles.splashCard,
                     {
@@ -589,6 +606,12 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
     marginBottom: 24,
     letterSpacing: 1,
+  },
+  loadingContainer: {
+    width: "100%",
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   offerCard: {
     backgroundColor: "#CDDCDC", // Light blue-green color from the image
