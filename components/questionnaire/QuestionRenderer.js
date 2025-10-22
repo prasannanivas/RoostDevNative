@@ -73,6 +73,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
 
@@ -106,6 +107,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
 
@@ -116,6 +118,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
 
@@ -126,6 +129,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
 
@@ -136,6 +140,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
     case "conditionalMultipleItems":
@@ -145,6 +150,7 @@ const QuestionRenderer = ({
           question={processedQuestion}
           value={value}
           onValueChange={onValueChange}
+          fieldErrors={fieldErrors}
         />
       );
 

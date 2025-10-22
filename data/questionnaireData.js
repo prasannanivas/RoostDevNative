@@ -1108,7 +1108,7 @@ const questions = [
         ],
       },
     ],
-    nextQuestion: 115, // Continue with banking questions
+    nextQuestion: 112, // Continue with banking questions
   },
   {
     id: 112,

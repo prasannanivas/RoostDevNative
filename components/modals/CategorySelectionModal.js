@@ -318,6 +318,11 @@ const CategorySelectionModal = ({
   // Map the questionnaire categories to our UI categories with dynamic starting question IDs
   // based on whether we're in the co-signer flow or not
   const categoryMapping = {
+    basic: {
+      id: "basic",
+      label: "Basic",
+      startQuestionId: 1, // Always starts at question 1 for basic info
+    },
     personal_details: {
       id: "personal_details",
       label: "Your Personal Details",
@@ -405,6 +410,7 @@ const CategorySelectionModal = ({
 
   // List of categories for the UI, ordered as they should appear
   const primaryCategories = [
+    categoryMapping.basic,
     categoryMapping.personal_details,
     categoryMapping.employment_details,
     categoryMapping.living_details,
@@ -433,6 +439,55 @@ const CategorySelectionModal = ({
     isCoSignerFlow && showCoSignerCategories
       ? coSignerCategories
       : primaryCategories;
+
+  // Function to check if a category has missing fields required for pre-approval
+  const isCategoryMissingPreApprovalFields = (categoryId) => {
+    // Check Basic category - needs downPaymentAmount from question 2
+    if (categoryId === "basic") {
+      const response2 = localResponses["2"] || localResponses[2] || {};
+      console.log("Validating Basic category for pre-approval:", response2);
+      if (!response2.downPaymentAmount || response2.downPaymentAmount === "") {
+        return true;
+      }
+    }
+
+    // Check Income Details category for main applicant - needs income and bonuses from question 11
+    if (categoryId === "income_details") {
+      const response11 =
+        localResponses["11"] ||
+        localResponses[11] ||
+        localResponses["108"] ||
+        localResponses[108] ||
+        {};
+
+      if (
+        !response11.income ||
+        response11.income === "" ||
+        ((response11.benefits === "yes" || response11.bonuses === "yes") &&
+          (!response11.bonusComissionAnnualAmount ||
+            response11.bonusComissionAnnualAmount === ""))
+      ) {
+        return true;
+      }
+    }
+
+    // Check Income Details category for co-applicant - needs coIncome and coBonuses from question 112
+    if (categoryId === "co_income_details" && isCoSignerFlow) {
+      const response112 = localResponses["112"] || localResponses[112] || {};
+      if (
+        !response112.coIncome ||
+        response112.coIncome === "" ||
+        ((response112.coBenefits === "yes" ||
+          response112.coBonuses === "yes") &&
+          (!response112.coBonusComissionAnnualAmount ||
+            response112.coBonusComissionAnnualAmount === ""))
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   const handleAddCoSigner = () => {
     setIsFirstTimeCoSigner(true);
@@ -668,6 +723,9 @@ const CategorySelectionModal = ({
     if (!validateNameFields()) return;
     if (!validateContactFields()) return;
     if (!validateRequiredFields()) return;
+
+    // Validate pre-approval critical fields (Question 2, 11, 112)
+    if (!validatePreApprovalCriticalFields()) return;
 
     // Support being called as an event handler (first arg is event) or with a boolean flag
     const withoutAlert = typeof arg === "boolean" ? arg : false;
@@ -906,6 +964,104 @@ const CategorySelectionModal = ({
     return true;
   };
 
+  // Helper to validate pre-approval critical fields
+  const validatePreApprovalCriticalFields = () => {
+    const errors = {};
+
+    // Question 2: Down payment amount (critical for pre-approval)
+    if (currentQuestion?.id === 2 || currentQuestion?.id === "2") {
+      if (
+        !currentResponse?.downPaymentAmount ||
+        currentResponse.downPaymentAmount === ""
+      ) {
+        setFieldErrors({
+          downPaymentAmount:
+            "This field is crucial for pre-approval calculation",
+        });
+        return false;
+      }
+    }
+
+    // Question 11: Income details for main applicant (critical for pre-approval)
+    if (currentQuestion?.id === 11 || currentQuestion?.id === "11") {
+      const missingFields = [];
+
+      // Always require income
+      if (
+        !currentResponse?.income ||
+        currentResponse.income === "" ||
+        currentResponse.income === undefined
+      ) {
+        missingFields.push("Annual Income");
+        errors.income = "This field is crucial for pre-approval calculation";
+      }
+
+      // Only require bonus/commission amount if user selected "yes" for bonuses OR benefits
+      const hasBonuses = currentResponse?.bonuses === "yes";
+      const hasBenefits = currentResponse?.benefits === "yes";
+
+      if (hasBonuses || hasBenefits) {
+        if (
+          !currentResponse?.bonusComissionAnnualAmount ||
+          currentResponse.bonusComissionAnnualAmount === ""
+        ) {
+          missingFields.push("Bonus/Commission Amount");
+          errors.bonusComissionAnnualAmount =
+            "This field is crucial for pre-approval calculation";
+        }
+      }
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          "Pre-Approval Required Fields",
+          `The following fields are crucial for calculating your pre-approval:\n\n${missingFields.join(
+            "\n"
+          )}\n\nPlease enter this information to continue.`
+        );
+        setFieldErrors(errors);
+        return false;
+      }
+    }
+
+    // Question 112: Income details for co-applicant (critical for pre-approval if co-signer exists)
+    if (currentQuestion?.id === 112 || currentQuestion?.id === "112") {
+      const missingFields = [];
+      console.log("Validating co-applicant income fields:", currentResponse);
+
+      // Always require coIncome
+      if (
+        !currentResponse?.coIncome ||
+        currentResponse.coIncome === "" ||
+        currentResponse.coIncome === undefined
+      ) {
+        missingFields.push("Co-Applicant Annual Income");
+        errors.coIncome = "This field is crucial for pre-approval calculation";
+      }
+
+      // Only require bonus/commission amount if user selected "yes" for bonuses OR benefits
+      const hasBonuses = currentResponse?.coBonuses === "yes";
+      const hasBenefits = currentResponse?.coBenefits === "yes";
+
+      if (hasBonuses || hasBenefits) {
+        if (
+          !currentResponse?.coBonusComissionAnnualAmount ||
+          currentResponse.coBonusComissionAnnualAmount === ""
+        ) {
+          missingFields.push("Co-Applicant Bonus/Commission Amount");
+          errors.coBonusComissionAnnualAmount =
+            "This field is crucial for pre-approval calculation";
+        }
+      }
+
+      if (missingFields.length > 0) {
+        setFieldErrors(errors);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const hasNext = () => {
     if (!currentQuestion) return false;
     return !!getNextQuestionId(currentResponse);
@@ -918,6 +1074,9 @@ const CategorySelectionModal = ({
     if (!validateNameFields()) return;
     if (!validateContactFields()) return;
     if (!validateRequiredFields()) return;
+
+    // Validate pre-approval critical fields (Question 2, 11, 112)
+    if (!validatePreApprovalCriticalFields()) return;
 
     // First update the context with our local changes
     if (setResponses && Object.keys(localResponses).length > 0) {
@@ -1059,20 +1218,36 @@ const CategorySelectionModal = ({
                 contentContainerStyle={styles.scrollViewContent}
                 showsVerticalScrollIndicator={false}
               >
-                {categories.map((category) => (
-                  <TouchableOpacity
-                    key={category.id}
-                    style={styles.categoryButton}
-                    onPress={() =>
-                      handleCategorySelect(
-                        category.id,
-                        category.startQuestionId
-                      )
-                    }
-                  >
-                    <Text style={styles.categoryText}>{category.label}</Text>
-                  </TouchableOpacity>
-                ))}
+                {categories.map((category) => {
+                  const hasWarning = isCategoryMissingPreApprovalFields(
+                    category.id
+                  );
+
+                  return (
+                    <View key={category.id} style={styles.categoryWrapper}>
+                      <TouchableOpacity
+                        style={styles.categoryButton}
+                        onPress={() =>
+                          handleCategorySelect(
+                            category.id,
+                            category.startQuestionId
+                          )
+                        }
+                      >
+                        <Text style={styles.categoryText}>
+                          {category.label}
+                        </Text>
+                      </TouchableOpacity>
+                      {hasWarning && (
+                        <View style={styles.warningBadge}>
+                          <Text style={styles.warningText}>
+                            ⚠️ Required for Pre-Approval
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
 
                 {/* Add Co-Signer Button - Only show when viewing primary applicant categories */}
                 {!isCoSignerFlow && (
@@ -1403,19 +1578,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
+  categoryWrapper: {
+    width: "100%",
+    marginBottom: 16,
+  },
   categoryButton: {
     borderWidth: 1,
     borderColor: COLORS.green,
     borderRadius: 33,
     paddingVertical: 13,
     paddingHorizontal: 24,
-    marginBottom: 16,
   },
   categoryText: {
     color: COLORS.green,
     fontFamily: "Futura",
     fontSize: 12,
     fontWeight: "700",
+  },
+  warningBadge: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  warningText: {
+    color: "#F0913A",
+    fontFamily: "Futura",
+    fontSize: 10,
+    fontWeight: "500",
   },
   coSignerButton: {
     minWidth: 271,

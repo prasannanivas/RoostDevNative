@@ -588,6 +588,8 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
   const validateRequiredFields = () => {
     const errors = {};
 
+    // Question 2 validation is now handled by validatePreApprovalCriticalFields
+
     // Check if this is a required question
     if (currentQuestion?.id === 5) {
       // Validate text fields
@@ -617,6 +619,99 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
     return true;
   };
 
+  // Helper to validate pre-approval critical fields
+  const validatePreApprovalCriticalFields = () => {
+    const errors = {};
+
+    // Question 2: Down payment amount (critical for pre-approval)
+    if (currentQuestion?.id === 2 || currentQuestion?.id === "2") {
+      if (
+        !currentResponse?.downPaymentAmount ||
+        currentResponse.downPaymentAmount === ""
+      ) {
+        setFieldErrors({
+          downPaymentAmount:
+            "This field is crucial for pre-approval calculation",
+        });
+        return false;
+      }
+    }
+
+    // Question 11: Income details for main applicant (critical for pre-approval)
+    if (
+      currentQuestion?.id === 11 ||
+      currentQuestion?.id === "11" ||
+      currentQuestion?.id === "108" ||
+      currentQuestion?.id === 108
+    ) {
+      const missingFields = [];
+
+      if (!currentResponse?.income || currentResponse.income === "") {
+        missingFields.push("Annual Income");
+        errors.income = "This field is crucial for pre-approval calculation";
+      }
+
+      if (
+        (currentResponse.benefits === "yes" ||
+          currentResponse.bonuses === "yes") &&
+        (!currentResponse?.bonusComissionAnnualAmount ||
+          currentResponse.bonusComissionAnnualAmount === "")
+      ) {
+        missingFields.push("Bonus/Commission Amount");
+        errors.bonusComissionAnnualAmount =
+          "This field is crucial for pre-approval calculation";
+      }
+
+      if (missingFields.length > 0) {
+        setFieldErrors(errors);
+        return false;
+      }
+    }
+
+    // Question 112: Income details for co-applicant (critical for pre-approval if co-signer exists)
+    if (currentQuestion?.id === 112 || currentQuestion?.id === "112") {
+      const missingFields = [];
+
+      // Always require coIncome
+      if (
+        !currentResponse?.coIncome ||
+        currentResponse.coIncome === "" ||
+        currentResponse.coIncome === undefined
+      ) {
+        missingFields.push("Co-Applicant Annual Income");
+        errors.coIncome = "This field is crucial for pre-approval calculation";
+      }
+
+      // Only require bonus/commission amount if user selected "yes" for bonuses OR benefits
+      const hasBonuses = currentResponse?.coBonuses === "yes";
+      const hasBenefits = currentResponse?.coBenefits === "yes";
+
+      if (hasBonuses || hasBenefits) {
+        if (
+          !currentResponse?.coBonusComissionAnnualAmount ||
+          currentResponse.coBonusComissionAnnualAmount === ""
+        ) {
+          missingFields.push("Co-Applicant Bonus/Commission Amount");
+          errors.coBonusComissionAnnualAmount =
+            "This field is crucial for pre-approval calculation";
+        }
+      }
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          "Pre-Approval Required Fields",
+          `The following fields are crucial for calculating your pre-approval:\n\n${missingFields.join(
+            "\n"
+          )}\n\nPlease enter this information to continue.`
+        );
+        setFieldErrors(errors);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleNext = async () => {
     // First validate name fields if applicable
     if (!validateNameFields()) {
@@ -629,6 +724,11 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
     }
 
     if (!validateRequiredFields()) {
+      return; // Stop if validation fails
+    }
+
+    // Validate pre-approval critical fields (Question 2, 11, 112)
+    if (!validatePreApprovalCriticalFields()) {
       return; // Stop if validation fails
     }
 
