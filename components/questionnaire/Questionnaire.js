@@ -698,14 +698,136 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
       }
 
       if (missingFields.length > 0) {
-        Alert.alert(
-          "Pre-Approval Required Fields",
-          `The following fields are crucial for calculating your pre-approval:\n\n${missingFields.join(
-            "\n"
-          )}\n\nPlease enter this information to continue.`
-        );
         setFieldErrors(errors);
         return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Helper to validate assets and properties fields
+  const validateAssetsAndProperties = () => {
+    const errors = {};
+
+    // Question 13: Assets for main applicant
+    if (
+      currentQuestion?.id === 13 ||
+      currentQuestion?.id === "13" ||
+      currentQuestion?.id === 116 ||
+      currentQuestion?.id === "116"
+    ) {
+      if (currentResponse?.hasAssets === "yes") {
+        // Check if items array exists and has at least one item
+        if (!currentResponse?.items || currentResponse.items.length === 0) {
+          Alert.alert(
+            "Required Information",
+            "You selected 'Yes' for assets. Please add at least one asset with item name and value."
+          );
+          return false;
+        }
+
+        // Validate each item has both item name and value
+        const invalidItems = currentResponse.items.filter(
+          (item) =>
+            !item.item || !item.value || item.item === "" || item.value === ""
+        );
+
+        if (invalidItems.length > 0) {
+          Alert.alert(
+            "Required Information",
+            "Please fill in both item name and value for all assets."
+          );
+          return false;
+        }
+      }
+    }
+
+    // Question 14: Properties for main applicant
+    if (
+      currentQuestion?.id === 14 ||
+      currentQuestion?.id === "14" ||
+      currentQuestion?.id === 118 ||
+      currentQuestion?.id === "118"
+    ) {
+      if (currentResponse?.hasOtherProperties === "yes") {
+        // Check if required fields are filled
+        if (!currentResponse?.address || currentResponse.address === "") {
+          Alert.alert(
+            "Required Information",
+            "You selected 'Yes' for other properties. Please enter the property address."
+          );
+          errors.address = "Property address is required";
+          setFieldErrors(errors);
+          return false;
+        }
+
+        if (!currentResponse?.value || currentResponse.value === "") {
+          Alert.alert(
+            "Required Information",
+            "Please enter the property value."
+          );
+          errors.value = "Property value is required";
+          setFieldErrors(errors);
+          return false;
+        }
+      }
+    }
+
+    // Question 117: Assets for co-applicant
+    if (currentQuestion?.id === 117 || currentQuestion?.id === "117") {
+      if (currentResponse?.coHasAssets === "yes") {
+        // Check if coItem array exists and has at least one item
+        if (!currentResponse?.coItem || currentResponse.coItem.length === 0) {
+          Alert.alert(
+            "Required Information",
+            "You selected 'Yes' for co-applicant assets. Please add at least one asset with item name and value."
+          );
+          return false;
+        }
+
+        // Validate each item has both item name and value
+        const invalidItems = currentResponse.coItem.filter(
+          (item) =>
+            !item.coItem ||
+            !item.coValue ||
+            item.coItem === "" ||
+            item.coValue === ""
+        );
+
+        if (invalidItems.length > 0) {
+          Alert.alert(
+            "Required Information",
+            "Please fill in both item name and value for all co-applicant assets."
+          );
+          return false;
+        }
+      }
+    }
+
+    // Question 119: Properties for co-applicant
+    if (currentQuestion?.id === 119 || currentQuestion?.id === "119") {
+      if (currentResponse?.coHasOtherProperties === "yes") {
+        // Check if required fields are filled
+        if (!currentResponse?.coAddress || currentResponse.coAddress === "") {
+          Alert.alert(
+            "Required Information",
+            "You selected 'Yes' for co-applicant's other properties. Please enter the property address."
+          );
+          errors.coAddress = "Property address is required";
+          setFieldErrors(errors);
+          return false;
+        }
+
+        if (!currentResponse?.coValue || currentResponse.coValue === "") {
+          Alert.alert(
+            "Required Information",
+            "Please enter the co-applicant's property value."
+          );
+          errors.coValue = "Property value is required";
+          setFieldErrors(errors);
+          return false;
+        }
       }
     }
 
@@ -729,6 +851,11 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
 
     // Validate pre-approval critical fields (Question 2, 11, 112)
     if (!validatePreApprovalCriticalFields()) {
+      return; // Stop if validation fails
+    }
+
+    // Validate assets and properties fields (Question 13, 14, 117, 119)
+    if (!validateAssetsAndProperties()) {
       return; // Stop if validation fails
     }
 

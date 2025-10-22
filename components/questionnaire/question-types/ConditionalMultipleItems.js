@@ -149,7 +149,12 @@ const CustomToggleButton = ({ options, value, onValueChange }) => {
   );
 };
 
-const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
+const ConditionalMultipleItems = ({
+  question,
+  value,
+  onValueChange,
+  fieldErrors = {},
+}) => {
   const { responses } = useQuestionnaire();
   const [formData, setFormData] = useState(value || {});
   const [items, setItems] = useState(value?.items || []);
@@ -209,6 +214,7 @@ const ConditionalMultipleItems = ({ question, value, onValueChange }) => {
             key={field.key}
             label={field.label}
             value={itemValue || ""}
+            error={fieldErrors[field.key] || ""}
             onChangeText={(text) =>
               handleItemFieldChange(itemIndex, field.key, text)
             }

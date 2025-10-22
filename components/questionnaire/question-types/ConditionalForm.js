@@ -145,7 +145,12 @@ const CustomToggleButton = ({ options, value, onValueChange }) => {
   );
 };
 
-const ConditionalForm = ({ question, value, onValueChange }) => {
+const ConditionalForm = ({
+  question,
+  value,
+  onValueChange,
+  fieldErrors = {},
+}) => {
   const { responses } = useQuestionnaire();
   const [formData, setFormData] = useState(value || {});
   const previousFormData = useRef(value || {});
@@ -207,6 +212,7 @@ const ConditionalForm = ({ question, value, onValueChange }) => {
             key={field.key}
             label={field.label}
             value={formData[field.key] || ""}
+            error={fieldErrors[field.key] || ""}
             onChangeText={(text) => handleFieldChange(field.key, text)}
             placeholder={field.placeholder}
             keyboardType={field.keyboard || "default"}
