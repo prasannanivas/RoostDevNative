@@ -14,6 +14,7 @@ import {
   RefreshControl,
   Linking,
   Image,
+  AppState,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system/legacy";
@@ -138,6 +139,55 @@ const ClientHome = ({ questionnaireData }) => {
   useEffect(() => {
     setLoadingDocuments(loadingClient);
   }, [loadingClient]);
+
+  // Track app state to handle modal auto-dismiss on resume
+  const appState = React.useRef(AppState.currentState);
+  const wasModalOpenBeforeBackground = React.useRef(false);
+  const shouldReopenModal = React.useRef(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      // Save modal state when going to background
+      if (
+        appState.current === "active" &&
+        nextAppState.match(/inactive|background/)
+      ) {
+        wasModalOpenBeforeBackground.current = showCategorySelection;
+        if (showCategorySelection) {
+          shouldReopenModal.current = true;
+          console.log(
+            "ClientHome: Going to background with modal open, will force reopen on resume"
+          );
+        }
+      }
+
+      // When returning to active, force reopen the modal if it was open
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        if (shouldReopenModal.current) {
+          console.log(
+            "ClientHome: App resumed, forcing modal reopen to prevent freeze"
+          );
+          // First ensure it's closed
+          setShowCategorySelection(false);
+          // Then reopen it after a brief delay
+          setTimeout(() => {
+            setShowCategorySelection(true);
+            shouldReopenModal.current = false;
+          }, 150);
+        }
+      }
+
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription && subscription.remove();
+    };
+  }, [showCategorySelection]);
+
   // Fetch documents from the server
   // Initial data loading
   useEffect(() => {
@@ -1047,27 +1097,24 @@ const ClientHome = ({ questionnaireData }) => {
         chatType={selectedChatType}
       />
 
-      {/* Category Selection Modal - Using key to force remount and reset state */}
-      {showCategorySelection && (
-        <QuestionnaireProvider>
-          <CategorySelectionModal
-            key={`category-selection-${Date.now()}`}
-            visible={showCategorySelection}
-            questionnaireData={questionnaireData}
-            onClose={() => {
-              onRefresh();
-              setShowCategorySelection(false);
-            }}
-            onSelectCategory={handleCategorySelect}
-            logo={
-              <Image
-                source={require("./assets/Roost_Logo_V1_Logo-text-black.svg")}
-                style={{ width: 150, height: 60, resizeMode: "contain" }}
-              />
-            }
-          />
-        </QuestionnaireProvider>
-      )}
+      {/* Category Selection Modal */}
+      <QuestionnaireProvider>
+        <CategorySelectionModal
+          visible={showCategorySelection}
+          questionnaireData={questionnaireData}
+          onClose={() => {
+            onRefresh();
+            setShowCategorySelection(false);
+          }}
+          onSelectCategory={handleCategorySelect}
+          logo={
+            <Image
+              source={require("./assets/Roost_Logo_V1_Logo-text-black.svg")}
+              style={{ width: 150, height: 60, resizeMode: "contain" }}
+            />
+          }
+        />
+      </QuestionnaireProvider>
     </View>
   );
 };

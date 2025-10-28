@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { questions } from "../../data/questionnaireData";
 import QuestionRenderer from "../questionnaire/QuestionRenderer";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
@@ -24,6 +24,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   Alert,
+  AppState,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../Logo";
@@ -53,6 +54,45 @@ const CategorySelectionModal = ({
   const { auth } = useAuth();
   // Get the questionnaire context
   const { responses, updateResponse, setResponses } = useQuestionnaire();
+
+  // Track if modal close was triggered by app backgrounding
+  const isAppBackgrounding = useRef(false);
+  const appState = useRef(AppState.currentState);
+
+  // Monitor app state to prevent auto-close on resume
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      // Detect when app is going to background
+      if (
+        appState.current === "active" &&
+        nextAppState.match(/inactive|background/)
+      ) {
+        isAppBackgrounding.current = true;
+        console.log(
+          "CategorySelectionModal: App going to background, will prevent auto-close"
+        );
+      }
+
+      // Reset flag when app becomes active again
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        console.log("CategorySelectionModal: App resumed");
+        // Keep the flag true for a bit longer to catch the OS dismiss
+        setTimeout(() => {
+          isAppBackgrounding.current = false;
+          console.log("CategorySelectionModal: Background flag reset");
+        }, 500);
+      }
+
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription && subscription.remove();
+    };
+  }, []);
 
   // Initialize local responses from provided data or context
   useEffect(() => {
@@ -1240,7 +1280,38 @@ const CategorySelectionModal = ({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      transparent={false}
+      statusBarTranslucent={false}
+      hardwareAccelerated={true}
+      onRequestClose={() => {
+        // Don't close if this was triggered by app backgrounding/resuming
+        if (isAppBackgrounding.current) {
+          console.log(
+            "CategorySelectionModal: Ignoring OS dismiss during app state change - NOT calling onClose"
+          );
+          // Don't call onClose() - this prevents the parent from setting showCategorySelection to false
+          return;
+        }
+        // This is a real user action (swipe down, back button, etc.)
+        console.log(
+          "CategorySelectionModal: User closed modal - calling onClose"
+        );
+        onClose();
+      }}
+      onShow={() => {
+        console.log("CategorySelectionModal: Modal is now visible");
+      }}
+      onDismiss={() => {
+        // Called after the modal has been dismissed
+        // If we're backgrounding and modal gets dismissed, we need to tell parent to keep it open
+        if (isAppBackgrounding.current) {
+          console.log(
+            "CategorySelectionModal: Modal dismissed during backgrounding - this will cause UI freeze"
+          );
+        } else {
+          console.log("CategorySelectionModal: Modal dismissed by user action");
+        }
+      }}
     >
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
