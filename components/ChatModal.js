@@ -10,23 +10,21 @@ const ChatModal = ({
   userName,
   userType = "client",
   chatType = "admin",
+  onUnreadChange,
 }) => {
+  // Chat component now always mounted and handles its own modal
+  // Use chatType as key to ensure complete isolation between admin and mortgage-broker chats
   return (
-    <Modal
+    <Chat
+      key={`chat-${chatType}-${userId}`}
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <Chat
-        visible={visible}
-        onClose={onClose}
-        userId={userId}
-        userName={userName}
-        userType={userType}
-        chatType={chatType}
-      />
-    </Modal>
+      onClose={onClose}
+      userId={userId}
+      userName={userName}
+      userType={userType}
+      chatType={chatType}
+      onUnreadChange={onUnreadChange}
+    />
   );
 };
 

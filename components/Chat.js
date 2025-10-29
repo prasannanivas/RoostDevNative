@@ -16,9 +16,11 @@ import {
   RefreshControl,
   Keyboard,
   Image,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
+import { Audio } from "expo-av";
 import { useAuth } from "../context/AuthContext";
 import ChatService from "../services/ChatService";
 import TypingIndicator from "./TypingIndicator";
@@ -65,6 +67,7 @@ const Chat = ({
   userName = "User",
   userType = "client",
   chatType = "admin", // "admin" or "mortgage-broker"
+  onUnreadChange, // Callback to notify parent about unread messages
 }) => {
   const { auth } = useAuth();
 
@@ -111,6 +114,7 @@ const Chat = ({
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [imageCached, setImageCached] = useState(false);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
   const scrollViewRef = useRef(null);
   const wsConnectionRef = useRef(null);
@@ -121,13 +125,48 @@ const Chat = ({
   const isTypingRef = useRef(false);
   const isRefreshingRef = useRef(false);
   const lastScrollYRef = useRef(0);
+  const soundRef = useRef(null);
 
   // Use dynamic context data based on userType
   const userFromContext = contextInfo;
   const displayName = contextName;
 
+  // Function to play notification sound
+  const playNotificationSound = async () => {
+    console.log("🎵 playNotificationSound() called");
+    try {
+      console.log("🎵 Attempting to load and play notification.mp3...");
+
+      // Create and play sound
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/notification.mp3"),
+        { shouldPlay: true, volume: 0.8 }
+      );
+      soundRef.current = sound;
+      console.log("✅ Sound loaded successfully, should be playing now!");
+
+      // Unload sound after playing
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          console.log("🎵 Sound finished playing, unloading...");
+          sound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.error("❌ ERROR playing notification sound:", error);
+      console.error("Error details:", error.message);
+      console.warn(
+        "To enable sound notifications, add notification.mp3 to the assets folder"
+      );
+    }
+  };
+
   // Pre-cache the Roost logo image on component mount
   useEffect(() => {
+    console.log(
+      `🚀 [Chat] Component mounted - chatType: ${chatType}, userId: ${userId}, userType: ${userType}`
+    );
+
     const cacheImage = async () => {
       try {
         await Asset.fromModule(roostLogoImage).downloadAsync();
@@ -139,6 +178,25 @@ const Chat = ({
       }
     };
     cacheImage();
+
+    // Set up audio mode
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+    });
+
+    return () => {
+      console.log(`🛑 [Chat] Component unmounting - chatType: ${chatType}`);
+    };
+  }, []);
+
+  // Cleanup sound on unmount
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
   }, []);
 
   // Handle sending typing indicators
@@ -306,6 +364,22 @@ const Chat = ({
             console.warn("Filtering out invalid message:", msg);
             return false;
           }
+
+          // CRITICAL: Filter by chat type to prevent showing messages in wrong chat
+          // This is a safety check (API should already filter, but double-check here)
+          if (chatType === "admin" && msg.sender === "mortgage-broker") {
+            console.log(
+              "🚫 Filtering out mortgage-broker message from admin chat API response"
+            );
+            return false;
+          }
+          if (chatType === "mortgage-broker" && msg.sender === "admin") {
+            console.log(
+              "🚫 Filtering out admin message from mortgage-broker chat API response"
+            );
+            return false;
+          }
+
           return true;
         })
         .map((msg) => {
@@ -453,6 +527,20 @@ const Chat = ({
     if (visible && userId) {
       loadMessages();
 
+      // Scroll to bottom after a short delay to ensure messages are rendered
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+
+      // Additional scroll attempts to ensure we reach the bottom
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 300);
+
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 500);
+
       // Animate entrance
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -467,7 +555,7 @@ const Chat = ({
         }),
       ]).start();
     }
-  }, [visible, userId]);
+  }, [visible, userId, chatType]); // Added chatType to dependency array
 
   // Mark unread messages as read when chat becomes visible
   useEffect(() => {
@@ -499,19 +587,104 @@ const Chat = ({
                   : msg
               )
             );
+
+            // Immediately clear unread badge after marking as read
+            console.log("📊 Messages marked as read, clearing unread badge");
+            setHasUnreadMessages(false);
+            if (onUnreadChange) {
+              console.log(
+                "📊 Calling onUnreadChange(false) after marking read"
+              );
+              onUnreadChange(false);
+            }
           })
           .catch((error) => {
             console.log("Error marking messages as read:", error);
           });
       }
     }
-  }, [visible, messages, userId]);
+  }, [visible, messages, userId, userType, onUnreadChange]);
+
+  // Track unread messages and notify parent component
+  useEffect(() => {
+    console.log(
+      "📊 Unread tracking effect - visible:",
+      visible,
+      "| messages count:",
+      messages.length,
+      "| chatType:",
+      chatType
+    );
+    if (!visible) {
+      // When chat is not visible, check if there are unread messages
+      const hasUnread = messages.some(
+        (msg) => msg.sender === "support" && !msg.readBy?.[userType]?.isRead
+      );
+      console.log(
+        "📊 Chat NOT visible - hasUnread:",
+        hasUnread,
+        "| chatType:",
+        chatType
+      );
+
+      if (hasUnread !== hasUnreadMessages) {
+        console.log(
+          "📊 Unread status changed! Setting hasUnreadMessages to:",
+          hasUnread,
+          "| chatType:",
+          chatType
+        );
+        setHasUnreadMessages(hasUnread);
+        if (onUnreadChange) {
+          console.log(
+            "📊 Calling onUnreadChange callback with:",
+            hasUnread,
+            "| chatType:",
+            chatType
+          );
+          onUnreadChange(hasUnread);
+        } else {
+          console.warn("⚠️ onUnreadChange callback is not defined!");
+        }
+      }
+    } else {
+      // When chat becomes visible, clear unread status immediately
+      console.log(
+        "📊 Chat IS visible - clearing unread status immediately | chatType:",
+        chatType
+      );
+      setHasUnreadMessages(false);
+      if (onUnreadChange) {
+        console.log(
+          "📊 Calling onUnreadChange(false) immediately | chatType:",
+          chatType
+        );
+        onUnreadChange(false);
+      }
+    }
+  }, [
+    visible,
+    messages,
+    userType,
+    hasUnreadMessages,
+    onUnreadChange,
+    chatType,
+  ]);
 
   // Subscribe to real-time chat updates via WebSocket
   useEffect(() => {
-    if (!visible || !userId) return;
+    // Keep socket connected even when chat is not visible (to receive notifications)
+    if (!userId) {
+      console.log("⚠️ No userId, skipping socket subscription");
+      return;
+    }
 
-    console.log("Setting up WebSocket subscription for user:", userId);
+    console.log(
+      "🔌 Setting up WebSocket subscription for user:",
+      userId,
+      "| Chat visible:",
+      visible
+    );
 
     const handleNewMessage = (data) => {
       console.log("Received new message via WebSocket:", data);
@@ -533,6 +706,24 @@ const Chat = ({
         return;
       }
 
+      // CRITICAL: Filter messages by chat type to prevent showing in wrong chat
+      // Admin chat should only receive admin messages
+      // Mortgage-broker chat should only receive mortgage-broker messages
+      if (chatType === "admin" && message.sender === "mortgage-broker") {
+        console.log(
+          "🚫 Ignoring mortgage-broker message in admin chat:",
+          messageId
+        );
+        return;
+      }
+      if (chatType === "mortgage-broker" && message.sender === "admin") {
+        console.log(
+          "🚫 Ignoring admin message in mortgage-broker chat:",
+          messageId
+        );
+        return;
+      }
+
       console.log(
         "Processing message - ID:",
         messageId,
@@ -541,7 +732,9 @@ const Chat = ({
         "CurrentUserId:",
         userId,
         "OriginalSender:",
-        message.sender
+        message.sender,
+        "ChatType:",
+        chatType
       );
 
       // Check if message already exists to prevent duplicates
@@ -716,6 +909,13 @@ const Chat = ({
                       : msg
                   )
                 );
+
+                // Explicitly clear unread badge since message was read immediately
+                console.log("📊 New message read immediately, clearing badge");
+                setHasUnreadMessages(false);
+                if (onUnreadChange) {
+                  onUnreadChange(false);
+                }
               })
               .catch((error) => {
                 console.error("Error marking new message as read:", error);
@@ -726,10 +926,20 @@ const Chat = ({
         return newMessages;
       });
 
-      // If it's a support message, we might want to show a notification
+      // If it's a support message, play notification sound
+      console.log(
+        "🔔 MESSAGE RECEIVED - Sender:",
+        transformedMessage.sender,
+        "| Visible:",
+        visible
+      );
       if (transformedMessage.sender === "support") {
-        // You can add a notification sound or vibration here
-        console.log("New support message received!");
+        console.log(
+          "🔊 SUPPORT MESSAGE DETECTED! Attempting to play notification sound..."
+        );
+        playNotificationSound();
+      } else {
+        console.log("⏭️ Not a support message, skipping notification sound");
       }
     };
 
@@ -788,7 +998,7 @@ const Chat = ({
       }
 
       if (wsConnection) {
-        console.log("Disconnecting Socket.IO connection");
+        console.log("🔌 Disconnecting Socket.IO connection");
         if (typeof wsConnection.disconnect === "function") {
           wsConnection.disconnect();
         } else if (wsConnection.readyState === WebSocket.OPEN) {
@@ -799,7 +1009,7 @@ const Chat = ({
       wsConnectionRef.current = null;
       setCurrentChatId(null);
     };
-  }, [visible, userId]);
+  }, [userId]); // Removed 'visible' - keep socket connected even when chat is not visible
 
   // Track if user is at bottom before auto-scrolling
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -838,6 +1048,22 @@ const Chat = ({
     console.log("=== End Messages Debug ===");
   }, [messages]);
 
+  // Scroll to bottom when chat becomes visible with messages
+  useEffect(() => {
+    if (visible && messages.length > 0 && !loading) {
+      console.log("📜 Chat visible with messages, scrolling to bottom...");
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 300);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 600);
+    }
+  }, [visible, messages.length, loading]);
+
   // Handle keyboard events for better UX
   useEffect(() => {
     if (!visible) return;
@@ -846,9 +1072,16 @@ const Chat = ({
       "keyboardDidShow",
       () => {
         console.log("Keyboard appeared, scrolling to bottom");
+        // Multiple scroll attempts when keyboard appears
         setTimeout(() => {
           scrollViewRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        }, 50);
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 150);
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: false });
+        }, 300);
       }
     );
 
@@ -857,8 +1090,12 @@ const Chat = ({
       () => {
         console.log("Keyboard hidden, scrolling to bottom");
         // Scroll to bottom when keyboard closes to prevent messages sticking at top
-
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 50);
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: false });
+        }, 200);
       }
     );
 
@@ -1373,9 +1610,8 @@ const Chat = ({
     );
   };
 
-  if (!visible) return null;
-
-  return (
+  // Always render to keep socket connected, but conditionally show modal
+  const chatContent = (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -1384,11 +1620,28 @@ const Chat = ({
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>
-            {chatType === "mortgage-broker"
-              ? "Mortgage Broker"
-              : "Roost Support"}
-          </Text>
+          <View style={styles.headerTitleRow}>
+            {chatType === "mortgage-broker" ? (
+              <Ionicons
+                name="business"
+                size={18}
+                color={COLORS.white}
+                style={styles.headerIcon}
+              />
+            ) : (
+              <Ionicons
+                name="headset"
+                size={18}
+                color={COLORS.white}
+                style={styles.headerIcon}
+              />
+            )}
+            <Text style={styles.headerTitle}>
+              {chatType === "mortgage-broker"
+                ? "Mortgage Broker"
+                : "General Support"}
+            </Text>
+          </View>
           <View style={styles.statusContainer}>
             <View
               style={[
@@ -1445,6 +1698,22 @@ const Chat = ({
               { paddingBottom: isTyping ? 80 : 24 }, // Extra space when typing indicator is visible
             ]}
             showsVerticalScrollIndicator={false}
+            onContentSizeChange={() => {
+              // Scroll to bottom when content size changes (messages loaded)
+              if (visible && !loading) {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: false });
+                }, 50);
+              }
+            }}
+            onLayout={() => {
+              // Scroll to bottom when layout completes
+              if (visible && messages.length > 0 && !loading) {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: false });
+                }, 100);
+              }
+            }}
             onScroll={(event) => {
               const { contentOffset, contentSize, layoutMeasurement } =
                 event.nativeEvent;
@@ -1596,6 +1865,18 @@ const Chat = ({
       </View>
     </KeyboardAvoidingView>
   );
+
+  // Wrap in modal
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      {chatContent}
+    </Modal>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -1627,12 +1908,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  headerIcon: {
+    marginRight: 8,
+  },
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#FDFDFD",
     fontFamily: "Futura",
-    marginBottom: 4,
   },
   statusContainer: {
     flexDirection: "row",

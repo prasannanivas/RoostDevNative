@@ -840,6 +840,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
   const [ackLoading, setAckLoading] = useState(false);
   // Chat modal state
   const [showChat, setShowChat] = useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
+
+  // Handler for chat unread changes
+  const handleChatUnreadChange = (hasUnread) => {
+    console.log("🏠 [RealtorHome] Chat unread status changed:", hasUnread);
+    setHasUnreadChat(hasUnread);
+  };
+
+  // Monitor badge state changes
+  useEffect(() => {
+    console.log(
+      "🔴 [RealtorHome] BADGE STATE:",
+      hasUnreadChat ? "SHOWING" : "HIDDEN"
+    );
+  }, [hasUnreadChat]);
+
   // Hardcoded documents list for Fully Approved modal (no API call)
   const fullyApprovedDocs = [
     "Agreement of Purchase and Sale",
@@ -1093,6 +1109,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               size={24}
               color={COLORS.white}
             />
+            {hasUnreadChat && (
+              <View style={styles.chatUnreadBadge}>
+                <View style={styles.chatUnreadDot} />
+              </View>
+            )}
           </TouchableOpacity>
           <GiftIcon
             onPress={handleRewardsClick}
@@ -2394,6 +2415,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         userId={realtor.id}
         userName={realtorFromContext?.realtorInfo?.name || realtor.name}
         userType="realtor"
+        onUnreadChange={handleChatUnreadChange}
       />
 
       {/* Mortgage Application Modal */}
@@ -2444,6 +2466,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 15,
+    position: "relative",
+  },
+  chatUnreadBadge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "#F0913A",
+    borderRadius: 10,
+    width: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.black,
+  },
+  chatUnreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFFFFF",
   },
   userInfoContainer: {
     flexDirection: "row",

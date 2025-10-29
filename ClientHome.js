@@ -84,6 +84,36 @@ const ClientHome = ({ questionnaireData }) => {
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const [hasUnreadAdmin, setHasUnreadAdmin] = useState(false);
+  const [hasUnreadBroker, setHasUnreadBroker] = useState(false);
+
+  // Handler for chat unread changes - separate for each chat type
+  const handleAdminUnreadChange = (hasUnread) => {
+    console.log("🏠 [ClientHome] Admin chat unread status changed:", hasUnread);
+    setHasUnreadAdmin(hasUnread);
+  };
+
+  const handleBrokerUnreadChange = (hasUnread) => {
+    console.log(
+      "🏠 [ClientHome] Broker chat unread status changed:",
+      hasUnread
+    );
+    setHasUnreadBroker(hasUnread);
+  };
+
+  // Monitor badge state changes
+  useEffect(() => {
+    const hasAnyUnread = hasUnreadAdmin || hasUnreadBroker;
+    console.log(
+      "🔴 [ClientHome] BADGE STATE:",
+      hasAnyUnread ? "SHOWING" : "HIDDEN",
+      "| Admin:",
+      hasUnreadAdmin,
+      "| Broker:",
+      hasUnreadBroker
+    );
+  }, [hasUnreadAdmin, hasUnreadBroker]);
+
   const [showChatTypeSelection, setShowChatTypeSelection] = useState(false);
   const [selectedChatType, setSelectedChatType] = useState("admin");
   const [mortgageBrokerAvailable, setMortgageBrokerAvailable] = useState(false);
@@ -680,16 +710,23 @@ const ClientHome = ({ questionnaireData }) => {
         {/* Right Section: Notification Bell and Help Button */}
         <View style={styles.rightSection}>
           {renderNotificationButton()}
-          <HelpButton
-            borderColor={COLORS.white}
-            textColor={COLORS.white}
-            width={46}
-            height={46}
-            text="HELP"
-            onPress={handleHelpPress}
-            variant="outline"
-            size="medium"
-          />
+          <View style={styles.helpButtonContainer}>
+            <HelpButton
+              borderColor={COLORS.white}
+              textColor={COLORS.white}
+              width={46}
+              height={46}
+              text="HELP"
+              onPress={handleHelpPress}
+              variant="outline"
+              size="medium"
+            />
+            {(hasUnreadAdmin || hasUnreadBroker) && (
+              <View style={styles.chatUnreadBadge}>
+                <View style={styles.chatUnreadDot} />
+              </View>
+            )}
+          </View>
         </View>
       </View>
 
@@ -1058,6 +1095,11 @@ const ClientHome = ({ questionnaireData }) => {
                   Help with app, documents, and general questions
                 </Text>
               </View>
+              {hasUnreadAdmin && (
+                <View style={styles.chatTypeUnreadBadge}>
+                  <View style={styles.chatTypeUnreadDot} />
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1076,6 +1118,11 @@ const ClientHome = ({ questionnaireData }) => {
                   Specific questions about your mortgage application
                 </Text>
               </View>
+              {hasUnreadBroker && (
+                <View style={styles.chatTypeUnreadBadge}>
+                  <View style={styles.chatTypeUnreadDot} />
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1088,14 +1135,28 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </Modal>
 
-      {/* Chat Modal */}
+      {/* Chat Modals - Always mounted to maintain socket connections */}
+      {/* Admin Chat */}
       <ChatModal
-        visible={showChat}
+        visible={showChat && selectedChatType === "admin"}
         onClose={() => setShowChat(false)}
         userId={clientId}
         userName={clientFromContext.name}
-        chatType={selectedChatType}
+        chatType="admin"
+        onUnreadChange={handleAdminUnreadChange}
       />
+
+      {/* Mortgage Broker Chat - only if broker is available */}
+      {mortgageBrokerAvailable && (
+        <ChatModal
+          visible={showChat && selectedChatType === "mortgage-broker"}
+          onClose={() => setShowChat(false)}
+          userId={clientId}
+          userName={clientFromContext.name}
+          chatType="mortgage-broker"
+          onUnreadChange={handleBrokerUnreadChange}
+        />
+      )}
 
       {/* Category Selection Modal */}
       <QuestionnaireProvider>
@@ -1149,6 +1210,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 12,
+  },
+  helpButtonContainer: {
+    position: "relative",
+  },
+  chatUnreadBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#F0913A",
+    borderRadius: 10,
+    width: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.black,
+    zIndex: 10,
+  },
+  chatUnreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFFFFF",
   },
   initials: {
     flexDirection: "row",
@@ -1849,6 +1933,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E1E5E9",
+    position: "relative",
+  },
+  chatTypeUnreadBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "#F0913A",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.silver,
+    zIndex: 10,
+  },
+  chatTypeUnreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#FFFFFF",
   },
   chatTypeOptionIcon: {
     marginRight: 16,
