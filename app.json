@@ -2,7 +2,7 @@
   "expo": {
     "name": "Roost",
     "slug": "RoostDevNative",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "orientation": "portrait",
     "icon": "./assets/app-icon-main.png",
     "userInterfaceStyle": "light",

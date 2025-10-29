@@ -11,17 +11,22 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
   Animated,
   Dimensions,
   RefreshControl,
   Keyboard,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Asset } from "expo-asset";
 import { useAuth } from "../context/AuthContext";
 import ChatService from "../services/ChatService";
 import TypingIndicator from "./TypingIndicator";
 import { generateInitials } from "../utils/initialsUtils";
+import Svg, { Path } from "react-native-svg";
+
+// Pre-cache the Roost logo image
+const roostLogoImage = require("../assets/app-icon.png");
 
 /**
  * Color palette from UX team design system
@@ -48,7 +53,7 @@ const COLORS = {
   inputBackground: "#FFFFFF",
   borderColor: "#E1E5E9",
   timestampColor: "#8E9AAF",
-  onlineIndicator: "#10B981",
+  onlineIndicator: "#377473",
 };
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -105,6 +110,7 @@ const Chat = ({
   const [wsConnected, setWsConnected] = useState(false);
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
+  const [imageCached, setImageCached] = useState(false);
 
   const scrollViewRef = useRef(null);
   const wsConnectionRef = useRef(null);
@@ -113,10 +119,27 @@ const Chat = ({
   const slideAnim = useRef(new Animated.Value(50)).current;
   const typingTimeoutRef = useRef(null);
   const isTypingRef = useRef(false);
+  const isRefreshingRef = useRef(false);
+  const lastScrollYRef = useRef(0);
 
   // Use dynamic context data based on userType
   const userFromContext = contextInfo;
   const displayName = contextName;
+
+  // Pre-cache the Roost logo image on component mount
+  useEffect(() => {
+    const cacheImage = async () => {
+      try {
+        await Asset.fromModule(roostLogoImage).downloadAsync();
+        setImageCached(true);
+        console.log("Roost logo image cached successfully");
+      } catch (error) {
+        console.warn("Failed to cache Roost logo image:", error);
+        setImageCached(true); // Set to true anyway to not block rendering
+      }
+    };
+    cacheImage();
+  }, []);
 
   // Handle sending typing indicators
   const handleTypingStart = () => {
@@ -832,7 +855,10 @@ const Chat = ({
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
       () => {
-        console.log("Keyboard hidden");
+        console.log("Keyboard hidden, scrolling to bottom");
+        // Scroll to bottom when keyboard closes to prevent messages sticking at top
+
+        scrollViewRef.current?.scrollToEnd({ animated: true });
       }
     );
 
@@ -1042,15 +1068,100 @@ const Chat = ({
   };
 
   const onRefresh = async () => {
-    if (refreshing) return;
+    if (refreshing || isRefreshingRef.current) return;
 
     setRefreshing(true);
+    isRefreshingRef.current = true;
+
     try {
-      await loadMessages(1, false);
+      console.log("Fetching new messages from bottom pull...");
+
+      // Get the latest message ID to fetch only newer messages
+      const latestMessageId =
+        messages.length > 0 ? messages[messages.length - 1].id : null;
+
+      let response;
+      if (chatType === "mortgage-broker") {
+        response = await ChatService.getMortgageBrokerMessages(userId, 50, 1);
+      } else {
+        response = await ChatService.getMessages(userId, 50, 1, userType);
+      }
+
+      const apiMessages = response.messages || [];
+
+      // Transform API messages
+      const transformedMessages = apiMessages
+        .filter((msg) => {
+          const hasContent = msg.content && msg.content.trim();
+          const hasId = msg._id;
+          if (!hasContent || !hasId) return false;
+          return true;
+        })
+        .map((msg) => {
+          const isFromSupport =
+            msg.sender === "admin" ||
+            msg.sender === "mortgage-broker" ||
+            msg.sender === "sub-admin";
+          const isFromUser =
+            msg.sender === "client" || msg.sender === "realtor";
+          const isRead = msg.readBy?.[userType]?.isRead || false;
+
+          let timestamp = new Date();
+          if (msg.createdAt) {
+            const dateFromAPI = new Date(msg.createdAt);
+            if (
+              !isNaN(dateFromAPI.getTime()) &&
+              dateFromAPI.getFullYear() > 1970
+            ) {
+              timestamp = dateFromAPI;
+            }
+          }
+
+          return {
+            id: msg._id,
+            text: msg.content.trim(),
+            sender: isFromSupport ? "support" : "user",
+            timestamp: timestamp,
+            status: isFromUser ? (isRead ? "delivered" : "sent") : "delivered",
+            messageType: msg.messageType || "text",
+            isDeleted: msg.isDeleted || false,
+            readBy: msg.readBy,
+            replyTo: msg.replyTo,
+            senderId: msg.senderId,
+            originalSender: msg.sender,
+          };
+        });
+
+      // Only add new messages that don't exist in current state
+      setMessages((prevMessages) => {
+        const existingIds = new Set(prevMessages.map((msg) => msg.id));
+        const newMessages = transformedMessages.filter(
+          (msg) => !existingIds.has(msg.id)
+        );
+
+        if (newMessages.length > 0) {
+          console.log(
+            `Found ${newMessages.length} new messages, appending to bottom`
+          );
+          // Append new messages at the end
+          return [...prevMessages, ...newMessages];
+        } else {
+          console.log("No new messages found");
+          return prevMessages;
+        }
+      });
+
+      // Smooth scroll to bottom after adding new messages
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true });
+        }
+      }, 150);
     } catch (error) {
       console.error("Error refreshing messages:", error);
     } finally {
       setRefreshing(false);
+      isRefreshingRef.current = false;
     }
   };
 
@@ -1111,10 +1222,26 @@ const Chat = ({
       return "";
     }
 
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    const timeString = date.toLocaleTimeString([], {
+      hour: "numeric",
       minute: "2-digit",
+      hour12: true,
     });
+
+    if (isToday) {
+      return `Today - ${timeString}`;
+    } else if (isYesterday) {
+      return `Yesterday - ${timeString}`;
+    } else {
+      const dayName = date.toLocaleDateString([], { weekday: "short" });
+      return `${dayName} - ${timeString}`;
+    }
   };
 
   const renderMessage = (message) => {
@@ -1138,14 +1265,14 @@ const Chat = ({
       >
         {isSupport && (
           <View style={styles.supportAvatar}>
-            {message.originalSender === "admin" ? (
-              <Ionicons
-                name="shield-checkmark"
-                size={16}
-                color={COLORS.green}
-              />
+            {chatType === "mortgage-broker" ? (
+              <Ionicons name="home" size={20} color={COLORS.white} />
             ) : (
-              <Ionicons name="headset-outline" size={16} color={COLORS.green} />
+              <Image
+                source={roostLogoImage}
+                style={styles.supportAvatarImage}
+                resizeMode="contain"
+              />
             )}
           </View>
         )}
@@ -1166,33 +1293,28 @@ const Chat = ({
           </Text>
 
           <View style={styles.messageFooter}>
-            <View style={styles.timestampContainer}>
-              <Text
-                style={[
-                  styles.timestamp,
-                  isUser ? styles.userTimestamp : styles.supportTimestamp,
-                ]}
-              >
-                {formatTime(message.timestamp)}
-              </Text>
-              {isSupport && message.originalSender && (
-                <Text style={styles.senderLabel}>{message.originalSender}</Text>
-              )}
-            </View>
+            <Text
+              style={[
+                styles.timestamp,
+                isUser ? styles.userTimestamp : styles.supportTimestamp,
+              ]}
+            >
+              {formatTime(message.timestamp)}
+            </Text>
 
             {isUser && (
               <View style={styles.messageStatus}>
                 {message.status === "sending" && (
-                  <ActivityIndicator size="small" color={COLORS.white} />
+                  <ActivityIndicator size="small" color={COLORS.slate} />
                 )}
                 {message.status === "sent" && (
-                  <Ionicons name="checkmark" size={12} color={COLORS.white} />
+                  <Ionicons name="checkmark" size={14} color={COLORS.slate} />
                 )}
                 {message.status === "delivered" && (
                   <Ionicons
                     name="checkmark-done"
-                    size={12}
-                    color={COLORS.white}
+                    size={14}
+                    color={COLORS.slate}
                   />
                 )}
                 {message.status === "failed" && (
@@ -1200,7 +1322,7 @@ const Chat = ({
                     onPress={() => retryMessage(message.id)}
                     style={styles.retryButton}
                   >
-                    <Ionicons name="refresh" size={12} color={COLORS.red} />
+                    <Ionicons name="refresh" size={14} color={COLORS.red} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -1228,7 +1350,15 @@ const Chat = ({
     return (
       <View style={[styles.messageContainer, styles.supportMessageContainer]}>
         <View style={styles.supportAvatar}>
-          <Ionicons name="headset-outline" size={16} color={COLORS.green} />
+          {chatType === "mortgage-broker" ? (
+            <Ionicons name="home" size={20} color={COLORS.white} />
+          ) : (
+            <Image
+              source={roostLogoImage}
+              style={styles.supportAvatarImage}
+              resizeMode="contain"
+            />
+          )}
         </View>
         <View
           style={[
@@ -1246,216 +1376,243 @@ const Chat = ({
   if (!visible) return null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={onClose}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-          </TouchableOpacity>
-
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>
-              {chatType === "mortgage-broker"
-                ? "Mortgage Broker"
-                : "Roost Support"}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerTitle}>
+            {chatType === "mortgage-broker"
+              ? "Mortgage Broker"
+              : "Roost Support"}
+          </Text>
+          <View style={styles.statusContainer}>
+            <View
+              style={[
+                styles.statusDot,
+                {
+                  backgroundColor:
+                    wsConnected && connectionStatus === "connected"
+                      ? COLORS.onlineIndicator
+                      : connectionStatus === "error"
+                      ? COLORS.red
+                      : COLORS.gray,
+                },
+              ]}
+            />
+            <Text style={styles.statusText}>
+              {wsConnected && connectionStatus === "connected"
+                ? "Online"
+                : connectionStatus === "error"
+                ? "Connection Error"
+                : "Connecting..."}
             </Text>
-            <View style={styles.statusContainer}>
-              <View
-                style={[
-                  styles.statusDot,
-                  {
-                    backgroundColor:
-                      wsConnected && connectionStatus === "connected"
-                        ? COLORS.onlineIndicator
-                        : connectionStatus === "error"
-                        ? COLORS.red
-                        : COLORS.gray,
-                  },
-                ]}
-              />
-              <Text style={styles.statusText}>
-                {wsConnected && connectionStatus === "connected"
-                  ? "Online"
-                  : connectionStatus === "error"
-                  ? "Connection Error"
-                  : "Connecting..."}
-              </Text>
-            </View>
           </View>
+        </View>
+
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Svg
+            width="32"
+            height="32"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <Path
+              d="M13 0C5.82075 0 0 5.8201 0 13C0 20.1799 5.8201 26 13 26C20.1799 26 26 20.1799 26 13C26 5.8201 20.1799 0 13 0ZM13 24.401C6.7275 24.401 1.625 19.2725 1.625 13C1.625 6.7275 6.7275 1.625 13 1.625C19.2725 1.625 24.375 6.7275 24.375 13C24.375 19.2725 19.2725 24.401 13 24.401ZM17.5961 8.4045C17.2793 8.08763 16.7648 8.08763 16.4473 8.4045L13.0007 11.8511L9.55402 8.4045C9.23715 8.08763 8.72202 8.08763 8.4045 8.4045C8.08698 8.72138 8.08763 9.2365 8.4045 9.55338L11.8511 13L8.4045 16.4466C8.08763 16.7635 8.08763 17.2786 8.4045 17.5955C8.72138 17.9124 9.2365 17.9124 9.55402 17.5955L13.0007 14.1489L16.4473 17.5955C16.7642 17.9124 17.2786 17.9124 17.5961 17.5955C17.9137 17.2786 17.913 16.7635 17.5961 16.4466L14.1495 13L17.5961 9.55338C17.914 9.23585 17.914 8.72138 17.5961 8.4045Z"
+              fill="#797979"
+            />
+          </Svg>
+        </TouchableOpacity>
+      </View>
+
+      {/* Messages Area */}
+      <View style={styles.messagesContainer}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.green} />
+            <Text style={styles.loadingText}>Loading messages...</Text>
+          </View>
+        ) : (
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesScrollView}
+            contentContainerStyle={[
+              styles.messagesContent,
+              { paddingBottom: isTyping ? 80 : 24 }, // Extra space when typing indicator is visible
+            ]}
+            showsVerticalScrollIndicator={false}
+            onScroll={(event) => {
+              const { contentOffset, contentSize, layoutMeasurement } =
+                event.nativeEvent;
+              const currentScrollY = contentOffset.y;
+              const isScrolledToBottom =
+                contentOffset.y + layoutMeasurement.height >=
+                contentSize.height - 50;
+              setIsAtBottom(isScrolledToBottom);
+
+              // Detect pull from bottom (when scrolling down past the end)
+              const distanceFromBottom =
+                contentSize.height -
+                (contentOffset.y + layoutMeasurement.height);
+
+              // Only trigger refresh if:
+              // 1. User has pulled down past the bottom (negative distance)
+              // 2. Not already refreshing
+              // 3. User is scrolling downward (pulling up)
+              // 4. The pull is significant enough
+              const isPullingUp = currentScrollY > lastScrollYRef.current;
+
+              if (
+                distanceFromBottom < -80 &&
+                !refreshing &&
+                !isRefreshingRef.current &&
+                isPullingUp
+              ) {
+                console.log("Pull-to-refresh triggered from bottom");
+                isRefreshingRef.current = true;
+                onRefresh().finally(() => {
+                  isRefreshingRef.current = false;
+                });
+              }
+
+              lastScrollYRef.current = currentScrollY;
+            }}
+            scrollEventThrottle={16}
+            bounces={true}
+          >
+            {/* Load More Button */}
+            {pagination && pagination.hasMore && (
+              <View style={styles.loadMoreContainer}>
+                <TouchableOpacity
+                  style={styles.loadMoreButton}
+                  onPress={loadMoreMessages}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={COLORS.green} />
+                  ) : (
+                    <Text style={styles.loadMoreText}>Load More Messages</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {messages
+              .filter((msg) => {
+                const isValid = msg && msg.text && msg.text.trim() && msg.id;
+                if (!isValid) {
+                  console.warn("Filtering out invalid message in render:", msg);
+                }
+                return isValid;
+              })
+              .map((msg, index) => {
+                // console.log(
+                //   `Rendering message ${index}:`,
+                //   msg.text?.substring(0, 20) + "..."
+                // );
+                return renderMessage(msg);
+              })}
+            {renderTypingIndicator()}
+            {/* Extra spacer when typing to ensure visibility */}
+            {isTyping && <View style={{ height: 20 }} />}
+
+            {/* Bottom refresh indicator */}
+            {refreshing && (
+              <View style={styles.bottomRefreshContainer}>
+                <ActivityIndicator size="small" color={COLORS.green} />
+                <Text style={styles.bottomRefreshText}>
+                  Loading new messages...
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Input Area */}
+      <View style={styles.inputContainer}>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            ref={textInputRef}
+            style={styles.textInput}
+            value={inputText}
+            onChangeText={handleInputChange}
+            placeholder="Type your message..."
+            placeholderTextColor={COLORS.gray}
+            multiline
+            maxLength={500}
+            returnKeyType="send"
+            onFocus={() => {
+              // Scroll to bottom when input is focused
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 300);
+            }}
+            onContentSizeChange={() => {
+              // Auto-scroll when text input grows
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
+            onSubmitEditing={sendMessage}
+            blurOnSubmit={false}
+          />
 
           <TouchableOpacity
-            style={styles.moreButton}
-            onPress={() => {
-              console.log(
-                "🧪 Manual WebSocket test triggered for user:",
-                userId
-              );
-              ChatService.testWebSocket(userId);
-            }}
+            style={[
+              styles.sendButton,
+              (!inputText.trim() || sending) && styles.sendButtonDisabled,
+            ]}
+            onPress={sendMessage}
+            disabled={!inputText.trim() || sending}
           >
-            <Ionicons
-              name="wifi"
-              size={20}
-              color={wsConnected ? COLORS.onlineIndicator : COLORS.white}
-            />
+            {sending ? (
+              <ActivityIndicator size="small" color={COLORS.green} />
+            ) : (
+              <Svg
+                width="26"
+                height="26"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <Path
+                  d="M8.62808 11.1601L13.4742 6.31397M18.4316 3.35645L14.341 16.651C13.9744 17.8425 13.7909 18.4385 13.4748 18.636C13.2005 18.8074 12.8609 18.836 12.5623 18.7121C12.2178 18.5692 11.9383 18.0111 11.3807 16.8958L8.7897 11.7139C8.7012 11.5369 8.65691 11.4488 8.5978 11.3721C8.54535 11.304 8.48481 11.2427 8.41676 11.1903C8.34182 11.1325 8.25517 11.0892 8.08608 11.0046L2.89224 8.40772C1.77693 7.85006 1.21923 7.57098 1.07632 7.22656C0.95238 6.92787 0.980645 6.588 1.152 6.31375C1.34959 5.99751 1.94555 5.8138 3.13735 5.44709L16.4319 1.35645C17.3689 1.06815 17.8376 0.924119 18.154 1.0403C18.4297 1.1415 18.647 1.35861 18.7482 1.63428C18.8644 1.9506 18.7202 2.41904 18.4322 3.35506L18.4316 3.35645Z"
+                  stroke="#4D4D4D"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </Svg>
+            )}
           </TouchableOpacity>
         </View>
 
-        {/* Messages Area */}
-        <View style={styles.messagesContainer}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.green} />
-              <Text style={styles.loadingText}>Loading messages...</Text>
-            </View>
-          ) : (
-            <ScrollView
-              ref={scrollViewRef}
-              style={styles.messagesScrollView}
-              contentContainerStyle={[
-                styles.messagesContent,
-                { paddingBottom: isTyping ? 80 : 24 }, // Extra space when typing indicator is visible
-              ]}
-              showsVerticalScrollIndicator={false}
-              onScroll={(event) => {
-                const { contentOffset, contentSize, layoutMeasurement } =
-                  event.nativeEvent;
-                const isScrolledToBottom =
-                  contentOffset.y + layoutMeasurement.height >=
-                  contentSize.height - 50;
-                setIsAtBottom(isScrolledToBottom);
-              }}
-              scrollEventThrottle={16}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor={COLORS.green}
-                  colors={[COLORS.green]}
-                />
-              }
-            >
-              {/* Load More Button */}
-              {pagination && pagination.hasMore && (
-                <View style={styles.loadMoreContainer}>
-                  <TouchableOpacity
-                    style={styles.loadMoreButton}
-                    onPress={loadMoreMessages}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? (
-                      <ActivityIndicator size="small" color={COLORS.green} />
-                    ) : (
-                      <Text style={styles.loadMoreText}>
-                        Load More Messages
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {messages
-                .filter((msg) => {
-                  const isValid = msg && msg.text && msg.text.trim() && msg.id;
-                  if (!isValid) {
-                    console.warn(
-                      "Filtering out invalid message in render:",
-                      msg
-                    );
-                  }
-                  return isValid;
-                })
-                .map((msg, index) => {
-                  // console.log(
-                  //   `Rendering message ${index}:`,
-                  //   msg.text?.substring(0, 20) + "..."
-                  // );
-                  return renderMessage(msg);
-                })}
-              {renderTypingIndicator()}
-              {/* Extra spacer when typing to ensure visibility */}
-              {isTyping && <View style={{ height: 20 }} />}
-            </ScrollView>
-          )}
-        </View>
-
-        {/* Input Area */}
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              ref={textInputRef}
-              style={styles.textInput}
-              value={inputText}
-              onChangeText={handleInputChange}
-              placeholder="Type your message..."
-              placeholderTextColor={COLORS.gray}
-              multiline
-              maxLength={500}
-              returnKeyType="send"
-              onFocus={() => {
-                // Scroll to bottom when input is focused
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollToEnd({ animated: true });
-                }, 300);
-              }}
-              onContentSizeChange={() => {
-                // Auto-scroll when text input grows
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollToEnd({ animated: true });
-                }, 100);
-              }}
-              onSubmitEditing={sendMessage}
-              blurOnSubmit={false}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                (!inputText.trim() || sending) && styles.sendButtonDisabled,
-              ]}
-              onPress={sendMessage}
-              disabled={!inputText.trim() || sending}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color={inputText.trim() ? COLORS.white : COLORS.gray}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.inputHint}>
-            Messages are encrypted and secure
-          </Text>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <Text style={styles.inputHint}>Messages are encrypted and secure</Text>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#F4F4F4",
   },
 
   // Header Styles
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.green,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: Platform.OS === "ios" ? 50 : 12,
+    justifyContent: "center",
+    backgroundColor: "#0E1D1D",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingTop: Platform.OS === "ios" ? 10 : 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -1465,38 +1622,41 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  backButton: {
-    padding: 8,
-    marginRight: 12,
-  },
   headerInfo: {
     flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
-    color: COLORS.white,
+    color: "#FDFDFD",
     fontFamily: "Futura",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   statusContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 10,
+    fontWeight: "500",
     color: COLORS.white,
-    opacity: 0.8,
     fontFamily: "Futura",
   },
-  moreButton: {
-    padding: 8,
+  closeButton: {
+    backgroundColor: "#F4F4F4",
+    borderRadius: 53,
+
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Messages Styles
@@ -1526,7 +1686,7 @@ const styles = StyleSheet.create({
   // Message Bubble Styles
   messageContainer: {
     flexDirection: "row",
-    marginBottom: 16,
+    marginBottom: 20,
     alignItems: "flex-end",
   },
   userMessageContainer: {
@@ -1536,37 +1696,37 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   messageBubble: {
-    maxWidth: screenWidth * 0.75,
-    borderRadius: 20,
-    padding: 12,
+    maxWidth: screenWidth * 0.7,
+    borderRadius: 16,
+    padding: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
   userBubble: {
-    backgroundColor: COLORS.userBubble,
+    backgroundColor: COLORS.white,
     borderBottomRightRadius: 4,
-    marginRight: 8,
+    marginRight: 12,
   },
   supportBubble: {
-    backgroundColor: COLORS.supportBubble,
+    backgroundColor: COLORS.white,
     borderBottomLeftRadius: 4,
-    marginLeft: 8,
+    marginLeft: 12,
     borderWidth: 1,
-    borderColor: COLORS.borderColor,
+    borderColor: "#E5E5E5",
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 24,
     fontFamily: "Futura",
   },
   userMessageText: {
-    color: COLORS.white,
+    color: COLORS.black,
   },
   supportMessageText: {
     color: COLORS.black,
@@ -1577,31 +1737,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 8,
   },
-  timestampContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
   timestamp: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: "Futura",
+    color: COLORS.slate,
   },
   userTimestamp: {
-    color: COLORS.white,
-    opacity: 0.7,
+    color: COLORS.slate,
   },
   supportTimestamp: {
-    color: COLORS.timestampColor,
-  },
-  senderLabel: {
-    fontSize: 10,
-    fontFamily: "Futura",
-    color: COLORS.green,
-    fontWeight: "600",
-    backgroundColor: COLORS.coloredBgFill,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    color: COLORS.slate,
   },
   messageStatus: {
     marginLeft: 8,
@@ -1630,22 +1775,38 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
 
+  // Bottom Refresh Styles
+  bottomRefreshContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    gap: 8,
+  },
+  bottomRefreshText: {
+    fontSize: 13,
+    color: COLORS.green,
+    fontFamily: "Futura",
+  },
+
   // Avatar Styles
   supportAvatar: {
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.red,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 2,
-    borderWidth: 2,
-    borderColor: COLORS.green,
+    overflow: "hidden",
   },
-  userAvatar: {
+  supportAvatarImage: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
@@ -1653,7 +1814,7 @@ const styles = StyleSheet.create({
   },
   userAvatarText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
   },
@@ -1668,12 +1829,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     backgroundColor: COLORS.white,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 34 : 12,
+    paddingVertical: 16,
+    paddingBottom: Platform.OS === "ios" ? 34 : 16,
     borderTopWidth: 1,
-    borderTopColor: COLORS.borderColor,
-    elevation: 8, // Android shadow
-    shadowColor: "#000", // iOS shadow
+    borderTopColor: "#E5E5E5",
+    elevation: 8,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -2,
@@ -1683,40 +1844,39 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    backgroundColor: COLORS.inputBackground,
-    borderRadius: 24,
+    alignItems: "center",
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.borderColor,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 48,
+    borderColor: "#797979",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minHeight: 56,
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: "500",
     fontFamily: "Futura",
-    color: COLORS.black,
+    color: "#797979",
     maxHeight: 100,
     paddingVertical: 8,
   },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.green,
+    width: 26,
+    height: 26,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 8,
+    marginLeft: 12,
   },
   sendButtonDisabled: {
-    backgroundColor: COLORS.silver,
+    opacity: 0.9,
   },
   inputHint: {
-    fontSize: 11,
-    color: COLORS.timestampColor,
+    fontSize: 12,
+    color: COLORS.slate,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 12,
     fontFamily: "Futura",
   },
 });
