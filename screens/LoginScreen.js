@@ -396,14 +396,6 @@ export default function LoginScreen() {
         style={{ flex: 0.8 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 4 : undefined}
       >
-        {/* Brand Logo */}
-        <Logo
-          width={120}
-          height={42}
-          variant="black"
-          style={styles.brandLogo}
-        />
-
         <ScrollView
           contentContainerStyle={styles.container}
           style={styles.scrollView}
@@ -411,6 +403,13 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           accessible={true}
         >
+          {/* Brand Logo */}
+          <Logo
+            width={120}
+            height={42}
+            variant="black"
+            style={styles.brandLogo}
+          />
           {/* Error Message */}
           {error && (
             <Text
@@ -773,16 +772,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    height: "85%",
     paddingHorizontal: 24,
-    paddingVertical: 48,
+    paddingTop: 32,
+    paddingBottom: 20,
     alignItems: "center",
-    justifyContent: "center",
-    flexGrow: 1,
+    minHeight: "100%",
     backgroundColor: COLORS.background,
   },
   brandLogo: {
-    marginBottom: 32,
+    marginBottom: 64,
     alignSelf: "center",
     marginTop: 64,
     backgroundColor: COLORS.background, // Ensure logo has a background color
