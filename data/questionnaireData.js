@@ -387,6 +387,11 @@ const questions = [
         label: "",
         type: "text",
         keyboard: "numeric",
+        validation: {
+          min: 15000,
+          errorMessage:
+            "Sorry, The minimum income should be $15,000 a year or greater",
+        },
       },
       {
         key: "bonuses",
@@ -753,6 +758,11 @@ const questions = [
         placeholder: "Annual Income",
         type: "text",
         keyboard: "numeric",
+        validation: {
+          min: 15000,
+          errorMessage:
+            "Sorry, The minimum income should be $15,000 a year or greater",
+        },
       },
       {
         key: "bonuses",

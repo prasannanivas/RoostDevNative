@@ -1062,6 +1062,69 @@ const CategorySelectionModal = ({
       ) {
         missingFields.push("Annual Income");
         errors.income = "This field is crucial for pre-approval calculation";
+      } else {
+        // Validate minimum income requirement
+        const incomeValue = parseFloat(
+          String(currentResponse.income).replace(/[^0-9.]/g, "")
+        );
+        if (incomeValue < 15000) {
+          errors.income =
+            "Sorry, The minimum income should be $15,000 a year or greater";
+          setFieldErrors(errors);
+          return false;
+        }
+      }
+
+      // Only require bonus/commission amount if user selected "yes" for bonuses OR benefits
+      const hasBonuses = currentResponse?.bonuses === "yes";
+      const hasBenefits = currentResponse?.benefits === "yes";
+
+      if (hasBonuses || hasBenefits) {
+        if (
+          !currentResponse?.bonusComissionAnnualAmount ||
+          currentResponse.bonusComissionAnnualAmount === ""
+        ) {
+          missingFields.push("Bonus/Commission Amount");
+          errors.bonusComissionAnnualAmount =
+            "This field is crucial for pre-approval calculation";
+        }
+      }
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          "Pre-Approval Required Fields",
+          `The following fields are crucial for calculating your pre-approval:\n\n${missingFields.join(
+            "\n"
+          )}\n\nPlease enter this information to continue.`
+        );
+        setFieldErrors(errors);
+        return false;
+      }
+    }
+
+    // Question 108: Income details for main applicant in co-signer flow (critical for pre-approval)
+    if (currentQuestion?.id === 108 || currentQuestion?.id === "108") {
+      const missingFields = [];
+
+      // Always require income
+      if (
+        !currentResponse?.income ||
+        currentResponse.income === "" ||
+        currentResponse.income === undefined
+      ) {
+        missingFields.push("Annual Income");
+        errors.income = "This field is crucial for pre-approval calculation";
+      } else {
+        // Validate minimum income requirement
+        const incomeValue = parseFloat(
+          String(currentResponse.income).replace(/[^0-9.]/g, "")
+        );
+        if (incomeValue < 15000) {
+          errors.income =
+            "Sorry, The minimum income should be $15,000 a year or greater";
+          setFieldErrors(errors);
+          return false;
+        }
       }
 
       // Only require bonus/commission amount if user selected "yes" for bonuses OR benefits

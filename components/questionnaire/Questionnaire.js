@@ -674,6 +674,17 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
       if (!currentResponse?.income || currentResponse.income === "") {
         missingFields.push("Annual Income");
         errors.income = "This field is crucial for pre-approval calculation";
+      } else {
+        // Validate minimum income requirement
+        const incomeValue = parseFloat(
+          String(currentResponse.income).replace(/[^0-9.]/g, "")
+        );
+        if (incomeValue < 15000) {
+          errors.income =
+            "Sorry, The minimum income should be $15,000 a year or greater";
+          setFieldErrors(errors);
+          return false;
+        }
       }
 
       if (
