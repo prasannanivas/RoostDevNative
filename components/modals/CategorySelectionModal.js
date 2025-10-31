@@ -25,6 +25,7 @@ import {
   ActivityIndicator,
   Alert,
   AppState,
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../Logo";
@@ -51,6 +52,7 @@ const CategorySelectionModal = ({
   const [localResponses, setLocalResponses] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCoSignerCategories, setShowCoSignerCategories] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { auth } = useAuth();
   // Get the questionnaire context
   const { responses, updateResponse, setResponses } = useQuestionnaire();
@@ -58,6 +60,29 @@ const CategorySelectionModal = ({
   // Track if modal close was triggered by app backgrounding
   const isAppBackgrounding = useRef(false);
   const appState = useRef(AppState.currentState);
+
+  // Keyboard visibility listener for Android
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      const keyboardDidShowListener = Keyboard.addListener(
+        "keyboardDidShow",
+        () => {
+          setKeyboardVisible(true);
+        }
+      );
+      const keyboardDidHideListener = Keyboard.addListener(
+        "keyboardDidHide",
+        () => {
+          setKeyboardVisible(false);
+        }
+      );
+
+      return () => {
+        keyboardDidShowListener.remove();
+        keyboardDidHideListener.remove();
+      };
+    }
+  }, []);
 
   // Monitor app state to prevent auto-close on resume
   useEffect(() => {
@@ -1567,63 +1592,74 @@ const CategorySelectionModal = ({
           )}
         </KeyboardAvoidingView>
       </SafeAreaView>
-      {!showQuestions ? (
-        <View style={styles.footer}>
-          <View
-            style={[
-              styles.buttonContainer,
-              { justifyContent: "center", transform: [{ rotate: "270deg" }] },
-            ]}
-          >
-            <Button
-              Icon={<BackButton width={30} height={30} color="#FFFFFF" />}
-              onPress={onClose}
-              variant="outline"
-              style={styles.backButton}
-            />
-          </View>
-        </View>
-      ) : (
-        <View style={styles.footer}>
-          <View style={styles.buttonContainer}>
-            <View style={{ transform: [{ rotate: "270deg" }] }}>
-              <Button
-                Icon={<BackButton width={30} height={30} color="#FFFFFF" />}
-                onPress={handleBackToCategories}
-                variant="outline"
-                style={styles.backButton}
-              />
-            </View>
-
-            {hasNext() ? (
-              <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Text style={styles.nextButtonText}> Next</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[styles.nextButton, isSubmitting && { opacity: 0.6 }]}
-                onPress={() => {
-                  if (!isSubmitting) handleSaveSection(false);
-                }}
-                disabled={isSubmitting}
+      {!showQuestions
+        ? (Platform.OS === "ios" || !keyboardVisible) && (
+            <View style={styles.footer}>
+              <View
+                style={[
+                  styles.buttonContainer,
+                  {
+                    justifyContent: "center",
+                    transform: [{ rotate: "270deg" }],
+                  },
+                ]}
               >
-                {isSubmitting ? (
-                  <>
-                    <ActivityIndicator
-                      color={COLORS.white}
-                      size="small"
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={styles.nextButtonText}>Saving...</Text>
-                  </>
+                <Button
+                  Icon={<BackButton width={30} height={30} color="#FFFFFF" />}
+                  onPress={onClose}
+                  variant="outline"
+                  style={styles.backButton}
+                />
+              </View>
+            </View>
+          )
+        : (Platform.OS === "ios" || !keyboardVisible) && (
+            <View style={styles.footer}>
+              <View style={styles.buttonContainer}>
+                <View style={{ transform: [{ rotate: "270deg" }] }}>
+                  <Button
+                    Icon={<BackButton width={30} height={30} color="#FFFFFF" />}
+                    onPress={handleBackToCategories}
+                    variant="outline"
+                    style={styles.backButton}
+                  />
+                </View>
+
+                {hasNext() ? (
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={handleNext}
+                  >
+                    <Text style={styles.nextButtonText}> Next</Text>
+                  </TouchableOpacity>
                 ) : (
-                  <Text style={styles.nextButtonText}>Update</Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.nextButton,
+                      isSubmitting && { opacity: 0.6 },
+                    ]}
+                    onPress={() => {
+                      if (!isSubmitting) handleSaveSection(false);
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <ActivityIndicator
+                          color={COLORS.white}
+                          size="small"
+                          style={{ marginRight: 8 }}
+                        />
+                        <Text style={styles.nextButtonText}>Saving...</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.nextButtonText}>Update</Text>
+                    )}
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      )}
+              </View>
+            </View>
+          )}
     </Modal>
   );
 };

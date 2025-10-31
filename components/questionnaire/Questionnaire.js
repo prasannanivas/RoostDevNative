@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
@@ -68,6 +69,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [storageReady, setStorageReady] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   // Keys builder
   const getKeys = () => {
@@ -173,6 +175,29 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
       setResponses(questionnaireData.responses);
     }
   }, [questionnaireData, setResponses]);
+
+  // Keyboard visibility listener for Android
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      const keyboardDidShowListener = Keyboard.addListener(
+        "keyboardDidShow",
+        () => {
+          setKeyboardVisible(true);
+        }
+      );
+      const keyboardDidHideListener = Keyboard.addListener(
+        "keyboardDidHide",
+        () => {
+          setKeyboardVisible(false);
+        }
+      );
+
+      return () => {
+        keyboardDidShowListener.remove();
+        keyboardDidHideListener.remove();
+      };
+    }
+  }, []);
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
   const currentResponse = responses[currentQuestionId];
 
@@ -1202,34 +1227,35 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {/* Footer stays outside KeyboardAvoidingView so it remains fixed */}
-      <View style={styles.footer}>
-        <View style={styles.buttonContainer}>
-          <Button
-            title={
-              currentQuestion?.type === "finalStep" ? "Complete" : "Continue"
-            }
-            onPress={handleNext}
-            variant="primary"
-            loading={isSubmitting}
-            style={styles.looksGoodButton}
-          />
-
-          {canGoBack && (
+      {/* Footer stays outside KeyboardAvoidingView so it remains fixed - Hidden on Android when keyboard is visible */}
+      {(Platform.OS === "ios" || !keyboardVisible) && (
+        <View style={styles.footer}>
+          <View style={styles.buttonContainer}>
             <Button
-              Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
-              onPress={goToPreviousQuestion}
-              variant="outline"
-              style={styles.backButton}
+              title={
+                currentQuestion?.type === "finalStep" ? "Complete" : "Continue"
+              }
+              onPress={handleNext}
+              variant="primary"
+              loading={isSubmitting}
+              style={styles.looksGoodButton}
             />
-          )}
-          {/* "Looks Good" button after questions */}
+
+            {canGoBack && (
+              <Button
+                Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
+                onPress={goToPreviousQuestion}
+                variant="outline"
+                style={styles.backButton}
+              />
+            )}
+            {/* "Looks Good" button after questions */}
+          </View>
         </View>
-      </View>
+      )}
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -1338,7 +1364,7 @@ const styles = StyleSheet.create({
     flex: 1, // Take remaining space in row
   },
   footer: {
-    position: Platform.OS === "ios" ? "absolute" : "relative",
+    position: "absolute",
     bottom: 0,
     width: "100%",
     height: "15%",

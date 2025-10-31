@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Platform } from "react-native";
 import SignupStackWithFixedBar from "./navigation/SignupStackWithFixedBar";
 import RealtorOnboardingStack from "./navigation/RealtorOnboardingStack";
 import Home from "./Home";
@@ -23,14 +24,19 @@ export default function App() {
   const [isSplashVisible, setSplashVisible] = useState(true);
   const hideSplash = () => setSplashVisible(false);
 
+  const bgColor = Platform.OS === "android" ? "#F6F6F6" : "#CB003F";
+
   const navTheme = {
     ...DefaultTheme,
-    colors: { ...DefaultTheme.colors, background: "#CB003F" },
+    colors: { ...DefaultTheme.colors, background: bgColor },
   };
 
   return (
-    <SafeAreaProvider style={{ flex: 1, backgroundColor: "#CB003F" }}>
-      <StatusBar style="light" backgroundColor="#CB003F" />
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: bgColor }}>
+      <StatusBar
+        style={Platform.OS === "android" ? "dark" : "light"}
+        backgroundColor={bgColor}
+      />
       <NavigationContainer theme={navTheme}>
         <AuthProvider>
           <NetworkProvider>

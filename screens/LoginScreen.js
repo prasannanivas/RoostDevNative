@@ -64,6 +64,7 @@ export default function LoginScreen() {
   const [showSavedOnly, setShowSavedOnly] = useState(false); // When true: only show saved user + Face ID + different account
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showSavedPassword, setShowSavedPassword] = useState(false); // Reveal password+login in saved-only mode
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   // Create refs for form inputs
   const passwordInputRef = useRef(null);
@@ -362,6 +363,29 @@ export default function LoginScreen() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  // Keyboard visibility listener for Android
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      const keyboardDidShowListener = Keyboard.addListener(
+        "keyboardDidShow",
+        () => {
+          setKeyboardVisible(true);
+        }
+      );
+      const keyboardDidHideListener = Keyboard.addListener(
+        "keyboardDidHide",
+        () => {
+          setKeyboardVisible(false);
+        }
+      );
+
+      return () => {
+        keyboardDidShowListener.remove();
+        keyboardDidHideListener.remove();
+      };
+    }
   }, []);
 
   return (
@@ -685,8 +709,9 @@ export default function LoginScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-      {/* Sign Up Section moved to bottom above footer (hidden in saved-only mode) */}
-      {!showSavedOnly && (
+
+      {/* Sign Up Section moved to bottom above footer (hidden in saved-only mode and when keyboard is visible on Android) */}
+      {!showSavedOnly && (Platform.OS === "ios" || !keyboardVisible) && (
         <View style={styles.signUpContainer}>
           <Text style={styles.signUpPrompt}>
             Don't have an account? Sign up for free
@@ -703,36 +728,38 @@ export default function LoginScreen() {
         </View>
       )}
 
-      {/* Footer (dark background) */}
-      <View style={styles.footerContainer}>
-        <Text style={styles.footerText}>
-          By logging in, you agree to Roost's{" "}
-          <Text
-            style={styles.linkText}
-            onPress={() => {
-              Linking.openURL("https://roostapp.io/terms-of-service");
-            }}
-            accessibilityRole="link"
-          >
-            Terms of Use
-          </Text>{" "}
-          and{" "}
-          <Text
-            style={styles.linkText}
-            onPress={() => {
-              Linking.openURL("https://roostapp.io/privacy");
-            }}
-            accessibilityRole="link"
-          >
-            Privacy&nbsp;Policy
+      {/* Footer (dark background) - Hidden on Android when keyboard is visible */}
+      {(Platform.OS === "ios" || !keyboardVisible) && (
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>
+            By logging in, you agree to Roost's{" "}
+            <Text
+              style={styles.linkText}
+              onPress={() => {
+                Linking.openURL("https://roostapp.io/terms-of-service");
+              }}
+              accessibilityRole="link"
+            >
+              Terms of Use
+            </Text>{" "}
+            and{" "}
+            <Text
+              style={styles.linkText}
+              onPress={() => {
+                Linking.openURL("https://roostapp.io/privacy");
+              }}
+              accessibilityRole="link"
+            >
+              Privacy&nbsp;Policy
+            </Text>
+            .
           </Text>
-          .
-        </Text>
-        <Text style={styles.footerText}>
-          By providing your email & phone number, you consent to receive
-          communications from Roost. You can opt-out anytime.
-        </Text>
-      </View>
+          <Text style={styles.footerText}>
+            By providing your email & phone number, you consent to receive
+            communications from Roost. You can opt-out anytime.
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
