@@ -361,18 +361,18 @@ const EmailVerificationScreen = React.forwardRef(
           style={styles.keyboardContainer}
           keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
-          {/* Brand Title */}
-          <Logo
-            width={120}
-            height={42}
-            variant="black"
-            style={styles.brandLogo}
-          />
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.contentContainer}
             bounces={false}
           >
+            {/* Brand Title */}
+            <Logo
+              width={120}
+              height={42}
+              variant="black"
+              style={styles.brandLogo}
+            />
             {/* Heading */}
             <Text style={styles.heading}>Verify your email address</Text>
             {/* Subheading */}
@@ -487,9 +487,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   brandLogo: {
-    marginBottom: 32,
+    marginBottom: 64,
     alignSelf: "center",
-    marginTop: 64,
+    marginTop: 32,
   },
   heading: {
     fontSize: 20, // H2 size

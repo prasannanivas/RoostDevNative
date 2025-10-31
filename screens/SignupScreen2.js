@@ -291,12 +291,6 @@ const SignUpDetailsScreen = React.forwardRef(
           style={styles.keyboardContainer}
           keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
         >
-          <Logo
-            width={120}
-            height={42}
-            variant="black"
-            style={styles.brandLogo}
-          />
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.contentContainer}
@@ -304,6 +298,12 @@ const SignUpDetailsScreen = React.forwardRef(
             keyboardShouldPersistTaps="handled"
             accessible={true}
           >
+            <Logo
+              width={120}
+              height={42}
+              variant="black"
+              style={styles.brandLogo}
+            />
             <Text style={styles.heading}>Let's get started!</Text>
             {/* Update the note text to indicate email is required */}
             <Text style={styles.noteText}>
@@ -486,9 +486,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   brandLogo: {
-    marginBottom: 32,
+    marginBottom: 64,
     alignSelf: "center",
-    marginTop: 64,
+    marginTop: 32,
   },
   heading: {
     fontSize: 20, // H2 size

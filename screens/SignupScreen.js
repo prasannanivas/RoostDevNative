@@ -118,19 +118,18 @@ const AccountTypeScreen = React.forwardRef(
           style={styles.keyboardContainer}
           keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
         >
-          {/* Brand Title */}
-          <Logo
-            width={120}
-            height={42}
-            variant="black"
-            style={styles.brandLogo}
-          />
-
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.contentContainer}
             bounces={false}
           >
+            {/* Brand Title */}
+            <Logo
+              width={120}
+              height={42}
+              variant="black"
+              style={styles.brandLogo}
+            />
             {/* Prompt */}
             <Text style={styles.heading}>
               What type of account are you sign up for?
@@ -280,15 +279,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 24,
-    paddingVertical: 48,
+    paddingVertical: 24,
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
   },
   brandLogo: {
-    marginBottom: 32,
+    marginBottom: 64,
     alignSelf: "center",
-    marginTop: 64,
+    marginTop: 32,
   },
   heading: {
     fontSize: 20, // H2 size

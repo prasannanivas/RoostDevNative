@@ -240,14 +240,6 @@ const PasswordScreen = React.forwardRef(
           style={styles.keyboardContainer}
           keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 0}
         >
-          {/* Logo */}
-          <Logo
-            width={120}
-            height={42}
-            variant="black"
-            style={styles.brandLogo}
-          />
-
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.contentContainer}
@@ -255,6 +247,13 @@ const PasswordScreen = React.forwardRef(
             keyboardShouldPersistTaps="handled"
             accessible={true}
           >
+            {/* Logo */}
+            <Logo
+              width={120}
+              height={42}
+              variant="black"
+              style={styles.brandLogo}
+            />
             <Text style={styles.heading}>Secure your account</Text>
             {/* Display invitation message if available */}
 
@@ -419,9 +418,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   brandLogo: {
-    marginBottom: 32,
+    marginBottom: 64,
     alignSelf: "center",
-    marginTop: 64,
+    marginTop: 32,
   },
   heading: {
     fontSize: 20, // H2 size

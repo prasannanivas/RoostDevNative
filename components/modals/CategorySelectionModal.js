@@ -1506,31 +1506,30 @@ const CategorySelectionModal = ({
                 {/* Fixed progress for simplicity, can be dynamic */}
               </View>
 
-              {/* Back button and logo for question view */}
-              <View style={styles.headerContainer}>
-                {/* <TouchableOpacity onPress={handleBackToCategories} style={{}}>
+              {/* Question content */}
+              <ScrollView
+                style={styles.questionScrollView}
+                contentContainerStyle={styles.questionScrollViewContent}
+              >
+                {/* Back button and logo for question view */}
+                <View style={styles.headerContainer}>
+                  {/* <TouchableOpacity onPress={handleBackToCategories} style={{}}>
                   <Ionicons
                     name="arrow-back-outline"
                     size={24}
                     color={COLORS.black}
                   />
                 </TouchableOpacity> */}
-                {/* <View style={{ width: 24 }} /> */}
-                <View style={styles.logoContainer}>
-                  <Logo
-                    width={120}
-                    height={42}
-                    variant="black"
-                    style={styles.brandLogo}
-                  />
+                  {/* <View style={{ width: 24 }} /> */}
+                  <View style={styles.logoContainer}>
+                    <Logo
+                      width={120}
+                      height={42}
+                      variant="black"
+                      style={styles.brandLogo}
+                    />
+                  </View>
                 </View>
-              </View>
-
-              {/* Question content */}
-              <ScrollView
-                style={styles.questionScrollView}
-                contentContainerStyle={styles.questionScrollViewContent}
-              >
                 {currentQuestion && (
                   <>
                     {/* Question Header with Initials and Question Text */}

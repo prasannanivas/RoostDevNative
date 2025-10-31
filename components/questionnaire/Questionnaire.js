@@ -1150,15 +1150,6 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
         )}
       </View>
 
-      <View style={styles.logoContainer}>
-        <Logo
-          width={120}
-          height={42}
-          variant="black"
-          style={styles.brandLogo}
-        />
-      </View>
-
       {/* Only wrap the ScrollView/content in KeyboardAvoidingView, not the footer */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -1169,6 +1160,14 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
         >
+          <View style={styles.logoContainer}>
+            <Logo
+              width={120}
+              height={42}
+              variant="black"
+              style={styles.brandLogo}
+            />
+          </View>
           <View style={styles.content}>
             <View style={styles.contentWrapper}>
               {/* Question Header with Initials and Question Text */}
