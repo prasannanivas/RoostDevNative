@@ -51,14 +51,28 @@ export async function registerForPushNotificationsAsync() {
     console.log("Must use physical device for push notifications");
   }
 
-  // For Android, set notification channel
+  // For Android, set notification channels
   if (Platform.OS === "android") {
+    // Default channel
     Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#019B8E",
     });
+
+    // Chat messages channel
+    Notifications.setNotificationChannelAsync("chat-messages", {
+      name: "Chat Messages",
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#377473",
+      sound: "default",
+      enableLights: true,
+      enableVibrate: true,
+    });
+
+    console.log("✅ Android notification channels configured");
   }
 
   return token;
@@ -71,6 +85,13 @@ export async function registerDeviceOnServer(
   userType = "client"
 ) {
   try {
+    console.log("📱 Registering device with server:", {
+      userId,
+      userType,
+      platform: Platform.OS,
+      tokenPreview: token ? token.substring(0, 30) + "..." : "no token",
+    });
+
     const response = await axios.post(
       "https://signup.roostapp.io/notifications/register-device",
       {
@@ -78,11 +99,20 @@ export async function registerDeviceOnServer(
         token,
         userType, // 'client' or 'realtor'
         platform: Platform.OS,
+        deviceType: "mobile", // Specify this is a mobile device for Expo push
       }
+    );
+
+    console.log(
+      "✅ Device registered successfully for push notifications:",
+      response.data
     );
     return response.data;
   } catch (error) {
-    console.error("Error registering device:", error);
+    console.error(
+      "❌ Error registering device:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }

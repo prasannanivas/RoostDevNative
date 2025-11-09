@@ -9,6 +9,7 @@ import Home from "./Home";
 import WrappedClientDetails from "./screens/WrappedClientDetails";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { ChatUnreadProvider } from "./context/ChatUnreadContext";
 import { NetworkProvider, NetworkContext } from "./context/NetworkContext";
 import { RealtorProvider } from "./context/RealtorContext";
 import NetworkStatusIndicator from "./components/NetworkStatusIndicator";
@@ -42,35 +43,37 @@ export default function App() {
           <NetworkProvider>
             <RealtorProvider>
               <NotificationProvider>
-                <Stack.Navigator initialRouteName="Home">
-                  <Stack.Screen
-                    name="Home"
-                    component={Home}
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="SignupStack"
-                    component={SignupStackWithFixedBar}
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="RealtorOnboarding"
-                    component={RealtorOnboardingStack}
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="ClientDetails"
-                    component={WrappedClientDetails}
-                    options={{ title: "Client Details" }}
-                  />
-                  <Stack.Screen
-                    name="PasswordReset"
-                    component={PasswordResetScreen}
-                  />
-                </Stack.Navigator>
-                {/* Network status components */}
-                <NetworkStatusIndicator />
-                <OfflineGameWrapper />
+                <ChatUnreadProvider>
+                  <Stack.Navigator initialRouteName="Home">
+                    <Stack.Screen
+                      name="Home"
+                      component={Home}
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="SignupStack"
+                      component={SignupStackWithFixedBar}
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="RealtorOnboarding"
+                      component={RealtorOnboardingStack}
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="ClientDetails"
+                      component={WrappedClientDetails}
+                      options={{ title: "Client Details" }}
+                    />
+                    <Stack.Screen
+                      name="PasswordReset"
+                      component={PasswordResetScreen}
+                    />
+                  </Stack.Navigator>
+                  {/* Network status components */}
+                  <NetworkStatusIndicator />
+                  <OfflineGameWrapper />
+                </ChatUnreadProvider>
               </NotificationProvider>
             </RealtorProvider>
           </NetworkProvider>

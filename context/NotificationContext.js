@@ -105,8 +105,18 @@ export const NotificationProvider = ({ children }) => {
           data,
         });
 
-        // You can show a custom UI or simply refresh the notifications
-        fetchNotifications();
+        // Handle chat notifications differently
+        if (
+          data.type === "CHAT_MESSAGE" ||
+          data.notificationType === "chat_message"
+        ) {
+          console.log("📨 Chat message notification received:", data);
+          // The ChatUnreadContext will handle updating the unread count via socket
+          // No need to refresh all notifications for chat messages
+        } else {
+          // For other notifications, refresh the notification list
+          fetchNotifications();
+        }
       });
 
     // This listener is called when a user taps on a notification

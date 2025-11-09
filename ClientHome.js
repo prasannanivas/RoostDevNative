@@ -22,6 +22,7 @@ import * as Sharing from "expo-sharing";
 import { useAuth } from "./context/AuthContext";
 import { useClient } from "./context/ClientContext";
 import { useNotification } from "./context/NotificationContext";
+import { useChatUnread } from "./context/ChatUnreadContext";
 import ClientProfile from "./ClientProfile";
 import NotificationComponent from "./NotificationComponent";
 import { QuestionnaireProvider } from "./context/QuestionnaireContext";
@@ -74,6 +75,7 @@ const ClientHome = ({ questionnaireData }) => {
   } = useClient();
 
   const { unreadCount } = useNotification();
+  const { unreadCounts, totalUnread } = useChatUnread();
   const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -692,6 +694,12 @@ const ClientHome = ({ questionnaireData }) => {
               variant="outline"
               size="medium"
             />
+            {/* Chat unread badge on Help button */}
+            {totalUnread > 0 && (
+              <View style={styles.chatUnreadBadge}>
+                <View style={styles.chatUnreadDot} />
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -1061,6 +1069,14 @@ const ClientHome = ({ questionnaireData }) => {
                   Help with app, documents, and general questions
                 </Text>
               </View>
+              {/* Unread badge for admin chat */}
+              {unreadCounts.admin > 0 && (
+                <View style={styles.chatTypeUnreadBadge}>
+                  <Text style={styles.chatTypeUnreadText}>
+                    {unreadCounts.admin}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1079,6 +1095,14 @@ const ClientHome = ({ questionnaireData }) => {
                   Specific questions about your mortgage application
                 </Text>
               </View>
+              {/* Unread badge for mortgage broker chat */}
+              {unreadCounts["mortgage-broker"] > 0 && (
+                <View style={styles.chatTypeUnreadBadge}>
+                  <Text style={styles.chatTypeUnreadText}>
+                    {unreadCounts["mortgage-broker"]}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1894,14 +1918,21 @@ const styles = StyleSheet.create({
     top: 12,
     right: 12,
     backgroundColor: "#F0913A",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 6,
     borderWidth: 2,
     borderColor: COLORS.silver,
     zIndex: 10,
+  },
+  chatTypeUnreadText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
   },
   chatTypeUnreadDot: {
     width: 10,

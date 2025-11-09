@@ -111,13 +111,22 @@ class ChatService {
    * @param {string} userType - Type of user ('client' or 'realtor')
    * @returns {Promise} - Promise resolving to success status
    */
-  async markMessagesAsRead(userId, messageIds, userType = "client") {
+  async markMessagesAsRead(
+    userId,
+    messageIds,
+    userType = "client",
+    chatType = "admin"
+  ) {
     try {
       const headers = await this.getAuthHeaders();
       const endpoint = userType === "realtor" ? "realtor" : "client";
 
+      console.log(
+        `📖 ChatService.markMessagesAsRead - userId: ${userId}, userType: ${userType}, chatType: ${chatType}`
+      );
+
       const response = await fetch(
-        `${this.baseUrl}/${endpoint}/chat/${userId}/read`,
+        `${this.baseUrl}/${endpoint}/chat/${userId}/read?chatType=${chatType}`,
         {
           method: "POST",
           headers,

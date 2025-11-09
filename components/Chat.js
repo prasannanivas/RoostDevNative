@@ -22,6 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
 import { Audio } from "expo-av";
 import { useAuth } from "../context/AuthContext";
+import { useChatUnread } from "../context/ChatUnreadContext";
 import ChatService from "../services/ChatService";
 import TypingIndicator from "./TypingIndicator";
 import { generateInitials } from "../utils/initialsUtils";
@@ -70,6 +71,7 @@ const Chat = ({
   onUnreadChange, // Callback to notify parent about unread messages
 }) => {
   const { auth } = useAuth();
+  const { clearUnread, setUnreadForType } = useChatUnread();
 
   // Get context data based on userType
   let contextInfo = null;
@@ -567,8 +569,18 @@ const Chat = ({
         .map((msg) => msg.id);
 
       if (unreadMessageIds.length > 0) {
-        console.log("Marking messages as read:", unreadMessageIds);
-        ChatService.markMessagesAsRead(userId, unreadMessageIds, userType)
+        console.log(
+          "Marking messages as read:",
+          unreadMessageIds,
+          "chatType:",
+          chatType
+        );
+        ChatService.markMessagesAsRead(
+          userId,
+          unreadMessageIds,
+          userType,
+          chatType
+        )
           .then(() => {
             // Update local state to reflect read status
             setMessages((prev) =>
@@ -592,8 +604,12 @@ const Chat = ({
               )
             );
 
-            // Immediately clear unread badge after marking as read
-            console.log("📊 Messages marked as read, clearing unread badge");
+            // Clear unread count in ChatUnreadContext
+            console.log(
+              "📊 Messages marked as read, clearing unread count for",
+              chatType
+            );
+            clearUnread(chatType);
             setHasUnreadMessages(false);
           })
           .catch((error) => {
@@ -601,7 +617,15 @@ const Chat = ({
           });
       }
     }
-  }, [visible, messages, userId, userType, onUnreadChange]);
+  }, [
+    visible,
+    messages,
+    userId,
+    userType,
+    onUnreadChange,
+    chatType,
+    clearUnread,
+  ]);
 
   // Track unread messages and notify parent component
   useEffect(() => {
