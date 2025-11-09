@@ -304,16 +304,14 @@ const Chat = ({
         }
       }
 
-      let response;
-      if (chatType === "mortgage-broker") {
-        response = await ChatService.getMortgageBrokerMessages(
-          userId,
-          50,
-          page
-        );
-      } else {
-        response = await ChatService.getMessages(userId, 50, page, userType);
-      }
+      // Use unified endpoint for both admin and mortgage-broker chats
+      let response = await ChatService.getMessagesByType(
+        userId,
+        chatType,
+        50,
+        page
+      );
+
       console.log("Loaded messages response:", response);
 
       const apiMessages = response.messages || [];
@@ -949,12 +947,36 @@ const Chat = ({
       }
     };
 
-    const handleTypingIndicator = (isTyping, fromUserId) => {
+    const handleTypingIndicator = (
+      isTyping,
+      fromUserId,
+      fromChatId,
+      fromUserType
+    ) => {
       console.log(
-        `User ${fromUserId} is ${isTyping ? "typing" : "not typing"}`
+        `User ${fromUserId} (type: ${fromUserType}) is ${
+          isTyping ? "typing" : "not typing"
+        } in chat ${fromChatId}`
       );
-      // Only show typing for support messages
-      if (fromUserId !== userId) {
+
+      // Determine if this typing event is for the current chat type
+      // Admin users typing -> show in "admin" chat
+      // Mortgage broker (sub-admin) users typing -> show in "mortgage-broker" chat
+      let typingChatType = null;
+      if (fromUserType === "admin") {
+        typingChatType = "admin";
+      } else if (
+        fromUserType === "sub-admin" ||
+        fromUserType === "mortgage-broker"
+      ) {
+        typingChatType = "mortgage-broker";
+      }
+
+      // Only show typing if it's for the current chat type
+      if (fromUserId !== userId && typingChatType === chatType) {
+        console.log(
+          `✅ Showing typing indicator for ${typingChatType} chat (current: ${chatType})`
+        );
         setIsTyping(isTyping);
 
         // Auto-scroll when typing indicator appears
@@ -963,6 +985,10 @@ const Chat = ({
             scrollViewRef.current?.scrollToEnd({ animated: true });
           }, 100);
         }
+      } else if (typingChatType !== chatType) {
+        console.log(
+          `⏭️ Ignoring typing indicator from ${typingChatType} (current chat: ${chatType})`
+        );
       }
     };
 
@@ -1150,18 +1176,22 @@ const Chat = ({
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      console.log("Sending message:", messageText, "for user:", userId);
+      console.log(
+        "Sending message:",
+        messageText,
+        "for user:",
+        userId,
+        "chatType:",
+        chatType
+      );
 
-      // Send message via API
-      let response;
-      if (chatType === "mortgage-broker") {
-        response = await ChatService.sendMortgageBrokerMessage(
-          userId,
-          messageText
-        );
-      } else {
-        response = await ChatService.sendMessage(userId, messageText, userType);
-      }
+      // Send message via unified API endpoint
+      const response = await ChatService.sendMessageByType(
+        userId,
+        messageText,
+        chatType
+      );
+
       console.log("Message sent successfully:", response);
 
       // Update message with server response - only if we have a valid response
@@ -1324,11 +1354,8 @@ const Chat = ({
         messages.length > 0 ? messages[messages.length - 1].id : null;
 
       let response;
-      if (chatType === "mortgage-broker") {
-        response = await ChatService.getMortgageBrokerMessages(userId, 50, 1);
-      } else {
-        response = await ChatService.getMessages(userId, 50, 1, userType);
-      }
+      // Use unified endpoint for both admin and mortgage-broker chats
+      response = await ChatService.getMessagesByType(userId, chatType, 50, 1);
 
       const apiMessages = response.messages || [];
 
@@ -1429,7 +1456,12 @@ const Chat = ({
     try {
       console.log("Retrying message:", message.text, "for user:", userId);
 
-      const response = await ChatService.sendMessage(userId, message.text);
+      // Use unified endpoint with chatType
+      const response = await ChatService.sendMessageByType(
+        userId,
+        message.text,
+        chatType
+      );
       console.log("Message retry successful:", response);
 
       // Update message with server response

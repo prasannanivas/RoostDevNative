@@ -8,6 +8,8 @@ import React, {
 } from "react";
 import { useAuth } from "./AuthContext";
 import io from "socket.io-client";
+import * as Notifications from "expo-notifications";
+import { AppState } from "react-native";
 
 const ChatUnreadContext = createContext(null);
 
@@ -166,11 +168,80 @@ export const ChatUnreadProvider = ({ children }) => {
     };
   }, [clientId]);
 
+  // Listen to push notifications and increment unread count immediately
+  useEffect(() => {
+    if (!clientId) return;
+
+    console.log("📱 Setting up push notification listener for ChatUnread");
+
+    // Listen for notifications received while app is in foreground or background
+    const notificationSubscription =
+      Notifications.addNotificationReceivedListener((notification) => {
+        const data = notification.request.content.data;
+        console.log("📨 ChatUnread received notification:", data);
+
+        // Check if it's a chat notification
+        if (
+          data.type === "CHAT_MESSAGE" ||
+          data.notificationType === "chat_message"
+        ) {
+          const chatType = data.chatType; // "admin" or "mortgage-broker"
+
+          if (chatType) {
+            console.log(
+              `📈 Incrementing unread count for ${chatType} from push notification`
+            );
+            incrementUnread(chatType);
+          }
+        }
+      });
+
+    // Also listen for notification responses (when user taps notification)
+    const responseSubscription =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data;
+        console.log("📲 ChatUnread notification tapped:", data);
+
+        // When user taps notification, they'll be taken to the chat
+        // The Chat component will handle marking as read
+        // We don't need to do anything here
+      });
+
+    return () => {
+      console.log("🛑 Cleaning up ChatUnread notification listeners");
+      notificationSubscription.remove();
+      responseSubscription.remove();
+    };
+  }, [clientId]);
+
   // Fetch initial counts on mount
   useEffect(() => {
     if (clientId) {
       fetchUnreadCounts();
     }
+  }, [clientId]);
+
+  // Listen to app state changes and fetch counts when app comes to foreground
+  useEffect(() => {
+    if (!clientId) return;
+
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextAppState) => {
+        console.log(`📱 AppState changed to: ${nextAppState}`);
+
+        // When app comes to foreground (from background or inactive)
+        if (nextAppState === "active") {
+          console.log("📊 App became active, fetching unread counts...");
+          fetchUnreadCounts();
+        }
+      }
+    );
+
+    return () => {
+      console.log("🛑 Cleaning up AppState listener");
+      appStateSubscription.remove();
+    };
   }, [clientId]);
 
   // Refresh counts when app comes to foreground

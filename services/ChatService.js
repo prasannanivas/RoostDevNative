@@ -26,7 +26,61 @@ class ChatService {
   }
 
   /**
-   * Fetch chat messages for a user
+   * Get messages by chat type (unified endpoint for admin and mortgage-broker chats)
+   * @param {string} userId - The user ID
+   * @param {string} chatType - Type of chat ('admin' or 'mortgage-broker')
+   * @param {number} limit - Number of messages to fetch
+   * @param {number} page - Page number for pagination
+   * @returns {Promise} - Promise resolving to messages array
+   */
+  async getMessagesByType(userId, chatType = "admin", limit = 50, page = 1) {
+    try {
+      const headers = await this.getAuthHeaders();
+      const url = `${this.baseUrl}/client/messages-by-type/${userId}?chatType=${chatType}&limit=${limit}&page=${page}`;
+
+      console.log(
+        `📨 Fetching messages - userId: ${userId}, chatType: ${chatType}, page: ${page}`
+      );
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log(
+            `No chat history found for user ${userId}, chatType: ${chatType} - returning empty messages`
+          );
+          return {
+            messages: [],
+            pagination: null,
+            available: true,
+          };
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(
+        `✅ Fetched ${
+          data.messages?.length || 0
+        } messages for chatType: ${chatType}`
+      );
+
+      return {
+        messages: data.messages || [],
+        pagination: data.pagination || null,
+        available: data.available !== false,
+      };
+    } catch (error) {
+      console.error(`Error fetching messages by type (${chatType}):`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get chat messages (legacy endpoint - prefer getMessagesByType)
    * @param {string} userId - The user ID
    * @param {number} limit - Number of messages to fetch
    * @param {number} page - Page number for pagination
@@ -70,7 +124,47 @@ class ChatService {
   }
 
   /**
-   * Send a new message
+   * Send a message by chat type (unified endpoint for admin and mortgage-broker chats)
+   * @param {string} userId - The user ID
+   * @param {string} message - The message text
+   * @param {string} chatType - Type of chat ('admin' or 'mortgage-broker')
+   * @returns {Promise} - Promise resolving to the sent message
+   */
+  async sendMessageByType(userId, message, chatType = "admin") {
+    try {
+      const headers = await this.getAuthHeaders();
+
+      console.log(
+        `📤 Sending message - userId: ${userId}, chatType: ${chatType}`
+      );
+
+      const response = await fetch(
+        `${this.baseUrl}/client/messages-by-type/${userId}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            content: message,
+            chatType: chatType,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ Message sent successfully for chatType: ${chatType}`);
+      return data.message || data;
+    } catch (error) {
+      console.error(`Error sending message by type (${chatType}):`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send a new message (legacy endpoint - prefer sendMessageByType)
    * @param {string} userId - The user ID
    * @param {string} message - The message text
    * @param {string} userType - Type of user ('client' or 'realtor')
@@ -362,7 +456,8 @@ class ChatService {
     socket.on("user_typing", (data) => {
       console.log("⌨️ Typing indicator:", data);
       if (data.user.id !== userId) {
-        onTyping(data.isTyping, data.user.id);
+        // Pass chatId and user type along with typing status
+        onTyping(data.isTyping, data.user.id, data.chatId, data.user.type);
       }
     });
 
