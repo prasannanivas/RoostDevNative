@@ -577,7 +577,11 @@ const Chat = ({
                   ? {
                       ...msg,
                       readBy: {
-                        ...msg.readBy,
+                        ...(typeof msg.readBy === "object" &&
+                        msg.readBy !== null &&
+                        !Array.isArray(msg.readBy)
+                          ? msg.readBy
+                          : {}),
                         [userType]: {
                           isRead: true,
                           readAt: new Date().toISOString(),
@@ -591,12 +595,6 @@ const Chat = ({
             // Immediately clear unread badge after marking as read
             console.log("📊 Messages marked as read, clearing unread badge");
             setHasUnreadMessages(false);
-            if (onUnreadChange) {
-              console.log(
-                "📊 Calling onUnreadChange(false) after marking read"
-              );
-              onUnreadChange(false);
-            }
           })
           .catch((error) => {
             console.log("Error marking messages as read:", error);
@@ -617,35 +615,26 @@ const Chat = ({
     );
     if (!visible) {
       // When chat is not visible, check if there are unread messages
-      const hasUnread = messages.some(
+      const unreadMessages = messages.filter(
         (msg) => msg.sender === "support" && !msg.readBy?.[userType]?.isRead
       );
+
       console.log(
-        "📊 Chat NOT visible - hasUnread:",
-        hasUnread,
+        "📊 Chat NOT visible - unreadMessages count:",
+        unreadMessages.length,
         "| chatType:",
         chatType
       );
 
-      if (hasUnread !== hasUnreadMessages) {
+      if (unreadMessages.length > 0 && !hasUnreadMessages) {
         console.log(
-          "📊 Unread status changed! Setting hasUnreadMessages to:",
-          hasUnread,
-          "| chatType:",
+          "📊 New unread messages detected! Setting hasUnreadMessages to TRUE | chatType:",
           chatType
         );
-        setHasUnreadMessages(hasUnread);
-        if (onUnreadChange) {
-          console.log(
-            "📊 Calling onUnreadChange callback with:",
-            hasUnread,
-            "| chatType:",
-            chatType
-          );
-          onUnreadChange(hasUnread);
-        } else {
-          console.warn("⚠️ onUnreadChange callback is not defined!");
-        }
+        setHasUnreadMessages(true);
+      } else if (unreadMessages.length === 0 && hasUnreadMessages) {
+        console.log("📊 No more unread messages - clearing status");
+        setHasUnreadMessages(false);
       }
     } else {
       // When chat becomes visible, clear unread status immediately
@@ -654,22 +643,8 @@ const Chat = ({
         chatType
       );
       setHasUnreadMessages(false);
-      if (onUnreadChange) {
-        console.log(
-          "📊 Calling onUnreadChange(false) immediately | chatType:",
-          chatType
-        );
-        onUnreadChange(false);
-      }
     }
-  }, [
-    visible,
-    messages,
-    userType,
-    hasUnreadMessages,
-    onUnreadChange,
-    chatType,
-  ]);
+  }, [visible, messages, userType, onUnreadChange, chatType]); // Removed hasUnreadMessages to prevent infinite loop
 
   // Subscribe to real-time chat updates via WebSocket
   useEffect(() => {
@@ -688,6 +663,12 @@ const Chat = ({
 
     const handleNewMessage = (data) => {
       console.log("Received new message via WebSocket:", data);
+
+      // Ignore read receipt notifications completely
+      if (data.type === "read_receipt") {
+        console.log("🔕 Ignoring read receipt (disabled)");
+        return;
+      }
 
       // Extract the actual message from the nested structure
       const message = data.message || data;
@@ -899,7 +880,11 @@ const Chat = ({
                       ? {
                           ...msg,
                           readBy: {
-                            ...msg.readBy,
+                            ...(typeof msg.readBy === "object" &&
+                            msg.readBy !== null &&
+                            !Array.isArray(msg.readBy)
+                              ? msg.readBy
+                              : {}),
                             [userType]: {
                               isRead: true,
                               readAt: new Date().toISOString(),
@@ -913,9 +898,6 @@ const Chat = ({
                 // Explicitly clear unread badge since message was read immediately
                 console.log("📊 New message read immediately, clearing badge");
                 setHasUnreadMessages(false);
-                if (onUnreadChange) {
-                  onUnreadChange(false);
-                }
               })
               .catch((error) => {
                 console.error("Error marking new message as read:", error);

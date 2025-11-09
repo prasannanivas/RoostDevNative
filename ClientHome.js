@@ -84,35 +84,6 @@ const ClientHome = ({ questionnaireData }) => {
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showChat, setShowChat] = useState(false);
-  const [hasUnreadAdmin, setHasUnreadAdmin] = useState(false);
-  const [hasUnreadBroker, setHasUnreadBroker] = useState(false);
-
-  // Handler for chat unread changes - separate for each chat type
-  const handleAdminUnreadChange = (hasUnread) => {
-    console.log("🏠 [ClientHome] Admin chat unread status changed:", hasUnread);
-    setHasUnreadAdmin(hasUnread);
-  };
-
-  const handleBrokerUnreadChange = (hasUnread) => {
-    console.log(
-      "🏠 [ClientHome] Broker chat unread status changed:",
-      hasUnread
-    );
-    setHasUnreadBroker(hasUnread);
-  };
-
-  // Monitor badge state changes
-  useEffect(() => {
-    const hasAnyUnread = hasUnreadAdmin || hasUnreadBroker;
-    console.log(
-      "🔴 [ClientHome] BADGE STATE:",
-      hasAnyUnread ? "SHOWING" : "HIDDEN",
-      "| Admin:",
-      hasUnreadAdmin,
-      "| Broker:",
-      hasUnreadBroker
-    );
-  }, [hasUnreadAdmin, hasUnreadBroker]);
 
   const [showChatTypeSelection, setShowChatTypeSelection] = useState(false);
   const [selectedChatType, setSelectedChatType] = useState("admin");
@@ -721,11 +692,6 @@ const ClientHome = ({ questionnaireData }) => {
               variant="outline"
               size="medium"
             />
-            {(hasUnreadAdmin || hasUnreadBroker) && (
-              <View style={styles.chatUnreadBadge}>
-                <View style={styles.chatUnreadDot} />
-              </View>
-            )}
           </View>
         </View>
       </View>
@@ -1095,11 +1061,6 @@ const ClientHome = ({ questionnaireData }) => {
                   Help with app, documents, and general questions
                 </Text>
               </View>
-              {hasUnreadAdmin && (
-                <View style={styles.chatTypeUnreadBadge}>
-                  <View style={styles.chatTypeUnreadDot} />
-                </View>
-              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1118,11 +1079,6 @@ const ClientHome = ({ questionnaireData }) => {
                   Specific questions about your mortgage application
                 </Text>
               </View>
-              {hasUnreadBroker && (
-                <View style={styles.chatTypeUnreadBadge}>
-                  <View style={styles.chatTypeUnreadDot} />
-                </View>
-              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1143,7 +1099,6 @@ const ClientHome = ({ questionnaireData }) => {
         userId={clientId}
         userName={clientFromContext.name}
         chatType="admin"
-        onUnreadChange={handleAdminUnreadChange}
       />
 
       {/* Mortgage Broker Chat - only if broker is available */}
@@ -1154,7 +1109,6 @@ const ClientHome = ({ questionnaireData }) => {
           userId={clientId}
           userName={clientFromContext.name}
           chatType="mortgage-broker"
-          onUnreadChange={handleBrokerUnreadChange}
         />
       )}
 

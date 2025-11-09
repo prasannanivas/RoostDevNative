@@ -357,6 +357,20 @@ class ChatService {
       }
     });
 
+    // Listen for messages read receipts
+    socket.on("messages_read", (data) => {
+      console.log("✅ Messages read event:", data);
+      if (onMessage) {
+        // Notify the message handler about read receipts
+        onMessage({
+          type: "read_receipt",
+          chatId: data.chatId,
+          readBy: data.readBy,
+          timestamp: data.timestamp || new Date(),
+        });
+      }
+    });
+
     // Listen for successful chat joining
     socket.on("joined_chats", (data) => {
       console.log("🏠 Joined chats:", data);
