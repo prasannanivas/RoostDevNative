@@ -42,6 +42,8 @@ import InviteRealtorModal from "./components/modals/InviteRealtorModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
 import ChatModal from "./components/ChatModal";
 import MortgageApplicationModal from "./components/modals/MortgageApplicationModal";
+import InviteClientModal from "./components/modals/InviteClientModal";
+import ShareOptionsModal from "./components/modals/ShareOptionsModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -485,9 +487,14 @@ const RealtorHome = ({ onShowNotifications }) => {
           type: "success",
         });
 
-        // Close current modal and show the invite options modal
-        setShowForm(false);
-        setShowInviteOptionsModal(true);
+        console.log("RealtorHome - Client invited successfully!");
+        console.log("RealtorHome - formData:", formData);
+
+        // Show the invite options modal on top (keep form open)
+        setTimeout(() => {
+          console.log("RealtorHome - Setting showInviteOptionsModal to true");
+          setShowInviteOptionsModal(true);
+        }, 300);
 
         // Refresh the realtor data to show the new client
         realtorFromContext?.fetchLatestRealtor();
@@ -496,8 +503,6 @@ const RealtorHome = ({ onShowNotifications }) => {
         setTimeout(() => {
           updateNeededDocumentsCounts();
         }, 1000); // Small delay to ensure the new client is available
-
-        // Don't close the modal automatically - user will click "Done" now
       } else {
         setFeedback({
           message: "Failed to invite client. Please try again.",
@@ -711,8 +716,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       console.error("Error opening SMS:", err)
     );
 
-    // Close modal and schedule transactional email check
+    // Close both modals and schedule transactional email check
     setShowInviteOptionsModal(false);
+    setShowForm(false);
     resetFormData();
     scheduleTransactionalEmailCheck();
   };
@@ -737,16 +743,18 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       console.error("Error opening email:", err)
     );
 
-    // Close modal and schedule transactional email check
+    // Close both modals and schedule transactional email check
     setShowInviteOptionsModal(false);
+    setShowForm(false);
     resetFormData();
     scheduleTransactionalEmailCheck();
   };
 
   const handleNoneOption = () => {
     // Send transactional email immediately
-    sendTransactionalEmail();
+    // sendTransactionalEmail();
     setShowInviteOptionsModal(false);
+    setShowForm(false);
     resetFormData();
   };
 
@@ -1599,370 +1607,56 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         realtorId={realtor.id}
       />
 
-      {/* New Invite Options Modal */}
-      <Modal
-        visible={showInviteOptionsModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowInviteOptionsModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.formOverlay}
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.inviteOptionsContainer}>
-              <TouchableOpacity
-                style={styles.closeFormButton}
-                onPress={() => setShowInviteOptionsModal(false)}
-              >
-                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
-                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
-                  <Path
-                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                    fill="#A9A9A9"
-                  />
-                </Svg>
-              </TouchableOpacity>
+      {/* Invite Client Modal */}
+      {!showInviteOptionsModal && (
+        <InviteClientModal
+          visible={showForm}
+          onClose={() => setShowForm(false)}
+          formData={formData}
+          setFormData={setFormData}
+          isMultiple={isMultiple}
+          setIsMultiple={setIsMultiple}
+          handleInviteClient={handleInviteClient}
+          pickContact={pickContact}
+          handlePickInviteFile={handlePickInviteFile}
+          handleMultipleInvites={handleMultipleInvites}
+          isLoading={isLoading}
+          multiInviteLoading={multiInviteLoading}
+          selectedInviteFile={selectedInviteFile}
+          multiInviteFeedback={multiInviteFeedback}
+          fieldErrors={fieldErrors}
+          setFieldErrors={setFieldErrors}
+          formatPhoneNumber={formatPhoneNumber}
+          unFormatPhoneNumber={unFormatPhoneNumber}
+          trimLeft={trimLeft}
+          trimFull={trimFull}
+        />
+      )}
 
-              <Text style={styles.inviteOptionsTitle}>Client invite via</Text>
-              <Text style={styles.inviteOptionsSubtitle}>
-                It's always best to send a custom invite directly from you by
-                text or email. Or have us send it
-              </Text>
-
-              <View style={styles.contactOptions}>
-                {formData.phone && (
-                  <TouchableOpacity
-                    style={styles.primaryOptionBtn}
-                    onPress={handlePersonalText}
-                  >
-                    {/* <MaterialIcons name="sms" size={32} color="#2196F3" /> */}
-                    <Text style={styles.primaryOptionText}>Personal Text</Text>
-                  </TouchableOpacity>
-                )}
-
-                {formData.email && (
-                  <TouchableOpacity
-                    style={styles.primaryOptionBtn}
-                    onPress={handlePersonalEmail}
-                  >
-                    {/* <Entypo name="mail" size={32} color="#F44336" /> */}
-                    <Text style={styles.primaryOptionText}>Personal Email</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <View style={styles.noneOptionContainer}>
-                <TouchableOpacity
-                  style={styles.noneButton}
-                  onPress={handleNoneOption}
-                >
-                  <Text style={styles.noneButtonText}>Invite</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
-      </Modal>
-      {/* Invite Form Modal (Overlay) */}
-      <Modal
-        visible={showForm}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowForm(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "height" : "height"}
-          style={styles.formOverlay}
-          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : 0}
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.formContainer}>
-              {/* Add close button here */}
-              <TouchableOpacity
-                style={styles.closeFormButton}
-                onPress={() => setShowForm(false)}
-              >
-                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
-                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
-                  <Path
-                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                    fill="#A9A9A9"
-                  />
-                </Svg>
-              </TouchableOpacity>
-
-              <Text style={styles.formTitle}>ADD A CLIENT</Text>
-              <Text style={styles.formSubtitle}>
-                Send your client an invite to view and share listing with you.
-              </Text>
-              {/* One/Multiple Toggle */}
-              <View style={styles.toggleContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleOption,
-                    !isMultiple && styles.toggleOptionActive,
-                  ]}
-                  onPress={() => setIsMultiple(false)}
-                >
-                  <Text
-                    style={
-                      !isMultiple ? styles.toggleTextActive : styles.toggleText
-                    }
-                  >
-                    One
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleOption,
-                    isMultiple && styles.toggleOptionActive,
-                  ]}
-                  onPress={() => setIsMultiple(true)}
-                >
-                  <Text
-                    style={
-                      isMultiple ? styles.toggleTextActive : styles.toggleText
-                    }
-                  >
-                    Multiple
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {!isMultiple ? (
-                /* Single Client Form */
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                >
-                  <>
-                    <TextInput
-                      style={styles.inputField}
-                      placeholder="First Name"
-                      placeholderTextColor={COLORS.gray}
-                      value={formData.firstName}
-                      onChangeText={(text) => {
-                        setFormData({ ...formData, firstName: trimLeft(text) });
-                        if (fieldErrors.firstName)
-                          setFieldErrors({
-                            ...fieldErrors,
-                            firstName: "",
-                          });
-                      }}
-                      onBlur={() =>
-                        setFormData({
-                          ...formData,
-                          firstName: trimFull(formData.firstName),
-                        })
-                      }
-                      returnKeyType="next"
-                      blurOnSubmit={false}
-                      onSubmitEditing={() => lastNameInputRef.current?.focus()}
-                    />
-                    <TextInput
-                      ref={lastNameInputRef}
-                      style={styles.inputField}
-                      placeholder="Last Name"
-                      placeholderTextColor={COLORS.gray}
-                      value={formData.lastName}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, lastName: trimLeft(text) })
-                      }
-                      onBlur={() =>
-                        setFormData({
-                          ...formData,
-                          lastName: trimFull(formData.lastName),
-                        })
-                      }
-                      returnKeyType="next"
-                      blurOnSubmit={false}
-                      onSubmitEditing={() => emailInputRef.current?.focus()}
-                    />
-                    <TextInput
-                      ref={emailInputRef}
-                      style={styles.inputField}
-                      placeholder="Email"
-                      placeholderTextColor={COLORS.gray}
-                      keyboardType="email-address"
-                      value={formData.email}
-                      onChangeText={(text) => {
-                        setFormData({ ...formData, email: trimLeft(text) });
-                        if (fieldErrors.emailPhone)
-                          setFieldErrors({
-                            ...fieldErrors,
-                            emailPhone: "",
-                          });
-                      }}
-                      onBlur={() =>
-                        setFormData({
-                          ...formData,
-                          email: trimFull(formData.email),
-                        })
-                      }
-                      returnKeyType="next"
-                      blurOnSubmit={false}
-                      onSubmitEditing={() => phoneInputRef.current?.focus()}
-                    />
-                    <TextInput
-                      ref={phoneInputRef}
-                      style={styles.inputField}
-                      placeholder="Phone"
-                      placeholderTextColor={COLORS.gray}
-                      keyboardType="phone-pad"
-                      value={formatPhoneNumber(formData.phone)}
-                      onChangeText={(text) => {
-                        // Only allow digits, max 10
-                        setFormData({
-                          ...formData,
-                          phone: unFormatPhoneNumber(trimLeft(text)),
-                        });
-                        if (fieldErrors.emailPhone)
-                          setFieldErrors({
-                            ...fieldErrors,
-                            emailPhone: "",
-                          });
-                      }}
-                      onBlur={() =>
-                        setFormData({
-                          ...formData,
-                          phone: unFormatPhoneNumber(trimFull(formData.phone)),
-                        })
-                      }
-                      maxLength={14} // (xxx)-xxx-xxxx is 14 chars
-                      returnKeyType="done"
-                      onSubmitEditing={Keyboard.dismiss}
-                    />
-
-                    {(fieldErrors.emailPhone || fieldErrors.firstName) && (
-                      <View
-                        style={{
-                          fontSize: 13,
-                        }}
-                      >
-                        {fieldErrors.emailPhone && (
-                          <Text
-                            style={{
-                              fontWeight: "bold",
-                              color: COLORS.red,
-                              marginBottom: 4,
-                              marginLeft: 4,
-                            }}
-                          >
-                            * {fieldErrors.emailPhone}
-                          </Text>
-                        )}
-                        {fieldErrors.firstName && (
-                          <Text
-                            style={{
-                              fontWeight: "bold",
-                              color: COLORS.red,
-                              marginBottom: 4,
-                              marginLeft: 4,
-                            }}
-                          >
-                            * {fieldErrors.firstName}
-                          </Text>
-                        )}
-                      </View>
-                    )}
-
-                    {/* Send invite button */}
-                    <TouchableOpacity
-                      style={styles.sendInviteButton}
-                      onPress={handleInviteClient}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <ActivityIndicator color={COLORS.white} />
-                      ) : (
-                        <Text style={styles.sendInviteButtonText}>
-                          Send Invite
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-
-                    {/* Use contactInviteContainer instead of dividerContainer */}
-                    <View style={styles.contactInviteContainer}>
-                      <Text style={styles.orText}>
-                        Or you can invite the contact you have on your phone
-                      </Text>
-
-                      <TouchableOpacity
-                        style={styles.contactsButton}
-                        onPress={pickContact}
-                      >
-                        <Text style={styles.contactsButtonText}>
-                          Invite my contacts
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </>
-                </ScrollView>
-              ) : (
-                /* Multiple Clients Form */
-                <>
-                  <TouchableOpacity
-                    style={styles.uploadFileButton}
-                    onPress={handlePickInviteFile}
-                  >
-                    <Text style={styles.uploadFileText}>Upload File</Text>
-                  </TouchableOpacity>
-                  {selectedInviteFile && (
-                    <Text
-                      style={{
-                        color: COLORS.slate,
-                        marginTop: 8,
-                        textAlign: "center",
-                      }}
-                    >
-                      Selected: {selectedInviteFile.name}
-                    </Text>
-                  )}
-                  <TouchableOpacity
-                    style={styles.sendInviteButton}
-                    onPress={handleMultipleInvites}
-                    disabled={multiInviteLoading}
-                  >
-                    {multiInviteLoading ? (
-                      <ActivityIndicator color={COLORS.white} />
-                    ) : (
-                      <Text style={styles.sendInviteButtonText}>
-                        Send Invites
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                  {!!multiInviteFeedback && (
-                    <Text
-                      style={{
-                        color: multiInviteFeedback.includes("success")
-                          ? COLORS.green
-                          : COLORS.red,
-                        marginTop: 8,
-                        textAlign: "center",
-                      }}
-                    >
-                      {multiInviteFeedback}
-                    </Text>
-                  )}
-                  <Text style={styles.orDivider}>OR</Text>
-                  <Text style={styles.alternativeText}>
-                    You can always email a file (Excel or .CSV) to us at
-                    <Text style={{ fontWeight: "bold" }}>
-                      {" "}
-                      files@roostapp.io{" "}
-                    </Text>
-                    and we can take care of it for you
-                  </Text>
-                </>
-              )}
-            </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
-      </Modal>
+      {/* Share Options Modal for Client Invite */}
+      {console.log(
+        "RealtorHome Render - showInviteOptionsModal:",
+        showInviteOptionsModal,
+        "formData:",
+        { phone: formData.phone, email: formData.email }
+      )}
+      {showInviteOptionsModal && (
+        <ShareOptionsModal
+          visible={showInviteOptionsModal}
+          onClose={() => {
+            console.log("ShareOptionsModal - onClose called");
+            setShowInviteOptionsModal(false);
+            setShowForm(false);
+          }}
+          title="Client invite via"
+          subtitle="We have sent an invite! However its always best to reach out directly. Sending a personalized message is simple just click one of the options below."
+          hasPhone={!!formData.phone}
+          hasEmail={!!formData.email}
+          onPersonalText={handlePersonalText}
+          onPersonalEmail={handlePersonalEmail}
+          onSkip={handleNoneOption}
+        />
+      )}
 
       {/* Client Card Detail Modal - Slides from bottom */}
       <Modal
@@ -2757,7 +2451,7 @@ const styles = StyleSheet.create({
   },
   formOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 10,
@@ -3083,67 +2777,6 @@ const styles = StyleSheet.create({
     right: -10, // Half of the circle width (37/2) to position it 50% outside
     zIndex: 10,
   },
-  contactOptions: {
-    alignItems: "center",
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
-  },
-  contactOptionsTitle: {
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
-    marginBottom: 16,
-    color: COLORS.black,
-    fontFamily: "Futura",
-  },
-  contactOptions: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-    marginBottom: 48, // 48px gap before None button
-  },
-  primaryOptionBtn: {
-    backgroundColor: COLORS.green,
-    borderRadius: 33,
-    paddingVertical: 12,
-    paddingHorizontal: 23,
-    alignItems: "center",
-    minWidth: 120,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  primaryOptionText: {
-    //  marginTop: 8,
-    fontSize: 12,
-    fontWeight: "bold",
-    color: COLORS.white,
-    fontFamily: "Futura",
-    textAlign: "center",
-  },
-  noneOptionContainer: {
-    alignItems: "center",
-    width: "100%",
-  },
-  noneButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: COLORS.green,
-    borderRadius: 33,
-    paddingVertical: 13,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    width: "80%",
-  },
-  noneButtonText: {
-    color: COLORS.green,
-    fontSize: 12,
-    fontWeight: "700",
-    fontFamily: "Futura",
-  },
   contactIconBtn: {
     alignItems: "center",
     marginHorizontal: 16,
@@ -3169,40 +2802,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     fontSize: 16, // H3 size
     fontWeight: "500", // H3 weight
-    fontFamily: "Futura",
-  },
-  inviteOptionsContainer: {
-    backgroundColor: COLORS.white,
-    padding: 24,
-    borderRadius: 8,
-    width: "90%",
-    maxHeight: "90%",
-    elevation: 5,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    marginTop: 18.5,
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    overflow: "visible",
-    position: "relative",
-    alignItems: "center",
-  },
-  inviteOptionsTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 12,
-    textAlign: "center",
-    letterSpacing: 0,
-    color: COLORS.green,
-    fontFamily: "Futura",
-  },
-  inviteOptionsSubtitle: {
-    textAlign: "center",
-    fontSize: 14,
-    fontWeight: "500",
-    color: COLORS.black,
-    marginBottom: 24,
-    paddingHorizontal: 16,
     fontFamily: "Futura",
   },
   contactInviteContainer: {

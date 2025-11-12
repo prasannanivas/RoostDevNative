@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,30 +9,32 @@ import {
   StyleSheet,
   Alert,
   Linking,
-  Clipboard, // Add Clipboard import
+  Clipboard,
   Platform,
+  ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
 } from "react-native";
-import {
-  MaterialCommunityIcons,
-  MaterialIcons,
-  Entypo,
-} from "@expo/vector-icons";
+import Svg, { Circle, Path } from "react-native-svg";
 import {
   formatPhoneNumber,
   unFormatPhoneNumber,
 } from "../../utils/phoneFormatUtils";
 import { trimLeft, trimFull } from "../../utils/stringUtils";
+import ShareOptionsModal from "./ShareOptionsModal";
 
 const COLORS = {
-  primary: "#377473", // Updated to green color as specified
-  secondary: "#333333",
-  white: "#FDFDFD", // Updated to specified white color
-  black: "#000000",
-  gray: "#CCCCCC",
-  lightGray: "#F5F5F5",
-  error: "#F44336",
-  success: "#25D366",
-  info: "#2196F3",
+  green: "#377473",
+  background: "#F6F6F6",
+  black: "#1D2327",
+  slate: "#707070",
+  gray: "#A9A9A9",
+  silver: "#F6F6F6",
+  white: "#FDFDFD",
+  red: "#A20E0E",
+  orange: "#F0913A",
+  disabledGray: "#E8E8E8",
 };
 
 /**
@@ -52,19 +54,40 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     email: "",
     phone: "",
   });
-  // Legacy inline contact options (replaced by separate share modal)
-  const [showContactOptions, setShowContactOptions] = useState(false);
-  // New share options modal (mirrors ClientInviteModal pattern)
   const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
-  const [inviteLink, setInviteLink] = useState(""); // Store the invite link from API response
-  const [copied, setCopied] = useState(false); // Add state for copy feedback
+  const [inviteLink, setInviteLink] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [modalReady, setModalReady] = useState(false);
+
+  // Refs for input navigation
+  const lastNameInputRef = useRef();
+  const emailInputRef = useRef();
+  const phoneInputRef = useRef();
+
+  // Handle modal visibility with delay to prevent conflicts on app start
+  useEffect(() => {
+    if (visible) {
+      // Add a small delay to ensure the app is fully mounted
+      const timer = setTimeout(() => {
+        setModalReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setModalReady(false);
+    }
+  }, [visible]);
+
+  // Check if the form is valid to enable the button
+  const isFormValid =
+    inviteData.firstName &&
+    inviteData.firstName.trim() !== "" &&
+    (inviteData.email?.trim() || inviteData.phone?.trim());
 
   // Function to handle inviting a realtor
   const handleInviteRealtor = async () => {
     setInviteLoading(true);
     setInviteFeedback({ msg: "", type: "" });
-    setShowContactOptions(false);
 
     // Validate that either email or phone is provided
     if (
@@ -82,16 +105,15 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     }
 
     try {
-      // Build the message text
-      const inviteMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients`;
-
-      // Construct the API payload - keep the format the same by combining first and last name
+      // Construct the API payload
       const payload = {
         referenceName: `${inviteData.firstName} ${inviteData.lastName}`.trim(),
         email: inviteData.email,
         phone: inviteData.phone,
         type: "Realtor",
-      }; // Send the invite via the API - keep loading indicator showing
+      };
+
+      // Send the invite via the API
       const resp = await fetch(
         `https://signup.roostapp.io/realtor/${realtorId}/invite-realtor`,
         {
@@ -107,17 +129,19 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
         setInviteLink(
           responseData.inviteLink ||
             `http://signup.roostapp.io/?realtorCode=${realtorInfo?.inviteCode}&iv=r`
-        ); // Set the invite link from response
+        );
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
 
-        // Instead of automatically opening apps, show contact option icons
-        // OLD: inline contact options
-        // setShowContactOptions(true);
-        // NEW: open dedicated share modal like ClientInviteModal
-        setShowShareOptionsModal(true);
+        console.log("InviteRealtorModal - Realtor invited successfully!");
+        console.log("InviteRealtorModal - inviteData:", inviteData);
 
-        // Don't automatically close the form so the user can use the contact options
-        // The user can manually close the form when they're done
+        // Open the share options modal after a brief delay to ensure state update
+        setTimeout(() => {
+          console.log(
+            "InviteRealtorModal - Setting showShareOptionsModal to true"
+          );
+          setShowShareOptionsModal(true);
+        }, 300);
       } else {
         setInviteFeedback({
           msg: "Failed – try again",
@@ -128,57 +152,18 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
       console.error(e);
       setInviteFeedback({ msg: "Error occurred", type: "error" });
     } finally {
-      // Always ensure the loading indicator is removed when complete
       setInviteLoading(false);
     }
   };
-  // Handle opening WhatsApp
-  const openWhatsApp = () => {
-    // Use the invite link returned from the API response if available
-    const signupLink =
-      inviteLink ||
-      `https://signup.roostapp.io/?realtorCode=${
-        realtorInfo?.inviteCode || "https://signup.roostapp.io/"
-      }`;
-
-    const whatsappMessage = `Hey ${
-      inviteData.firstName
-    }, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients. Click here to get started: ${
-      inviteLink || signupLink
-    }`;
-    const phone = inviteData.phone.replace(/[^0-9]/g, "");
-    let whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
-      whatsappMessage
-    )}`;
-
-    Linking.canOpenURL(whatsappUrl)
-      .then((supported) => {
-        if (supported) {
-          return Linking.openURL(whatsappUrl);
-        } else {
-          Alert.alert(
-            "WhatsApp not installed",
-            "Please install WhatsApp to use this feature",
-            [{ text: "OK" }]
-          );
-        }
-      })
-      .catch((err) => console.error("Error opening WhatsApp:", err));
-  };
   // Handle opening SMS
   const openSMS = () => {
-    // Use the invite link returned from the API response if available
     const signupLink =
       inviteLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
       }`;
 
-    const smsMessage = `Hey ${
-      inviteData.firstName
-    }, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients. Click here to get started: ${
-      inviteLink || signupLink
-    }`;
+    const smsMessage = `Hey ${inviteData.firstName}, I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients. Click here to get started: ${signupLink}`;
     const smsUrl = `sms:${inviteData.phone}?body=${encodeURIComponent(
       smsMessage
     )}`;
@@ -187,9 +172,9 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
       console.error("Error opening SMS:", err)
     );
   };
+
   // Handle opening Email
   const openEmail = () => {
-    // Use the invite link returned from the API response if available
     const signupLink =
       inviteLink ||
       `https://signup.roostapp.io/?realtorCode=${
@@ -201,7 +186,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
 
 I'm sharing a link to get started with Roost. Its a mortgage app that rewards Realtors that share it with their clients.
 
-Click here to get started: ${inviteLink || signupLink}
+Click here to get started: ${signupLink}
 
 Looking forward to working with you!`;
 
@@ -213,9 +198,9 @@ Looking forward to working with you!`;
       console.error("Error opening email:", err)
     );
   };
+
   // Reset the form when closing
   const handleClose = () => {
-    setShowContactOptions(false);
     setShowShareOptionsModal(false);
     setInviteData({
       firstName: "",
@@ -224,526 +209,422 @@ Looking forward to working with you!`;
       phone: "",
     });
     setInviteFeedback({ msg: "", type: "" });
-    setInviteLink(""); // Reset the invite link
+    setInviteLink("");
+    setCopied(false);
     onClose();
   };
 
-  // Function to handle copying the link to clipboard
-  const handleCopyLink = () => {
-    // Use the invite link returned from the API response if available
-    const linkToCopy =
-      inviteLink ||
-      `https://signup.roostapp.io/?realtorCode=${
-        realtorInfo?.inviteCode || ""
-      }`;
-
-    Clipboard.setString(linkToCopy);
-    setCopied(true);
-
-    // Reset the copied state after 2 seconds
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-  };
-
-  // Handlers for new share options modal (reuse existing openSMS / openEmail)
+  // Handlers for share options modal
   const handlePersonalText = () => {
     openSMS();
     setShowShareOptionsModal(false);
-  };
-  const handlePersonalEmail = () => {
-    openEmail();
-    setShowShareOptionsModal(false);
-  };
-  const handleNoneOption = () => {
-    // Simply close; fallback (e.g., scheduled transactional email) could be added here
     handleClose();
   };
 
+  const handlePersonalEmail = () => {
+    openEmail();
+    setShowShareOptionsModal(false);
+    handleClose();
+  };
+
+  const handleNoneOption = () => {
+    handleClose();
+  };
+
+  console.log(
+    "InviteRealtorModal Render - visible:",
+    visible,
+    "showShareOptionsModal:",
+    showShareOptionsModal
+  );
+
   return (
     <>
-      <Modal
-        visible={visible && !showShareOptionsModal}
-        transparent
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <Entypo name="cross" size={24} color="#999" />
-            </TouchableOpacity>
+      {/* Main Invite Form Modal */}
+      {!showShareOptionsModal && (
+        <Modal
+          visible={visible && modalReady}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={handleClose}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.overlay}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.container}>
+                {/* Header Section */}
+                <View style={styles.header}>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={handleClose}
+                  >
+                    <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                      <Circle cx="18.5" cy="18.5" r="18.5" fill="#ffffff" />
+                      <Path
+                        d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                        fill="#A9A9A9"
+                      />
+                    </Svg>
+                  </TouchableOpacity>
 
-            <Text style={styles.modalTitle}>REFER A REALTOR</Text>
-            <Text style={styles.modalSubtitle}>
-              Invite your Realtor friends to use Roost
-            </Text>
+                  <View style={styles.titleRow}>
+                    <View style={styles.iconContainer}>
+                      <Svg
+                        width="59"
+                        height="58"
+                        viewBox="0 0 59 58"
+                        fill="none"
+                      >
+                        <Circle cx="29.5" cy="29" r="29" fill="#377473" />
+                        <Path
+                          d="M34.8181 39.909C34.8181 37.0974 31.3992 34.8181 27.1818 34.8181C22.9643 34.8181 19.5454 37.0974 19.5454 39.909M39.909 36.0908V32.2727M39.909 32.2727V28.4545M39.909 32.2727H36.0909M39.909 32.2727H43.7272M27.1818 30.9999C24.3701 30.9999 22.0909 28.7207 22.0909 25.909C22.0909 23.0974 24.3701 20.8181 27.1818 20.8181C29.9934 20.8181 32.2727 23.0974 32.2727 25.909C32.2727 28.7207 29.9934 30.9999 27.1818 30.9999Z"
+                          stroke="#FDFDFD"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Svg>
+                    </View>
+                    <Text style={styles.title}>Refer a Realtor</Text>
+                  </View>
+                  <Text style={styles.subTitle}>
+                    Invite your Realtor friends to use Roost
+                  </Text>
+                </View>
 
-            {inviteFeedback.msg ? (
-              <Text
-                style={[
-                  styles.feedbackMsg,
-                  inviteFeedback.type === "success"
-                    ? styles.success
-                    : styles.error,
-                ]}
-              >
-                {inviteFeedback.msg}
-              </Text>
-            ) : null}
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={inviteData.firstName}
-                onChangeText={(t) => {
-                  setInviteFeedback({ msg: "", type: "" });
-                  setInviteData((prev) => ({
-                    ...prev,
-                    firstName: trimLeft(t),
-                  }));
-                }}
-                onBlur={() =>
-                  setInviteData((prev) => ({
-                    ...prev,
-                    firstName: trimFull(prev.firstName),
-                  }))
-                }
-                placeholder="First Name"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={inviteData.lastName}
-                onChangeText={(t) => {
-                  setInviteFeedback({ msg: "", type: "" });
-                  setInviteData((prev) => ({
-                    ...prev,
-                    lastName: trimLeft(t),
-                  }));
-                }}
-                onBlur={() =>
-                  setInviteData((prev) => ({
-                    ...prev,
-                    lastName: trimFull(prev.lastName),
-                  }))
-                }
-                placeholder="Last Name"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                keyboardType="email-address"
-                value={inviteData.email}
-                onChangeText={(t) =>
-                  setInviteData((prev) => ({
-                    ...prev,
-                    email: trimLeft(t),
-                  }))
-                }
-                onBlur={() =>
-                  setInviteData((prev) => ({
-                    ...prev,
-                    email: trimFull(prev.email),
-                  }))
-                }
-                placeholder="Email"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                keyboardType="phone-pad"
-                returnKeyType="done"
-                returnKeyLabel="close"
-                value={formatPhoneNumber(inviteData.phone)}
-                onChangeText={(t) =>
-                  setInviteData((prev) => ({
-                    ...prev,
-                    phone: unFormatPhoneNumber(trimLeft(t)),
-                  }))
-                }
-                onBlur={() =>
-                  setInviteData((prev) => ({
-                    ...prev,
-                    phone: unFormatPhoneNumber(trimFull(prev.phone)),
-                  }))
-                }
-                placeholder="Phone"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            {/* Always show main action area unless share modal takes over */}
-            <TouchableOpacity
-              style={[
-                styles.sendInviteBtn,
-                inviteLoading && styles.modalBtnDisabled,
-              ]}
-              disabled={inviteLoading}
-              onPress={handleInviteRealtor}
-            >
-              {inviteLoading ? (
-                <ActivityIndicator color={COLORS.white} />
-              ) : (
-                <Text style={styles.sendInviteBtnText}>Send Invite</Text>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.orDivider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.orText}>OR</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <View style={styles.shareLinkContainer}>
-              <Text style={styles.shareLinkText}>
-                Share this link with them
-              </Text>
-              <Text style={styles.linkText}>
-                {inviteLink ||
-                  "http://signup.roostapp.io/?realtorCode=" +
-                    (realtorInfo?.inviteCode || "")}
-              </Text>
-              <TouchableOpacity
-                style={styles.copyButton}
-                onPress={handleCopyLink}
-              >
-                <Text style={styles.copyButtonText}>
-                  {copied ? "Copied!" : "Copy"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Share Options Modal (mirrors ClientInviteModal pattern) */}
-      <Modal
-        visible={showShareOptionsModal}
-        transparent
-        animationType="fade"
-        onRequestClose={handleClose}
-      >
-        <View style={styles.shareOptionsOverlay}>
-          <View style={styles.shareOptionsContainer}>
-            <TouchableOpacity
-              style={styles.shareOptionsCloseBtn}
-              onPress={handleClose}
-            >
-              <Entypo name="cross" size={24} color="#999" />
-            </TouchableOpacity>
-            <Text style={styles.shareOptionsTitle}>Realtor invite via</Text>
-            <Text style={styles.shareOptionsSubtitle}>
-              It's always best to send a custom invite directly from you by text
-              or email. Or have us send it
-            </Text>
-            <View style={styles.sharePrimaryOptions}>
-              {inviteData.phone ? (
-                <TouchableOpacity
-                  style={styles.primaryShareBtn}
-                  onPress={handlePersonalText}
+                {/* Form Content */}
+                <ScrollView
+                  style={styles.formContent}
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
                 >
-                  {/* <MaterialIcons name="sms" size={32} color="#2196F3" /> */}
-                  <Text style={styles.primaryShareBtnText}>Personal Text</Text>
-                </TouchableOpacity>
-              ) : null}
-              {inviteData.email ? (
-                <TouchableOpacity
-                  style={styles.primaryShareBtn}
-                  onPress={handlePersonalEmail}
-                >
-                  {/* <Entypo name="mail" size={32} color="#F44336" /> */}
-                  <Text style={styles.primaryShareBtnText}>Personal Email</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-            {/* {inviteData.phone ? (
-              <TouchableOpacity
-                style={styles.secondaryShareBtn}
-                onPress={openWhatsApp}
-              >
-                <MaterialCommunityIcons
-                  name="whatsapp"
-                  size={28}
-                  color={COLORS.success}
-                />
-                <Text style={styles.secondaryShareBtnText}>WhatsApp</Text>
-              </TouchableOpacity>
-            ) : null} */}
-            <TouchableOpacity
-              style={styles.noneShareBtn}
-              onPress={handleNoneOption}
-            >
-              <Text style={styles.noneShareBtnText}>Invite</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+                  {inviteFeedback.msg ? (
+                    <View style={styles.feedbackContainer}>
+                      <Text
+                        style={[
+                          styles.feedbackText,
+                          inviteFeedback.type === "success"
+                            ? styles.successText
+                            : styles.errorText,
+                        ]}
+                      >
+                        {inviteFeedback.msg}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="First Name"
+                    placeholderTextColor={COLORS.slate}
+                    value={inviteData.firstName}
+                    onChangeText={(text) => {
+                      setInviteFeedback({ msg: "", type: "" });
+                      setInviteData((prev) => ({
+                        ...prev,
+                        firstName: trimLeft(text),
+                      }));
+                    }}
+                    onBlur={() =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        firstName: trimFull(prev.firstName),
+                      }))
+                    }
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => lastNameInputRef.current?.focus()}
+                  />
+
+                  <TextInput
+                    ref={lastNameInputRef}
+                    style={styles.inputField}
+                    placeholder="Last Name"
+                    placeholderTextColor={COLORS.slate}
+                    value={inviteData.lastName}
+                    onChangeText={(text) =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        lastName: trimLeft(text),
+                      }))
+                    }
+                    onBlur={() =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        lastName: trimFull(prev.lastName),
+                      }))
+                    }
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => emailInputRef.current?.focus()}
+                  />
+
+                  <TextInput
+                    ref={emailInputRef}
+                    style={styles.inputField}
+                    placeholder="Email"
+                    placeholderTextColor={COLORS.slate}
+                    keyboardType="email-address"
+                    value={inviteData.email}
+                    onChangeText={(text) =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        email: trimLeft(text),
+                      }))
+                    }
+                    onBlur={() =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        email: trimFull(prev.email),
+                      }))
+                    }
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => phoneInputRef.current?.focus()}
+                  />
+
+                  <TextInput
+                    ref={phoneInputRef}
+                    style={styles.inputField}
+                    placeholder="Phone"
+                    placeholderTextColor={COLORS.slate}
+                    keyboardType="phone-pad"
+                    value={formatPhoneNumber(inviteData.phone)}
+                    onChangeText={(text) =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        phone: unFormatPhoneNumber(trimLeft(text)),
+                      }))
+                    }
+                    onBlur={() =>
+                      setInviteData((prev) => ({
+                        ...prev,
+                        phone: unFormatPhoneNumber(trimFull(prev.phone)),
+                      }))
+                    }
+                    maxLength={14}
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss}
+                  />
+
+                  {/* Send Invite Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.sendInviteButton,
+                      !isFormValid && styles.sendInviteButtonDisabled,
+                    ]}
+                    onPress={handleInviteRealtor}
+                    disabled={inviteLoading || !isFormValid}
+                  >
+                    {inviteLoading ? (
+                      <ActivityIndicator color={COLORS.white} />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.sendInviteButtonText,
+                          !isFormValid && { color: "#797979" },
+                        ]}
+                      >
+                        Send invite
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+
+                  {/* Share Link Section */}
+                  <View style={styles.shareLinkSection}>
+                    <Text style={styles.shareLinkTitle}>
+                      Share this link with them
+                    </Text>
+                    <Text style={styles.shareLinkText}>
+                      {inviteLink ||
+                        `Roostapp.io/signup/${
+                          realtorInfo?.inviteCode || "..."
+                        }`}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.copyButton}
+                      onPress={() => {
+                        const linkToCopy =
+                          inviteLink ||
+                          `https://signup.roostapp.io/?realtorCode=${
+                            realtorInfo?.inviteCode || ""
+                          }`;
+                        Clipboard.setString(linkToCopy);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                    >
+                      <Text style={styles.copyButtonText}>
+                        {copied ? "Copied!" : "Copy"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </Modal>
+      )}
+
+      {/* Share Options Modal */}
+      {showShareOptionsModal && (
+        <ShareOptionsModal
+          visible={showShareOptionsModal}
+          onClose={handleClose}
+          title="Realtor invite via"
+          subtitle="We have sent an invite! However its always best to reach out directly. Sending a personalized message is simple just click one of the options below."
+          hasPhone={!!inviteData.phone}
+          hasEmail={!!inviteData.email}
+          onPersonalText={handlePersonalText}
+          onPersonalEmail={handlePersonalEmail}
+          onSkip={handleNoneOption}
+        />
+      )}
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    justifyContent: "flex-end",
   },
-  modalContent: {
-    backgroundColor: COLORS.white, // Using the updated white color (#FDFDFD)
-    borderRadius: 15,
-    padding: 30,
-    width: "100%",
-    maxWidth: 500,
+  container: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: "90%",
+    paddingBottom: Platform.OS === "ios" ? 34 : 20,
+  },
+  header: {
+    alignItems: "flex-start",
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
     position: "relative",
   },
   closeButton: {
     position: "absolute",
-    top: 15,
-    right: 15,
-    zIndex: 1,
-    padding: 5,
+    top: 16,
+    right: 16,
+    backgroundColor: "transparent",
+    zIndex: 10,
   },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 700,
-    marginBottom: 5,
-    textAlign: "center",
-    fontFamily: "futura",
-    color: COLORS.black,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    color: COLORS.secondary,
-    textAlign: "center",
-    fontFamily: "futura",
-    fontWeight: "500",
-    marginBottom: 30,
-  },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    fontFamily: "futura",
-    backgroundColor: COLORS.white,
-  },
-  feedbackMsg: {
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    textAlign: "center",
-    fontSize: 16,
-  },
-  success: {
-    backgroundColor: "rgba(76, 175, 80, 0.2)",
-    color: "#388E3C",
-  },
-  error: {
-    backgroundColor: "rgba(244, 67, 54, 0.2)",
-    color: "#D32F2F",
-  },
-  sendInviteBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  sendInviteBtnText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: "700",
-    fontFamily: "futura",
-  },
-  modalBtnDisabled: {
-    opacity: 0.6,
-  },
-  orDivider: {
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#ddd",
+  iconContainer: {
+    marginRight: 12,
   },
-  orText: {
-    marginHorizontal: 15,
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    letterSpacing: 0.5,
   },
-  shareLinkContainer: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 15,
+  subTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#707070",
+    marginTop: 16,
+    fontFamily: "Futura",
+    alignSelf: "center",
+  },
+  formContent: {
+    paddingHorizontal: 24,
+  },
+  feedbackContainer: {
+    marginBottom: 12,
+  },
+  feedbackText: {
+    padding: 10,
+    borderRadius: 8,
+    textAlign: "center",
+    fontSize: 14,
+    fontFamily: "Futura",
+  },
+  successText: {
+    backgroundColor: "rgba(55, 116, 115, 0.2)",
+    color: COLORS.green,
+  },
+  errorText: {
+    backgroundColor: "rgba(162, 14, 14, 0.2)",
+    color: COLORS.red,
+  },
+  inputField: {
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 16,
+    minHeight: 42,
+    fontFamily: "Futura",
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
+  },
+  sendInviteButton: {
+    backgroundColor: COLORS.green,
+    borderRadius: 30,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  sendInviteButtonDisabled: {
+    backgroundColor: COLORS.disabledGray,
+  },
+  sendInviteButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  shareLinkSection: {
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
     padding: 20,
+    marginBottom: 20,
     alignItems: "center",
   },
-  shareLinkText: {
-    fontSize: 16,
+  shareLinkTitle: {
+    fontSize: 14,
     fontWeight: "500",
-    fontFamily: "futura",
-    color: COLORS.secondary,
-    marginBottom: 10,
+    color: COLORS.slate,
+    marginBottom: 8,
+    fontFamily: "Futura",
+    textAlign: "center",
   },
-  linkText: {
-    fontSize: 16,
-    color: "#333",
-    marginBottom: 15,
-    fontWeight: 700,
-    fontFamily: "futura",
+  shareLinkText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#707070",
+    marginBottom: 16,
+    fontFamily: "Futura",
     textAlign: "center",
   },
   copyButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 33,
+    backgroundColor: COLORS.white,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: COLORS.green,
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    justifyContent: "center",
+    paddingHorizontal: 32,
     alignItems: "center",
+    minWidth: 120,
   },
   copyButtonText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: "700",
-    fontFamily: "futura",
-  },
-  contactOptions: {
-    marginTop: 15,
-    alignItems: "center",
-  },
-  contactOptionsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  contactIcons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginBottom: 15,
-  },
-  contactIconBtn: {
-    alignItems: "center",
-    padding: 10,
-  },
-  contactIconText: {
-    marginTop: 5,
+    color: COLORS.green,
     fontSize: 14,
-  },
-  /* Share Options Modal Styles */
-  shareOptionsOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    zIndex: 1000,
-  },
-  shareOptionsContainer: {
-    backgroundColor: COLORS.white,
-    width: "100%",
-    maxWidth: 500,
-    borderRadius: 15,
-    padding: 28,
-    position: "relative",
-  },
-  shareOptionsCloseBtn: {
-    position: "absolute",
-    top: 15,
-    right: 15,
-    zIndex: 1,
-    padding: 5,
-  },
-  shareOptionsTitle: {
-    fontSize: 22,
     fontWeight: "700",
-    marginBottom: 8,
-    textAlign: "center",
-    color: COLORS.black,
-    fontFamily: "futura",
-  },
-  shareOptionsSubtitle: {
-    fontSize: 14,
-    color: COLORS.secondary,
-    textAlign: "center",
-    marginBottom: 24,
-    fontFamily: "futura",
-  },
-  sharePrimaryOptions: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-    marginBottom: 24,
-  },
-  primaryShareBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 33,
-    paddingVertical: 12,
-    paddingHorizontal: 13,
-    alignItems: "center",
-    minWidth: 140,
-  },
-  primaryShareBtnText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: "700",
-    //marginTop: 8,
-    fontFamily: "futura",
-    textAlign: "center",
-  },
-  secondaryShareBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "center",
-    backgroundColor: "#f0f0f0",
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 50,
-    marginBottom: 24,
-    gap: 10,
-  },
-  secondaryShareBtnText: {
-    color: COLORS.secondary,
-    fontSize: 14,
-    fontWeight: "600",
-    fontFamily: "futura",
-  },
-  noneShareBtn: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 13,
-    borderRadius: 33,
-    alignItems: "center",
-    alignSelf: "center",
-    minWidth: 100,
-  },
-  noneShareBtnText: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: "700",
-    fontFamily: "futura",
+    fontFamily: "Futura",
   },
 });
 
