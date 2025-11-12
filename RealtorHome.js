@@ -30,14 +30,7 @@ import { useNotification } from "./context/NotificationContext";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import ProfileUpdateModal from "./components/modals/ProfileUpdateModal";
 import NotificationBell from "./components/icons/NotificationBell";
-import NotificationComponent from "./NotificationComponent";
-import {
-  FontAwesome,
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
-  Entypo,
-} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import GiftIcon from "./components/icons/GiftIcon";
 import {
   EmptyProgressBar,
@@ -81,7 +74,7 @@ import {
   unFormatPhoneNumber,
 } from "./utils/phoneFormatUtils";
 
-const RealtorHome = () => {
+const RealtorHome = ({ onShowNotifications }) => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
   const realtorFromContext = useRealtor();
@@ -121,8 +114,6 @@ const RealtorHome = () => {
   }, [realtor, invited]);
 
   const navigation = useNavigation();
-  // Notification state
-  const [showNotifications, setShowNotifications] = useState(false);
 
   // Local state
   const [showForm, setShowForm] = useState(false);
@@ -963,12 +954,6 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         realtorId={realtor.id}
       />
 
-      {/* Notification Component */}
-      <NotificationComponent
-        visible={showNotifications}
-        onClose={() => setShowNotifications(false)}
-        userId={realtor.id}
-      />
       <CustomAdminMessagesModal
         visible={showCustomMessageModal}
         messages={customMessages}
@@ -1097,9 +1082,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             showBadge={unreadCount > 0}
             badgeCount={unreadCount}
             style={styles.notificationBell}
-            onPress={() => setShowNotifications(true)}
+            onPress={onShowNotifications}
           />
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.chatIconContainer}
             onPress={handleChatPress}
             activeOpacity={0.7}
@@ -1114,7 +1099,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 <View style={styles.chatUnreadDot} />
               </View>
             )}
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <GiftIcon
             onPress={handleRewardsClick}
             width={46}
@@ -1160,10 +1145,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           </Text>
         </View>
         {/* ================= TITLE: CLIENTS ================= */}
-        <View style={styles.clientsTitleContainer}>
-          <Text style={styles.clientsTitle}>Clients</Text>
-          <Text style={styles.ActiveText}>ACTIVE</Text>
-        </View>
+
         {/* ================= SCROLLABLE CLIENT LIST ================= */}
         <ScrollView
           style={styles.clientsScrollView}
@@ -1177,6 +1159,10 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             />
           }
         >
+          <View style={styles.clientsTitleContainer}>
+            {/* <Text style={styles.clientsTitle}>Clients</Text> */}
+            <Text style={styles.ActiveText}>ACTIVE CLIENTS</Text>
+          </View>
           {activeClients.length === 0 ? (
             <View style={styles.emptyStateContainer}>
               <Text style={styles.emptyStateText}>
@@ -1185,7 +1171,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               <Text style={styles.emptyStateSubText}>
                 Add your first client by pressing the button below
               </Text>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.addClientsButton}
                 onPress={() => setShowForm(true)}
                 activeOpacity={0.8}
@@ -1210,116 +1196,121 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   </Svg>
                   <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
                 </View>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           ) : (
-            activeClients.map((client) => {
-              const docCount = client.documents
-                ? getDocumentCounts(client.documents)
-                : { approved: 0, pending: 0 };
+            <View style={styles.clientsGroupWrapper}>
+              {activeClients.map((client, index) => {
+                const docCount = client.documents
+                  ? getDocumentCounts(client.documents)
+                  : { approved: 0, pending: 0 };
 
-              const totalNeeded = neededDocumentsCount[client.inviteeId] || 10;
+                const totalNeeded =
+                  neededDocumentsCount[client.inviteeId] || 10;
 
-              const statusText =
-                client?.clientStatus === "FullyApproved"
-                  ? `Fully Approved - $${parseFloat(
-                      client.fullyApprovedDetails?.amount
-                    ).toFixed(2)}`
-                  : client?.clientStatus === "FullyApproved" &&
-                    client?.fullyApprovedDetails?.paperWorkRequested
-                  ? "Share Documents"
-                  : client?.clientStatus === "Completed"
-                  ? "Completed"
-                  : client?.clientStatus === "PreApproved"
-                  ? "Pre Approved"
-                  : client.status === "PENDING"
-                  ? "Invited"
-                  : client.clientAddress === null
-                  ? "Account Deleted"
-                  : client.status === "ACCEPTED" &&
-                    (!client.documents ||
-                      client.documents.length === 0 ||
-                      client?.clientAddress !== null)
-                  ? "Signed Up"
-                  : client.status === "ACCEPTED" && client.documents.length > 0
-                  ? `${docCount.approved}/${totalNeeded} Documents`
-                  : client.clientAddress === null
-                  ? "Account Deleted"
-                  : client.status;
+                const statusText =
+                  client?.clientStatus === "FullyApproved"
+                    ? `Fully Approved - $${parseFloat(
+                        client.fullyApprovedDetails?.amount
+                      ).toFixed(0)}`
+                    : client?.clientStatus === "FullyApproved" &&
+                      client?.fullyApprovedDetails?.paperWorkRequested
+                    ? "Share Documents"
+                    : client?.clientStatus === "Completed"
+                    ? "Completed"
+                    : client?.clientStatus === "PreApproved"
+                    ? "Pre Approved"
+                    : client.status === "PENDING"
+                    ? "Invited"
+                    : client.clientAddress === null
+                    ? "Account Deleted"
+                    : client.status === "ACCEPTED" &&
+                      (!client.documents ||
+                        client.documents.length === 0 ||
+                        client?.clientAddress !== null)
+                    ? "Signed Up"
+                    : client.status === "ACCEPTED" &&
+                      client.documents.length > 0
+                    ? `${docCount.approved}/${totalNeeded} Documents`
+                    : client.clientAddress === null
+                    ? "Account Deleted"
+                    : client.status;
 
-              return (
-                <TouchableOpacity
-                  key={client.id || client._id || client.inviteeId}
-                  style={styles.clientCard}
-                  onPress={() =>
-                    client.clientStatus === "FullyApproved" &&
-                    client?.fullyApprovedDetails?.paperWorkRequested
-                      ? openFullyApprovedModal(client)
-                      : handleClientClick(client)
-                  }
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.initialsCircle}>
-                    <Text style={styles.initialsText}>
-                      {getInitials(client.referenceName)}
-                    </Text>
-                  </View>
-                  <View style={styles.clientDetails}>
-                    <Text style={styles.clientName}>
-                      {client.referenceName}
-                    </Text>
-                    {client.clientStatus === "FullyApproved" &&
-                    client.fullyApprovedDetails?.paperWorkRequested ? (
-                      <CompleteProgressBar text="Share Documents" />
-                    ) : client.clientStatus === "FullyApproved" ? (
-                      <CompleteProgressBar
-                        text={`Fully Approved - $${parseFloat(
-                          client.fullyApprovedDetails?.amount
-                        ).toFixed(2)}`}
-                      />
-                    ) : client.clientStatus === "Completed" ? (
-                      <CompleteProgressBar
-                        text="COMPLETED"
-                        points={client?.completionDetails?.realtorAward || ""}
-                        date={
-                          client?.completionDetails?.date
-                            ? new Date(
-                                client.completionDetails.date
-                              ).toLocaleDateString("en-US", {
-                                month: "2-digit",
-                                day: "2-digit",
-                                year: "numeric",
-                              })
-                            : ""
-                        }
-                      />
-                    ) : client.clientStatus === "PreApproved" ? (
-                      <MidProgressBar text="PRE APPROVED" progress={100} />
-                    ) : client.status === "ACCEPTED" &&
-                      client.documents &&
-                      client.documents.length > 0 ? (
-                      <MidProgressBar
-                        text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
-                        progress={(docCount.approved / totalNeeded) * 100}
-                        style={styles.statusProgressBar}
-                      />
-                    ) : (
-                      <EmptyProgressBar
-                        text={statusText.toUpperCase()}
-                        progress={
-                          client.status === "PENDING"
-                            ? 10
-                            : client.status === "ACCEPTED"
-                            ? 30
-                            : 50
-                        }
-                        style={styles.statusProgressBar}
-                      />
+                return (
+                  <TouchableOpacity
+                    key={client.id || client._id || client.inviteeId}
+                    style={styles.clientCard}
+                    onPress={() =>
+                      client.clientStatus === "FullyApproved" &&
+                      client?.fullyApprovedDetails?.paperWorkRequested
+                        ? openFullyApprovedModal(client)
+                        : handleClientClick(client)
+                    }
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.initialsCircle}>
+                      <Text style={styles.initialsText}>
+                        {getInitials(client.referenceName)}
+                      </Text>
+                    </View>
+                    <View style={styles.clientDetails}>
+                      <Text style={styles.clientName}>
+                        {client.referenceName}
+                      </Text>
+                      {client.clientStatus === "FullyApproved" &&
+                      client.fullyApprovedDetails?.paperWorkRequested ? (
+                        <CompleteProgressBar text="Share Documents" />
+                      ) : client.clientStatus === "FullyApproved" ? (
+                        <CompleteProgressBar
+                          text={`Fully Approved - $${parseFloat(
+                            client.fullyApprovedDetails?.amount
+                          ).toFixed(0)}`}
+                        />
+                      ) : client.clientStatus === "Completed" ? (
+                        <CompleteProgressBar
+                          text="COMPLETED"
+                          points={client?.completionDetails?.realtorAward || ""}
+                          date={
+                            client?.completionDetails?.date
+                              ? new Date(
+                                  client.completionDetails.date
+                                ).toLocaleDateString("en-US", {
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  year: "numeric",
+                                })
+                              : ""
+                          }
+                        />
+                      ) : client.clientStatus === "PreApproved" ? (
+                        <MidProgressBar text="Pre approved" progress={100} />
+                      ) : client.status === "ACCEPTED" &&
+                        client.documents &&
+                        client.documents.length > 0 ? (
+                        <MidProgressBar
+                          text={`${docCount.approved}/${totalNeeded} Documents`}
+                          progress={(docCount.approved / totalNeeded) * 100}
+                        />
+                      ) : (
+                        <EmptyProgressBar
+                          text={statusText}
+                          progress={
+                            client.status === "PENDING"
+                              ? 10
+                              : client.status === "ACCEPTED"
+                              ? 30
+                              : 50
+                          }
+                        />
+                      )}
+                    </View>
+                    {index !== activeClients.length - 1 && (
+                      <View style={styles.clientCardBorder} />
                     )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           )}
 
           <View style={styles.completedClientsContainer}>
@@ -1328,8 +1319,8 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             </View>
 
             {completedClients.length > 0 ? (
-              <>
-                {completedClients.map((client) => {
+              <View style={styles.clientsGroupWrapper}>
+                {completedClients.map((client, index) => {
                   return (
                     <TouchableOpacity
                       key={client.id || client._id || client.inviteeId}
@@ -1363,10 +1354,13 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           }
                         />
                       </View>
+                      {index !== completedClients.length - 1 && (
+                        <View style={styles.clientCardBorder} />
+                      )}
                     </TouchableOpacity>
                   );
                 })}
-              </>
+              </View>
             ) : (
               <View style={styles.emptyStateContainer}>
                 <Text style={styles.emptyStateText}>
@@ -1381,44 +1375,49 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               <View style={[styles.clientsTitleContainer]}>
                 <Text style={styles.ActiveText}>COMPLETED - REFERRAL</Text>
               </View>
-              {completedReferrals.map((client) => (
-                <TouchableOpacity
-                  key={client.id || client._id || client.inviteeId}
-                  style={styles.clientCard}
-                  onPress={() => handleClientReferralClick(client)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.initialsCircle}>
-                    <Text style={styles.initialsText}>
-                      {getInitials(client.name)}
-                    </Text>
-                  </View>
-                  <View style={styles.clientDetails}>
-                    <Text style={styles.clientName}>{client.name}</Text>
-                    <CompleteProgressBar
-                      text="COMPLETED"
-                      points={client?.completionDetails?.referralReward || ""}
-                      date={
-                        client?.completionDetails?.date
-                          ? new Date(
-                              client.completionDetails.date
-                            ).toLocaleDateString("en-US", {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            })
-                          : ""
-                      }
-                    />
-                  </View>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.clientsGroupWrapper}>
+                {completedReferrals.map((client, index) => (
+                  <TouchableOpacity
+                    key={client.id || client._id || client.inviteeId}
+                    style={styles.clientCard}
+                    onPress={() => handleClientReferralClick(client)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.initialsCircle}>
+                      <Text style={styles.initialsText}>
+                        {getInitials(client.name)}
+                      </Text>
+                    </View>
+                    <View style={styles.clientDetails}>
+                      <Text style={styles.clientName}>{client.name}</Text>
+                      <CompleteProgressBar
+                        text="COMPLETED"
+                        points={client?.completionDetails?.referralReward || ""}
+                        date={
+                          client?.completionDetails?.date
+                            ? new Date(
+                                client.completionDetails.date
+                              ).toLocaleDateString("en-US", {
+                                month: "2-digit",
+                                day: "2-digit",
+                                year: "numeric",
+                              })
+                            : ""
+                        }
+                      />
+                    </View>
+                    {index !== completedReferrals.length - 1 && (
+                      <View style={styles.clientCardBorder} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
         </ScrollView>
         {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
       </ScrollView>
-      {(activeClients.length > 0 || completedClients.length > 0) && (
+      {activeClients.length > 0 || completedClients.length > 0 ? (
         <TouchableOpacity
           style={styles.floatingAddButton}
           onPress={() => setShowForm(true)}
@@ -1426,7 +1425,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         >
           <View style={styles.addButtonContent}>
             <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
-              <Rect x="1" y="1" width="54" height="54" rx="27" fill="#F0913A" />
+              <Rect x="1" y="1" width="54" height="54" rx="27" fill="#377473" />
               <Path
                 d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
                 stroke="#FDFDFD"
@@ -1435,7 +1434,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 strokeLinejoin="round"
               />
             </Svg>
-            <Text style={styles.addClientButtonText}>ADD CLIENTS</Text>
+            <Text style={styles.addClientButtonText}>ADD CLIENT</Text>
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity onPress={() => setShowForm(true)} activeOpacity={0.8}>
+          <View style={styles.floatingAddButtonEmptyClients}>
+            <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
+              <Rect x="1" y="1" width="54" height="54" rx="27" fill="#377473" />
+              <Path
+                d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+                stroke="#FDFDFD"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
           </View>
         </TouchableOpacity>
       )}
@@ -2029,32 +2043,31 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         ) : selectedClientCard.clientStatus ===
                           "PreApproved" ? (
                           <MidProgressBar
-                            text={`PRE APPROVED`}
+                            text={`Pre approved`}
                             progress={100}
                           />
                         ) : selectedClientCard.status === "ACCEPTED" &&
                           selectedClientCard.documents &&
                           selectedClientCard.documents.length > 0 ? (
                           <MidProgressBar
-                            text={`${docCount.approved}/${totalNeeded} DOCUMENTS`}
+                            text={`${docCount.approved}/${totalNeeded} Documents`}
                             progress={(docCount.approved / totalNeeded) * 100}
-                            style={styles.detailStatusProgressBar}
                           />
                         ) : (
                           <EmptyProgressBar
                             text={
                               selectedClientCard.status === "PENDING"
-                                ? "INVITED"
+                                ? "Invited"
                                 : selectedClientCard.clientAddress === null
-                                ? "ACCOUNT DELETED"
+                                ? "Account Deleted"
                                 : selectedClientCard.status === "ACCEPTED" &&
                                   (!selectedClientCard.documents ||
                                     selectedClientCard.documents.length === 0 ||
                                     selectedClientCard?.clientAddress !== null)
-                                ? "SIGNED UP"
+                                ? "Signed Up"
                                 : selectedClientCard.clientAddress === null
-                                ? "ACCOUNT DELETED"
-                                : selectedClientCard.status.toUpperCase()
+                                ? "Account Deleted"
+                                : selectedClientCard.status
                             }
                             progress={
                               selectedClientCard.status === "PENDING"
@@ -2065,7 +2078,6 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                                 ? 30
                                 : 50
                             }
-                            style={styles.detailStatusProgressBar}
                           />
                         );
                       })()}
@@ -2099,7 +2111,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                               ? "Client Signed Up"
                               : selectedClientCard.clientAddress === null
                               ? "Account Deleted"
-                              : selectedClientCard.status.toUpperCase(),
+                              : selectedClientCard.status,
                         });
                       }}
                     >
@@ -2580,8 +2592,11 @@ const styles = StyleSheet.create({
 
   // Clients section
   clientsTitleContainer: {
-    alignItems: "center",
-    marginVertical: 16,
+    width: "90%",
+    alignItems: "left",
+    marginTop: 16,
+    alignSelf: "center",
+    marginBottom: 4,
   },
   clientsTitle: {
     fontSize: 24, // H1 size
@@ -2590,49 +2605,66 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   ActiveText: {
-    fontSize: 14, // P size
+    fontSize: 11, // P size
     fontWeight: 700, // P weight
-    color: COLORS.slate,
+    color: "#797979",
     fontFamily: "Futura",
     marginTop: 6,
+    letterSpacing: "0.8",
   },
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 64, // Increased vertical padding to add more space
-    gap: 16, // Gap between items in the scroll view
+    //  gap: 16, // Gap between items in the scroll view
   },
   clientsScrollView: {
     flex: 1,
     paddingBottom: 16, // Padding at the bottom of the scroll view
     marginBottom: 64, // Space for the floating button
   },
-  clientCard: {
+  clientsGroupWrapper: {
     alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
-    marginVertical: 2, // Increased vertical margin for more space between cards
-    padding: 8,
     width: "95%",
     minWidth: 358,
     maxWidth: 528,
-    height: 78,
+    marginVertical: 8,
+    borderRadius: 16,
+    backgroundColor: COLORS.white,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 }, // Added slight vertical offset for better shadow effect
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
-    gap: 2,
+  },
+  clientCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    padding: 16,
+    width: "100%",
+    minHeight: 78,
+    position: "relative",
+  },
+  clientCardBorder: {
+    position: "absolute",
+    bottom: 0,
+    left: "20%",
+    width: "80%",
+    height: 0.5,
+    backgroundColor: "#686767ff",
+  },
+  lastClientCard: {
+    borderBottomWidth: 0,
   },
   initialsCircle: {
     width: 49,
     height: 49,
-    borderRadius: 24.5,
-    backgroundColor: COLORS.slate,
+    borderRadius: 45,
+    backgroundColor: "#4D4D4D",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
+    gap: 10,
   },
   initialsText: {
     color: COLORS.white,
@@ -2645,7 +2677,7 @@ const styles = StyleSheet.create({
   },
   clientName: {
     fontSize: 18, // Slightly larger
-    fontWeight: "600", // Bolder
+    fontWeight: "500", // Bolder
     color: COLORS.black,
     marginBottom: 0,
     fontFamily: "Futura",
@@ -2674,11 +2706,12 @@ const styles = StyleSheet.create({
   floatingAddButton: {
     position: "absolute",
     bottom: 34,
-    right: 24,
+    left: "5%",
     minWidth: 271,
+    width: "90%",
     height: 56,
     borderRadius: 30,
-    backgroundColor: "#F0913A", // Orange color
+    backgroundColor: "#377473", // Orange color
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -2687,6 +2720,11 @@ const styles = StyleSheet.create({
     zIndex: 10,
     justifyContent: "center",
     alignItems: "center",
+  },
+  floatingAddButtonEmptyClients: {
+    position: "absolute",
+    bottom: 34,
+    right: "5%",
   },
   addButtonContent: {
     flexDirection: "row",
@@ -2698,7 +2736,7 @@ const styles = StyleSheet.create({
   },
   addClientButtonText: {
     color: COLORS.white,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
     marginLeft: 0,
@@ -3285,13 +3323,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 10, // Space between icon and text
   },
-  addClientButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "700",
-    fontFamily: "Futura",
-    marginLeft: 6,
-  },
   closeButtonContainer: {
     position: "absolute",
     top: 20,
@@ -3316,8 +3347,8 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   emptyStateContainer: {
-    marginTop: 24,
-    borderRadius: 8,
+    marginTop: 8,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     color: "#FDFDFD",
@@ -3339,15 +3370,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
-    color: "#A9A9A9",
+    color: "#797979",
     textAlign: "center",
     marginBottom: 8,
   },
   emptyStateSubText: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "500",
     fontFamily: "Futura",
-    color: "#A9A9A9",
+    color: "#797979",
     textAlign: "center",
     marginBottom: 8,
   },

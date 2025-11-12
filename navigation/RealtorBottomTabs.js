@@ -46,7 +46,7 @@ const COLORS = {
 };
 
 // Offers screen for the tag functionality
-const TagScreen = () => {
+const TagScreen = ({ onShowNotifications }) => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
   const realtorFromContext = useRealtor();
@@ -282,7 +282,7 @@ const TagScreen = () => {
             showBadge={unreadCount > 0}
             badgeCount={unreadCount}
             style={styles.notificationBell}
-            onPress={() => console.log("Notifications pressed")}
+            onPress={onShowNotifications}
           />
           <TouchableOpacity
             style={styles.chatIconContainer}
@@ -448,7 +448,7 @@ const TagScreen = () => {
   );
 };
 
-const RealtorBottomTabs = () => {
+const RealtorBottomTabs = ({ onShowNotifications }) => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -478,6 +478,7 @@ const RealtorBottomTabs = () => {
           paddingBottom: 16,
           paddingTop: 8,
           alignItems: "center",
+          zIndex: 1,
         },
         tabBarItemStyle: {
           flex: 0,
@@ -492,14 +493,18 @@ const RealtorBottomTabs = () => {
     >
       <Tab.Screen
         name="HomeTab"
-        component={RealtorHome}
+        children={(props) => (
+          <RealtorHome {...props} onShowNotifications={onShowNotifications} />
+        )}
         options={{
           tabBarLabel: "",
         }}
       />
       <Tab.Screen
         name="TagTab"
-        component={TagScreen}
+        children={(props) => (
+          <TagScreen {...props} onShowNotifications={onShowNotifications} />
+        )}
         options={{
           tabBarLabel: "",
         }}

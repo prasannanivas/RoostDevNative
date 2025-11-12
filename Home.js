@@ -10,6 +10,7 @@ import ClientQuestionaire from "./ClientQuestionaire.js";
 import { ClientProvider } from "./context/ClientContext.js";
 import { RealtorProvider } from "./context/RealtorContext.js";
 import RealtorOnboardingCheck from "./components/RealtorOnboardingCheck.js";
+import NotificationComponent from "./NotificationComponent.js";
 
 const Home = () => {
   const { auth, logout } = useAuth();
@@ -20,6 +21,7 @@ const Home = () => {
   const [onboardingCheckCompleted, setOnboardingCheckCompleted] =
     useState(false);
   const [lastAuthId, setLastAuthId] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // AsyncStorage keys for tracking realtor onboarding completion
   const REALTOR_ONBOARDING_KEY = "realtor_onboarding_completed_";
@@ -160,7 +162,15 @@ const Home = () => {
               }}
             />
           )}
-          <RealtorBottomTabs key={Date.now()} />
+          <RealtorBottomTabs
+            key={Date.now()}
+            onShowNotifications={() => setShowNotifications(true)}
+          />
+          <NotificationComponent
+            visible={showNotifications}
+            onClose={() => setShowNotifications(false)}
+            userId={auth.realtor?.id}
+          />
         </RealtorProvider>
       ) : (
         <View

@@ -23,25 +23,27 @@ const MidProgressBar = ({ text = "SUBMITTED", progress = 62, style = {} }) => {
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.background}>
+      <View style={styles.progressBar}>
         <View style={[styles.fill, { width: `${boundedProgress}%` }]} />
-        <Text style={styles.barText}>{text}</Text>
       </View>
+      <Text style={styles.barText}>{text}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 2,
   },
-  background: {
-    height: 21,
+  progressBar: {
+    width: 100,
+    height: 10,
     backgroundColor: "#F6F6F6",
     borderRadius: 10.5,
     overflow: "hidden",
     position: "relative",
-    justifyContent: "center",
   },
   fill: {
     position: "absolute",
@@ -53,11 +55,10 @@ const styles = StyleSheet.create({
   },
   barText: {
     color: "#000000",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "500",
     fontFamily: "Futura",
-    textAlign: "center",
-    zIndex: 2,
+    marginLeft: 8,
   },
 });
 

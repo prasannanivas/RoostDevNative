@@ -12,24 +12,34 @@ import {
   StatusBar,
   ActivityIndicator,
 } from "react-native";
-import { SvgXml } from "react-native-svg";
+import Svg, { Path, SvgXml } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useNotification } from "./context/NotificationContext";
-import { CloseButton } from "./components/icons";
+import { CloseButton, NotificationBellIcon } from "./components/icons";
+import NotificationBell from "./components/icons/NotificationBell";
 
 // Warning icon SVG for orange notification
-const approvedBlueSvgXml = `<svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
-  <path d="M12.6961 1.08673C13.0958 0.54636 13.9042 0.54636 14.3039 1.08673L15.6823 2.94997C15.9593 3.32437 16.458 3.45801 16.8851 3.27225L19.0104 2.34783C19.6268 2.07973 20.3269 2.48391 20.4029 3.15176L20.6649 5.45455C20.7176 5.91728 21.0827 6.28239 21.5454 6.33506L23.8482 6.59714C24.5161 6.67315 24.9203 7.37321 24.6522 7.98959L23.7277 10.1149C23.542 10.542 23.6756 11.0407 24.05 11.3177L25.9133 12.6961C26.4536 13.0958 26.4536 13.9042 25.9133 14.3039L24.05 15.6823C23.6756 15.9593 23.542 16.458 23.7277 16.8851L24.6522 19.0104C24.9203 19.6268 24.5161 20.3269 23.8482 20.4029L21.5454 20.6649C21.0827 20.7176 20.7176 21.0827 20.6649 21.5454L20.4029 23.8482C20.3269 24.5161 19.6268 24.9203 19.0104 24.6522L16.8851 23.7277C16.458 23.542 15.9593 23.6756 15.6823 24.05L14.3039 25.9133C13.9042 26.4536 13.0958 26.4536 12.6961 25.9133L11.3177 24.05C11.0407 23.6756 10.542 23.542 10.1149 23.7277L7.98959 24.6522C7.37321 24.9203 6.67315 24.5161 6.59714 23.8482L6.33506 21.5454C6.28239 21.0827 5.91728 20.7176 5.45455 20.6649L3.15176 20.4029C2.48391 20.3269 2.07973 19.6268 2.34783 19.0104L3.27225 16.8851C3.45801 16.458 3.32437 15.9593 2.94997 15.6823L1.08673 14.3039C0.54636 13.9042 0.54636 13.0958 1.08673 12.6961L2.94997 11.3177C3.32437 11.0407 3.45801 10.542 3.27225 10.1149L2.34783 7.98959C2.07973 7.37321 2.48391 6.67315 3.15176 6.59714L5.45455 6.33506C5.91728 6.28239 6.28239 5.91728 6.33506 5.45455L6.59714 3.15176C6.67315 2.48391 7.37321 2.07973 7.98959 2.34783L10.1149 3.27225C10.542 3.45801 11.0407 3.32437 11.3177 2.94997L12.6961 1.08673Z" fill="#1D2327"/>
-  <path d="M8 13L12 16.5L18.5 10" stroke="#FDFDFD" stroke-width="2" stroke-linecap="round"/>
-</svg>`;
+const approvedBlueSvgXml = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12.6961 1.08673C13.0958 0.54636 13.9042 0.54636 14.3039 1.08673L15.6823 2.94997C15.9593 3.32437 16.458 3.45801 16.8851 3.27225L19.0104 2.34783C19.6268 2.07973 20.3269 2.48391 20.4029 3.15176L20.6649 5.45455C20.7176 5.91728 21.0827 6.28239 21.5454 6.33506L23.8482 6.59714C24.5161 6.67315 24.9203 7.37321 24.6522 7.98959L23.7277 10.1149C23.542 10.542 23.6756 11.0407 24.05 11.3177L25.9133 12.6961C26.4536 13.0958 26.4536 13.9042 25.9133 14.3039L24.05 15.6823C23.6756 15.9593 23.542 16.458 23.7277 16.8851L24.6522 19.0104C24.9203 19.6268 24.5161 20.3269 23.8482 20.4029L21.5454 20.6649C21.0827 20.7176 20.7176 21.0827 20.6649 21.5454L20.4029 23.8482C20.3269 24.5161 19.6268 24.9203 19.0104 24.6522L16.8851 23.7277C16.458 23.542 15.9593 23.6756 15.6823 24.05L14.3039 25.9133C13.9042 26.4536 13.0958 26.4536 12.6961 25.9133L11.3177 24.05C11.0407 23.6756 10.542 23.542 10.1149 23.7277L7.98959 24.6522C7.37321 24.9203 6.67315 24.5161 6.59714 23.8482L6.33506 21.5454C6.28239 21.0827 5.91728 20.7176 5.45455 20.6649L3.15176 20.4029C2.48391 20.3269 2.07973 19.6268 2.34783 19.0104L3.27225 16.8851C3.45801 16.458 3.32437 15.9593 2.94997 15.6823L1.08673 14.3039C0.54636 13.9042 0.54636 13.0958 1.08673 12.6961L2.94997 11.3177C3.32437 11.0407 3.45801 10.542 3.27225 10.1149L2.34783 7.98959C2.07973 7.37321 2.48391 6.67315 3.15176 6.59714L5.45455 6.33506C5.91728 6.28239 6.28239 5.91728 6.33506 5.45455L6.59714 3.15176C6.67315 2.48391 7.37321 2.07973 7.98959 2.34783L10.1149 3.27225C10.542 3.45801 11.0407 3.32437 11.3177 2.94997L12.6961 1.08673Z" fill="#699796"/>
+<path d="M8 13L12 16.5L18.5 10" stroke="#FDFDFD" stroke-width="2" stroke-linecap="round"/>
+</svg>
+
+`;
 
 // Approved icon SVG for green notification
-const warningSvgXml = `<svg xmlns="http://www.w3.org/2000/svg" width="29" height="25" viewBox="0 0 29 25" fill="none">
-  <path d="M13.634 1.5C14.0189 0.833332 14.9811 0.833333 15.366 1.5L27.4904 22.5C27.8753 23.1667 27.3942 24 26.6244 24H2.37564C1.60584 24 1.12472 23.1667 1.50962 22.5L13.634 1.5Z" fill="#1D2327"/>
-  <rect x="13.5" y="9" width="2" height="7" rx="1" fill="#FDFDFD"/>
-  <rect x="13.5" y="18" width="2" height="2" rx="1" fill="#FDFDFD"/>
-</svg>`;
+const warningSvgXml = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M13.134 1.5C13.5189 0.833332 14.4811 0.833333 14.866 1.5L26.9904 22.5C27.3753 23.1667 26.8942 24 26.1244 24H1.87564C1.10584 24 0.624719 23.1667 1.00962 22.5L13.134 1.5Z" fill="#F0913A"/>
+<rect x="13" y="9" width="2" height="7" rx="1" fill="#FDFDFD"/>
+<rect x="13" y="18" width="2" height="2" rx="1" fill="#FDFDFD"/>
+</svg>
+`;
+
+const rejectedSvgXml = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="2" y="2" width="24" height="24" rx="2" fill="#A20E0E"/>
+<path d="M18.9999 18.9999L14 14M14 14L9 9M14 14L19 9M14 14L9 19" stroke="#FDFDFD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
 
 // Approved icon SVG for blue notification
 const approvedGreenSvgXml = `<svg xmlns="http://www.w3.org/2000/svg" width="29" height="25" viewBox="0 0 29 25" fill="none">
@@ -95,7 +105,7 @@ export const NotificationMessage = ({
       activeOpacity={0.9}
     >
       <View style={styles.notificationMessageIcon}>
-        <SvgXml xml={iconSvg} width={21} height={21} />
+        <SvgXml xml={iconSvg} width={28} height={28} />
       </View>
       <View style={styles.notificationMessageContent}>
         <Text style={styles.notificationMessageDate}>{date}</Text>
@@ -278,8 +288,18 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
         ]}
       >
         <View style={styles.notificationsHeader}>
-          <Text style={styles.notificationsTitle}>Notifications</Text>
-          <TouchableOpacity onPress={handleClose}>
+          <View style={styles.notificationsTitle}>
+            <NotificationBell
+              bellColor="black"
+              badgeColor="transparent"
+              showBadge={false}
+            />
+            <Text style={styles.notificationsTitleText}> Notifications</Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleClose}
+            style={styles.closeButtonPosition}
+          >
             <CloseButton onPress={handleClose} />
           </TouchableOpacity>
         </View>
@@ -350,19 +370,31 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
     overflow: "hidden",
+    zIndex: 1010,
   },
   notificationsHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     padding: 24,
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
+    position: "relative",
   },
   notificationsTitle: {
-    fontSize: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notificationsTitleText: {
+    fontSize: 16,
     fontWeight: "700",
     color: "#23231A",
+    marginLeft: 8,
+  },
+  closeButtonPosition: {
+    position: "absolute",
+    right: 24,
   },
   notificationsList: {
     flex: 1,
@@ -403,8 +435,8 @@ const styles = StyleSheet.create({
   },
   notificationMessageContainer: {
     flexDirection: "row",
-    minHeight: 105,
-    borderRadius: 12,
+    minHeight: 76,
+    borderRadius: 16,
     marginVertical: 8,
     marginHorizontal: 16,
     shadowColor: "#000",
@@ -419,7 +451,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   notificationMessageOrange: {
-    backgroundColor: "#F0913A1A",
+    backgroundColor: "#F0913A4D",
   },
   notificationMessageRed: {
     backgroundColor: "#F24E1A1A",
@@ -439,19 +471,20 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   notificationMessageDate: {
-    fontSize: 12,
-    color: "#666666",
+    fontSize: 10,
+    fontWeight: "500",
+    color: "#797979",
     marginBottom: 4,
   },
   notificationMessageTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#23231A",
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#202020",
     marginBottom: 4,
   },
   notificationMessageText: {
-    fontSize: 14,
-    color: "#23231A",
+    fontSize: 10,
+    color: "#4D4D4D",
   },
   notificationMessageIcon: {
     width: 50,
@@ -459,6 +492,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     overflow: "visible",
+    marginLeft: 8,
   },
   unreadDotMessage: {
     width: 8,

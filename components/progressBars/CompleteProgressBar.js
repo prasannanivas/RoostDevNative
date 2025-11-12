@@ -14,13 +14,32 @@ const CompleteProgressBar = ({ text, points, date }) => {
     white: "#FDFDFD",
   };
 
+  // Format points to round numbers if it exists
+  const formattedPoints = points
+    ? Math.round(parseFloat(points)).toString().replace(/\.0+$/, "")
+    : null;
+
+  // If text is "COMPLETED", only show points and date
+  if (text === "COMPLETED") {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.barText}>
+          {date || ""}
+          {formattedPoints && date ? " - " : ""}
+          {formattedPoints ? `${formattedPoints} PTS` : ""}
+        </Text>
+      </View>
+    );
+  }
+
+  // For other text, show the progress bar
   return (
     <View style={styles.container}>
       <View
         style={[
-          styles.background,
+          styles.progressBar,
           {
-            backgroundColor: text !== "COMPLETED" ? COLORS.orange : COLORS.blue,
+            backgroundColor: COLORS.green,
           },
         ]}
       >
@@ -28,30 +47,31 @@ const CompleteProgressBar = ({ text, points, date }) => {
           style={[
             styles.fill,
             {
-              backgroundColor:
-                text !== "COMPLETED" ? COLORS.orange : COLORS.blue,
+              backgroundColor: COLORS.green,
             },
           ]}
         />
-        <Text style={styles.barText}>{`${text} ${
-          points ? ` - ${points} PTS` : ""
-        }${date ? ` - ${date}` : ""}`}</Text>
       </View>
+      <Text style={styles.barText}>{`${text}${
+        formattedPoints ? ` - ${formattedPoints} PTS` : ""
+      }${date ? ` - ${date}` : ""}`}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 8,
   },
-  background: {
-    height: 21,
+  progressBar: {
+    width: 100,
+    height: 10,
     //  backgroundColor: "#2271B1", // Blue for completed
     borderRadius: 10.5,
     overflow: "hidden",
     position: "relative",
-    justifyContent: "center",
   },
   fill: {
     position: "absolute",
@@ -63,12 +83,11 @@ const styles = StyleSheet.create({
     borderRadius: 10.5,
   },
   barText: {
-    color: "#FDFDFD", // White color for text
-    fontSize: 11,
+    color: "#000000ff", // White color for text
+    fontSize: 10,
     fontWeight: "500",
     fontFamily: "Futura",
-    textAlign: "center",
-    zIndex: 2,
+    marginLeft: 8,
   },
 });
 
