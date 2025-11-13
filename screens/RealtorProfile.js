@@ -98,6 +98,10 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // Add scroll state for header transition
+  const [isScrolled, setIsScrolled] = useState(false);
+  const scrollAnimation = useRef(new Animated.Value(0)).current;
+
   // Notification preferences - stored locally
   const [notificationPrefs, setNotificationPrefs] = useState({
     // Push notifications
@@ -1048,22 +1052,74 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
       )}
 
       <View style={styles.topMargin}></View>
-      {/* Header: Avatar, Name, Info - Updated to match Figma Android design */}
 
-      {/* Personal Info (Disabled fields for name, email, phone, location) */}
-
-      <ScrollView
-        style={{ zIndex: 20 }}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
+      {/* Fixed Header: Avatar, Name, Info */}
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            position: "absolute",
+            top: 60,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            backgroundColor: scrollAnimation.interpolate({
+              inputRange: [60, 110],
+              outputRange: [COLORS.background, COLORS.white],
+              extrapolate: "clamp",
+            }),
+            height: scrollAnimation.interpolate({
+              inputRange: [60, 110],
+              outputRange: [172, 84],
+              extrapolate: "clamp",
+            }),
+            shadowOpacity: scrollAnimation.interpolate({
+              inputRange: [60, 110],
+              outputRange: [0, 0.5],
+              extrapolate: "clamp",
+            }),
+          },
+          isScrolled && {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 4,
+            elevation: 4,
+          },
+        ]}
       >
-        <View style={styles.header}>
+        <Animated.View
+          style={[
+            styles.avatarContainer,
+            {
+              transform: [
+                {
+                  translateX: scrollAnimation.interpolate({
+                    inputRange: [60, 110],
+                    outputRange: [0, -120],
+                    extrapolate: "clamp",
+                  }),
+                },
+                {
+                  translateY: scrollAnimation.interpolate({
+                    inputRange: [60, 110],
+                    outputRange: [0, -38],
+                    extrapolate: "clamp",
+                  }),
+                },
+                {
+                  scale: scrollAnimation.interpolate({
+                    inputRange: [60, 110],
+                    outputRange: [1, 0.4],
+                    extrapolate: "clamp",
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={handleProfilePicture}
             disabled={uploadingProfilePic}
-            style={styles.avatarContainer}
           >
             <View style={{ position: "relative", width: 120, height: 120 }}>
               {/* Blue Circle Background - This will fade out */}
@@ -1135,13 +1191,66 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               )}
             </View>
           </TouchableOpacity>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.realtorName}>
-              {formData.firstName} {formData.lastName}
-            </Text>
-          </View>
-        </View>
+        </Animated.View>
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              top: scrollAnimation.interpolate({
+                inputRange: [60, 110],
+                outputRange: [136, 20],
+                extrapolate: "clamp",
+              }),
+            },
+            isScrolled && {
+              left: Dimensions.get("window").width * 0.3,
+              width: Dimensions.get("window").width * 0.5,
+              alignItems: "flex-start",
+            },
+          ]}
+        >
+          <Animated.Text
+            style={[
+              styles.realtorName,
+              {
+                fontSize: scrollAnimation.interpolate({
+                  inputRange: [60, 110],
+                  outputRange: [24, 16],
+                  extrapolate: "clamp",
+                }),
+                textAlign: "center",
+              },
+            ]}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {formData.firstName} {formData.lastName}
+          </Animated.Text>
+        </Animated.View>
+      </Animated.View>
 
+      {/* Scrollable Content */}
+      <ScrollView
+        style={{ zIndex: 20 }}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 235 }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollAnimation } } }],
+          {
+            useNativeDriver: false,
+            listener: (event) => {
+              const scrollY = event.nativeEvent.contentOffset.y;
+              setIsScrolled(scrollY > 100);
+            },
+          }
+        )}
+        scrollEventThrottle={16}
+      >
         <View style={styles.section}>
           <Text style={styles.sectionSubTitle}>
             Keep your personal info up-to-date
@@ -1824,7 +1933,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: COLORS.background,
     zIndex: 1,
-    minHeight: 172,
   },
   avatarContainer: {
     position: "relative",
