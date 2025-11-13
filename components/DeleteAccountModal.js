@@ -63,15 +63,13 @@ export default function DeleteAccountModal({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "height" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
         <View
           style={{
             flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 24,
+            justifyContent: "flex-end",
             backgroundColor: "rgba(0,0,0,0.5)",
           }}
         >
@@ -79,25 +77,29 @@ export default function DeleteAccountModal({
             style={{
               width: "100%",
               backgroundColor: COLORS?.white || "#fff",
-              borderRadius: 8,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
               padding: 24,
+              paddingBottom: Platform.OS === "ios" ? 40 : 24,
             }}
           >
             <Text
               style={{
-                fontSize: 20,
-                fontWeight: "bold",
-                color: COLORS?.black || "#000",
+                fontSize: 16,
+                fontWeight: "700",
+                color: COLORS?.black || "#202020",
                 textAlign: "center",
-                marginBottom: 8,
+                fontFamily: "Futura",
+                marginBottom: 16,
               }}
             >
-              Delete my account
+              Delete my account?!
             </Text>
             <Text
               style={{
                 color: COLORS?.slate || "#666",
-                marginBottom: 16,
+                marginBottom: 14,
+                fontWeight: "500",
                 textAlign: "center",
               }}
             >
@@ -109,11 +111,13 @@ export default function DeleteAccountModal({
             <Text
               style={{
                 color: COLORS?.slate || "#666",
+                fontWeight: "500",
+                fontSize: 14,
                 marginBottom: 12,
                 textAlign: "center",
               }}
             >
-              Type "delete" to confirm.
+              Type "DELETE" to confirm.
             </Text>
 
             {/* Live spelling guidance */}
@@ -125,7 +129,7 @@ export default function DeleteAccountModal({
                   textAlign: "center",
                 }}
               >
-                Mismatch spelling. Type "delete".
+                Mismatch spelling. Type "DELETE".
               </Text>
             ) : null}
             {error ? (
@@ -167,11 +171,8 @@ export default function DeleteAccountModal({
                 onPress={handleConfirm}
                 style={{
                   flex: 1,
-                  backgroundColor:
-                    matches && !loading
-                      ? COLORS?.red || "#a00"
-                      : COLORS?.gray || "#ccc",
-                  borderRadius: 8,
+                  backgroundColor: matches && !loading ? "#A20E0E" : "#E8E8E8",
+                  borderRadius: 33,
                   paddingVertical: 12,
                   alignItems: "center",
                   marginRight: 8,
@@ -180,28 +181,29 @@ export default function DeleteAccountModal({
               >
                 <Text
                   style={{
-                    color: COLORS?.white || "#fff",
-                    fontFamily: "futura",
+                    color: matches && !loading ? "#fff" : "#797979",
+                    fontFamily: "Futura",
                     fontWeight: "700",
-                    fontSize: "12",
+                    fontSize: 12,
                   }}
                 >
-                  {loading ? "Deleting..." : "Confirm Delete"}
+                  {loading ? "Deleting..." : "Delete"}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onCancel}
                 style={{
                   flex: 1,
-                  backgroundColor: COLORS?.gray || "#ccc",
-                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: COLORS.green,
+                  borderRadius: 33,
                   paddingVertical: 12,
                   alignItems: "center",
                 }}
               >
                 <Text
                   style={{
-                    color: COLORS?.black || "#000",
+                    color: COLORS?.green,
                     fontFamily: "futura",
                     fontWeight: "700",
                     fontSize: "12",

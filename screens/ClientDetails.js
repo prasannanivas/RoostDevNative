@@ -20,22 +20,53 @@ import Toast from "react-native-toast-message"; // Make sure to set up this libr
 import { generateInitialsFromFullName } from "../utils/initialsUtils";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
+import Svg, { Circle, G, Rect, Path, Defs, ClipPath } from "react-native-svg";
+import { formatPhoneNumber } from "../utils/phoneFormatUtils.js";
 
 const COLORS = {
   green: "#377473",
+  teal: "#4A8B8A",
   background: "#F6F6F6",
   black: "#1D2327",
   slate: "#707070",
-  gray: "#A9A9A9",
+  gray: "#5A5A5A",
+  lightGray: "#CCCCCC",
   silver: "#F6F6F6",
   white: "#FDFDFD",
   blue: "#2271B1",
   yellow: "#F0DE3A",
   orange: "#F0913A",
-  red: "#A20E0E",
+  red: "#C41E3A",
   noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
   coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
 };
+
+// Custom SVG Icons
+const ApprovedIcon = () => (
+  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="12" fill="#377473" />
+  </Svg>
+);
+
+const RejectedIcon = () => (
+  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <G clipPath="url(#clip0_1825_1898)">
+      <Rect width="24" height="24" rx="12" fill="#A20E0E" />
+      <Path
+        d="M16 16L12 12M12 12L8 8M12 12L16 8M12 12L8 16"
+        stroke="#FDFDFD"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </G>
+    <Defs>
+      <ClipPath id="clip0_1825_1898">
+        <Rect width="24" height="24" fill="white" />
+      </ClipPath>
+    </Defs>
+  </Svg>
+);
 
 const ClientDetails = () => {
   const navigation = useNavigation();
@@ -431,201 +462,274 @@ const ClientDetails = () => {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.clientHeader}>
-        <Text style={styles.clientName}>{client.name}</Text>
-        <View style={styles.initialsCircle}>
-          <Text style={styles.initialsText}>
-            {generateInitialsFromFullName(client.name)}
-          </Text>
+    <View style={styles.container}>
+      {/* Close Button */}
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Svg
+          width="26"
+          height="26"
+          viewBox="0 0 26 26"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <Path
+            d="M13 0C5.82075 0 0 5.8201 0 13C0 20.1799 5.8201 26 13 26C20.1799 26 26 20.1799 26 13C26 5.8201 20.1799 0 13 0ZM13 24.401C6.7275 24.401 1.625 19.2725 1.625 13C1.625 6.7275 6.7275 1.625 13 1.625C19.2725 1.625 24.375 6.7275 24.375 13C24.375 19.2725 19.2725 24.401 13 24.401ZM17.5961 8.4045C17.2793 8.08763 16.7648 8.08763 16.4473 8.4045L13.0007 11.8511L9.55402 8.4045C9.23715 8.08763 8.72202 8.08763 8.4045 8.4045C8.08698 8.72138 8.08763 9.2365 8.4045 9.55338L11.8511 13L8.4045 16.4466C8.08763 16.7635 8.08763 17.2786 8.4045 17.5955C8.72138 17.9124 9.2365 17.9124 9.55402 17.5955L13.0007 14.1489L16.4473 17.5955C16.7642 17.9124 17.2786 17.9124 17.5961 17.5955C17.9137 17.2786 17.913 16.7635 17.5961 16.4466L14.1495 13L17.5961 9.55338C17.914 9.23585 17.914 8.72138 17.5961 8.4045Z"
+            fill="#797979"
+          />
+        </Svg>
+      </TouchableOpacity>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header Section */}
+        <View style={styles.headerSection}>
+          <View style={styles.initialsCircle}>
+            <Text style={styles.initialsText}>
+              {generateInitialsFromFullName(client.name)}
+            </Text>
+          </View>
+          <View style={styles.nameContainer}>
+            <Text style={styles.clientName}>{client.name}</Text>
+            <Text style={styles.statusLabel}>{statusText || "Invited"}</Text>
+          </View>
         </View>
-      </View>
+
+        {/* Client Details Section */}
+        <View style={styles.detailsSection}>
+          <Text style={styles.sectionHeader}>CLIENT DETAILS</Text>
+          <View style={styles.detailsCard}>
+            <View style={styles.detailRow}>
+              <Svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <Path
+                  d="M7.50246 2.25722C7.19873 1.4979 6.46332 1 5.64551 1H2.89474C1.8483 1 1 1.8481 1 2.89453C1 11.7892 8.21078 19 17.1055 19C18.1519 19 19 18.1516 19 17.1052L19.0005 14.354C19.0005 13.5361 18.5027 12.8009 17.7434 12.4971L15.1069 11.4429C14.4249 11.1701 13.6483 11.2929 13.0839 11.7632L12.4035 12.3307C11.6089 12.9929 10.4396 12.9402 9.7082 12.2088L7.79222 10.2911C7.06079 9.55962 7.00673 8.39134 7.66895 7.59668L8.23633 6.9163C8.70661 6.35195 8.83049 5.57516 8.55766 4.89309L7.50246 2.25722Z"
+                  stroke="#4D4D4D"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </Svg>
+
+              <Text style={styles.detailText}>
+                {formatPhoneNumber(client.phone) || "(416)829-0000"}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <Path
+                  d="M4 6L10.1076 10.6123L10.1097 10.614C10.7878 11.1113 11.1271 11.3601 11.4988 11.4562C11.8272 11.5412 12.1725 11.5412 12.501 11.4562C12.8729 11.36 13.2132 11.1105 13.8926 10.6123C13.8926 10.6123 17.8101 7.60594 20 6M3 15.8002V8.2002C3 7.08009 3 6.51962 3.21799 6.0918C3.40973 5.71547 3.71547 5.40973 4.0918 5.21799C4.51962 5 5.08009 5 6.2002 5H17.8002C18.9203 5 19.4796 5 19.9074 5.21799C20.2837 5.40973 20.5905 5.71547 20.7822 6.0918C21 6.5192 21 7.07899 21 8.19691V15.8036C21 16.9215 21 17.4805 20.7822 17.9079C20.5905 18.2842 20.2837 18.5905 19.9074 18.7822C19.48 19 18.921 19 17.8031 19H6.19691C5.07899 19 4.5192 19 4.0918 18.7822C3.71547 18.5905 3.40973 18.2842 3.21799 17.9079C3 17.4801 3 16.9203 3 15.8002Z"
+                  stroke="#4D4D4D"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </Svg>
+
+              <Text style={styles.detailText}>
+                {client.email || "Email@gmail.com"}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <Path
+                  d="M2 20H4M4 20H14M4 20V6.2002C4 5.08009 4 4.51962 4.21799 4.0918C4.40973 3.71547 4.71547 3.40973 5.0918 3.21799C5.51962 3 6.08009 3 7.2002 3H10.8002C11.9203 3 12.4796 3 12.9074 3.21799C13.2837 3.40973 13.5905 3.71547 13.7822 4.0918C14 4.5192 14 5.07899 14 6.19691V12M14 20H20M14 20V12M20 20H22M20 20V12C20 11.0681 19.9999 10.6024 19.8477 10.2349C19.6447 9.74481 19.2557 9.35523 18.7656 9.15224C18.3981 9 17.9316 9 16.9997 9C16.0679 9 15.6019 9 15.2344 9.15224C14.7443 9.35523 14.3552 9.74481 14.1522 10.2349C14 10.6024 14 11.0681 14 12M7 10H11M7 7H11"
+                  stroke="#4D4D4D"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </Svg>
+
+              <Text style={styles.detailText}>
+                {client.employmentType || "Employment type: unknown"}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Documents Section */}
+        <View style={styles.documentsSection}>
+          <Text style={styles.sectionHeader}>DOCUMENTS SUBMITTED</Text>
+          <View style={styles.documentsCard}>
+            {client.documents && client.documents.length > 0 ? (
+              client.documents.map((doc, index) => (
+                <View key={index} style={styles.documentRow}>
+                  <Text style={styles.documentText}>{doc.docType}</Text>
+                  {doc.status.toLowerCase() === "approved" ? (
+                    <ApprovedIcon />
+                  ) : (
+                    <RejectedIcon />
+                  )}
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noDocumentsText}>No documents submitted</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Download Button */}
+        <TouchableOpacity
+          style={styles.downloadButton}
+          disabled={loadingDownload}
+          onPress={async () => {
+            setLoadingDownload(true);
+            setDownloadProgress(0);
+            try {
+              const xhr = new XMLHttpRequest();
+              xhr.open(
+                "POST",
+                "https://signup.roostapp.io/pdf/download-filled-pdf",
+                true
+              );
+              xhr.setRequestHeader("Content-Type", "application/json");
+              xhr.responseType = "blob";
+              xhr.onprogress = (event) => {
+                if (event.lengthComputable) {
+                  setDownloadProgress(
+                    Math.round((event.loaded / event.total) * 100)
+                  );
+                }
+              };
+              xhr.onload = async function () {
+                if (xhr.status === 200) {
+                  try {
+                    const blob = xhr.response;
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                      try {
+                        const base64data = reader.result.split(",")[1];
+                        const fileUri =
+                          FileSystem.cacheDirectory + "referral.pdf";
+                        await FileSystem.writeAsStringAsync(
+                          fileUri,
+                          base64data,
+                          {
+                            encoding: FileSystem.EncodingType.Base64,
+                          }
+                        );
+                        if (await Sharing.isAvailableAsync()) {
+                          await Sharing.shareAsync(fileUri);
+                        }
+                        setLoadingDownload(false);
+                      } catch (err) {
+                        console.log(err);
+                        setLoadingDownload(false);
+                      }
+                    };
+                    reader.readAsDataURL(blob);
+                  } catch (err) {
+                    console.log(err);
+                    setLoadingDownload(false);
+                  }
+                } else {
+                  setLoadingDownload(false);
+                }
+              };
+              xhr.onerror = function () {
+                setLoadingDownload(false);
+              };
+              xhr.send(
+                JSON.stringify({
+                  clientId: clientId,
+                  type: "realtorRewardPdf",
+                })
+              );
+            } catch (err) {
+              console.log(err);
+              setLoadingDownload(false);
+            }
+          }}
+        >
+          {loadingDownload ? (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <ActivityIndicator size="small" color={COLORS.gray} />
+              <Text style={[styles.downloadButtonText, { marginLeft: 10 }]}>
+                {`Downloading... ${downloadProgress}%`}
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.downloadButtonText}>
+              Download referral document
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Delete Button */}
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={async () => {
+            Alert.alert(
+              "Delete Client",
+              "Are you sure you want to delete this client?",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      setLoading(true);
+                      const response = await fetch(
+                        `https://signup.roostapp.io/Realtor/DeleteClient`,
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ inviteId, realtorId }),
+                        }
+                      );
+                      setLoading(false);
+                      if (response.ok) {
+                        Alert.alert("Success", "Client deleted successfully", [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              navigation.goBack();
+                            },
+                          },
+                        ]);
+                      } else {
+                        Alert.alert("Error", "Failed to delete client");
+                      }
+                    } catch (error) {
+                      setLoading(false);
+                      Alert.alert("Error", "Failed to delete client");
+                    }
+                  },
+                },
+              ]
+            );
+          }}
+        >
+          <Text style={styles.deleteButtonText}>Delete user</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       <RequestDocumentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRequestDocument}
       />
-
-      <View style={styles.contentWrapper}>
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Document Review</Text>
-          {mergedDocs && mergedDocs.length > 0 ? (
-            mergedDocs.map((doc, index) => (
-              <View key={index} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <Text style={styles.docTitle}>{doc.docType}</Text>
-                  <View
-                    style={[
-                      styles.statusPill,
-                      { backgroundColor: getStatusColor(doc.clientStatus) },
-                    ]}
-                  >
-                    <Text style={styles.statusPillText}>
-                      {doc.clientStatus}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.actionButtons}>
-                  {doc.fileId && (
-                    <TouchableOpacity
-                      style={styles.viewButton}
-                      onPress={() => handleView(doc)}
-                    >
-                      <Text style={styles.viewButtonText}>View Document</Text>
-                    </TouchableOpacity>
-                  )}
-                  {doc.clientStatus === "Submitted" && (
-                    <View style={styles.approvalButtons}>
-                      <TouchableOpacity
-                        style={styles.approveButton}
-                        onPress={() => handleApprove(doc)}
-                        disabled={isProcessing}
-                      >
-                        <Text style={styles.approveButtonText}>
-                          {isProcessing ? "Processing..." : "Approve"}
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.rejectButton}
-                        onPress={() => handleReject(doc)}
-                        disabled={isProcessing}
-                      >
-                        <Text style={styles.rejectButtonText}>
-                          {isProcessing ? "Processing..." : "Reject"}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyState}>No documents to review</Text>
-          )}
-        </View> */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents Submitted</Text>
-          {client.documents && client.documents.length > 0 ? (
-            client.documents.map((doc, index) => (
-              <View key={index} style={styles.documentCard}>
-                <View style={styles.documentInfo}>
-                  <Text style={styles.docTitle}>{doc.docType}</Text>
-                  <View
-                    style={[
-                      styles.statusPill,
-                      { backgroundColor: getStatusColor(doc.status) },
-                    ]}
-                  >
-                    <Text style={styles.statusPillText}>{doc.status}</Text>
-                  </View>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyState}>No documents submitted yet</Text>
-          )}
-        </View>
-        {statusText === "Completed" && (
-          <TouchableOpacity
-            style={[
-              styles.viewDetailsButton,
-              {
-                backgroundColor: COLORS.blue,
-                borderRadius: 33,
-                opacity: loadingDownload ? 0.6 : 1,
-              },
-            ]}
-            disabled={loadingDownload}
-            onPress={async () => {
-              setLoadingDownload(true);
-              setDownloadProgress(0);
-              try {
-                // Use XMLHttpRequest for progress
-                const xhr = new XMLHttpRequest();
-                xhr.open(
-                  "POST",
-                  "https://signup.roostapp.io/pdf/download-filled-pdf",
-                  true
-                );
-                xhr.setRequestHeader("Content-Type", "application/json");
-                xhr.responseType = "blob";
-                xhr.onprogress = (event) => {
-                  if (event.lengthComputable) {
-                    setDownloadProgress(
-                      Math.round((event.loaded / event.total) * 100)
-                    );
-                  }
-                };
-                xhr.onload = async function () {
-                  if (xhr.status === 200) {
-                    try {
-                      const blob = xhr.response;
-                      const reader = new FileReader();
-                      reader.onloadend = async () => {
-                        try {
-                          const base64data = reader.result.split(",")[1];
-                          const fileUri =
-                            FileSystem.cacheDirectory + "referral.pdf";
-                          await FileSystem.writeAsStringAsync(
-                            fileUri,
-                            base64data,
-                            {
-                              encoding: FileSystem.EncodingType.Base64,
-                            }
-                          );
-                          if (await Sharing.isAvailableAsync()) {
-                            await Sharing.shareAsync(fileUri);
-                          }
-                          setLoadingDownload(false);
-                          setShowClientReferralModal(false);
-                        } catch (err) {
-                          console.log(err);
-                          setLoadingDownload(false);
-                        }
-                      };
-                      reader.readAsDataURL(blob);
-                    } catch (err) {
-                      console.log(err);
-                      setLoadingDownload(false);
-                    }
-                  } else {
-                    setLoadingDownload(false);
-                  }
-                };
-                xhr.onerror = function () {
-                  setLoadingDownload(false);
-                };
-                xhr.send(
-                  JSON.stringify({
-                    clientId: clientId,
-                    type: "realtorRewardPdf",
-                  })
-                );
-              } catch (err) {
-                console.log(err);
-                setLoadingDownload(false);
-              }
-            }}
-          >
-            {loadingDownload ? (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <ActivityIndicator size="small" color={COLORS.white} />
-                <Text
-                  style={[styles.viewDetailsButtonText, { marginLeft: 10 }]}
-                >
-                  {`Downloading... ${downloadProgress}%`}
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.viewDetailsButtonText}>
-                DOWNLOAD REFERRAL
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -639,164 +743,157 @@ const getStatusColor = (status) => {
 };
 
 const styles = StyleSheet.create({
-  deleteButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    backgroundColor: "#dc3545",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    zIndex: 10,
-  },
-  deleteButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
   container: {
-    padding: 20,
-    backgroundColor: "#FFFFFF",
     flex: 1,
+    fontFamily: "Futura",
+    backgroundColor: "#FFFFFF",
   },
-  clientHeader: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  clientName: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#23231A",
-  },
-  statusBadge: {
-    backgroundColor: "#e0e0e0",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginTop: 8,
-  },
-  statusBadgeText: {
-    fontSize: 14,
-    color: "#23231A",
-  },
-  initialsCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#2271B1", // Blue color
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 8,
+  },
+  noDocumentsText: {
+    alignSelf: "center",
+    fontSize: 14,
+    color: "#797979",
+  },
+  scrollContent: {
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  headerSection: {
+    flexDirection: "row",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 32,
+    paddingHorizontal: 8,
+  },
+  initialsCircle: {
+    width: 49,
+    height: 49,
+    borderRadius: 50,
+    backgroundColor: "#5A5A5A",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 20,
   },
   initialsText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#FFFFFF", // White text
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#FDFDFD",
   },
-  requestButton: {
-    backgroundColor: "#019B8E",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 10,
+  nameContainer: {
+    justifyContent: "center",
   },
-  requestButtonText: {
-    color: "#FFFFFF",
+  clientName: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#1D2327",
+    marginBottom: 4,
   },
-  contentWrapper: {
-    marginTop: 20,
+  statusLabel: {
+    fontSize: 14,
+    color: "#797979",
+    fontWeight: "500",
+  },
+  detailsSection: {
+    marginBottom: 32,
+  },
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#5A5A5A",
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  detailsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  detailText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#1A1A1A",
+    marginLeft: 16,
     flex: 1,
   },
-  section: {
-    marginBottom: 30,
+  documentsSection: {
+    marginBottom: 32,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#23231A",
-    marginBottom: 10,
+  documentsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
+    minHeight: 100,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  reviewCard: {
-    backgroundColor: "#F4F4F4",
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
-  },
-  reviewHeader: {
+  documentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
   },
-  docTitle: {
+  documentText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#23231A",
+    color: "#1A1A1A",
+    flex: 1,
   },
-  statusPill: {
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  statusPillText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  viewButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  viewButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-  },
-  approvalButtons: {
-    flexDirection: "row",
-  },
-  approveButton: {
-    backgroundColor: "#28a745",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  approveButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-  },
-  rejectButton: {
-    backgroundColor: "#dc3545",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  rejectButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-  },
-  emptyState: {
-    fontSize: 16,
-    color: "#666666",
-    textAlign: "center",
-  },
-  documentCard: {
-    backgroundColor: "#F4F4F4",
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
-  },
-  documentInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  downloadButton: {
+    backgroundColor: "#E8E8E8",
+    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     alignItems: "center",
+    marginBottom: 16,
+  },
+  downloadButtonText: {
+    fontSize: 12,
+    fontFamily: "Futura",
+    color: "#797979",
+    fontWeight: "700",
+  },
+  deleteButton: {
+    backgroundColor: COLORS.red,
+    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  deleteButtonText: {
+    fontSize: 12,
+    color: "#FDFDFD",
+    fontFamily: "Futura",
+    fontWeight: "700",
   },
   loadingContainer: {
     backgroundColor: COLORS.background,
@@ -814,150 +911,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
   },
   errorText: {
     fontSize: 18,
     color: "#dc3545",
-  },
-  // Error details card styling
-  detailsCard: {
-    width: "90%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginTop: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#ECECEC",
-  },
-  infoLabel: {
-    color: "#707070",
-    fontSize: 14,
-    width: 95,
-  },
-  infoValueWithActions: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    minWidth: 0,
-  },
-  infoValue: {
-    color: "#1D2327",
-    fontSize: 15,
-    maxWidth: "85%",
-  },
-  linkValue: {
-    color: "#2271B1",
-  },
-  iconButton: {
-    marginLeft: 10,
-    padding: 6,
-    borderRadius: 20,
-    backgroundColor: "#F1F6FB",
-  },
-  // Modal styles
-  formOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  formContainer: {
-    backgroundColor: "#FFFFFF",
-    width: "100%",
-    borderRadius: 8,
-    padding: 20,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 15,
-    textAlign: "center",
-    color: "#23231A",
-  },
-  toggleButtons: {
-    flexDirection: "row",
-    marginBottom: 15,
-  },
-  toggleButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#019B8E",
-    padding: 10,
-    alignItems: "center",
-  },
-  toggleButtonActive: {
-    backgroundColor: "#019B8E",
-  },
-  toggleButtonText: {
-    color: "#019B8E",
-  },
-  toggleButtonTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  formActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  formButton: {
-    flex: 1,
-    backgroundColor: "#019B8E",
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-    alignItems: "center",
-  },
-  formButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  loadingButton: {
-    opacity: 0.7,
-  },
-  feedbackMessage: {
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
-    textAlign: "center",
-  },
-  successMessage: {
-    backgroundColor: "#d4edda",
-    color: "#155724",
-  },
-  errorMessage: {
-    backgroundColor: "#f8d7da",
-    color: "#721c24",
-  },
-  viewDetailsButton: {
-    position: "absolute",
-    bottom: 30,
-    backgroundColor: COLORS.green,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    alignItems: "center",
-    alignSelf: "center",
-    width: "80%",
-  },
-  viewDetailsButtonText: {
-    color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
-    fontFamily: "Futura",
+    marginBottom: 24,
   },
 });
 

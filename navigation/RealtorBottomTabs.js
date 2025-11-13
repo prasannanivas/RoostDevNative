@@ -46,7 +46,7 @@ const COLORS = {
 };
 
 // Offers screen for the tag functionality
-const TagScreen = ({ onShowNotifications }) => {
+const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
   const realtorFromContext = useRealtor();
@@ -69,7 +69,8 @@ const TagScreen = ({ onShowNotifications }) => {
 
   // Placeholder handlers for header actions
   const handleProfileClick = () => {
-    console.log("Profile clicked");
+    console.log("Profile clicked in TagScreen - navigating to Home");
+    onNavigateToHome?.("profile");
   };
 
   const handleChatPress = () => {
@@ -77,7 +78,8 @@ const TagScreen = ({ onShowNotifications }) => {
   };
 
   const handleRewardsClick = () => {
-    console.log("Rewards clicked");
+    console.log("Rewards clicked in TagScreen - navigating to Home");
+    onNavigateToHome?.("rewards");
   };
 
   // Handler for mortgage application
@@ -171,9 +173,9 @@ const TagScreen = ({ onShowNotifications }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents="box-none">
       {/* ================= TOP HEADER (Same as RealtorHome) ================= */}
-      <View style={styles.headerContainer}>
+      <View style={styles.headerContainer} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.userInfoContainer}
           onPress={handleProfileClick}
@@ -282,9 +284,12 @@ const TagScreen = ({ onShowNotifications }) => {
             showBadge={unreadCount > 0}
             badgeCount={unreadCount}
             style={styles.notificationBell}
-            onPress={onShowNotifications}
+            onPress={() => {
+              console.log("Notification bell pressed in TagScreen");
+              onShowNotifications?.();
+            }}
           />
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.chatIconContainer}
             onPress={handleChatPress}
             activeOpacity={0.7}
@@ -294,7 +299,7 @@ const TagScreen = ({ onShowNotifications }) => {
               size={24}
               color={COLORS.white}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <GiftIcon
             onPress={handleRewardsClick}
             width={46}
@@ -449,6 +454,9 @@ const TagScreen = ({ onShowNotifications }) => {
 };
 
 const RealtorBottomTabs = ({ onShowNotifications }) => {
+  const realtorHomeRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("HomeTab");
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -478,7 +486,8 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
           paddingBottom: 16,
           paddingTop: 8,
           alignItems: "center",
-          zIndex: 1,
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
         },
         tabBarItemStyle: {
           flex: 0,
@@ -494,19 +503,42 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
       <Tab.Screen
         name="HomeTab"
         children={(props) => (
-          <RealtorHome {...props} onShowNotifications={onShowNotifications} />
+          <RealtorHome
+            {...props}
+            ref={realtorHomeRef}
+            onShowNotifications={onShowNotifications}
+          />
         )}
         options={{
           tabBarLabel: "",
+        }}
+        listeners={{
+          focus: () => setActiveTab("HomeTab"),
         }}
       />
       <Tab.Screen
         name="TagTab"
         children={(props) => (
-          <TagScreen {...props} onShowNotifications={onShowNotifications} />
+          <TagScreen
+            {...props}
+            onShowNotifications={onShowNotifications}
+            onNavigateToHome={(action) => {
+              props.navigation.navigate("HomeTab");
+              setTimeout(() => {
+                if (action === "profile") {
+                  realtorHomeRef.current?.openProfile?.();
+                } else if (action === "rewards") {
+                  realtorHomeRef.current?.openRewards?.();
+                }
+              }, 100);
+            }}
+          />
         )}
         options={{
           tabBarLabel: "",
+        }}
+        listeners={{
+          focus: () => setActiveTab("TagTab"),
         }}
       />
     </Tab.Navigator>
@@ -528,6 +560,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 8,
     backgroundColor: COLORS.black,
+    zIndex: 10,
+    elevation: 10,
   },
   iconsContainer: {
     flexDirection: "row",

@@ -75,8 +75,9 @@ import {
   formatPhoneNumber,
   unFormatPhoneNumber,
 } from "./utils/phoneFormatUtils";
+import { getClientStatusText } from "./utils/statusTextUtils";
 
-const RealtorHome = ({ onShowNotifications }) => {
+const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   const { auth } = useAuth();
   const realtor = auth.realtor;
   const realtorFromContext = useRealtor();
@@ -247,7 +248,12 @@ const RealtorHome = ({ onShowNotifications }) => {
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [showInviteOptionsModal, setShowInviteOptionsModal] = useState(false);
   const [selectedClientCard, setSelectedClientCard] = useState(null);
-  const [showClientCardModal, setShowClientCardModal] = useState(false); // Animation values - initial positions for different slide directions
+  const [showClientCardModal, setShowClientCardModal] = useState(false);
+  const [showResendInviteOptions, setShowResendInviteOptions] = useState(false);
+  const resendButtonFadeAnim = useRef(new Animated.Value(1)).current;
+  const resendButtonSlideAnim = useRef(new Animated.Value(0)).current;
+  const inviteOptionsFadeAnim = useRef(new Animated.Value(0)).current;
+  const inviteOptionsSlideAnim = useRef(new Animated.Value(20)).current;
   const [showClientReferralModal, setShowClientReferralModal] = useState(false);
   // For left slide (profile), start at -1000 (off-screen to the left)
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
@@ -370,6 +376,46 @@ const RealtorHome = ({ onShowNotifications }) => {
       slideOut("bottom");
     }
   }, [showClientReferralModal]);
+
+  useEffect(() => {
+    if (showResendInviteOptions) {
+      // Fade out and slide up the resend button
+      Animated.parallel([
+        Animated.timing(resendButtonFadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(resendButtonSlideAnim, {
+          toValue: -30,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Fade in and slide up the options
+      Animated.parallel([
+        Animated.timing(inviteOptionsFadeAnim, {
+          toValue: 1,
+          duration: 300,
+          delay: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(inviteOptionsSlideAnim, {
+          toValue: 0,
+          duration: 300,
+          delay: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Reset animations
+      resendButtonFadeAnim.setValue(1);
+      resendButtonSlideAnim.setValue(0);
+      inviteOptionsFadeAnim.setValue(0);
+      inviteOptionsSlideAnim.setValue(20);
+    }
+  }, [showResendInviteOptions]);
 
   // Effect to fetch needed documents counts when invited clients change
   useEffect(() => {
@@ -855,6 +901,18 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
     );
   }, [hasUnreadChat]);
 
+  // Expose methods to parent components via ref
+  React.useImperativeHandle(ref, () => ({
+    openProfile: () => {
+      console.log("🔵 [RealtorHome] openProfile called via ref");
+      setShowProfile(true);
+    },
+    openRewards: () => {
+      console.log("🔵 [RealtorHome] openRewards called via ref");
+      setShowRewards(true);
+    },
+  }));
+
   // Hardcoded documents list for Fully Approved modal (no API call)
   const fullyApprovedDocs = [
     "Agreement of Purchase and Sale",
@@ -1216,33 +1274,10 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 const totalNeeded =
                   neededDocumentsCount[client.inviteeId] || 10;
 
-                const statusText =
-                  client?.clientStatus === "FullyApproved"
-                    ? `Fully Approved - $${parseFloat(
-                        client.fullyApprovedDetails?.amount
-                      ).toFixed(0)}`
-                    : client?.clientStatus === "FullyApproved" &&
-                      client?.fullyApprovedDetails?.paperWorkRequested
-                    ? "Share Documents"
-                    : client?.clientStatus === "Completed"
-                    ? "Completed"
-                    : client?.clientStatus === "PreApproved"
-                    ? "Pre Approved"
-                    : client.status === "PENDING"
-                    ? "Invited"
-                    : client.clientAddress === null
-                    ? "Account Deleted"
-                    : client.status === "ACCEPTED" &&
-                      (!client.documents ||
-                        client.documents.length === 0 ||
-                        client?.clientAddress !== null)
-                    ? "Signed Up"
-                    : client.status === "ACCEPTED" &&
-                      client.documents.length > 0
-                    ? `${docCount.approved}/${totalNeeded} Documents`
-                    : client.clientAddress === null
-                    ? "Account Deleted"
-                    : client.status;
+                const statusText = getClientStatusText(client, {
+                  docCount,
+                  totalNeeded,
+                });
 
                 return (
                   <TouchableOpacity
@@ -1684,7 +1719,10 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             <View style={styles.clientCardModalContent}>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                onPress={() => setShowClientCardModal(false)}
+                onPress={() => {
+                  setShowClientCardModal(false);
+                  setShowResendInviteOptions(false);
+                }}
               >
                 <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
                   <Circle cx="18.5" cy="18.5" r="18.5" fill="#ffffffff" />
@@ -1714,6 +1752,15 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         const totalNeeded =
                           neededDocumentsCount[selectedClientCard.inviteeId] ||
                           10;
+
+                        // Show date for Invited status
+                        if (selectedClientCard.status === "PENDING") {
+                          return (
+                            <EmptyProgressBar
+                              text={getClientStatusText(selectedClientCard)}
+                            />
+                          );
+                        }
 
                         return selectedClientCard.clientStatus ===
                           "Completed" ? (
@@ -1755,20 +1802,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                           />
                         ) : (
                           <EmptyProgressBar
-                            text={
-                              selectedClientCard.status === "PENDING"
-                                ? "Invited"
-                                : selectedClientCard.clientAddress === null
-                                ? "Account Deleted"
-                                : selectedClientCard.status === "ACCEPTED" &&
-                                  (!selectedClientCard.documents ||
-                                    selectedClientCard.documents.length === 0 ||
-                                    selectedClientCard?.clientAddress !== null)
-                                ? "Signed Up"
-                                : selectedClientCard.clientAddress === null
-                                ? "Account Deleted"
-                                : selectedClientCard.status
-                            }
+                            text={getClientStatusText(selectedClientCard)}
                             progress={
                               selectedClientCard.status === "PENDING"
                                 ? 10
@@ -1785,40 +1819,164 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   </View>
 
                   <View style={styles.clientCardActions}>
-                    <TouchableOpacity
-                      style={styles.viewDetailsButton}
-                      onPress={() => {
-                        setShowClientCardModal(false);
-                        navigation.navigate("ClientDetails", {
-                          clientId: selectedClientCard.inviteeId,
-                          clientData: selectedClientCard,
-                          inviteId: selectedClientCard.inviteId,
-                          onDelete: onRefresh,
-                          statusText:
-                            selectedClientCard.clientStatus === "Completed"
-                              ? "Completed"
-                              : selectedClientCard.clientStatus ===
-                                "PreApproved"
-                              ? "Pre Approved"
-                              : selectedClientCard.status === "PENDING"
-                              ? "Client Invited"
-                              : selectedClientCard.clientAddress === null
-                              ? "Account Deleted"
-                              : selectedClientCard.status === "ACCEPTED" &&
-                                (!selectedClientCard.documents ||
-                                  selectedClientCard.documents.length === 0 ||
-                                  selectedClientCard?.clientAddress !== null)
-                              ? "Client Signed Up"
-                              : selectedClientCard.clientAddress === null
-                              ? "Account Deleted"
-                              : selectedClientCard.status,
-                        });
-                      }}
-                    >
-                      <Text style={styles.viewDetailsButtonText}>
-                        View Details
-                      </Text>
-                    </TouchableOpacity>
+                    {selectedClientCard.status === "PENDING" ? (
+                      showResendInviteOptions ? (
+                        <Animated.View
+                          style={{
+                            width: "100%",
+                            gap: 12,
+                            alignItems: "center",
+                            opacity: inviteOptionsFadeAnim,
+                            transform: [
+                              {
+                                translateY: inviteOptionsSlideAnim,
+                              },
+                            ],
+                          }}
+                        >
+                          {selectedClientCard.email && (
+                            <TouchableOpacity
+                              style={styles.inviteOptionButton}
+                              onPress={async () => {
+                                const email = selectedClientCard.email;
+                                const link =
+                                  selectedClientCard.inviteLink || "";
+                                if (!link) {
+                                  Alert.alert(
+                                    "No Link",
+                                    "No invite link available."
+                                  );
+                                  return;
+                                }
+                                const message = `Please accept my invitation to sign up and complete your details: ${link}`;
+                                const subject = encodeURIComponent(
+                                  "Invitation from Roost"
+                                );
+                                const body = encodeURIComponent(message);
+                                const url = `mailto:${email}?subject=${subject}&body=${body}`;
+                                try {
+                                  const supported = await Linking.canOpenURL(
+                                    url
+                                  );
+                                  if (supported) await Linking.openURL(url);
+                                  else
+                                    Alert.alert(
+                                      "Not Supported",
+                                      "Email is not available on this device."
+                                    );
+                                } catch (e) {
+                                  Alert.alert("Error", "Unable to open email.");
+                                }
+                              }}
+                            >
+                              <Text style={styles.inviteOptionButtonText}>
+                                Send Personal Email
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+
+                          {selectedClientCard.phone && (
+                            <TouchableOpacity
+                              style={styles.inviteOptionButton}
+                              onPress={async () => {
+                                const phone = selectedClientCard.phone || "";
+                                const link =
+                                  selectedClientCard.inviteLink || "";
+                                if (!link) {
+                                  Alert.alert(
+                                    "No Link",
+                                    "No invite link available."
+                                  );
+                                  return;
+                                }
+                                const message = encodeURIComponent(
+                                  `Please accept my invitation to sign up and complete your details: ${link}`
+                                );
+                                const delimiter =
+                                  Platform.OS === "ios" ? "&" : "?";
+                                const url = `sms:${phone}${delimiter}body=${message}`;
+                                try {
+                                  const supported = await Linking.canOpenURL(
+                                    url
+                                  );
+                                  if (supported) await Linking.openURL(url);
+                                  else
+                                    Alert.alert(
+                                      "Not Supported",
+                                      "SMS is not available on this device."
+                                    );
+                                } catch (e) {
+                                  Alert.alert("Error", "Unable to open SMS.");
+                                }
+                              }}
+                            >
+                              <Text style={styles.inviteOptionButtonText}>
+                                Send Personal Text
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+
+                          <TouchableOpacity
+                            style={styles.inviteSkipButton}
+                            onPress={() => {
+                              setShowClientCardModal(false);
+                              setShowResendInviteOptions(false);
+                            }}
+                          >
+                            <Text style={styles.inviteSkipButtonText}>
+                              Roost Invite
+                            </Text>
+                          </TouchableOpacity>
+                        </Animated.View>
+                      ) : (
+                        <Animated.View
+                          style={{
+                            opacity: resendButtonFadeAnim,
+                            transform: [
+                              {
+                                translateY: resendButtonSlideAnim,
+                              },
+                            ],
+                            width: "100%",
+                            alignItems: "center",
+                          }}
+                        >
+                          <TouchableOpacity
+                            style={styles.viewDetailsButton}
+                            onPress={() => {
+                              setShowResendInviteOptions(true);
+                            }}
+                          >
+                            <Text style={styles.viewDetailsButtonText}>
+                              Resend Invite
+                            </Text>
+                          </TouchableOpacity>
+                        </Animated.View>
+                      )
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.viewDetailsButton}
+                        onPress={() => {
+                          setShowClientCardModal(false);
+                          navigation.navigate("ClientDetails", {
+                            clientId: selectedClientCard.inviteeId,
+                            clientData: selectedClientCard,
+                            inviteId: selectedClientCard.inviteId,
+                            onDelete: onRefresh,
+                            statusText: getClientStatusText(
+                              selectedClientCard,
+                              {
+                                isShortForm: true,
+                              }
+                            ),
+                          });
+                        }}
+                      >
+                        <Text style={styles.viewDetailsButtonText}>
+                          View Details
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               )}
@@ -2139,7 +2297,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   // Styles removed and moved to ProfileUpdateModal component
@@ -3103,6 +3261,43 @@ const styles = StyleSheet.create({
   fullyApprovedPrimaryButtonText: {
     color: COLORS.white,
     fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  inviteOptionButton: {
+    backgroundColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 23,
+    alignItems: "center",
+    minWidth: 120,
+    width: "90%",
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  inviteOptionButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLORS.white,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  inviteSkipButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    alignItems: "center",
+    width: "90%",
+  },
+  inviteSkipButtonText: {
+    color: COLORS.green,
+    fontSize: 12,
     fontWeight: "700",
     fontFamily: "Futura",
   },

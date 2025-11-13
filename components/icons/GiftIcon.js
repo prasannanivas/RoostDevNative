@@ -1,5 +1,5 @@
-import React from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { TouchableOpacity, StyleSheet, Animated } from "react-native";
 import Svg, { Rect, Path } from "react-native-svg";
 
 /**
@@ -21,9 +21,37 @@ const GiftIcon = ({
   width = 46,
   height = 46,
 }) => {
+  const borderColorAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(borderColorAnim, {
+        toValue: 3000,
+        duration: 3000,
+        useNativeDriver: false,
+      })
+    );
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [borderColorAnim]);
+
+  const borderColor = borderColorAnim.interpolate({
+    inputRange: [0, 1000, 2000, 3000],
+    outputRange: ["#f3f31fff", "#ce4d11ff", "rgba(0, 0, 0, 0)", "#f3f31fff"],
+  });
+
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        style,
+        {
+          borderWidth: 6,
+          borderColor: borderColor,
+        },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -56,6 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 10,
+    borderRadius: 33, // Make it fully rounded
   },
 });
 

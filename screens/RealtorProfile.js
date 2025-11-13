@@ -30,6 +30,7 @@ import {
 } from "../utils/phoneFormatUtils";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
 import DeleteAccountModal from "../components/DeleteAccountModal";
+import ChatModal from "../components/ChatModal";
 import { trimLeft, trimFull } from "../utils/stringUtils";
 
 // Design System Colors
@@ -46,7 +47,7 @@ const COLORS = {
   orange: "#F0913A",
   red: "#A20E0E",
   noticeContainer: "rgba(55, 116, 115, 0.25)", // 25% green opacity
-  coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
+  coloredBackgroundFill: "rgba(55, 116, 115, 0.2)", // 10% green opacity
 };
 
 export default function RealtorProfile({ onClose, preloadedImage }) {
@@ -98,6 +99,9 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // Chat modal state
+  const [showChatModal, setShowChatModal] = useState(false);
+
   // Add scroll state for header transition
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollAnimation = useRef(new Animated.Value(0)).current;
@@ -147,6 +151,28 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
 
   // Animation for save success notification
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Toggle switch animations
+  const toggleAnimations = useRef({
+    clientAccept: new Animated.Value(
+      realtor?.notificationPreferences?.clientAccept ?? true ? 1 : 0
+    ),
+    clientPreApproval: new Animated.Value(
+      realtor?.notificationPreferences?.clientPreApproval ?? true ? 1 : 0
+    ),
+    marketingNotifications: new Animated.Value(
+      realtor?.notificationPreferences?.marketingNotifications ?? true ? 1 : 0
+    ),
+    clientAcceptEmails: new Animated.Value(
+      realtor?.notificationPreferences?.clientAcceptEmails ?? true ? 1 : 0
+    ),
+    clientPreApprovalEmails: new Animated.Value(
+      realtor?.notificationPreferences?.clientPreApprovalEmails ?? true ? 1 : 0
+    ),
+    marketingEmails: new Animated.Value(
+      realtor?.notificationPreferences?.marketingEmails ?? true ? 1 : 0
+    ),
+  }).current;
 
   // Validation functions
   const validateEmail = (email) => {
@@ -250,10 +276,19 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
 
   // Toggle notification preferences
   const toggleNotificationPref = (key) => {
+    const newValue = !notificationPrefs[key];
     const newPrefs = {
       ...notificationPrefs,
-      [key]: !notificationPrefs[key],
+      [key]: newValue,
     };
+
+    // Animate the toggle
+    Animated.timing(toggleAnimations[key], {
+      toValue: newValue ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+
     setNotificationPrefs(newPrefs);
     saveNotificationPreferences(newPrefs);
   };
@@ -1208,7 +1243,10 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             isScrolled && {
               left: Dimensions.get("window").width * 0.3,
               width: Dimensions.get("window").width * 0.5,
-              alignItems: "flex-start",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 84,
+              top: 0,
             },
           ]}
         >
@@ -1227,6 +1265,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             numberOfLines={2}
             ellipsizeMode="tail"
           >
+            {/* David Wrobel */}
             {formData.firstName} {formData.lastName}
           </Animated.Text>
         </Animated.View>
@@ -1348,6 +1387,14 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             />
           </View>
         </View>
+        {/* Chat Support Button */}
+        <TouchableOpacity
+          style={styles.fullWidthButton}
+          onPress={() => setShowChatModal(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.buttonText}> Support Chat </Text>
+        </TouchableOpacity>
         {/* Brokerage Info (Editable) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Brokerage Information</Text>
@@ -1472,136 +1519,12 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </TouchableOpacity> */}
         </View>
-        {/* Notification Preferences (Push Notifications) */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
-
-          {/* Client Accept */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Client Accept</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("clientAccept")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.clientAccept && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.clientAccept && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Client Pre-approval */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Client Pre-approval</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("clientPreApproval")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.clientPreApproval && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.clientPreApproval && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Marketing Notifications */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Marketing Notifications</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("marketingNotifications")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.marketingNotifications &&
-                  styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.marketingNotifications &&
-                    styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* Email Notifications Card */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Email</Text>
-          <Text style={styles.sectionSubTitle}>
-            Manage what emails you receive from us
-          </Text>
-
-          {/* Terms of Service Updates */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Client Accept</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("clientAcceptEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.clientAcceptEmails && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.clientAcceptEmails && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Client Pre-approval Emails */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Client Pre-approval</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("clientPreApprovalEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.clientPreApprovalEmails &&
-                  styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.clientPreApprovalEmails &&
-                    styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Marketing Emails */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Marketing Emails</Text>
-            <TouchableOpacity
-              onPress={() => toggleNotificationPref("marketingEmails")}
-              style={[
-                styles.toggleSwitch,
-                notificationPrefs.marketingEmails && styles.toggleSwitchOn,
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleThumb,
-                  notificationPrefs.marketingEmails && styles.toggleThumbOn,
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            { paddingHorizontal: 0, backgroundColor: "transparent" },
+          ]}
+        >
           <Text style={styles.sectionTitle}>Invite Code</Text>
           {/* Invite Code Section - Added for realtor invites */}
           {realtor?.inviteCode && (
@@ -1653,6 +1576,256 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             </View>
           )}
         </View>
+        {/* Notification Preferences (Push Notifications) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+
+          {/* Client Accept */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Accept</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("clientAccept")}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleSwitch,
+                  {
+                    backgroundColor: toggleAnimations.clientAccept.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [COLORS.gray, COLORS.green],
+                    }),
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.toggleThumb,
+                    {
+                      transform: [
+                        {
+                          translateX: toggleAnimations.clientAccept.interpolate(
+                            {
+                              inputRange: [0, 1],
+                              outputRange: [0, 28],
+                            }
+                          ),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Client Pre-approval */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Pre-approval</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("clientPreApproval")}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleSwitch,
+                  {
+                    backgroundColor:
+                      toggleAnimations.clientPreApproval.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [COLORS.gray, COLORS.green],
+                      }),
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.toggleThumb,
+                    {
+                      transform: [
+                        {
+                          translateX:
+                            toggleAnimations.clientPreApproval.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, 28],
+                            }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Marketing Notifications */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Marketing Notifications</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("marketingNotifications")}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleSwitch,
+                  {
+                    backgroundColor:
+                      toggleAnimations.marketingNotifications.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [COLORS.gray, COLORS.green],
+                      }),
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.toggleThumb,
+                    {
+                      transform: [
+                        {
+                          translateX:
+                            toggleAnimations.marketingNotifications.interpolate(
+                              {
+                                inputRange: [0, 1],
+                                outputRange: [0, 28],
+                              }
+                            ),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* Email Notifications Card */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Email</Text>
+          <Text style={styles.sectionSubTitle}>
+            Manage what emails you receive from us
+          </Text>
+
+          {/* Terms of Service Updates */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Accept</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("clientAcceptEmails")}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleSwitch,
+                  {
+                    backgroundColor:
+                      toggleAnimations.clientAcceptEmails.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [COLORS.gray, COLORS.green],
+                      }),
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.toggleThumb,
+                    {
+                      transform: [
+                        {
+                          translateX:
+                            toggleAnimations.clientAcceptEmails.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, 28],
+                            }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Client Pre-approval Emails */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Client Pre-approval</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("clientPreApprovalEmails")}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleSwitch,
+                  {
+                    backgroundColor:
+                      toggleAnimations.clientPreApprovalEmails.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [COLORS.gray, COLORS.green],
+                      }),
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.toggleThumb,
+                    {
+                      transform: [
+                        {
+                          translateX:
+                            toggleAnimations.clientPreApprovalEmails.interpolate(
+                              {
+                                inputRange: [0, 1],
+                                outputRange: [0, 28],
+                              }
+                            ),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Marketing Emails */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Marketing Emails</Text>
+            <TouchableOpacity
+              onPress={() => toggleNotificationPref("marketingEmails")}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleSwitch,
+                  {
+                    backgroundColor:
+                      toggleAnimations.marketingEmails.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [COLORS.gray, COLORS.green],
+                      }),
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.toggleThumb,
+                    {
+                      transform: [
+                        {
+                          translateX:
+                            toggleAnimations.marketingEmails.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, 28],
+                            }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Password Management */}
         <View>
           <TouchableOpacity
@@ -1766,136 +1939,241 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
       </Modal>
       {/* Email Change Modal - New addition */}
       <Modal visible={showEmailModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {/* Header */}
-            <Text style={styles.modalTitle}>
-              {emailChangeStep === 1
-                ? "Change Email Address"
-                : emailChangeStep === 2
-                ? "Verify Your Email"
-                : "Email Updated!"}
-            </Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1 }}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "flex-end",
+              backgroundColor: "rgba(0,0,0,0.5)",
+            }}
+          >
+            <View
+              style={[
+                styles.modalContent,
+                {
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  borderRadius: 0,
+                  marginBottom: 0,
+                  paddingBottom: Platform.OS === "ios" ? 40 : 24,
+                },
+              ]}
+            >
+              {/* Header */}
+              <Text style={styles.modalTitle}>
+                {emailChangeStep === 1
+                  ? "Change Email Address"
+                  : emailChangeStep === 2
+                  ? "Verify Your Email"
+                  : "Email Updated!"}
+              </Text>
 
-            {!emailChangeSuccess && (
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={handleEmailModalClose}
-              >
-                <Text style={styles.modalCloseText}>×</Text>
-              </TouchableOpacity>
-            )}
+              {/* Error Message */}
+              {emailError ? (
+                <Text style={styles.errorText}>{emailError}</Text>
+              ) : null}
 
-            {/* Error Message */}
-            {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
-            ) : null}
-
-            {/* Step 1: Enter New Email */}
-            {emailChangeStep === 1 && (
-              <>
-                <Text style={styles.modalSubtitle}>
-                  Enter your new email address below. We'll send a verification
-                  code to this address.
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="New Email Address"
-                  keyboardType="email-address"
-                  value={newEmail}
-                  onChangeText={(text) => setNewEmail(text)}
-                  autoCapitalize="none"
-                  autoFocus={true}
-                />
-                <TouchableOpacity
-                  style={styles.fullWidthButton}
-                  onPress={handleEmailSubmit}
-                >
-                  <Text style={styles.buttonText}>Continue</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {/* Step 2: Enter OTP */}
-            {emailChangeStep === 2 && (
-              <>
-                <Text style={styles.modalSubtitle}>
-                  We've sent a verification code to {newEmail}. Enter it below
-                  to verify your email address.
-                </Text>
-                <Text style={styles.pasteInstruction}>
-                  Paste your 6-digit code in the field - it will handle full
-                  codes automatically
-                </Text>
-                <TextInput
-                  ref={otpInputRef}
-                  style={styles.otpInput}
-                  placeholder="Enter verification code"
-                  keyboardType="numeric"
-                  value={emailOtp}
-                  onChangeText={(text) => {
-                    // Handle paste operation for full codes
-                    if (text.length > 1) {
-                      // Extract only numeric characters and limit to 6 digits
-                      const pastedDigits = text.replace(/\D/g, "").slice(0, 6);
-                      setEmailOtp(pastedDigits);
-                    } else {
-                      // Handle single character input
-                      setEmailOtp(text.replace(/\D/g, ""));
-                    }
-                  }}
-                  maxLength={6}
-                  selectTextOnFocus={true}
-                  onFocus={() => {
-                    // Select all text when focusing to make paste/editing easier
-                    if (emailOtp) {
-                      otpInputRef.current?.setSelection(0, emailOtp.length);
-                    }
-                  }}
-                />
-                <TouchableOpacity
-                  style={styles.fullWidthButton}
-                  onPress={handleOtpSubmit}
-                >
-                  <Text style={styles.buttonText}>Verify Email</Text>
-                </TouchableOpacity>
-                {/* Resend button with countdown */}
-                <TouchableOpacity
-                  style={[
-                    styles.resendButton,
-                    countdown > 0 && styles.resendButtonDisabled,
-                  ]}
-                  onPress={handleResendOtp}
-                  disabled={countdown > 0}
-                >
-                  <Text
-                    style={[
-                      styles.resendButtonText,
-                      countdown > 0 && styles.resendButtonTextDisabled,
-                    ]}
-                  >
-                    {countdown > 0
-                      ? `Resend code in ${countdown} seconds`
-                      : "Resend verification code"}
+              {/* Step 1: Enter New Email */}
+              {emailChangeStep === 1 && (
+                <>
+                  <Text style={styles.modalSubtitle}>
+                    Enter your new email address below. We'll send a
+                    verification code to this address.
                   </Text>
-                </TouchableOpacity>
-              </>
-            )}
+                  <TextInput
+                    key="email-input"
+                    style={styles.input}
+                    placeholder="New Email Address"
+                    keyboardType="email-address"
+                    value={newEmail}
+                    onChangeText={(text) => setNewEmail(text)}
+                    autoCapitalize="none"
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginTop: 16,
+                      gap: 20,
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        {
+                          flex: 1,
 
-            {/* Step 3: Success */}
-            {emailChangeStep === 3 && (
-              <View style={styles.successContainer}>
-                <View style={styles.successIconCircle}>
-                  <Text style={styles.successIconText}>✓</Text>
+                          backgroundColor: COLORS.green,
+                          borderRadius: 33,
+                          paddingVertical: 12,
+                          paddingHorizontal: 13,
+                          alignItems: "center",
+                        },
+                      ]}
+                      onPress={handleEmailSubmit}
+                    >
+                      <Text style={styles.buttonText}>Continue</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: COLORS.green,
+                        borderRadius: 33,
+                        paddingVertical: 12,
+                        paddingHorizontal: 13,
+                        alignItems: "center",
+                      }}
+                      onPress={handleEmailModalClose}
+                    >
+                      <Text
+                        style={{
+                          color: COLORS.green,
+                          fontFamily: "Futura",
+                          fontWeight: "700",
+                          fontSize: 12,
+                        }}
+                      >
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+
+              {/* Step 2: Enter OTP */}
+              {emailChangeStep === 2 && (
+                <>
+                  <Text style={styles.modalSubtitle}>
+                    We've sent a verification code to {newEmail}. Enter it below
+                    to verify your email address.
+                  </Text>
+                  <Text style={styles.pasteInstruction}>
+                    Paste your 6-digit code in the field - it will handle full
+                    codes automatically
+                  </Text>
+                  <TextInput
+                    key="otp-input"
+                    ref={otpInputRef}
+                    style={styles.otpInput}
+                    placeholder="Enter verification code"
+                    keyboardType="numeric"
+                    value={emailOtp}
+                    onChangeText={(text) => {
+                      // Handle paste operation for full codes
+                      if (text.length > 1) {
+                        // Extract only numeric characters and limit to 6 digits
+                        const pastedDigits = text
+                          .replace(/\D/g, "")
+                          .slice(0, 6);
+                        setEmailOtp(pastedDigits);
+                      } else {
+                        // Handle single character input
+                        setEmailOtp(text.replace(/\D/g, ""));
+                      }
+                    }}
+                    maxLength={6}
+                    selectTextOnFocus={true}
+                    onFocus={() => {
+                      // Select all text when focusing to make paste/editing easier
+                      if (emailOtp) {
+                        otpInputRef.current?.setSelection(0, emailOtp.length);
+                      }
+                    }}
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        {
+                          flex: 1,
+                          marginRight: 8,
+                          backgroundColor: COLORS.green,
+                          borderRadius: 33,
+                          paddingVertical: 12,
+                          alignItems: "center",
+                        },
+                      ]}
+                      onPress={handleOtpSubmit}
+                    >
+                      <Text style={styles.buttonText}>Verify Email</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: COLORS.green,
+                        borderRadius: 33,
+                        paddingVertical: 12,
+                        alignItems: "center",
+                      }}
+                      onPress={handleEmailModalClose}
+                    >
+                      <Text
+                        style={{
+                          color: COLORS.green,
+                          fontFamily: "Futura",
+                          fontWeight: "700",
+                          fontSize: 12,
+                        }}
+                      >
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {/* Resend button with countdown */}
+                  <TouchableOpacity
+                    style={[
+                      styles.resendButton,
+                      countdown > 0 && styles.resendButtonDisabled,
+                    ]}
+                    onPress={handleResendOtp}
+                    disabled={countdown > 0}
+                  >
+                    <Text
+                      style={[
+                        styles.resendButtonText,
+                        countdown > 0 && styles.resendButtonTextDisabled,
+                      ]}
+                    >
+                      {countdown > 0
+                        ? `Resend code in ${countdown} seconds`
+                        : "Resend verification code"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* Step 3: Success */}
+              {emailChangeStep === 3 && (
+                <View style={styles.successContainer}>
+                  <View style={styles.successIconCircle}>
+                    <Text style={styles.successIconText}>✓</Text>
+                  </View>
+                  <Text style={styles.successText}>
+                    Email successfully updated!
+                  </Text>
                 </View>
-                <Text style={styles.successText}>
-                  Email successfully updated!
-                </Text>
-              </View>
-            )}
+              )}
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
+
+      {/* Chat Modal */}
+      <ChatModal
+        visible={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        userId={realtor?.id || realtor?._id}
+        userName={realtor?.name || realtor?.firstName + " " + realtor?.lastName}
+        userType="realtor"
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -2082,12 +2360,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gray,
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 13,
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
     color: COLORS.black,
-    height: 48,
   },
   inputError: {
     borderColor: COLORS.red,
@@ -2151,16 +2428,15 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     width: "100%",
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    borderColor: COLORS.red,
+    backgroundColor: COLORS.red,
     borderRadius: 50,
-    paddingVertical: 36,
+    paddingVertical: 16,
+
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 16,
   },
   deleteButtonText: {
-    color: COLORS.red,
+    color: COLORS.white,
     fontSize: 12,
     fontWeight: 700,
     fontFamily: "Futura",
@@ -2224,20 +2500,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   } /* Invite Code Section */,
   inviteCodeContainer: {
-    backgroundColor: COLORS.coloredBackgroundFill,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: COLORS.gray,
+    backgroundColor: COLORS.coloredBackgroundFill,
   },
-  inviteCodeLabel: {
-    fontSize: 12,
-    color: COLORS.black,
-    fontWeight: "bold",
-    fontFamily: "Futura",
-    marginBottom: 8,
-  },
+
   inviteCodeWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -2246,16 +2514,15 @@ const styles = StyleSheet.create({
   },
   inviteCode: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.green,
-    letterSpacing: 1,
   },
   copyButton: {
     backgroundColor: COLORS.green,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 33,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2263,29 +2530,36 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: "bold",
     fontFamily: "Futura",
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: 700,
   },
   inviteCodeHint: {
     fontSize: 12,
     color: COLORS.slate,
+    alignSelf: "center",
     fontFamily: "Futura",
     fontStyle: "italic",
-    marginBottom: 16,
+    marginBottom: 2,
   },
 
   /* Shareable Link Section */
   shareableLinkContainer: {
     marginTop: 16,
     paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
+  },
+  inviteCodeLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    marginBottom: 2,
   },
   shareableLinkLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: COLORS.black,
-    fontWeight: "bold",
+    fontWeight: "600",
     fontFamily: "Futura",
-    marginBottom: 8,
+    marginBottom: 2,
   },
   shareableLinkWrapper: {
     flexDirection: "row",
@@ -2294,7 +2568,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   shareableLink: {
-    flex: 1,
+    flex: 0.7,
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
@@ -2335,7 +2609,7 @@ const styles = StyleSheet.create({
   },
   changeEmailButton: {
     borderColor: COLORS.green,
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 44,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -2375,16 +2649,16 @@ const styles = StyleSheet.create({
   },
   fullWidthButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
+    borderRadius: 33,
     paddingVertical: 16,
     alignItems: "center",
     alignSelf: "stretch", // Changed from width: "100%" to alignSelf: "stretch"
-    marginTop: 16,
+    marginBottom: 16,
   },
   buttonText: {
     color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   otpInput: {
@@ -2396,10 +2670,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     fontFamily: "Futura",
-    textAlign: "center",
     letterSpacing: 8,
     marginBottom: 24,
-    height: 48,
   },
   resendButton: {
     marginTop: 16,
@@ -2459,9 +2731,9 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   toggleSwitch: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
+    width: 52,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: COLORS.gray,
     justifyContent: "center",
     padding: 2,
@@ -2470,13 +2742,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
   },
   toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: COLORS.white,
   },
   toggleThumbOn: {
-    marginLeft: 20,
+    marginLeft: 28,
   },
   errorText: {
     color: COLORS.red,

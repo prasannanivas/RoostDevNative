@@ -304,15 +304,29 @@ const Chat = ({
         }
       }
 
-      // Use unified endpoint for both admin and mortgage-broker chats
-      let response = await ChatService.getMessagesByType(
-        userId,
-        chatType,
-        50,
-        page
-      );
+      // Use appropriate endpoint based on userType
+      let response;
+      if (userType === "realtor") {
+        // Realtors always chat with admin, use legacy endpoint
+        response = await ChatService.getMessages(userId, 50, page, userType);
+      } else {
+        // Clients can chat with admin or mortgage-broker, use unified endpoint
+        console.log(
+          "🔄 Loading messages for CLIENT - userId:",
+          userId,
+          "chatType:",
+          chatType
+        );
+        response = await ChatService.getMessagesByType(
+          userId,
+          chatType,
+          50,
+          page
+        );
+      }
 
-      console.log("Loaded messages response:", response);
+      console.log("✅ Loaded messages response:", response);
+      console.log("📊 API Messages count:", response?.messages?.length || 0);
 
       const apiMessages = response.messages || [];
       setPagination(response.pagination);
@@ -337,9 +351,8 @@ const Chat = ({
       if (apiMessages.length === 0 && !append) {
         const supportType =
           chatType === "mortgage-broker" ? "Mortgage Broker" : "Roost Support";
-        console.log(
-          "No existing messages found, showing welcome message for new client"
-        );
+        console.log("📭 No existing messages found, showing welcome message");
+        console.log("👤 User type:", userType, "Display name:", displayName);
         setMessages([
           {
             id: "welcome",
@@ -350,6 +363,7 @@ const Chat = ({
           },
         ]);
         setConnectionStatus("connected");
+        setLoading(false); // IMPORTANT: Stop loading spinner
         return;
       }
 
@@ -499,11 +513,14 @@ const Chat = ({
 
       setConnectionStatus("connected");
     } catch (error) {
-      console.error("Error loading messages:", error);
+      console.error("❌ Error loading messages:", error);
+      console.error("❌ Error details:", error.message);
+      console.error("❌ Error stack:", error.stack);
       setConnectionStatus("error");
 
       // Set fallback welcome message only for initial load failures
       if (!append) {
+        console.log("⚠️ Setting fallback welcome message due to error");
         setMessages([
           {
             id: "welcome",
@@ -1181,16 +1198,25 @@ const Chat = ({
         messageText,
         "for user:",
         userId,
+        "userType:",
+        userType,
         "chatType:",
         chatType
       );
 
-      // Send message via unified API endpoint
-      const response = await ChatService.sendMessageByType(
-        userId,
-        messageText,
-        chatType
-      );
+      // Send message via appropriate API endpoint
+      let response;
+      if (userType === "realtor") {
+        // Realtors always chat with admin, use legacy endpoint
+        response = await ChatService.sendMessage(userId, messageText, userType);
+      } else {
+        // Clients can chat with admin or mortgage-broker, use unified endpoint
+        response = await ChatService.sendMessageByType(
+          userId,
+          messageText,
+          chatType
+        );
+      }
 
       console.log("Message sent successfully:", response);
 
@@ -1354,8 +1380,13 @@ const Chat = ({
         messages.length > 0 ? messages[messages.length - 1].id : null;
 
       let response;
-      // Use unified endpoint for both admin and mortgage-broker chats
-      response = await ChatService.getMessagesByType(userId, chatType, 50, 1);
+      if (userType === "realtor") {
+        // Realtors always chat with admin, use legacy endpoint
+        response = await ChatService.getMessages(userId, 50, 1, userType);
+      } else {
+        // Clients can chat with admin or mortgage-broker, use unified endpoint
+        response = await ChatService.getMessagesByType(userId, chatType, 50, 1);
+      }
 
       const apiMessages = response.messages || [];
 
