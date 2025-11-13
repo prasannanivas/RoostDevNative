@@ -88,6 +88,10 @@ export default function RealtorRewards({
     postalCode: "",
   });
 
+  // Add scroll state for header transition
+  const [isScrolled, setIsScrolled] = useState(false);
+  const scrollAnimation = useRef(new Animated.Value(0)).current;
+
   const { fetchLatestRealtor } = useRealtor();
 
   console.log("selectedClient", selectedClient);
@@ -246,8 +250,39 @@ export default function RealtorRewards({
       {/* Fixed Header Section */}
       <View style={styles.fixedHeaderSection}>
         {/* Header with REWARDS text */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
+        <View style={styles.header}></View>
+
+        {/* Fixed Points Display */}
+        <Animated.View
+          style={[
+            styles.pointsContainer,
+            {
+              height: scrollAnimation.interpolate({
+                inputRange: [0, 50],
+                outputRange: [140, 70],
+                extrapolate: "clamp",
+              }),
+            },
+            isScrolled && {
+              backgroundColor: COLORS.white,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.5,
+            },
+          ]}
+        >
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+              <Circle cx="18.5" cy="18.5" r="18.5" fill="transparent" />
+              <Path
+                d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                fill="#797979"
+              />
+            </Svg>
+          </TouchableOpacity>
+
+          {/* Header with REWARDS text and icon */}
+          <View style={[styles.headerContent]}>
             <Svg
               width="25"
               height="24"
@@ -257,44 +292,162 @@ export default function RealtorRewards({
             >
               <Path
                 d="M12.5 5.5V8M12.5 5.5C12.5 4.11929 13.6193 3 15 3C16.3807 3 17.5 4.11929 17.5 5.5C17.5 6.88071 16.3807 8 15 8M12.5 5.5C12.5 4.11929 11.3807 3 10 3C8.61929 3 7.5 4.11929 7.5 5.5C7.5 6.88071 8.61929 8 10 8M12.5 8H15M12.5 8H10M12.5 8V14M15 8H18.3002C19.4203 8 19.9796 8 20.4074 8.21799C20.7837 8.40973 21.0905 8.71547 21.2822 9.0918C21.5 9.5192 21.5 10.079 21.5 11.1969V14M10 8H6.7002C5.58009 8 5.01962 8 4.5918 8.21799C4.21547 8.40973 3.90973 8.71547 3.71799 9.0918C3.5 9.51962 3.5 10.0801 3.5 11.2002V14M3.5 14V16.8002C3.5 17.9203 3.5 18.4801 3.71799 18.9079C3.90973 19.2842 4.21547 19.5905 4.5918 19.7822C5.0192 20 5.57899 20 6.69691 20H12.5M3.5 14H12.5M12.5 14V20M12.5 14H21.5M12.5 20H18.3031C19.421 20 19.98 20 20.4074 19.7822C20.7837 19.5905 21.0905 19.2842 21.2822 18.9079C21.5 18.4805 21.5 17.9215 21.5 16.8036V14"
-                stroke="#FDFDFD"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                stroke="#202020"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </Svg>
             <Text style={styles.headerTxt}>REWARDS</Text>
           </View>
-        </View>
 
-        {/* Fixed Points Display */}
-        <View style={styles.pointsContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-              <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
+          {/* Single Animated Points Button */}
+          <View
+            style={{
+              marginTop: 16,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Animated.View
+              style={{
+                width: scrollAnimation.interpolate({
+                  inputRange: [20, 50],
+                  outputRange: [
+                    Dimensions.get("window").width - 20,
+                    Dimensions.get("window").width * 0.3,
+                  ],
+                  extrapolate: "clamp",
+                }),
+                height: scrollAnimation.interpolate({
+                  inputRange: [20, 50],
+                  outputRange: [60, 50],
+                  extrapolate: "clamp",
+                }),
+                paddingHorizontal: scrollAnimation.interpolate({
+                  inputRange: [20, 50],
+                  outputRange: [0, 0],
+                  extrapolate: "clamp",
+                }),
+                transform: [
+                  {
+                    translateY: scrollAnimation.interpolate({
+                      inputRange: [20, 50],
+                      outputRange: [0, -50],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                  {
+                    translateX: scrollAnimation.interpolate({
+                      inputRange: [20, 50],
+                      outputRange: [0, -130],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ],
+              }}
+            >
+              <Animated.View
+                style={[
+                  styles.pointsButton,
+                  {
+                    paddingVertical: scrollAnimation.interpolate({
+                      inputRange: [20, 50],
+                      outputRange: [8, 10],
+                      extrapolate: "clamp",
+                    }),
+                    paddingHorizontal: scrollAnimation.interpolate({
+                      inputRange: [20, 50],
+                      outputRange: [8, 10],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                <Animated.Text
+                  style={[
+                    styles.pointsButtonText,
+                    {
+                      fontSize: scrollAnimation.interpolate({
+                        inputRange: [20, 50],
+                        outputRange: [32, 16],
+                        extrapolate: "clamp",
+                      }),
+                    },
+                  ]}
+                >
+                  {currentPoints}
+                  <Animated.Text
+                    style={[
+                      styles.pointsButtonPts,
+                      {
+                        fontSize: scrollAnimation.interpolate({
+                          inputRange: [20, 50],
+                          outputRange: [16, 8],
+                          extrapolate: "clamp",
+                        }),
+                      },
+                    ]}
+                  >
+                    PTS
+                  </Animated.Text>
+                </Animated.Text>
+              </Animated.View>
+            </Animated.View>
+          </View>
+
+          {/* Scrolled state: REWARDS text and icon on right */}
+          {/* <Animated.View
+            style={[
+              styles.headerContentScrolledRight,
+              {
+                opacity: scrollAnimation.interpolate({
+                  inputRange: [30, 60],
+                  outputRange: [0, 1],
+                  extrapolate: "clamp",
+                }),
+              },
+            ]}
+          >
+            <Svg
+              width="25"
+              height="24"
+              viewBox="0 0 25 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <Path
-                d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                fill="#A9A9A9"
+                d="M12.5 5.5V8M12.5 5.5C12.5 4.11929 13.6193 3 15 3C16.3807 3 17.5 4.11929 17.5 5.5C17.5 6.88071 16.3807 8 15 8M12.5 5.5C12.5 4.11929 11.3807 3 10 3C8.61929 3 7.5 4.11929 7.5 5.5C7.5 6.88071 8.61929 8 10 8M12.5 8H15M12.5 8H10M12.5 8V14M15 8H18.3002C19.4203 8 19.9796 8 20.4074 8.21799C20.7837 8.40973 21.0905 8.71547 21.2822 9.0918C21.5 9.5192 21.5 10.079 21.5 11.1969V14M10 8H6.7002C5.58009 8 5.01962 8 4.5918 8.21799C4.21547 8.40973 3.90973 8.71547 3.71799 9.0918C3.5 9.51962 3.5 10.0801 3.5 11.2002V14M3.5 14V16.8002C3.5 17.9203 3.5 18.4801 3.71799 18.9079C3.90973 19.2842 4.21547 19.5905 4.5918 19.7822C5.0192 20 5.57899 20 6.69691 20H12.5M3.5 14H12.5M12.5 14V20M12.5 14H21.5M12.5 20H18.3031C19.421 20 19.98 20 20.4074 19.7822C20.7837 19.5905 21.0905 19.2842 21.2822 18.9079C21.5 18.4805 21.5 17.9215 21.5 16.8036V14"
+                stroke="#202020"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </Svg>
-          </TouchableOpacity>
-          <View style={styles.pointsRow}>
-            <Text style={styles.pointsNum}>{currentPoints}</Text>
-            <Text style={[styles.pointsLbl, { top: "-3", left: -2 }]}>
-              points
-            </Text>
-          </View>
-        </View>
+            <Text style={styles.headerTxt}>REWARDS</Text>
+          </Animated.View> */}
+        </Animated.View>
       </View>
 
       {/* Scrollable Content Section */}
       <ScrollView
         style={styles.scrollContent}
         contentContainerStyle={{ paddingBottom: 40 }}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollAnimation } } }],
+          {
+            useNativeDriver: false,
+            listener: (event) => {
+              const scrollY = event.nativeEvent.contentOffset.y;
+              setIsScrolled(scrollY > 20);
+            },
+          }
+        )}
+        scrollEventThrottle={16}
       >
-        <View>
+        {/* <View>
           <Text style={styles.sectionTitle}>Referral program</Text>
-        </View>
+        </View> */}
         <View style={styles.sectionContainer}>
           <View style={styles.rewardItem}>
             <Text style={styles.rewardPoints}>
@@ -769,7 +922,7 @@ const styles = StyleSheet.create({
   /* Header */
   header: {
     backgroundColor: COLORS.black,
-    paddingTop: 76,
+    paddingTop: 63,
     padding: 24,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -789,31 +942,32 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
     justifyContent: "center",
   },
   headerTxt: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
     fontFamily: "Futura",
-    color: COLORS.white,
+    color: COLORS.black,
     textTransform: "uppercase",
     marginLeft: 8,
   },
   closeButton: {
     position: "absolute",
-    right: 16,
-    top: 16,
+    right: 6,
+    top: 3,
     padding: 8,
   },
 
   /* Points display */
   pointsContainer: {
-    padding: 24,
-    paddingLeft: 32,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-    alignItems: "left",
+    padding: 20,
+
+    width: "100%",
+    // borderBottomWidth: 1,
+    // borderBottomColor: COLORS.lightGray,
+    alignItems: "center",
+    marginBottom: 8,
   },
   pointsNum: {
     fontSize: 48,
@@ -833,6 +987,65 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
   },
+  headerContentScrolled: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    width: "100%",
+  },
+  headerContentScrolledRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    marginLeft: 16,
+    position: "absolute",
+    left: 170,
+    top: 20,
+  },
+  pointsBadge: {
+    backgroundColor: "#295756",
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginRight: 8,
+  },
+  pointsBadgeText: {
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.white,
+  },
+  pointsBadgePts: {
+    fontSize: 10,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.white,
+  },
+  pointsButtonContainer: {
+    width: "100%",
+    marginTop: 16,
+  },
+  pointsButton: {
+    backgroundColor: "#295756",
+    width: "100%",
+    borderRadius: 16,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pointsButtonText: {
+    fontSize: 32,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: "#FDFDFD",
+  },
+  pointsButtonPts: {
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: COLORS.white,
+  },
+
   /* Referral program section */
   sectionContainer: {
     paddingVertical: 16,
