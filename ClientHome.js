@@ -92,6 +92,7 @@ const ClientHome = ({ questionnaireData }) => {
   const [mortgageBrokerAvailable, setMortgageBrokerAvailable] = useState(false);
   const [checkingBrokerAvailability, setCheckingBrokerAvailability] =
     useState(false);
+  const [mortgageBrokerInfo, setMortgageBrokerInfo] = useState(null); // Store broker name and profile picture
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -364,17 +365,67 @@ const ClientHome = ({ questionnaireData }) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(
+          "Mortgage broker chat response:",
+          JSON.stringify(data, null, 2)
+        );
+
         const available = data.available || false;
         setMortgageBrokerAvailable(available);
+
+        // Extract and store mortgage broker info
+        if (available && data.chat?.participants?.mortgageBroker) {
+          const broker = data.chat.participants.mortgageBroker;
+
+          // Check if broker is just an ID (not populated) or full object
+          if (typeof broker === "string") {
+            console.warn(
+              "Mortgage broker data not populated, received ID:",
+              broker
+            );
+            // Fallback: set minimal info, broker details won't be available
+            setMortgageBrokerInfo({
+              name: "Mortgage Broker",
+              profilePicture: null,
+              email: null,
+              phone: null,
+              brokerageName: null,
+            });
+          } else {
+            // Broker object is populated
+            // Construct full URL for profile picture using the admin profile-picture endpoint
+            const profilePictureUrl = broker.profilePicture
+              ? `https://signup.roostapp.io/admin/profile-picture/${broker.profilePicture}`
+              : null;
+
+            setMortgageBrokerInfo({
+              name: broker.name || "Mortgage Broker",
+              profilePicture: profilePictureUrl,
+              email: broker.email || null,
+              phone: broker.phone || null,
+              brokerageName: broker.brokerageName || null,
+            });
+            console.log("Mortgage broker info saved:", {
+              name: broker.name,
+              profilePicture: profilePictureUrl || "Not available",
+            });
+          }
+        } else {
+          console.log("No mortgage broker participant data found in response");
+          setMortgageBrokerInfo(null);
+        }
+
         console.log("Mortgage broker availability checked:", available);
         return available;
       } else if (response.status === 404) {
         setMortgageBrokerAvailable(false);
+        setMortgageBrokerInfo(null);
         console.log("No mortgage broker assigned to client");
         return false;
       } else {
         // For temporary errors, be optimistic
         setMortgageBrokerAvailable(true);
+        setMortgageBrokerInfo(null);
         console.warn(
           "Temporary error checking mortgage broker availability, allowing access"
         );
@@ -384,6 +435,7 @@ const ClientHome = ({ questionnaireData }) => {
       console.error("Error checking mortgage broker availability:", error);
       // On network errors, be optimistic
       setMortgageBrokerAvailable(true);
+      setMortgageBrokerInfo(null);
       console.warn("Network error - allowing mortgage broker chat attempt");
       return true;
     } finally {
@@ -440,7 +492,7 @@ const ClientHome = ({ questionnaireData }) => {
         badgeColor={COLORS.orange}
         showBadge={unreadCount > 0}
         badgeCount={unreadCount}
-        variant="filled"
+        variant="outlined"
         onPress={handleNotifications}
         style={styles.notificationButton}
       />
@@ -469,6 +521,23 @@ const ClientHome = ({ questionnaireData }) => {
   const renderDocumentRow = (doc) => {
     const status = doc.status?.toLowerCase();
     let action = null;
+
+    // Determine container and label styles based on status
+    let containerStyle = styles.docItem;
+    let labelStyle = styles.docLabel;
+
+    if (status === "approved" || status === "complete") {
+      containerStyle = styles.docItemApproved;
+      labelStyle = styles.docLabelApproved;
+    } else if (
+      status === "pending" ||
+      status === "rejected" ||
+      status === "submitted"
+    ) {
+      containerStyle = styles.docItemPending;
+      labelStyle = styles.docLabelPending;
+    }
+
     if (status === "pending" || status === "rejected") {
       action = (
         <TouchableOpacity
@@ -481,7 +550,7 @@ const ClientHome = ({ questionnaireData }) => {
           disabled={actionLoading}
         >
           {actionLoading ? (
-            <ActivityIndicator size="small" color={COLORS.green} />
+            <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
             <Text style={styles.addPillText}>Add</Text>
           )}
@@ -500,7 +569,7 @@ const ClientHome = ({ questionnaireData }) => {
           disabled={actionLoading}
         >
           {actionLoading ? (
-            <ActivityIndicator size="small" color={COLORS.blue} />
+            <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
             <Text style={styles.submittedPillText}>Submitted</Text>
           )}
@@ -509,7 +578,10 @@ const ClientHome = ({ questionnaireData }) => {
     } else if (status === "approved" || status === "complete") {
       action = (
         <TouchableOpacity
-          style={[styles.completePill, actionLoading && styles.pillDisabled]}
+          style={[
+            styles.approvedIconContainer,
+            actionLoading && styles.pillDisabled,
+          ]}
           onPress={() => {
             setActionLoading(true);
             setSelectedCompleteDoc(doc);
@@ -519,16 +591,20 @@ const ClientHome = ({ questionnaireData }) => {
           disabled={actionLoading}
         >
           {actionLoading ? (
-            <ActivityIndicator size="small" color={COLORS.white} />
+            <ActivityIndicator size="small" color={COLORS.green} />
           ) : (
-            <Text style={styles.completePillText}>Approved</Text>
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={24}
+              color={COLORS.green}
+            />
           )}
         </TouchableOpacity>
       );
     }
     return (
-      <View key={doc.docType} style={styles.docItem}>
-        <Text style={styles.docLabel}>
+      <View key={doc.docType} style={containerStyle}>
+        <Text style={labelStyle}>
           {doc.displayName
             ? doc.displayName.charAt(0).toUpperCase() + doc.displayName.slice(1)
             : doc.docType.charAt(0).toUpperCase() + doc.docType.slice(1)}
@@ -834,7 +910,12 @@ const ClientHome = ({ questionnaireData }) => {
                   {docsNeeded.length > 0 ? (
                     docsNeeded.map(renderDocumentRow)
                   ) : (
-                    <Text style={styles.noDocsText}>No documents needed.</Text>
+                    <View style={styles.noDocsContainer}>
+                      <Text style={styles.noDocsText}>
+                        Document requests will be here, once your application is
+                        completed
+                      </Text>
+                    </View>
                   )}
                 </View>
 
@@ -853,9 +934,12 @@ const ClientHome = ({ questionnaireData }) => {
                         {docsRequested.length > 0 ? (
                           docsRequested.map(renderDocumentRow)
                         ) : (
-                          <Text style={styles.noDocsText}>
-                            No documents requested.
-                          </Text>
+                          <View style={styles.noDocsContainer}>
+                            <Text style={styles.noDocsText}>
+                              Document requests will be here, once your
+                              application is completed
+                            </Text>
+                          </View>
                         )}
                       </View>
                     </View>
@@ -1133,6 +1217,8 @@ const ClientHome = ({ questionnaireData }) => {
           userId={clientId}
           userName={clientFromContext.name}
           chatType="mortgage-broker"
+          supportName={mortgageBrokerInfo?.name || "Mortgage Broker"}
+          supportAvatar={mortgageBrokerInfo?.profilePicture}
         />
       )}
 
@@ -1245,16 +1331,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   welcomeText: {
-    color: "#A9A9A9",
-    fontSize: 12,
-    fontWeight: 700,
+    color: "#D2D2D2",
+    fontSize: 10,
+    fontWeight: 500,
     fontFamily: "Futura",
-    lineHeight: 25,
   },
   clientName: {
+    textTransform: "uppercase",
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: 500,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
   removeButtonText: {
@@ -1330,7 +1416,7 @@ const styles = StyleSheet.create({
   bigTitle: {
     fontSize: 24, // H1 size
     fontWeight: "bold", // H1 weight
-    color: COLORS.black,
+    color: COLORS.green,
     marginBottom: 16,
     fontFamily: "Futura",
   },
@@ -1364,9 +1450,9 @@ const styles = StyleSheet.create({
   },
 
   sectionHeader: {
-    fontSize: 20,
+    fontSize: 11,
     fontWeight: "700",
-    color: COLORS.black,
+    color: "#797979",
     marginBottom: 16,
     fontFamily: "Futura",
     lineHeight: 20,
@@ -1386,6 +1472,36 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 0,
   },
+  docItemApproved: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "#FBFBFB",
+    borderRadius: 16,
+    height: 40,
+  },
+  docItemPending: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "#FDFDFD",
+    borderRadius: 16,
+    height: 59,
+    shadowColor: "rgba(14, 29, 29, 0.2)",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   docLabel: {
     fontSize: 12, // P size
     fontWeight: "700", // P weight
@@ -1393,20 +1509,31 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
     fontFamily: "Futura",
+  },
+  docLabelApproved: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#797979",
+    flex: 1,
+    fontFamily: "Futura",
+    lineHeight: 19,
+  },
+  docLabelPending: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#4D4D4D",
+    flex: 1,
+    fontFamily: "Futura",
+    lineHeight: 19,
   }, // Pill styles
   addPill: {
-    backgroundColor: "transparent",
-    borderRadius: 33,
-    paddingTop: 13,
-    paddingRight: 24,
-    paddingBottom: 13,
-    paddingLeft: 24,
+    backgroundColor: COLORS.green,
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
-    textAlign: "center",
     flexShrink: 0,
-    borderWidth: 1,
-    borderColor: COLORS.green,
   },
   closeModalButton: {
     color: COLORS.black,
@@ -1420,20 +1547,16 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   addPillText: {
-    color: COLORS.green,
-    fontSize: 12,
+    color: COLORS.white,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
-    textAlign: "center",
-    letterSpacing: 0,
   },
   submittedPillText: {
     color: COLORS.green,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
-    textAlign: "center",
-    letterSpacing: 0,
   },
   completePillText: {
     color: COLORS.white,
@@ -1444,18 +1567,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   submittedPill: {
-    backgroundColor: "transparent",
-    borderRadius: 50,
-    paddingTop: 13,
-    paddingRight: 24,
-    paddingBottom: 13,
-    textAlign: "center",
-    paddingLeft: 24,
+    backgroundColor: COLORS.white,
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
     borderWidth: 1,
     borderColor: COLORS.green,
+  },
+  approvedIconContainer: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   completePill: {
     backgroundColor: COLORS.green,
@@ -1472,13 +1598,33 @@ const styles = StyleSheet.create({
     minWidth: 100,
     flexShrink: 0,
   },
+  noDocsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    height: 100,
+    backgroundColor: "#FBFBFB",
+    borderRadius: 16,
+    shadowColor: "rgba(14, 29, 29, 0.2)",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 8,
+  },
   noDocsText: {
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
-    color: COLORS.slate,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#D2D2D2",
     textAlign: "center",
-    marginVertical: 16,
+    lineHeight: 19,
     fontFamily: "Futura",
+    flex: 1,
   },
   loadingIndicator: {
     marginTop: 48,

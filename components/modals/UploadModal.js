@@ -341,7 +341,7 @@ const UploadModal = ({
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="slide"
       transparent
       onRequestClose={handleClose}
     >
@@ -415,13 +415,13 @@ const UploadModal = ({
               </ScrollView>
               <View style={styles.bottomButtonContainer}>
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.backButton]}
+                  style={styles.backButton}
                   onPress={() => setCapturedImages([])}
                 >
                   <BackButton color={COLORS.slate} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.addMoreButton]}
+                  style={styles.addMoreButton}
                   onPress={pickCameraFile}
                 >
                   <Text style={styles.addMoreButtonText}>
@@ -429,7 +429,7 @@ const UploadModal = ({
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.doneButton]}
+                  style={styles.doneButton}
                   onPress={convertImagesToPDF}
                 >
                   <Text style={styles.doneButtonText}>Done</Text>
@@ -439,11 +439,11 @@ const UploadModal = ({
           ) : !selectedFile ? (
             <View style={styles.buttonGroup}>
               <TouchableOpacity
-                style={[styles.actionButton, styles.actionButtonTakePicture]}
+                style={[styles.actionButton]}
                 onPress={pickCameraFile}
                 disabled={isLoading}
               >
-                <Text style={styles.actionButtonText}>Take Picture</Text>
+                <Text style={styles.actionButtonText}>Take a picture</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -451,8 +451,19 @@ const UploadModal = ({
                 onPress={pickDocumentFile}
                 disabled={isLoading}
               >
-                <Text style={styles.actionButtonText}>Upload from files</Text>
+                <Text style={styles.actionButtonHalfText}>
+                  Upload from files
+                </Text>
               </TouchableOpacity>
+
+              <Text style={styles.emailInfoText}>
+                You can just email all your files to{"\n"}
+                <Text style={styles.emailBold}>
+                  Documents@inbound.roostapp.io
+                </Text>{" "}
+                on your{"\n"}
+                computer. We will take it from there.
+              </Text>
             </View>
           ) : (
             <Text style={styles.fileSelected}>
@@ -554,15 +565,18 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
+    paddingBottom: 10,
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 24,
-    width: "90%",
-    maxWidth: 400,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+    paddingBottom: 48,
+    width: "100%",
+    maxWidth: "100%",
     position: "relative",
   },
   modalContentFullscreen: {
@@ -575,18 +589,19 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    marginBottom: 24,
-    paddingRight: 10,
+    marginBottom: 16,
+    paddingTop: 10,
+    position: "relative",
   },
   clientNameText: {
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.slate,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 8,
     fontFamily: "Futura",
   },
   infotext: {
@@ -594,27 +609,27 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: COLORS.slate,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 8,
     fontFamily: "Futura",
   },
   modalTitle: {
-    fontSize: 24, // H2 size
-    fontWeight: 700, // H2 weight
+    fontSize: 16,
+    fontWeight: 700,
     color: COLORS.black,
-    flex: 1,
     fontFamily: "Futura",
     textAlign: "center",
-    marginTop: 24, // Center title vertically
   },
   closeModalButton: {
     position: "absolute",
-    top: -12,
-    right: -12,
-    padding: 5,
-    borderRadius: 8,
-    backgroundColor: COLORS.white,
+    top: 10,
+    right: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 10,
   },
   closeModalText: {
     color: COLORS.black,
@@ -678,17 +693,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 13,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     borderTopWidth: 1,
     borderTopColor: COLORS.gray,
     backgroundColor: COLORS.white,
+    gap: 8,
   },
   backButton: {
     backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 8,
+    minWidth: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   backButtonText: {
     color: COLORS.slate,
@@ -700,57 +719,80 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 50,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.green,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addMoreButtonText: {
     color: COLORS.green,
-    fontSize: 12, // P size
-    fontWeight: 700, // P weight
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
   doneButton: {
     backgroundColor: COLORS.green,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 33,
+    borderRadius: 999,
+    minWidth: 80,
+    alignItems: "center",
+    justifyContent: "center",
   },
   doneButtonText: {
     color: COLORS.white,
-    fontSize: 12, // P size
-    fontWeight: 700, // P weight
+    fontSize: 12,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
   buttonGroup: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 16,
-    marginVertical: 16,
+    marginVertical: 8,
+    width: "100%",
   },
   actionButtonText: {
     color: COLORS.white,
-    fontSize: 12, // H3 size
-    fontWeight: 700, // P weight
+    fontSize: 14,
+    fontWeight: 700,
     fontFamily: "Futura",
   },
   actionButton: {
     backgroundColor: COLORS.green,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 33,
+    borderRadius: 999,
     textAlign: "center",
     alignItems: "center",
     justifyContent: "center",
+    width: "90%",
   },
   actionButtonHalf: {
-    flex: 160,
-    minHeight: 42,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.green,
+    width: "90%",
   },
-  actionButtonTakePicture: {
-    backgroundColor: COLORS.green,
-    minHeight: 42,
+  actionButtonHalfText: {
+    color: COLORS.green,
+    fontSize: 14,
+    fontWeight: 700,
+    fontFamily: "Futura",
+  },
+  emailInfoText: {
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+    color: "#4D4D4D",
+    fontFamily: "Futura",
+    marginTop: 8,
+  },
+  emailBold: {
+    fontWeight: "700",
   },
   fileSelected: {
     textAlign: "center",
@@ -762,16 +804,17 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: COLORS.green,
-    paddingVertical: 13,
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 50,
+    borderRadius: 999,
     marginTop: 16,
+    width: "90%",
   },
   uploadButtonText: {
     color: COLORS.white,
-    fontWeight: "700", // P weight
+    fontWeight: "700",
     textAlign: "center",
-    fontSize: 12, // H3 size
+    fontSize: 14,
     fontFamily: "Futura",
   },
   loadingIndicator: {

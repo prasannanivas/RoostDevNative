@@ -69,10 +69,13 @@ const Chat = ({
   userType = "client",
   chatType = "admin", // "admin" or "mortgage-broker"
   onUnreadChange, // Callback to notify parent about unread messages
+  supportName, // Name of support person (e.g., mortgage broker name)
+  supportAvatar, // Avatar URL of support person
 }) => {
   const { auth } = useAuth();
   const { clearUnread, setUnreadForType } = useChatUnread();
 
+  console.log("Chat component rendered", supportAvatar, supportName);
   // Get context data based on userType
   let contextInfo = null;
   let contextName = userName;
@@ -324,9 +327,6 @@ const Chat = ({
           page
         );
       }
-
-      console.log("✅ Loaded messages response:", response);
-      console.log("📊 API Messages count:", response?.messages?.length || 0);
 
       const apiMessages = response.messages || [];
       setPagination(response.pagination);
@@ -1080,9 +1080,9 @@ const Chat = ({
 
   // Debug: Track messages changes
   useEffect(() => {
-    console.log("=== Messages State Updated ===");
-    console.log("Messages count:", messages.length);
-    console.log("Last 3 messages:", messages.slice(-3));
+    // console.log("=== Messages State Updated ===");
+    // console.log("Messages count:", messages.length);
+    // console.log("Last 3 messages:", messages.slice(-3));
 
     messages.forEach((msg, index) => {
       if (!msg.text || !msg.text.trim()) {
@@ -1093,8 +1093,8 @@ const Chat = ({
     const validMessages = messages.filter(
       (msg) => msg && msg.text && msg.text.trim() && msg.id
     );
-    console.log("Valid messages count:", validMessages.length);
-    console.log("=== End Messages Debug ===");
+    // console.log("Valid messages count:", validMessages.length);
+    // console.log("=== End Messages Debug ===");
   }, [messages]);
 
   // Scroll to bottom when chat becomes visible with messages
@@ -1572,7 +1572,15 @@ const Chat = ({
         {isSupport && (
           <View style={styles.supportAvatar}>
             {chatType === "mortgage-broker" ? (
-              <Ionicons name="home" size={20} color={COLORS.white} />
+              supportAvatar ? (
+                <Image
+                  source={{ uri: supportAvatar }}
+                  style={styles.supportAvatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="home" size={20} color={COLORS.white} />
+              )
             ) : (
               <Image
                 source={roostLogoImage}
@@ -1657,7 +1665,15 @@ const Chat = ({
       <View style={[styles.messageContainer, styles.supportMessageContainer]}>
         <View style={styles.supportAvatar}>
           {chatType === "mortgage-broker" ? (
-            <Ionicons name="home" size={20} color={COLORS.white} />
+            supportAvatar ? (
+              <Image
+                source={{ uri: supportAvatar }}
+                style={styles.supportAvatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="home" size={20} color={COLORS.white} />
+            )
           ) : (
             <Image
               source={roostLogoImage}
@@ -1691,12 +1707,20 @@ const Chat = ({
         <View style={styles.headerInfo}>
           <View style={styles.headerTitleRow}>
             {chatType === "mortgage-broker" ? (
-              <Ionicons
-                name="business"
-                size={18}
-                color={COLORS.white}
-                style={styles.headerIcon}
-              />
+              supportAvatar ? (
+                <Image
+                  source={{ uri: supportAvatar }}
+                  style={styles.headerAvatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons
+                  name="business"
+                  size={18}
+                  color={COLORS.white}
+                  style={styles.headerIcon}
+                />
+              )
             ) : (
               <Ionicons
                 name="headset"
@@ -1707,11 +1731,11 @@ const Chat = ({
             )}
             <Text style={styles.headerTitle}>
               {chatType === "mortgage-broker"
-                ? "Mortgage Broker"
+                ? supportName || "Mortgage Broker"
                 : "General Support"}
             </Text>
           </View>
-          <View style={styles.statusContainer}>
+          {/* <View style={styles.statusContainer}>
             <View
               style={[
                 styles.statusDot,
@@ -1732,7 +1756,7 @@ const Chat = ({
                 ? "Connection Error"
                 : "Connecting..."}
             </Text>
-          </View>
+          </View> */}
         </View>
 
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -1959,7 +1983,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0E1D1D",
+    backgroundColor: "#9BB9B9",
     paddingHorizontal: 20,
     paddingVertical: 16,
     paddingTop: Platform.OS === "ios" ? 10 : 16,
@@ -1985,6 +2009,13 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     marginRight: 8,
+  },
+  headerAvatarImage: {
+    width: 38,
+    height: 38,
+    borderRadius: 33,
+    marginRight: 8,
+    backgroundColor: COLORS.white,
   },
   headerTitle: {
     fontSize: 16,
@@ -2151,7 +2182,7 @@ const styles = StyleSheet.create({
   supportAvatar: {
     width: 32,
     height: 32,
-    backgroundColor: COLORS.red,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 2,
@@ -2160,6 +2191,7 @@ const styles = StyleSheet.create({
   supportAvatarImage: {
     width: 32,
     height: 32,
+    borderRadius: 16, // Make it circular for profile pictures
   },
   userAvatar: {
     width: 40,

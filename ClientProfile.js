@@ -13,6 +13,7 @@ import {
   Animated, // Add this for animation
   Platform,
   KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -55,7 +56,7 @@ const CloseButton = ({ onPress, style }) => {
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-        <Circle cx="18.5" cy="18.5" r="18.5" fill="#F6F6F6" />
+        <Circle cx="18.5" cy="18.5" r="18.5" fill="transparent" />
         <Path
           d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
           fill="#A9A9A9"
@@ -128,6 +129,10 @@ export default function ClientProfile({ onClose }) {
   const [countdown, setCountdown] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Add scroll state for header transition
+  const [isScrolled, setIsScrolled] = useState(false);
+  const scrollAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Load client info
@@ -556,16 +561,134 @@ export default function ClientProfile({ onClose }) {
         )}
         {/* Avatar & Title */}
         <View style={styles.topMargin}></View>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{getInitials()}</Text>
-          </View>
-          <Text style={styles.profileTitle}>Your Profile</Text>
-        </View>
+
+        {/* Fixed Header: Avatar, Name */}
+        <Animated.View
+          style={[
+            styles.header,
+            {
+              position: "absolute",
+              top: 60,
+              left: 0,
+              right: 0,
+              zIndex: 100,
+              backgroundColor: scrollAnimation.interpolate({
+                inputRange: [60, 110],
+                outputRange: [COLORS.background, COLORS.white],
+                extrapolate: "clamp",
+              }),
+              height: scrollAnimation.interpolate({
+                inputRange: [60, 110],
+                outputRange: [172, 84],
+                extrapolate: "clamp",
+              }),
+              shadowOpacity: scrollAnimation.interpolate({
+                inputRange: [60, 110],
+                outputRange: [0, 0.5],
+                extrapolate: "clamp",
+              }),
+            },
+            isScrolled && {
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 4,
+              elevation: 4,
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.avatarContainer,
+              {
+                transform: [
+                  {
+                    translateX: scrollAnimation.interpolate({
+                      inputRange: [60, 110],
+                      outputRange: [0, -120],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                  {
+                    translateY: scrollAnimation.interpolate({
+                      inputRange: [60, 110],
+                      outputRange: [0, -38],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                  {
+                    scale: scrollAnimation.interpolate({
+                      inputRange: [60, 110],
+                      outputRange: [1, 0.6],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>{getInitials()}</Text>
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                top: scrollAnimation.interpolate({
+                  inputRange: [60, 110],
+                  outputRange: [136, 20],
+                  extrapolate: "clamp",
+                }),
+              },
+              isScrolled && {
+                left: Dimensions.get("window").width * 0.3,
+                width: Dimensions.get("window").width * 0.5,
+                alignItems: "center",
+                justifyContent: "center",
+                height: 84,
+                top: 0,
+              },
+            ]}
+          >
+            <Animated.Text
+              style={[
+                styles.profileTitle,
+                {
+                  fontSize: scrollAnimation.interpolate({
+                    inputRange: [60, 110],
+                    outputRange: [24, 16],
+                    extrapolate: "clamp",
+                  }),
+                  textAlign: "center",
+                },
+              ]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {formData.firstName} {formData.lastName}
+            </Animated.Text>
+          </Animated.View>
+        </Animated.View>
+
         <ScrollView
           style={{ zIndex: 20 }}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: 235 }]}
           showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollAnimation } } }],
+            {
+              useNativeDriver: false,
+              listener: (event) => {
+                const scrollY = event.nativeEvent.contentOffset.y;
+                setIsScrolled(scrollY > 100);
+              },
+            }
+          )}
+          scrollEventThrottle={16}
         >
           {/* Personal Info Card */}
           <View style={styles.card}>
@@ -1136,29 +1259,30 @@ const styles = StyleSheet.create({
     width: 37,
     height: 37,
     justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0)",
     alignItems: "center",
     zIndex: 9999, // Ensure it's always on top
   },
-  avatarContainer: {
-    position: "absolute",
-    top: 66,
-    left: 0,
-    right: 0,
+  header: {
     alignItems: "center",
-    backgroundColor: COLORS.background,
+    paddingHorizontal: 16,
+  },
+  avatarContainer: {
+    alignItems: "center",
     zIndex: 1,
+    marginTop: 32,
   },
   avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 60,
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   avatarText: {
-    fontSize: 24,
+    fontSize: 32,
     color: COLORS.white,
     fontFamily: "Futura",
     fontWeight: "bold",
@@ -1179,7 +1303,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   scrollContent: {
-    marginTop: 160 /* Add padding to account for the avatar container height */,
     paddingBottom: 160,
     zIndex: 10,
     backgroundColor: COLORS.background,
