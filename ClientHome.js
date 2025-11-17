@@ -39,6 +39,7 @@ import CategorySelectionModal from "./components/modals/CategorySelectionModal";
 import FullyApprovedModal from "./components/modals/FullyApprovedModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
 import ChatModal from "./components/ChatModal";
+import Svg, { Path } from "react-native-svg";
 
 /**
  * Color palette from UX team design system
@@ -93,6 +94,7 @@ const ClientHome = ({ questionnaireData }) => {
   const [checkingBrokerAvailability, setCheckingBrokerAvailability] =
     useState(false);
   const [mortgageBrokerInfo, setMortgageBrokerInfo] = useState(null); // Store broker name and profile picture
+  const [cachedProfilePicture, setCachedProfilePicture] = useState(null); // Store cached local URI
 
   const clientFromContext = clientInfo || auth.client;
 
@@ -299,10 +301,29 @@ const ClientHome = ({ questionnaireData }) => {
     });
   }, [merged, clientDocs]);
 
+  // Sort documents: Approved/Complete first, Submitted second, Pending/Rejected last
+  const sortDocuments = (docs) => {
+    return [...docs].sort((a, b) => {
+      const statusA = a.status?.toLowerCase() || "";
+      const statusB = b.status?.toLowerCase() || "";
+
+      // Define priority: approved/complete = 0, submitted = 1, pending/rejected = 2
+      const getPriority = (status) => {
+        if (status === "approved" || status === "complete") return 0;
+        if (status === "submitted") return 1;
+        return 2; // pending or rejected
+      };
+
+      return getPriority(statusA) - getPriority(statusB);
+    });
+  };
+
   // Sections
-  const docsNeeded = mergedWithStatusFix.filter((d) => d.type === "Needed");
-  const docsRequested = mergedWithStatusFix.filter(
-    (d) => d.type === "Needed-other"
+  const docsNeeded = sortDocuments(
+    mergedWithStatusFix.filter((d) => d.type === "Needed")
+  );
+  const docsRequested = sortDocuments(
+    mergedWithStatusFix.filter((d) => d.type === "Needed-other")
   );
   // Open upload modal
   const handleAdd = (doc) => {
@@ -344,6 +365,76 @@ const ClientHome = ({ questionnaireData }) => {
     }
     fetchCustomMessages();
   }, [auth, clientId, refreshing]);
+
+  // Download and cache profile picture
+  const downloadAndCacheProfilePicture = async (filename) => {
+    if (!filename) return null;
+
+    try {
+      // Create a cache directory for profile pictures
+      const cacheDir = `${FileSystem.cacheDirectory}profile-pictures/`;
+      const cachedFilePath = `${cacheDir}${filename}`;
+
+      // Check if directory exists, if not create it
+      const dirInfo = await FileSystem.getInfoAsync(cacheDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+      }
+
+      // Check if file already exists in cache
+      const fileInfo = await FileSystem.getInfoAsync(cachedFilePath);
+      if (fileInfo.exists) {
+        console.log("Profile picture found in cache:", cachedFilePath);
+        return cachedFilePath;
+      }
+
+      // Download the image if not cached
+      console.log("Downloading profile picture:", filename);
+      const downloadUrl = `https://signup.roostapp.io/admin/profile-picture/${filename}`;
+
+      const downloadResult = await FileSystem.downloadAsync(
+        downloadUrl,
+        cachedFilePath
+      );
+
+      if (downloadResult.status === 200) {
+        console.log("Profile picture downloaded and cached:", cachedFilePath);
+        return cachedFilePath;
+      } else {
+        console.error(
+          "Failed to download profile picture:",
+          downloadResult.status
+        );
+        return null;
+      }
+    } catch (error) {
+      console.error("Error downloading/caching profile picture:", error);
+      return null;
+    }
+  };
+
+  // Clear old cached profile pictures when filename changes
+  const clearOldCachedPictures = async (currentFilename) => {
+    try {
+      const cacheDir = `${FileSystem.cacheDirectory}profile-pictures/`;
+      const dirInfo = await FileSystem.getInfoAsync(cacheDir);
+
+      if (dirInfo.exists) {
+        const files = await FileSystem.readDirectoryAsync(cacheDir);
+
+        // Delete all files except the current one
+        for (const file of files) {
+          if (file !== currentFilename) {
+            const filePath = `${cacheDir}${file}`;
+            await FileSystem.deleteAsync(filePath, { idempotent: true });
+            console.log("Deleted old cached profile picture:", file);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error clearing old cached pictures:", error);
+    }
+  };
 
   // Check if mortgage broker is available
   const checkMortgageBrokerAvailability = async () => {
@@ -393,21 +484,33 @@ const ClientHome = ({ questionnaireData }) => {
             });
           } else {
             // Broker object is populated
-            // Construct full URL for profile picture using the admin profile-picture endpoint
-            const profilePictureUrl = broker.profilePicture
-              ? `https://signup.roostapp.io/admin/profile-picture/${broker.profilePicture}`
-              : null;
+            // Download and cache the profile picture
+            let cachedImageUri = null;
+            if (broker.profilePicture) {
+              // Clear old cached pictures first
+              await clearOldCachedPictures(broker.profilePicture);
+
+              // Download and cache the new picture
+              cachedImageUri = await downloadAndCacheProfilePicture(
+                broker.profilePicture
+              );
+            }
 
             setMortgageBrokerInfo({
               name: broker.name || "Mortgage Broker",
-              profilePicture: profilePictureUrl,
+              profilePicture: broker.profilePicture, // Store filename for reference
               email: broker.email || null,
               phone: broker.phone || null,
               brokerageName: broker.brokerageName || null,
             });
+
+            // Set the cached local URI separately
+            setCachedProfilePicture(cachedImageUri);
+
             console.log("Mortgage broker info saved:", {
               name: broker.name,
-              profilePicture: profilePictureUrl || "Not available",
+              profilePicture: broker.profilePicture || "Not available",
+              cachedUri: cachedImageUri || "Not cached",
             });
           }
         } else {
@@ -549,11 +652,12 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
-          {actionLoading ? (
+          {/* {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
             <Text style={styles.addPillText}>Add</Text>
-          )}
+          )} */}
+          <Text style={styles.addPillText}>Add</Text>
         </TouchableOpacity>
       );
     } else if (status === "submitted") {
@@ -568,11 +672,11 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
-          {actionLoading ? (
+          {/* {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.white} />
           ) : (
-            <Text style={styles.submittedPillText}>Submitted</Text>
-          )}
+            )} */}
+          <Text style={styles.submittedPillText}>Submitted</Text>
         </TouchableOpacity>
       );
     } else if (status === "approved" || status === "complete") {
@@ -590,7 +694,7 @@ const ClientHome = ({ questionnaireData }) => {
           }}
           disabled={actionLoading}
         >
-          {actionLoading ? (
+          {/* {actionLoading ? (
             <ActivityIndicator size="small" color={COLORS.green} />
           ) : (
             <Ionicons
@@ -598,7 +702,22 @@ const ClientHome = ({ questionnaireData }) => {
               size={24}
               color={COLORS.green}
             />
-          )}
+          )} */}
+          <Svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <Path
+              d="M15 10L11 14L9 12M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21Z"
+              stroke="#377473"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
         </TouchableOpacity>
       );
     }
@@ -791,6 +910,9 @@ const ClientHome = ({ questionnaireData }) => {
           />
         }
       >
+        {/* Extended Background for Header */}
+        <View style={styles.headerExtendedBackground} />
+
         <View style={styles.contentContainer}>
           <View style={styles.statusContainer}>
             {clientFromContext.status === "PreApproved" ? (
@@ -1124,11 +1246,11 @@ const ClientHome = ({ questionnaireData }) => {
       {/* Chat Type Selection Modal */}
       <Modal
         visible={showChatTypeSelection}
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         onRequestClose={() => setShowChatTypeSelection(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={styles.chatTypeSelectionOverlay}>
           <View style={styles.chatTypeSelectionModalContent}>
             <Text style={styles.chatTypeSelectionTitle}>
               Choose Support Type
@@ -1141,11 +1263,10 @@ const ClientHome = ({ questionnaireData }) => {
               style={styles.chatTypeOptionButton}
               onPress={() => handleChatTypeSelect("admin")}
             >
-              <Ionicons
-                name="headset-outline"
-                size={24}
-                color={COLORS.green}
-                style={styles.chatTypeOptionIcon}
+              <Image
+                source={require("./assets/app-icon.png")}
+                style={styles.chatTypeOptionAvatar}
+                resizeMode="contain"
               />
               <View style={styles.chatTypeOptionTextContainer}>
                 <Text style={styles.chatTypeOptionTitle}>General Support</Text>
@@ -1167,14 +1288,25 @@ const ClientHome = ({ questionnaireData }) => {
               style={styles.chatTypeOptionButton}
               onPress={() => handleChatTypeSelect("mortgage-broker")}
             >
-              <Ionicons
-                name="business-outline"
-                size={24}
-                color={COLORS.blue}
-                style={styles.chatTypeOptionIcon}
-              />
+              {cachedProfilePicture ? (
+                <Image
+                  source={{ uri: cachedProfilePicture }}
+                  style={styles.chatTypeOptionAvatar}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons
+                  name="business-outline"
+                  size={24}
+                  color={COLORS.blue}
+                  style={styles.chatTypeOptionIcon}
+                />
+              )}
               <View style={styles.chatTypeOptionTextContainer}>
-                <Text style={styles.chatTypeOptionTitle}>Mortgage Broker</Text>
+                <Text style={styles.chatTypeOptionTitle}>
+                  {mortgageBrokerInfo?.name + " " + `(Mortgage Broker)` ||
+                    "Mortgage Broker"}
+                </Text>
                 <Text style={styles.chatTypeOptionDescription}>
                   Specific questions about your mortgage application
                 </Text>
@@ -1218,7 +1350,7 @@ const ClientHome = ({ questionnaireData }) => {
           userName={clientFromContext.name}
           chatType="mortgage-broker"
           supportName={mortgageBrokerInfo?.name || "Mortgage Broker"}
-          supportAvatar={mortgageBrokerInfo?.profilePicture}
+          supportAvatar={cachedProfilePicture}
         />
       )}
 
@@ -1253,6 +1385,16 @@ const styles = StyleSheet.create({
     position: "relative", // To position absolute elements
   },
 
+  headerExtendedBackground: {
+    position: "absolute",
+    top: -126, // Position it to align with the header above
+    left: -24, // Compensate for ScrollView paddingHorizontal
+    right: -24, // Compensate for ScrollView paddingHorizontal
+    height: 180, // Extends to cover header (126px) + half of statusContainer padding/content
+    backgroundColor: COLORS.black,
+    zIndex: 0,
+  },
+
   topHeader: {
     width: "100%",
     height: 126, // Exact height as specified
@@ -1262,7 +1404,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingTop: 60, // Reserve 68px for mobile status bar
     paddingBottom: 8,
-    backgroundColor: COLORS.black,
+    backgroundColor: COLORS.black, // Restore original background color
+    zIndex: 1,
   },
   leftSection: {
     flexDirection: "row",
@@ -1392,7 +1535,7 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 4,
     marginBottom: 64,
   },
   contentContainer: {
@@ -1401,10 +1544,10 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     backgroundColor: COLORS.white,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 24,
-
+    zIndex: 2,
     shadowColor: "#00000040",
     shadowOffset: {
       width: 0,
@@ -2015,17 +2158,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   // Chat type selection modal styles
+  chatTypeSelectionOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+    paddingBottom: 0,
+  },
   chatTypeSelectionModalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: 24,
-    width: "90%",
-    maxWidth: 400,
-    alignItems: "center",
+    width: "100%",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: -2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -2088,6 +2236,13 @@ const styles = StyleSheet.create({
   },
   chatTypeOptionIcon: {
     marginRight: 16,
+  },
+  chatTypeOptionAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+    backgroundColor: COLORS.red, // Default red background while image loads
   },
   chatTypeOptionTextContainer: {
     flex: 1,

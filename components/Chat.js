@@ -2015,7 +2015,7 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 33,
     marginRight: 8,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.red, // Default red background while image loads
   },
   headerTitle: {
     fontSize: 16,
@@ -2182,21 +2182,23 @@ const styles = StyleSheet.create({
   supportAvatar: {
     width: 32,
     height: 32,
-    backgroundColor: "transparent",
+    backgroundColor: COLORS.red,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 383,
     marginBottom: 2,
     overflow: "hidden",
   },
   supportAvatarImage: {
     width: 32,
     height: 32,
-    borderRadius: 16, // Make it circular for profile pictures
+    borderRadius: 383, // Make it circular for profile pictures
+    backgroundColor: COLORS.red, // Default red background while image loads
   },
   userAvatar: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 383, // Make it circular for profile pictures
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",

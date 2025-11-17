@@ -676,7 +676,7 @@ export default function ClientProfile({ onClose }) {
 
         <ScrollView
           style={{ zIndex: 20 }}
-          contentContainerStyle={[styles.scrollContent, { paddingTop: 235 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: 220 }]}
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollAnimation } } }],

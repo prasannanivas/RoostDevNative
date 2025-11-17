@@ -38,19 +38,19 @@ const CompleteDocumentModal = ({
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="slide"
       transparent
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-              <CloseIconSvg />
-            </TouchableOpacity>
             <Text style={styles.modalTitle}>
               {document?.displayName || document?.docType || "Document"}
             </Text>
+            <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
+              <CloseIconSvg />
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.clientNameText}>
@@ -74,58 +74,59 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
+    paddingBottom: 10,
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 24,
-    width: "90%",
-    maxWidth: 400,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+    paddingBottom: 48,
+    width: "100%",
+    maxWidth: "100%",
     position: "relative",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 16,
+    paddingTop: 10,
+    position: "relative",
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: COLORS.black,
+    fontFamily: "Futura",
+    textAlign: "center",
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
   },
   clientNameText: {
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.slate,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 8,
     fontFamily: "Futura",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 24,
-    paddingRight: 10,
-  },
-  modalTitle: {
-    fontSize: 24, // H2 size
-    fontWeight: 700, // H2 weight
-    color: COLORS.black,
-    flex: 1,
-    fontFamily: "Futura",
-    textAlign: "center",
-    marginTop: 24, // Center title vertically
-  },
-  closeModalButton: {
-    position: "absolute",
-    top: -12,
-    right: -12,
-    padding: 5,
-    borderRadius: 8,
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeModalText: {
-    color: COLORS.black,
   },
   completeModalText: {
-    fontSize: 14, // H3 size
-    fontWeight: 500, // H3 weight
+    fontSize: 14,
+    fontWeight: 500,
     color: COLORS.slate,
     textAlign: "center",
     marginVertical: 24,
@@ -136,16 +137,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     alignSelf: "center",
-    borderRadius: 50,
-    minWidth: 82,
+    borderRadius: 999,
+    minWidth: 120,
     minHeight: 42,
     marginTop: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   closeButtonText: {
     color: COLORS.white,
-    fontWeight: 700, // P weight
+    fontWeight: 700,
     textAlign: "center",
-    fontSize: 12, // H3 size
+    fontSize: 14,
     fontFamily: "Futura",
   },
 });
