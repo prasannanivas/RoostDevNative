@@ -45,7 +45,7 @@ const COLORS = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-const Questionnaire = ({ questionnaireData, showCloseButton }) => {
+const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { auth } = useAuth();
@@ -1048,6 +1048,16 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
     }
   };
 
+  const handleBackPress = () => {
+    // If we're on the first question and onBack is provided, call it
+    if (currentQuestionId === 1 && onBack) {
+      onBack();
+    } else {
+      // Otherwise use normal back navigation
+      goToPreviousQuestion();
+    }
+  };
+
   const handleSubmit = async () => {
     if (!auth?.client?.id) {
       Alert.alert("Error", "User not authenticated");
@@ -1061,7 +1071,11 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
       await axios.put(
         `https://signup.roostapp.io/client/questionnaire/${auth.client.id}`,
         {
-          applyingbehalf: responses["5"] === "just_me" ? "Self" : "other",
+          applyingbehalf: responses["5"]
+            ? responses["5"] === "just_me"
+              ? "Self"
+              : "other"
+            : "",
           employmentStatus: findEmploymentStatusofSelf(responses),
           ownAnotherProperty: findOwnAnotherPropertySelf(responses),
           otherDetails: findCoSignerDetails(responses),
@@ -1251,10 +1265,10 @@ const Questionnaire = ({ questionnaireData, showCloseButton }) => {
               style={styles.looksGoodButton}
             />
 
-            {canGoBack && (
+            {(canGoBack || currentQuestionId === 1) && (
               <Button
                 Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
-                onPress={goToPreviousQuestion}
+                onPress={handleBackPress}
                 variant="outline"
                 style={styles.backButton}
               />

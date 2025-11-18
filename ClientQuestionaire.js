@@ -11,6 +11,7 @@ export default function ClientQuestionaire({
   navigation,
   questionnaireData,
   showCloseButton = true,
+  onBack,
 }) {
   const { auth } = useAuth();
   const [showPreview, setShowPreview] = useState(true);
@@ -118,6 +119,7 @@ export default function ClientQuestionaire({
           navigation={navigation}
           questionnaireData={questionnaireData}
           showCloseButton={showCloseButton}
+          onBack={onBack}
         />
       )}
     </QuestionnaireProvider>

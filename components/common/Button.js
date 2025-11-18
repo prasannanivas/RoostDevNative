@@ -67,12 +67,12 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 13,
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 33, // Fully rounded for pill shape
+    borderRadius: 999, // Fully rounded for pill shape
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 42, // Slightly taller
+    minHeight: 43,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -93,9 +93,10 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
   },
   text: {
-    fontSize: 12,
-    fontWeight: 700,
+    fontSize: 14,
+    fontWeight: "700",
     fontFamily: "Futura",
+    lineHeight: 19,
   },
   primaryText: {
     color: "#FFFFFF",
@@ -110,11 +111,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   disabled: {
-    backgroundColor: "#E0E0E0",
-    borderColor: "#E0E0E0",
+    backgroundColor: "#E8E8E8",
+    borderColor: "#E8E8E8",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   disabledText: {
-    color: "#999999",
+    color: "#797979",
   },
   loadingContainer: {
     flexDirection: "row",

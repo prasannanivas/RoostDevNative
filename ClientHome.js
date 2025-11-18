@@ -38,7 +38,10 @@ import CompleteDocumentModal from "./components/modals/CompleteDocumentModal";
 import CategorySelectionModal from "./components/modals/CategorySelectionModal";
 import FullyApprovedModal from "./components/modals/FullyApprovedModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
+import PhotoIDVerificationModal from "./components/modals/PhotoIDVerificationModal";
 import ChatModal from "./components/ChatModal";
+import ScheduleCallScreen from "./screens/ScheduleCallScreen";
+import RescheduleCallModal from "./components/modals/RescheduleCallModal";
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -85,6 +88,8 @@ const ClientHome = ({ questionnaireData }) => {
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showChangeOptions, setShowChangeOptions] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
+  const [showScheduleCall, setShowScheduleCall] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showChat, setShowChat] = useState(false);
 
@@ -93,6 +98,7 @@ const ClientHome = ({ questionnaireData }) => {
   const [mortgageBrokerAvailable, setMortgageBrokerAvailable] = useState(false);
   const [checkingBrokerAvailability, setCheckingBrokerAvailability] =
     useState(false);
+  const [helpButtonLoading, setHelpButtonLoading] = useState(false);
   const [mortgageBrokerInfo, setMortgageBrokerInfo] = useState(null); // Store broker name and profile picture
   const [cachedProfilePicture, setCachedProfilePicture] = useState(null); // Store cached local URI
 
@@ -100,6 +106,16 @@ const ClientHome = ({ questionnaireData }) => {
 
   const clientId =
     clientFromContext.id || auth.client.id || clientFromContext._id;
+
+  // Check if client is waiting for a call (questionnaire not completed and call scheduled)
+  const isClientWaitingForCall =
+    !(
+      clientFromContext?.questionnaire?.applyingbehalf &&
+      clientFromContext?.questionnaire?.employmentStatus &&
+      clientFromContext?.questionnaire?.ownAnotherProperty
+    ) &&
+    clientFromContext.callSchedulePreference?.preferredDay &&
+    clientFromContext.callSchedulePreference?.preferredTime;
   const [documentsFromApi, setDocumentsFromApi] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [clientDocs, setClientDocs] = useState(contextDocuments || []);
@@ -107,6 +123,9 @@ const ClientHome = ({ questionnaireData }) => {
   // Upload modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState(null);
+
+  // PhotoID verification modal state
+  const [showPhotoIDModal, setShowPhotoIDModal] = useState(false);
 
   // Button loading states
   const [actionLoading, setActionLoading] = useState(false);
@@ -328,7 +347,13 @@ const ClientHome = ({ questionnaireData }) => {
   // Open upload modal
   const handleAdd = (doc) => {
     setSelectedDocType(doc);
-    setShowModal(true);
+
+    // Check if it's a PhotoID document type
+    if (doc.docType?.toLowerCase() === "photoid") {
+      setShowPhotoIDModal(true);
+    } else {
+      setShowModal(true);
+    }
   };
 
   const closeModal = () => {
@@ -546,18 +571,19 @@ const ClientHome = ({ questionnaireData }) => {
     }
   };
 
-  // Help button logic - now opens chat type selection
+  // Help button logic - now opens mortgage broker chat directly
   const handleHelpPress = async () => {
-    // Check mortgage broker availability first
-    await checkMortgageBrokerAvailability();
+    setHelpButtonLoading(true);
+    try {
+      // Check mortgage broker availability first
+      await checkMortgageBrokerAvailability();
 
-    // If mortgage broker is available, show selection modal
-    if (mortgageBrokerAvailable) {
-      setShowChatTypeSelection(true);
-    } else {
-      // If no mortgage broker, go directly to general support
-      setSelectedChatType("admin");
+      // Go directly to mortgage broker chat
+      setSelectedChatType("mortgage-broker");
       setShowChat(true);
+    } finally {
+      // Keep loading state briefly while modal opens
+      setTimeout(() => setHelpButtonLoading(false), 500);
     }
   };
 
@@ -879,18 +905,24 @@ const ClientHome = ({ questionnaireData }) => {
         <View style={styles.rightSection}>
           {renderNotificationButton()}
           <View style={styles.helpButtonContainer}>
-            <HelpButton
-              borderColor={COLORS.white}
-              textColor={COLORS.white}
-              width={46}
-              height={46}
-              text="HELP"
-              onPress={handleHelpPress}
-              variant="outline"
-              size="medium"
-            />
+            {helpButtonLoading ? (
+              <View style={styles.helpLoadingContainer}>
+                <ActivityIndicator size="small" color={COLORS.white} />
+              </View>
+            ) : (
+              <HelpButton
+                borderColor={COLORS.white}
+                textColor={COLORS.white}
+                width={46}
+                height={46}
+                text="HELP"
+                onPress={handleHelpPress}
+                variant="outline"
+                size="medium"
+              />
+            )}
             {/* Chat unread badge on Help button */}
-            {totalUnread > 0 && (
+            {totalUnread > 0 && !helpButtonLoading && (
               <View style={styles.chatUnreadBadge}>
                 <View style={styles.chatUnreadDot} />
               </View>
@@ -915,6 +947,7 @@ const ClientHome = ({ questionnaireData }) => {
 
         <View style={styles.contentContainer}>
           <View style={styles.statusContainer}>
+            {/* Check if client has scheduled a call */}
             {clientFromContext.status === "PreApproved" ? (
               <>
                 <Text style={styles.bigTitlePreApproved}>Pre-Approved!</Text>
@@ -1004,6 +1037,36 @@ const ClientHome = ({ questionnaireData }) => {
                   </View>
                 )}
               </>
+            ) : isClientWaitingForCall ? (
+              <View style={styles.waitForCallCard}>
+                <Text style={styles.waitForCallTitle}>Wait for call</Text>
+                <Text style={styles.waitForCallDescription}>
+                  You should be receiving a call at{" "}
+                  {clientFromContext.callSchedulePreference.preferredTime.toLowerCase()}{" "}
+                  {clientFromContext.callSchedulePreference.preferredDay.toLowerCase()}{" "}
+                  from {mortgageBrokerInfo?.name || "your mortgage broker"}
+                </Text>
+                <View style={styles.callActionButtons}>
+                  <TouchableOpacity
+                    style={styles.applyOnlineButton}
+                    onPress={() => {
+                      setShowQuestionnaire(true);
+                    }}
+                  >
+                    <Text style={styles.applyOnlineButtonText}>
+                      Apply online
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.rescheduleButton}
+                    onPress={() => {
+                      setShowRescheduleModal(true);
+                    }}
+                  >
+                    <Text style={styles.rescheduleButtonText}>Reschedule</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
               <>
                 <Text style={styles.bigTitle}>Just Hang in there</Text>
@@ -1074,7 +1137,8 @@ const ClientHome = ({ questionnaireData }) => {
 
       {!(
         clientFromContext.status === "Completed" ||
-        clientFromContext.status === "FullyApproved"
+        clientFromContext.status === "FullyApproved" ||
+        isClientWaitingForCall
       ) && renderQuestionnaireButton()}
 
       {/* Profile Panel */}
@@ -1109,6 +1173,25 @@ const ClientHome = ({ questionnaireData }) => {
           })
         }
       />
+
+      {/* PhotoID Verification Modal */}
+      <PhotoIDVerificationModal
+        visible={showPhotoIDModal}
+        onClose={() => {
+          setShowPhotoIDModal(false);
+          setSelectedDocType(null);
+        }}
+        clientId={clientId}
+        clientName={clientFromContext.name}
+        onUploadSuccess={() =>
+          fetchRefreshData(clientId).then((result) => {
+            if (result?.neededDocsResponse?.documents_needed) {
+              setDocumentsFromApi(result.neededDocsResponse.documents_needed);
+            }
+          })
+        }
+      />
+
       {/* Complete Document Modal */}
       <CompleteDocumentModal
         visible={showCompleteModal}
@@ -1214,7 +1297,7 @@ const ClientHome = ({ questionnaireData }) => {
               },
             }}
             questionnaireData={questionnaireData}
-            showCloseButton={true}
+            showCloseButton={false}
             selectedCategory={selectedCategory}
             startQuestionId={selectedCategory?.startQuestionId}
           />
@@ -1372,6 +1455,14 @@ const ClientHome = ({ questionnaireData }) => {
           }
         />
       </QuestionnaireProvider>
+
+      {/* Reschedule Modal */}
+      <RescheduleCallModal
+        visible={showRescheduleModal}
+        onClose={() => setShowRescheduleModal(false)}
+        onReschedule={onRefresh}
+        clientId={clientId}
+      />
     </View>
   );
 };
@@ -1420,6 +1511,16 @@ const styles = StyleSheet.create({
   },
   helpButtonContainer: {
     position: "relative",
+  },
+  helpLoadingContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
   },
   chatUnreadBadge: {
     position: "absolute",
@@ -1747,7 +1848,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     paddingHorizontal: 16,
-    height: 100,
+    height: 200,
     backgroundColor: "#FBFBFB",
     borderRadius: 16,
     shadowColor: "rgba(14, 29, 29, 0.2)",
@@ -2260,6 +2361,72 @@ const styles = StyleSheet.create({
     color: COLORS.slate,
     fontFamily: "Futura",
     lineHeight: 18,
+  },
+  // Wait for call card
+  waitForCallCard: {
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    gap: 16,
+    backgroundColor: COLORS.white,
+    alignSelf: "stretch",
+  },
+  waitForCallTitle: {
+    fontFamily: "Futura",
+    fontWeight: "700",
+    fontSize: 24,
+    lineHeight: 32,
+    color: COLORS.green,
+    alignSelf: "stretch",
+  },
+  waitForCallDescription: {
+    fontFamily: "Futura",
+    fontWeight: "500",
+    fontSize: 14,
+    lineHeight: 19,
+    color: "#797979",
+    alignSelf: "stretch",
+  },
+  // Call scheduling action buttons
+  callActionButtons: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 0,
+    gap: 16,
+  },
+  applyOnlineButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: COLORS.green,
+    borderRadius: 999,
+  },
+  applyOnlineButtonText: {
+    fontFamily: "Futura",
+    fontWeight: "700",
+    fontSize: 14,
+    lineHeight: 19,
+    color: COLORS.white,
+  },
+  rescheduleButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.green,
+    borderRadius: 999,
+  },
+  rescheduleButtonText: {
+    fontFamily: "Futura",
+    fontWeight: "700",
+    fontSize: 14,
+    lineHeight: 19,
+    color: COLORS.green,
   },
   // Removed old custom message modal specific styles (now in shared component)
 });

@@ -28,6 +28,7 @@ import {
 import { trimLeft, trimFull } from "./utils/stringUtils";
 import LogoutConfirmationModal from "./components/LogoutConfirmationModal";
 import DeleteAccountModal from "./components/DeleteAccountModal";
+import ChatModal from "./components/ChatModal";
 
 // Design System Colors
 const COLORS = {
@@ -133,6 +134,9 @@ export default function ClientProfile({ onClose }) {
   // Add scroll state for header transition
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollAnimation = useRef(new Animated.Value(0)).current;
+
+  // Chat modal state
+  const [showChatModal, setShowChatModal] = useState(false);
 
   useEffect(() => {
     // Load client info
@@ -747,10 +751,8 @@ export default function ClientProfile({ onClose }) {
           </View>
           {/* Address Card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>My address</Text>
-            <Text style={styles.cardSubtitle}>
-              Make sure thing info is complete and up to date.
-            </Text>
+            {/* <Text style={styles.cardTitle}>My address</Text> */}
+            <Text style={styles.cardSubtitle}>current address</Text>
             <View style={styles.formGroup}>
               {/* <TextInput
                 style={[styles.input, { backgroundColor: COLORS.silver }]}
@@ -872,6 +874,16 @@ export default function ClientProfile({ onClose }) {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Support Chat Button */}
+          <TouchableOpacity
+            style={styles.supportChatButton}
+            onPress={() => setShowChatModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.supportChatButtonText}>Support Chat</Text>
+          </TouchableOpacity>
+
           {/* Email Notifications Card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Email</Text>
@@ -1231,6 +1243,15 @@ export default function ClientProfile({ onClose }) {
             </TouchableOpacity>
           </View>
         </Modal>
+
+        {/* Chat Modal */}
+        <ChatModal
+          visible={showChatModal}
+          onClose={() => setShowChatModal(false)}
+          userId={clientInfo?.id}
+          userName={clientInfo?.name}
+          chatType="admin"
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -1299,7 +1320,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "500",
     fontFamily: "Futura",
-    color: COLORS.slate,
+    color: "#1D2327",
     marginBottom: 24,
   },
   scrollContent: {
@@ -1336,7 +1357,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     fontFamily: "Futura",
-    color: COLORS.slate,
+    color: "#1D2327",
     marginBottom: 16,
   },
 
@@ -1349,7 +1370,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.slate,
     borderRadius: 4,
-    fontSize: 12,
+    fontSize: 14,
     paddingLeft: 16,
     paddingVertical: 13,
     fontWeight: 500,
@@ -1686,5 +1707,21 @@ const styles = StyleSheet.create({
   },
   resendButtonTextDisabled: {
     color: COLORS.gray,
+  },
+
+  // Support Chat Button
+  supportChatButton: {
+    backgroundColor: COLORS.green,
+    borderRadius: 50,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  supportChatButtonText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
   },
 });
