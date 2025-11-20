@@ -1,6 +1,13 @@
 // CompleteDocumentModal.js
-import React from "react";
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
+import React, { useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  Animated,
+} from "react-native";
 import CloseIconSvg from "../icons/CloseIconSvg";
 
 /**
@@ -35,15 +42,60 @@ const CompleteDocumentModal = ({
   clientName,
   coClientName,
 }) => {
+  // Animation values
+  const slideAnim = useRef(new Animated.Value(600)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const modalOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      // Sequential animation: backdrop fades in, then modal slides up
+      Animated.sequence([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.parallel([
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            tension: 65,
+            friction: 11,
+            useNativeDriver: true,
+          }),
+          Animated.timing(modalOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    } else {
+      slideAnim.setValue(600);
+      backdropOpacity.setValue(0);
+      modalOpacity.setValue(0);
+    }
+  }, [visible]);
+
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="none"
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <Animated.View
+        style={[styles.modalOverlay, { opacity: backdropOpacity }]}
+      >
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [{ translateY: slideAnim }],
+              opacity: modalOpacity,
+            },
+          ]}
+        >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
               {document?.displayName || document?.docType || "Document"}
@@ -64,19 +116,24 @@ const CompleteDocumentModal = ({
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   modalOverlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
     alignItems: "center",
     paddingBottom: 10,
+    zIndex: 1,
   },
   modalContent: {
     backgroundColor: COLORS.white,
@@ -87,6 +144,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: "100%",
     position: "relative",
+    zIndex: 2,
   },
   modalHeader: {
     flexDirection: "row",

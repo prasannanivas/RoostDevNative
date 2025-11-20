@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
 import getAuthHeaders from "../utils/authHeaders";
@@ -24,11 +26,69 @@ export default function DeleteAccountModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const slideAnim = useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const modalOpacity = useRef(new Animated.Value(0)).current;
+
   const base = "https://signup.roostapp.io";
 
   const required = "delete";
 
   const matches = text.trim().toLowerCase() === required;
+
+  useEffect(() => {
+    if (visible) {
+      // Reset text and error when modal opens
+      setText("");
+      setError("");
+
+      // Stagger animations: backdrop fades in, then modal slides up
+      Animated.sequence([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.parallel([
+          Animated.timing(modalOpacity, {
+            toValue: 1,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            friction: 20,
+          }),
+        ]),
+      ]).start();
+    } else {
+      // Reset animations
+      backdropOpacity.setValue(0);
+      modalOpacity.setValue(0);
+      slideAnim.setValue(Dimensions.get("window").height);
+    }
+  }, [visible]);
+
+  const handleCancel = () => {
+    Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: Dimensions.get("window").height,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onCancel();
+    });
+  };
+
   const handleConfirm = async () => {
     setError("");
     if (!matches) {
@@ -61,160 +121,167 @@ export default function DeleteAccountModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="none" transparent>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+        style={{ flex: 1, justifyContent: "flex-end" }}
       >
-        <View
+        <Animated.View
           style={{
-            flex: 1,
-            justifyContent: "flex-end",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             backgroundColor: "rgba(0,0,0,0.5)",
+            opacity: backdropOpacity,
+            zIndex: 1,
+          }}
+        />
+        <Animated.View
+          style={{
+            width: "100%",
+            backgroundColor: COLORS?.white || "#fff",
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 24,
+            paddingBottom: Platform.OS === "ios" ? 40 : 24,
+            transform: [{ translateY: slideAnim }],
+            opacity: modalOpacity,
+            zIndex: 2,
           }}
         >
-          <View
+          <Text
             style={{
-              width: "100%",
-              backgroundColor: COLORS?.white || "#fff",
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 24,
-              paddingBottom: Platform.OS === "ios" ? 40 : 24,
+              fontSize: 16,
+              fontWeight: "700",
+              color: COLORS?.black || "#202020",
+              textAlign: "center",
+              fontFamily: "Futura",
+              marginBottom: 16,
             }}
           >
+            Delete my account?!
+          </Text>
+          <Text
+            style={{
+              color: COLORS?.slate || "#666",
+              marginBottom: 14,
+              fontWeight: "500",
+              textAlign: "center",
+            }}
+          >
+            {type === "client"
+              ? "Are you sure? All your info will be deleted and you will have to start over"
+              : "Are you sure? You will lose access to all your info, your client's info and any remaining points"}
+          </Text>
+
+          <Text
+            style={{
+              color: COLORS?.slate || "#666",
+              fontWeight: "500",
+              fontSize: 14,
+              marginBottom: 12,
+              textAlign: "center",
+            }}
+          >
+            Type "DELETE" to confirm.
+          </Text>
+
+          {/* Live spelling guidance */}
+          {text.length > 0 && !matches ? (
             <Text
               style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: COLORS?.black || "#202020",
+                color: COLORS?.red || "#a00",
+                marginBottom: 8,
                 textAlign: "center",
-                fontFamily: "Futura",
-                marginBottom: 16,
               }}
             >
-              Delete my account?!
+              Mismatch spelling. Type "DELETE".
             </Text>
+          ) : null}
+          {error ? (
             <Text
               style={{
-                color: COLORS?.slate || "#666",
-                marginBottom: 14,
-                fontWeight: "500",
+                color: COLORS?.red || "#a00",
+                marginBottom: 8,
                 textAlign: "center",
               }}
             >
-              {type === "client"
-                ? "Are you sure? All your info will be deleted and you will have to start over"
-                : "Are you sure? You will lose access to all your info, your client's info and any remaining points"}
+              {error}
             </Text>
+          ) : null}
 
-            <Text
+          <TextInput
+            placeholder='Type "Delete" then press Enter'
+            value={text}
+            onChangeText={(t) => {
+              setText(t);
+              if (error) setError("");
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={{
+              borderWidth: 1,
+              borderColor: COLORS?.gray || "#ccc",
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+              marginBottom: 12,
+            }}
+            onSubmitEditing={handleConfirm}
+          />
+
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <TouchableOpacity
+              onPress={handleConfirm}
               style={{
-                color: COLORS?.slate || "#666",
-                fontWeight: "500",
-                fontSize: 14,
-                marginBottom: 12,
-                textAlign: "center",
-              }}
-            >
-              Type "DELETE" to confirm.
-            </Text>
-
-            {/* Live spelling guidance */}
-            {text.length > 0 && !matches ? (
-              <Text
-                style={{
-                  color: COLORS?.red || "#a00",
-                  marginBottom: 8,
-                  textAlign: "center",
-                }}
-              >
-                Mismatch spelling. Type "DELETE".
-              </Text>
-            ) : null}
-            {error ? (
-              <Text
-                style={{
-                  color: COLORS?.red || "#a00",
-                  marginBottom: 8,
-                  textAlign: "center",
-                }}
-              >
-                {error}
-              </Text>
-            ) : null}
-
-            <TextInput
-              placeholder='Type "Delete" then press Enter'
-              value={text}
-              onChangeText={(t) => {
-                setText(t);
-                if (error) setError("");
-              }}
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={{
-                borderWidth: 1,
-                borderColor: COLORS?.gray || "#ccc",
-                borderRadius: 8,
-                paddingHorizontal: 12,
+                flex: 1,
+                backgroundColor: matches && !loading ? "#A20E0E" : "#E8E8E8",
+                borderRadius: 33,
                 paddingVertical: 12,
-                marginBottom: 12,
+                alignItems: "center",
+                marginRight: 8,
               }}
-              onSubmitEditing={handleConfirm}
-            />
-
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
+              disabled={!matches || loading}
             >
-              <TouchableOpacity
-                onPress={handleConfirm}
+              <Text
                 style={{
-                  flex: 1,
-                  backgroundColor: matches && !loading ? "#A20E0E" : "#E8E8E8",
-                  borderRadius: 33,
-                  paddingVertical: 12,
-                  alignItems: "center",
-                  marginRight: 8,
-                }}
-                disabled={!matches || loading}
-              >
-                <Text
-                  style={{
-                    color: matches && !loading ? "#fff" : "#797979",
-                    fontFamily: "Futura",
-                    fontWeight: "700",
-                    fontSize: 12,
-                  }}
-                >
-                  {loading ? "Deleting..." : "Delete"}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={onCancel}
-                style={{
-                  flex: 1,
-                  borderWidth: 1,
-                  borderColor: COLORS.green,
-                  borderRadius: 33,
-                  paddingVertical: 12,
-                  alignItems: "center",
+                  color: matches && !loading ? "#fff" : "#797979",
+                  fontFamily: "Futura",
+                  fontWeight: "700",
+                  fontSize: 12,
                 }}
               >
-                <Text
-                  style={{
-                    color: COLORS?.green,
-                    fontFamily: "futura",
-                    fontWeight: "700",
-                    fontSize: "12",
-                  }}
-                >
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-            </View>
+                {loading ? "Deleting..." : "Delete"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleCancel}
+              style={{
+                flex: 1,
+                borderWidth: 1,
+                borderColor: COLORS.green,
+                borderRadius: 33,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: COLORS?.green,
+                  fontFamily: "futura",
+                  fontWeight: "700",
+                  fontSize: "12",
+                }}
+              >
+                Cancel
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );

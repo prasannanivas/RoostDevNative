@@ -29,6 +29,8 @@ import { trimLeft, trimFull } from "./utils/stringUtils";
 import LogoutConfirmationModal from "./components/LogoutConfirmationModal";
 import DeleteAccountModal from "./components/DeleteAccountModal";
 import ChatModal from "./components/ChatModal";
+import ChangePasswordModal from "./components/modals/ChangePasswordModal";
+import ChangeEmailModal from "./components/modals/ChangeEmailModal";
 
 // Design System Colors
 const COLORS = {
@@ -72,11 +74,6 @@ export default function ClientProfile({ onClose }) {
   const { clientInfo, fetchRefreshData } = useClient();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [feedback, setFeedback] = useState({ message: "", type: "" });
-  const [passwordData, setPasswordData] = useState({
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
   const [error, setError] = useState("");
 
   // Notification preferences - stored locally
@@ -117,17 +114,8 @@ export default function ClientProfile({ onClose }) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Email change states
+  // Email change modal state
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailChangeStep, setEmailChangeStep] = useState(1); // 1: Enter email, 2: Enter OTP, 3: Success
-  const [newEmail, setNewEmail] = useState("");
-  const [emailOtp, setEmailOtp] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
-  const otpInputRef = useRef(null);
-
-  // Countdown state for OTP resend
-  const [countdown, setCountdown] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -157,19 +145,6 @@ export default function ClientProfile({ onClose }) {
     // Load notification preferences from AsyncStorage
     loadNotificationPreferences();
   }, [clientInfo]);
-
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [countdown]);
 
   const loadNotificationPreferences = async () => {
     try {
@@ -247,10 +222,6 @@ export default function ClientProfile({ onClose }) {
     saveTimerRef.current = setTimeout(() => {
       handleSubmit();
     }, 1000);
-  };
-
-  const handlePasswordInputChange = (key, value) => {
-    setPasswordData((prev) => ({ ...prev, [key]: value }));
   };
 
   // Show confirmation modal instead of direct logout
@@ -355,12 +326,7 @@ export default function ClientProfile({ onClose }) {
     }
   };
 
-  const handlePasswordSubmit = async () => {
-    setError("");
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError("Passwords don't match");
-      return;
-    }
+  const handlePasswordSubmit = async (passwordData) => {
     try {
       const response = await axios.post(
         `https://signup.roostapp.io/client/${clientInfo.id}/updatepassword`,
@@ -371,15 +337,14 @@ export default function ClientProfile({ onClose }) {
       );
       if (response.data) {
         Alert.alert("Success", "Password updated successfully!");
-        setShowPasswordModal(false);
-        setPasswordData({
-          oldPassword: "",
-          newPassword: "",
-          confirmPassword: "",
+        setFeedback({
+          message: "Password updated successfully!",
+          type: "success",
         });
+        setTimeout(() => setFeedback({ message: "", type: "" }), 3000);
       }
     } catch (error) {
-      setError(error.response?.data?.error || "Error updating password");
+      throw new Error(error.response?.data?.error || "Error updating password");
     }
   };
 
@@ -390,156 +355,19 @@ export default function ClientProfile({ onClose }) {
     return `${firstInitial}${lastInitial}` || "SM";
   };
 
-  // New handler functions for email change
+  // Handler to open email change modal
   const handleEmailChangeStart = () => {
-    setNewEmail("");
-    setEmailOtp("");
-    setEmailError("");
-    setEmailChangeStep(1);
     setShowEmailModal(true);
   };
 
-  // Update the handleEmailSubmit function to use the correct OTP generation endpoint
-  const handleEmailSubmit = async () => {
-    if (!newEmail || !newEmail.includes("@")) {
-      setEmailError("Please enter a valid email address");
-      return;
-    }
-
-    try {
-      setEmailError("");
-
-      // First check if email already exists
-      await axios.post("https://signup.roostapp.io/presignup/email", {
-        email: newEmail,
-      });
-
-      // If we get here, the email is available (doesn't exist yet)
-      // Now send OTP to the new email using the correct endpoint
-      const otpResponse = await axios.post(
-        "https://signup.roostapp.io/otp/email/generate",
-        { email: newEmail }
-      );
-
-      if (otpResponse?.data?.message === "OTP sent successfully") {
-        setEmailChangeStep(2);
-        // Focus OTP input when it appears
-        setTimeout(() => {
-          if (otpInputRef.current) {
-            otpInputRef.current.focus();
-          }
-        }, 100);
-      } else {
-        setEmailError("Failed to send verification code. Please try again.");
-      }
-    } catch (error) {
-      if (error.response?.data?.error) {
-        setEmailError(
-          error.response.data.error ||
-            "This email is already registered. Please use a different email."
-        );
-      } else {
-        setEmailError("An error occurred. Please try again.");
-      }
-    }
-  };
-
-  // Update the handleOtpSubmit function to use the standard profile update endpoint
-
-  const handleOtpSubmit = async () => {
-    if (!emailOtp || emailOtp.length < 6) {
-      setEmailError("Please enter the complete 6-digit verification code");
-      return;
-    }
-
-    try {
-      setEmailError("");
-
-      // First verify the OTP using the correct endpoint
-      const verifyResponse = await axios.post(
-        "https://signup.roostapp.io/otp/email/verify",
-        {
-          email: newEmail,
-          otp: emailOtp,
-        }
-      );
-
-      if (verifyResponse.data && verifyResponse.data.success) {
-        // If OTP is verified, update the profile with the new email
-        // using the standard profile update endpoint
-
-        // Create payload similar to regular profile update
-        const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
-        const payload = {
-          name: fullName,
-          phone: formData.phone,
-          email: newEmail, // Use the new email
-          address: {
-            address: formData.address,
-            city: formData.city,
-            postalCode: formData.postalCode,
-          },
-        };
-
-        // Use PUT request to update profile
-        const updateResponse = await axios.put(
-          `https://signup.roostapp.io/client/${clientInfo.id}`,
-          payload
-        );
-
-        if (updateResponse.status === 200) {
-          // Update local form data with new email
-          setFormData((prev) => ({ ...prev, email: newEmail }));
-          setEmailChangeStep(3);
-          setEmailChangeSuccess(true);
-
-          // Close the modal after showing success for 2 seconds
-          setTimeout(() => {
-            setShowEmailModal(false);
-            setEmailChangeSuccess(false);
-            // Refresh client data to reflect changes
-            fetchRefreshData(clientInfo.id);
-          }, 2000);
-        }
-      } else {
-        setEmailError("Invalid verification code. Please try again.");
-      }
-    } catch (error) {
-      if (error.response?.data?.error) {
-        setEmailError(
-          error.response?.data?.error || "Invalid verification code"
-        );
-      } else {
-        setEmailError("Failed to verify code. Please try again.");
-      }
-    }
-  };
-
-  const handleEmailModalClose = () => {
-    setShowEmailModal(false);
-    setEmailError("");
-  };
-
-  // Function to handle resending the OTP
-  const handleResendOtp = async () => {
-    if (countdown > 0) return;
-
-    try {
-      setEmailError("");
-      const response = await axios.post(
-        "https://signup.roostapp.io/otp/email/generate",
-        { email: newEmail }
-      );
-
-      if (response?.data?.message === "OTP sent successfully") {
-        setEmailOtp("");
-        setCountdown(60); // Start 60 second countdown
-      } else {
-        setEmailError("Failed to resend code. Please try again.");
-      }
-    } catch (error) {
-      setEmailError("Failed to resend verification code.");
-    }
+  // Handler for successful email change
+  const handleEmailChangeSuccess = (newEmail) => {
+    setFormData((prev) => ({ ...prev, email: newEmail }));
+    setFeedback({
+      message: "Email updated successfully!",
+      type: "success",
+    });
+    setTimeout(() => setFeedback({ message: "", type: "" }), 3000);
   };
 
   return (
@@ -1039,210 +867,30 @@ export default function ClientProfile({ onClose }) {
         />
 
         {/* Email Change Modal */}
-        <Modal visible={showEmailModal} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              {/* Header */}
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {emailChangeStep === 1
-                    ? "Change Email Address"
-                    : emailChangeStep === 2
-                    ? "Verify Your Email"
-                    : "Email Updated!"}
-                </Text>
-                {!emailChangeSuccess && (
-                  <TouchableOpacity
-                    onPress={handleEmailModalClose}
-                    style={styles.modalCloseButton}
-                  >
-                    <Text style={styles.modalCloseText}>×</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              {/* Error Message */}
-              {emailError ? (
-                <Text style={styles.errorMessage}>{emailError}</Text>
-              ) : null}
-              {/* Step 1: Enter New Email */}
-              {emailChangeStep === 1 && (
-                <>
-                  <Text style={styles.modalSubtitle}>
-                    Enter your new email address below. We'll send a
-                    verification code to this address.
-                  </Text>
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="New Email Address"
-                    placeholderTextColor={COLORS.gray}
-                    keyboardType="email-address"
-                    value={newEmail}
-                    onChangeText={(text) => setNewEmail(text)}
-                    autoCapitalize="none"
-                    autoFocus={true}
-                  />
-                  <TouchableOpacity
-                    style={styles.fullWidthButton}
-                    onPress={handleEmailSubmit}
-                  >
-                    <Text style={styles.buttonText}>Continue</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              {/* Step 2: Enter OTP */}
-              {emailChangeStep === 2 && (
-                <>
-                  <Text style={styles.modalSubtitle}>
-                    We've sent a verification code to {newEmail}. Enter it below
-                    to verify your email address.
-                  </Text>
-                  <Text style={styles.pasteInstruction}>
-                    Paste your 6-digit code in the field - it will handle full
-                    codes automatically
-                  </Text>
-                  <TextInput
-                    ref={otpInputRef}
-                    style={styles.otpInput}
-                    placeholder="Enter verification code"
-                    placeholderTextColor={COLORS.gray}
-                    keyboardType="numeric"
-                    value={emailOtp}
-                    onChangeText={(text) => {
-                      // Handle paste operation for full codes
-                      if (text.length > 1) {
-                        // Extract only numeric characters and limit to 6 digits
-                        const pastedDigits = text
-                          .replace(/\D/g, "")
-                          .slice(0, 6);
-                        setEmailOtp(pastedDigits);
-                      } else {
-                        // Handle single character input
-                        setEmailOtp(text.replace(/\D/g, ""));
-                      }
-                    }}
-                    maxLength={6}
-                    selectTextOnFocus={true}
-                    onFocus={() => {
-                      // Select all text when focusing to make paste/editing easier
-                      if (emailOtp) {
-                        otpInputRef.current?.setSelection(0, emailOtp.length);
-                      }
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.fullWidthButton}
-                    onPress={handleOtpSubmit}
-                  >
-                    <Text style={styles.buttonText}>Verify Email</Text>
-                  </TouchableOpacity>
-                  {/* Resend button with countdown */}
-                  <TouchableOpacity
-                    style={[
-                      styles.resendButton,
-                      countdown > 0 && styles.resendButtonDisabled,
-                    ]}
-                    onPress={handleResendOtp}
-                    disabled={countdown > 0}
-                  >
-                    <Text
-                      style={[
-                        styles.resendButtonText,
-                        countdown > 0 && styles.resendButtonTextDisabled,
-                      ]}
-                    >
-                      {countdown > 0
-                        ? `Resend code in ${countdown} seconds`
-                        : "Resend verification code"}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              {/* Step 3: Success */}
-              {emailChangeStep === 3 && (
-                <View style={styles.successContainer}>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={60}
-                    color={COLORS.green}
-                  />
-                  <Text style={styles.successText}>
-                    Email successfully updated!
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </Modal>
+        <ChangeEmailModal
+          visible={showEmailModal}
+          onClose={() => setShowEmailModal(false)}
+          onSuccess={handleEmailChangeSuccess}
+          userId={clientInfo?.id}
+          userType="client"
+          currentFormData={{
+            name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+            phone: formData.phone,
+            address: {
+              address: formData.address,
+              city: formData.city,
+              postalCode: formData.postalCode,
+            },
+          }}
+          fetchRefreshData={fetchRefreshData}
+        />
         {/* Password Modal */}
-        <Modal visible={showPasswordModal} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Change Password</Text>
-              {error ? <Text style={styles.errorMessage}>{error}</Text> : null}
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Current Password"
-                placeholderTextColor={COLORS.gray}
-                secureTextEntry
-                value={passwordData.oldPassword}
-                onChangeText={(text) =>
-                  handlePasswordInputChange("oldPassword", text)
-                }
-              />
-              <TextInput
-                style={styles.modalInput}
-                placeholder="New Password"
-                placeholderTextColor={COLORS.gray}
-                secureTextEntry
-                value={passwordData.newPassword}
-                onChangeText={(text) =>
-                  handlePasswordInputChange("newPassword", text)
-                }
-              />
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Confirm New Password"
-                placeholderTextColor={COLORS.gray}
-                secureTextEntry
-                value={passwordData.confirmPassword}
-                onChangeText={(text) =>
-                  handlePasswordInputChange("confirmPassword", text)
-                }
-              />
-              <View style={styles.modalButtonRow}>
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={handlePasswordSubmit}
-                >
-                  <Text style={styles.modalButtonText}>Update Password</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
-                  onPress={() => {
-                    setShowPasswordModal(false);
-                    setError("");
-                    setPasswordData({
-                      oldPassword: "",
-                      newPassword: "",
-                      confirmPassword: "",
-                    });
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-              {/* Logout Button */}
-            </View>
-          </View>
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogoutPress}
-            >
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
+        <ChangePasswordModal
+          visible={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          onSubmit={handlePasswordSubmit}
+          userType="client"
+        />
 
         {/* Chat Modal */}
         <ChatModal
@@ -1394,9 +1042,9 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   toggleSwitch: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
+    width: 52,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: COLORS.gray,
     justifyContent: "center",
     padding: 2,
@@ -1405,13 +1053,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
   },
   toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: COLORS.white,
   },
   toggleThumbOn: {
-    marginLeft: 20,
+    marginLeft: 28,
   }, // Buttons
   buttonContainer: {
     marginBottom: 24,
@@ -1471,16 +1119,16 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     width: "100%",
-    backgroundColor: "transparent",
+    backgroundColor: COLORS.red,
     borderWidth: 0,
     borderColor: COLORS.red,
     borderRadius: 50,
-    paddingVertical: 36,
+    paddingVertical: 16,
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 16,
   },
   deleteButtonText: {
-    color: COLORS.red,
+    color: COLORS.white,
     fontSize: 12,
     fontWeight: 700,
     fontFamily: "Futura",

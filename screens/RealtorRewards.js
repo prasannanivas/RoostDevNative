@@ -1,5 +1,5 @@
 // RealtorRewards.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -93,6 +93,22 @@ export default function RealtorRewards({
   const scrollAnimation = useRef(new Animated.Value(0)).current;
 
   const { fetchLatestRealtor } = useRealtor();
+
+  // Memoize the scroll event handler to prevent recreation
+  const handleScroll = useMemo(
+    () =>
+      Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollAnimation } } }],
+        {
+          useNativeDriver: false,
+          listener: (event) => {
+            const scrollY = event.nativeEvent.contentOffset.y;
+            setIsScrolled(scrollY > 20);
+          },
+        }
+      ),
+    [scrollAnimation]
+  );
 
   console.log("selectedClient", selectedClient);
 
@@ -259,7 +275,7 @@ export default function RealtorRewards({
             {
               height: scrollAnimation.interpolate({
                 inputRange: [0, 50],
-                outputRange: [140, 70],
+                outputRange: [140, 78],
                 extrapolate: "clamp",
               }),
             },
@@ -298,7 +314,7 @@ export default function RealtorRewards({
                 strokeLinejoin="round"
               />
             </Svg>
-            <Text style={styles.headerTxt}>REWARDS</Text>
+            <Text style={styles.headerTxt}>Rewards</Text>
           </View>
 
           {/* Single Animated Points Button */}
@@ -321,7 +337,7 @@ export default function RealtorRewards({
                 }),
                 height: scrollAnimation.interpolate({
                   inputRange: [20, 50],
-                  outputRange: [60, 50],
+                  outputRange: [63, 46],
                   extrapolate: "clamp",
                 }),
                 paddingHorizontal: scrollAnimation.interpolate({
@@ -433,16 +449,7 @@ export default function RealtorRewards({
       <ScrollView
         style={styles.scrollContent}
         contentContainerStyle={{ paddingBottom: 40 }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollAnimation } } }],
-          {
-            useNativeDriver: false,
-            listener: (event) => {
-              const scrollY = event.nativeEvent.contentOffset.y;
-              setIsScrolled(scrollY > 20);
-            },
-          }
-        )}
+        onScroll={handleScroll}
         scrollEventThrottle={16}
       >
         {/* <View>
@@ -940,7 +947,9 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   headerContent: {
+    marginTop: 8,
     flexDirection: "row",
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -949,7 +958,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.black,
-    textTransform: "uppercase",
     marginLeft: 8,
   },
   closeButton: {
@@ -967,7 +975,6 @@ const styles = StyleSheet.create({
     // borderBottomWidth: 1,
     // borderBottomColor: COLORS.lightGray,
     alignItems: "center",
-    marginBottom: 8,
   },
   pointsNum: {
     fontSize: 48,

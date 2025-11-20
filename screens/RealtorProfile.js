@@ -31,6 +31,8 @@ import {
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
 import DeleteAccountModal from "../components/DeleteAccountModal";
 import ChatModal from "../components/ChatModal";
+import ChangePasswordModal from "../components/modals/ChangePasswordModal";
+import ChangeEmailModal from "../components/modals/ChangeEmailModal";
 import { trimLeft, trimFull } from "../utils/stringUtils";
 
 // Design System Colors
@@ -80,21 +82,8 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
     licenseNumber: "",
   });
 
-  // Password form data
-  const [passwordForm, setPasswordForm] = useState({
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
   // Email change state
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailChangeStep, setEmailChangeStep] = useState(1); // 1: Enter email, 2: Enter OTP, 3: Success
-  const [newEmail, setNewEmail] = useState("");
-  const [emailOtp, setEmailOtp] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const otpInputRef = useRef(null);
 
   // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -315,152 +304,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
 
   // Email change handler functions
   const handleEmailChangeStart = () => {
-    setNewEmail("");
-    setEmailOtp("");
-    setEmailError("");
-    setEmailChangeStep(1);
     setShowEmailModal(true);
-  };
-
-  const handleEmailSubmit = async () => {
-    if (!newEmail || !newEmail.includes("@")) {
-      setEmailError("Please enter a valid email address");
-      return;
-    }
-
-    try {
-      setEmailError("");
-
-      // First check if email already exists
-      const checkResponse = await fetch(
-        "https://signup.roostapp.io/presignup/email",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: newEmail }),
-        }
-      );
-
-      if (!checkResponse.ok) {
-        // If response is not ok, the email might already exist
-        const errorData = await checkResponse.json();
-        setEmailError(
-          errorData.error ||
-            "This email is already registered. Please use a different email."
-        );
-        return;
-      }
-
-      // If we get here, the email is available (doesn't exist yet)
-      // Now send OTP to the new email using the correct endpoint
-      const otpResponse = await fetch(
-        "https://signup.roostapp.io/otp/email/generate",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: newEmail }),
-        }
-      );
-
-      const otpData = await otpResponse.json();
-
-      if (otpData.message === "OTP sent successfully") {
-        setEmailChangeStep(2);
-        setCountdown(60); // Start 60 second countdown for resend
-        // Focus OTP input when it appears
-        setTimeout(() => {
-          if (otpInputRef.current) {
-            otpInputRef.current.focus();
-          }
-        }, 100);
-      } else {
-        setEmailError("Failed to send verification code. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error in email check/OTP generation:", error);
-      setEmailError("An error occurred. Please try again.");
-    }
-  };
-
-  const handleOtpSubmit = async () => {
-    if (!emailOtp || emailOtp.length < 6) {
-      setEmailError("Please enter the complete 6-digit verification code");
-      return;
-    }
-
-    try {
-      setEmailError("");
-
-      // First verify the OTP using the correct endpoint
-      const verifyResponse = await fetch(
-        "https://signup.roostapp.io/otp/email/verify",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: newEmail,
-            otp: emailOtp,
-          }),
-        }
-      );
-
-      const verifyData = await verifyResponse.json();
-
-      if (verifyData.success) {
-        // If OTP is verified, update the realtor's email
-        // Join firstName and lastName for the API request
-        const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-
-        const updateResponse = await fetch(
-          `https://signup.roostapp.io/realtor/${realtor._id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: fullName,
-              email: newEmail, // Update with new email
-              rewardsAddress: formData.rewardsAddress,
-              rewardsCity: formData.rewardsCity,
-              rewardsPostalCode: formData.rewardsPostalCode,
-              brokerageInfo: {
-                brokerageName: formData.brokerageName,
-                brokerageAddress: formData.brokerageAddress,
-                brokerageCity: formData.brokerageCity,
-                brokeragePostalCode: formData.brokeragePostalCode,
-                brokeragePhone: formData.brokeragePhone,
-                brokerageEmail: formData.brokerageEmail,
-                licenseNumber: formData.licenseNumber,
-              },
-            }),
-          }
-        );
-
-        if (updateResponse.ok) {
-          // Update local form data with new email
-          setFormData((prev) => ({ ...prev, email: newEmail }));
-          setEmailChangeStep(3);
-          setEmailChangeSuccess(true);
-
-          setFeedback({
-            message: "Email updated successfully!",
-            type: "success",
-          });
-
-          // Close the modal after showing success for 2 seconds
-          setTimeout(() => {
-            setShowEmailModal(false);
-            setEmailChangeSuccess(false);
-          }, 2000);
-        } else {
-          setEmailError("Failed to update email. Please try again.");
-        }
-      } else {
-        setEmailError("Invalid verification code. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error in email verification/update:", error);
-      setEmailError("Failed to verify code. Please try again.");
-    }
   };
 
   // Handle close with data refresh
@@ -686,20 +530,6 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
     }
   }, [realtor]);
 
-  // Add useEffect for countdown timer if it doesn't exist already
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [countdown]);
-
   // Update the existing handleSubmit function
   const handleSubmit = async () => {
     // Prevent duplicate save calls
@@ -768,14 +598,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
   };
 
   // Handle password change
-  const handlePasswordChange = async () => {
-    setError("");
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
+  const handlePasswordChange = async (passwordData) => {
     try {
       const response = await fetch(
         `https://signup.roostapp.io/realtor/${realtor._id}/updatepassword`,
@@ -783,8 +606,8 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            oldPassword: passwordForm.oldPassword,
-            newPassword: passwordForm.newPassword,
+            oldPassword: passwordData.oldPassword,
+            newPassword: passwordData.newPassword,
           }),
         }
       );
@@ -794,18 +617,13 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           message: "Password updated successfully!",
           type: "success",
         });
-        setPasswordForm({
-          oldPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
-        setIsPasswordModalOpen(false);
+        setTimeout(() => setFeedback({ message: "", type: "" }), 3000);
       } else {
         const data = await response.json();
-        setError(data.message || "Failed to update password");
+        throw new Error(data.message || "Failed to update password");
       }
     } catch (error) {
-      setError("Error updating password");
+      throw new Error(error.message || "Error updating password");
     }
   };
 
@@ -1870,301 +1688,28 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
       />
 
       {/* Password Modal */}
-      <Modal visible={isPasswordModalOpen} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Change Password</Text>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Current Password:</Text>
-              <TextInput
-                style={styles.input}
-                secureTextEntry
-                value={passwordForm.oldPassword}
-                onChangeText={(text) =>
-                  setPasswordForm({ ...passwordForm, oldPassword: text })
-                }
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>New Password:</Text>
-              <TextInput
-                style={styles.input}
-                secureTextEntry
-                value={passwordForm.newPassword}
-                onChangeText={(text) =>
-                  setPasswordForm({ ...passwordForm, newPassword: text })
-                }
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Confirm New Password:</Text>
-              <TextInput
-                style={styles.input}
-                secureTextEntry
-                value={passwordForm.confirmPassword}
-                onChangeText={(text) =>
-                  setPasswordForm({ ...passwordForm, confirmPassword: text })
-                }
-              />
-            </View>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handlePasswordChange}
-              >
-                <Text style={styles.modalButtonText}>Change Password</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
-                onPress={() => {
-                  setIsPasswordModalOpen(false);
-                  setError("");
-                  setPasswordForm({
-                    oldPassword: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                  });
-                }}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      {/* Email Change Modal - New addition */}
-      <Modal visible={showEmailModal} animationType="slide" transparent>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
-        >
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "flex-end",
-              backgroundColor: "rgba(0,0,0,0.5)",
-            }}
-          >
-            <View
-              style={[
-                styles.modalContent,
-                {
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  borderRadius: 0,
-                  marginBottom: 0,
-                  paddingBottom: Platform.OS === "ios" ? 40 : 24,
-                },
-              ]}
-            >
-              {/* Header */}
-              <Text style={styles.modalTitle}>
-                {emailChangeStep === 1
-                  ? "Change Email Address"
-                  : emailChangeStep === 2
-                  ? "Verify Your Email"
-                  : "Email Updated!"}
-              </Text>
-
-              {/* Error Message */}
-              {emailError ? (
-                <Text style={styles.errorText}>{emailError}</Text>
-              ) : null}
-
-              {/* Step 1: Enter New Email */}
-              {emailChangeStep === 1 && (
-                <>
-                  <Text style={styles.modalSubtitle}>
-                    Enter your new email address below. We'll send a
-                    verification code to this address.
-                  </Text>
-                  <TextInput
-                    key="email-input"
-                    style={styles.input}
-                    placeholder="New Email Address"
-                    keyboardType="email-address"
-                    value={newEmail}
-                    onChangeText={(text) => setNewEmail(text)}
-                    autoCapitalize="none"
-                  />
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginTop: 16,
-                      gap: 20,
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        {
-                          flex: 1,
-
-                          backgroundColor: COLORS.green,
-                          borderRadius: 33,
-                          paddingVertical: 12,
-                          paddingHorizontal: 13,
-                          alignItems: "center",
-                        },
-                      ]}
-                      onPress={handleEmailSubmit}
-                    >
-                      <Text style={styles.buttonText}>Continue</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        borderWidth: 1,
-                        borderColor: COLORS.green,
-                        borderRadius: 33,
-                        paddingVertical: 12,
-                        paddingHorizontal: 13,
-                        alignItems: "center",
-                      }}
-                      onPress={handleEmailModalClose}
-                    >
-                      <Text
-                        style={{
-                          color: COLORS.green,
-                          fontFamily: "Futura",
-                          fontWeight: "700",
-                          fontSize: 12,
-                        }}
-                      >
-                        Cancel
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-
-              {/* Step 2: Enter OTP */}
-              {emailChangeStep === 2 && (
-                <>
-                  <Text style={styles.modalSubtitle}>
-                    We've sent a verification code to {newEmail}. Enter it below
-                    to verify your email address.
-                  </Text>
-                  <Text style={styles.pasteInstruction}>
-                    Paste your 6-digit code in the field - it will handle full
-                    codes automatically
-                  </Text>
-                  <TextInput
-                    key="otp-input"
-                    ref={otpInputRef}
-                    style={styles.otpInput}
-                    placeholder="Enter verification code"
-                    keyboardType="numeric"
-                    value={emailOtp}
-                    onChangeText={(text) => {
-                      // Handle paste operation for full codes
-                      if (text.length > 1) {
-                        // Extract only numeric characters and limit to 6 digits
-                        const pastedDigits = text
-                          .replace(/\D/g, "")
-                          .slice(0, 6);
-                        setEmailOtp(pastedDigits);
-                      } else {
-                        // Handle single character input
-                        setEmailOtp(text.replace(/\D/g, ""));
-                      }
-                    }}
-                    maxLength={6}
-                    selectTextOnFocus={true}
-                    onFocus={() => {
-                      // Select all text when focusing to make paste/editing easier
-                      if (emailOtp) {
-                        otpInputRef.current?.setSelection(0, emailOtp.length);
-                      }
-                    }}
-                  />
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        {
-                          flex: 1,
-                          marginRight: 8,
-                          backgroundColor: COLORS.green,
-                          borderRadius: 33,
-                          paddingVertical: 12,
-                          alignItems: "center",
-                        },
-                      ]}
-                      onPress={handleOtpSubmit}
-                    >
-                      <Text style={styles.buttonText}>Verify Email</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        borderWidth: 1,
-                        borderColor: COLORS.green,
-                        borderRadius: 33,
-                        paddingVertical: 12,
-                        alignItems: "center",
-                      }}
-                      onPress={handleEmailModalClose}
-                    >
-                      <Text
-                        style={{
-                          color: COLORS.green,
-                          fontFamily: "Futura",
-                          fontWeight: "700",
-                          fontSize: 12,
-                        }}
-                      >
-                        Cancel
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  {/* Resend button with countdown */}
-                  <TouchableOpacity
-                    style={[
-                      styles.resendButton,
-                      countdown > 0 && styles.resendButtonDisabled,
-                    ]}
-                    onPress={handleResendOtp}
-                    disabled={countdown > 0}
-                  >
-                    <Text
-                      style={[
-                        styles.resendButtonText,
-                        countdown > 0 && styles.resendButtonTextDisabled,
-                      ]}
-                    >
-                      {countdown > 0
-                        ? `Resend code in ${countdown} seconds`
-                        : "Resend verification code"}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {/* Step 3: Success */}
-              {emailChangeStep === 3 && (
-                <View style={styles.successContainer}>
-                  <View style={styles.successIconCircle}>
-                    <Text style={styles.successIconText}>✓</Text>
-                  </View>
-                  <Text style={styles.successText}>
-                    Email successfully updated!
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      <ChangePasswordModal
+        visible={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSubmit={handlePasswordChange}
+        userType="realtor"
+      />
+      {/* Email Change Modal */}
+      <ChangeEmailModal
+        visible={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        userId={realtor._id}
+        userType="realtor"
+        currentFormData={formData}
+        fetchRefreshData={fetchRefreshData}
+        onSuccess={(newEmail) => {
+          setFormData((prev) => ({ ...prev, email: newEmail }));
+          setFeedback({
+            message: "Email updated successfully!",
+            type: "success",
+          });
+        }}
+      />
 
       {/* Chat Modal */}
       <ChatModal

@@ -1,5 +1,5 @@
 // UploadModal.js
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Image,
+  Animated,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -59,6 +60,41 @@ const UploadModal = ({
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewImageUri, setPreviewImageUri] = useState(null);
   const [previewImageIndex, setPreviewImageIndex] = useState(null);
+
+  // Animation values
+  const slideAnim = useRef(new Animated.Value(600)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const modalOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      // Sequential animation: backdrop fades in, then modal slides up
+      Animated.sequence([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.parallel([
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            tension: 65,
+            friction: 11,
+            useNativeDriver: true,
+          }),
+          Animated.timing(modalOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    } else {
+      slideAnim.setValue(600);
+      backdropOpacity.setValue(0);
+      modalOpacity.setValue(0);
+    }
+  }, [visible]);
 
   console.log("Selected document type:", selectedDocType);
 
@@ -341,15 +377,21 @@ const UploadModal = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="none"
       transparent
       onRequestClose={handleClose}
     >
-      <View style={styles.modalOverlay}>
-        <View
+      <Animated.View
+        style={[styles.modalOverlay, { opacity: backdropOpacity }]}
+      >
+        <Animated.View
           style={[
             styles.modalContent,
             capturedImages.length > 0 && styles.modalContentFullscreen,
+            {
+              transform: [{ translateY: slideAnim }],
+              opacity: modalOpacity,
+            },
           ]}
         >
           <View style={styles.modalHeader}>
@@ -555,19 +597,24 @@ const UploadModal = ({
               </View>
             </Modal>
           )}
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   modalOverlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
     alignItems: "center",
     paddingBottom: 10,
+    zIndex: 1,
   },
   modalContent: {
     backgroundColor: COLORS.white,
@@ -578,6 +625,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: "100%",
     position: "relative",
+    zIndex: 2,
   },
   modalContentFullscreen: {
     width: "100%",
