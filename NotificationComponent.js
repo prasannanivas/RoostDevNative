@@ -277,9 +277,9 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
             opacity: fadeAnim,
             transform: [
               {
-                translateY: slideAnim.interpolate({
+                translateX: slideAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [50, 0],
+                  outputRange: [Dimensions.get("window").width, 0],
                 }),
               },
               { scale: scaleAnim },
@@ -307,7 +307,7 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
         <ScrollView
           style={styles.notificationsList}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 8 }}
+          contentContainerStyle={{ paddingVertical: 16, gap: 16 }}
         >
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -352,15 +352,18 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
 const styles = StyleSheet.create({
   notificationsBlurView: {
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "flex-end",
   },
   notificationsContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    marginTop: 60,
+    backgroundColor: "#FDFDFD",
+    borderTopLeftRadius: 32,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
     width: "100%",
     height: "100%",
-    paddingBottom: 100,
+    marginTop: 126,
+    paddingBottom: 0,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -376,28 +379,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    padding: 0,
+    width: "100%",
+    height: 78,
+    backgroundColor: "#FBFBFB",
+    shadowColor: "rgba(14, 29, 29, 0.1)",
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 3,
+    borderTopLeftRadius: 16,
     position: "relative",
   },
   notificationsTitle: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    height: 46,
   },
   notificationsTitleText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#23231A",
+    color: "#1D2327",
     marginLeft: 8,
+    fontFamily: "Futura",
   },
   closeButtonPosition: {
     position: "absolute",
-    right: 24,
+    right: 8,
+    top: 16,
+    width: 42,
+    height: 42,
   },
   notificationsList: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   loadingContainer: {
     padding: 32,
@@ -435,64 +454,66 @@ const styles = StyleSheet.create({
   },
   notificationMessageContainer: {
     flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
     minHeight: 76,
     borderRadius: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    marginVertical: 0,
+    marginHorizontal: 0,
     overflow: "hidden",
     position: "relative",
   },
   notificationMessageOrange: {
-    backgroundColor: "#F0913A4D",
+    backgroundColor: "rgba(240, 145, 58, 0.3)",
   },
   notificationMessageRed: {
-    backgroundColor: "#F24E1A1A",
+    backgroundColor: "rgba(162, 14, 14, 0.2)",
   },
   notificationMessageGreen: {
-    backgroundColor: "#3774731A",
+    backgroundColor: "rgba(55, 116, 115, 0.1)",
   },
   notificationMessageBlue: {
-    backgroundColor: "#2271B11A",
+    backgroundColor: "rgba(55, 116, 115, 0.1)",
   },
   unreadNotificationMessage: {
-    transform: [{ scale: 1.05 }],
+    // No scaling transform for unread messages
   },
   notificationMessageContent: {
     flex: 1,
-    padding: 16,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    padding: 0,
+    gap: 4,
     position: "relative",
   },
   notificationMessageDate: {
     fontSize: 10,
     fontWeight: "500",
     color: "#797979",
-    marginBottom: 4,
+    fontFamily: "Futura",
+    lineHeight: 13,
   },
   notificationMessageTitle: {
     fontSize: 14,
     fontWeight: "500",
     color: "#202020",
-    marginBottom: 4,
+    fontFamily: "Futura",
+    lineHeight: 19,
   },
   notificationMessageText: {
     fontSize: 10,
+    fontWeight: "500",
     color: "#4D4D4D",
+    fontFamily: "Futura",
+    lineHeight: 13,
   },
   notificationMessageIcon: {
-    width: 50,
-    //height: "100%",
-    justifyContent: "center",
+    flexDirection: "row",
     alignItems: "center",
-    overflow: "visible",
-    marginLeft: 8,
+    padding: 16,
+    width: 60,
+    height: 60,
   },
   unreadDotMessage: {
     width: 8,
@@ -503,35 +524,54 @@ const styles = StyleSheet.create({
     top: 16,
     right: 0,
   },
-  bottomCloseButton: {
-    position: "absolute",
-    bottom: 63,
-    alignSelf: "center",
-    backgroundColor: "#2271B1",
-    width: 82,
-    paddingTop: 13,
-    paddingRight: 24,
-    paddingBottom: 13,
-    paddingLeft: 24,
-    borderRadius: 33,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+  sectionHeader: {
+    flexDirection: "column",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "flex-start",
+    paddingVertical: 4,
+    paddingHorizontal: 0,
+    backgroundColor: "#FDFDFD",
+    height: 23,
   },
-  bottomCloseButtonText: {
-    color: "#FBFBFB",
-    fontSize: 12,
-    fontWeight: 700,
+  sectionHeaderText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.88,
+    textTransform: "uppercase",
+    color: "#797979",
     fontFamily: "Futura",
-    textAlign: "center",
+    lineHeight: 15,
   },
+
+  // bottomCloseButton: {
+  //   position: "absolute",
+  //   bottom: 63,
+  //   alignSelf: "center",
+  //   backgroundColor: "#2271B1",
+  //   width: 82,
+  //   paddingTop: 13,
+  //   paddingRight: 24,
+  //   paddingBottom: 13,
+  //   paddingLeft: 24,
+  //   borderRadius: 33,
+  //   shadowColor: "#000",
+  //   shadowOffset: {
+  //     width: 0,
+  //     height: 2,
+  //   },
+  //   shadowOpacity: 0.15,
+  //   shadowRadius: 4,
+  //   elevation: 4,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  // },
+  // bottomCloseButtonText: {
+  //   color: "#FBFBFB",
+  //   fontSize: 12,
+  //   fontWeight: 700,
+  //   fontFamily: "Futura",
+  //   textAlign: "center",
+  // },
 });
 
 export default NotificationComponent;

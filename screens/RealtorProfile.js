@@ -912,10 +912,11 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           styles.header,
           {
             position: "absolute",
-            top: 60,
+            top: 63,
             left: 0,
             right: 0,
             zIndex: 100,
+            borderTopRightRadius: 16,
             backgroundColor: scrollAnimation.interpolate({
               inputRange: [60, 110],
               outputRange: [COLORS.background, COLORS.white],
@@ -933,6 +934,8 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             }),
           },
           isScrolled && {
+            justifyContent: "center",
+            alignItems: "center",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowRadius: 4,
@@ -948,21 +951,21 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
                 {
                   translateX: scrollAnimation.interpolate({
                     inputRange: [60, 110],
-                    outputRange: [0, -120],
+                    outputRange: [0, -60],
                     extrapolate: "clamp",
                   }),
                 },
                 {
                   translateY: scrollAnimation.interpolate({
                     inputRange: [60, 110],
-                    outputRange: [0, -38],
+                    outputRange: [0, -10],
                     extrapolate: "clamp",
                   }),
                 },
                 {
                   scale: scrollAnimation.interpolate({
                     inputRange: [60, 110],
-                    outputRange: [1, 0.4],
+                    outputRange: [1, 0.5],
                     extrapolate: "clamp",
                   }),
                 },
@@ -974,7 +977,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             onPress={handleProfilePicture}
             disabled={uploadingProfilePic}
           >
-            <View style={{ position: "relative", width: 120, height: 120 }}>
+            <View style={{ position: "relative", width: 90, height: 90 }}>
               {/* Blue Circle Background - This will fade out */}
               <Animated.View
                 style={[
@@ -1054,16 +1057,17 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               justifyContent: "center",
               top: scrollAnimation.interpolate({
                 inputRange: [60, 110],
-                outputRange: [136, 20],
+                outputRange: [120, 60],
                 extrapolate: "clamp",
               }),
             },
             isScrolled && {
-              left: Dimensions.get("window").width * 0.3,
-              width: Dimensions.get("window").width * 0.5,
-              alignItems: "center",
+              left: "40%",
               justifyContent: "center",
+              alignItems: "left",
               height: 84,
+              maxWidth: "45%",
+              marginLeft: 8,
               top: 0,
             },
           ]}
@@ -1077,7 +1081,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
                   outputRange: [24, 16],
                   extrapolate: "clamp",
                 }),
-                textAlign: "center",
+                textAlign: "left",
               },
             ]}
             numberOfLines={2}
@@ -1520,9 +1524,9 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
         {/* Email Notifications Card */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Email</Text>
-          <Text style={styles.sectionSubTitle}>
+          {/* <Text style={styles.sectionSubTitle}>
             Manage what emails you receive from us
-          </Text>
+          </Text> */}
 
           {/* Terms of Service Updates */}
           <View style={styles.switchRow}>
@@ -1650,7 +1654,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             style={styles.changePasswordButton}
             onPress={() => setIsPasswordModalOpen(true)}
           >
-            <Text style={styles.changePasswordButtonText}>Change Password</Text>
+            <Text style={styles.changePasswordButtonText}>Change password</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -1663,7 +1667,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             style={styles.deleteButton}
             onPress={() => setShowDeleteModal(true)}
           >
-            <Text style={styles.deleteButtonText}>Delete my Account</Text>
+            <Text style={styles.deleteButtonText}>Delete my account</Text>
           </TouchableOpacity>
           <LogoutConfirmationModal
             visible={showLogoutModal}
@@ -1726,14 +1730,13 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
 const styles = StyleSheet.create({
   /* Container for everything */
   container: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.black,
     flex: 1, // Changed from width: "100%" to flex: 1
-    paddingHorizontal: 12,
   },
 
   topMargin: {
     width: "110%",
-    height: 60, // Space for avatar and title
+    height: 63, // Space for avatar and title
     backgroundColor: COLORS.black,
     position: "absolute",
     top: 0,
@@ -1762,8 +1765,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
     borderRadius: 60,
     backgroundColor: COLORS.blue,
     justifyContent: "center",
@@ -1777,8 +1780,8 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
   },
   avatar: {
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
     borderRadius: 60, // Make it circular per design
     marginBottom: 16,
   },
@@ -1791,8 +1794,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
     borderRadius: 60,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     justifyContent: "center",
@@ -1812,9 +1815,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   scrollContent: {
-    marginTop: 63 /* Add padding to account for the avatar container height */,
+    marginTop: 16 /* Add padding to account for the avatar container height */,
     paddingBottom: 120,
     zIndex: 10,
+    paddingHorizontal: 16,
     backgroundColor: COLORS.background,
   },
   realtorName: {
@@ -1858,12 +1862,12 @@ const styles = StyleSheet.create({
     color: COLORS.red,
   } /* Section wrapper */,
   section: {
-    marginBottom: 32,
+    marginBottom: 16,
     backgroundColor: COLORS.white,
     padding: 16,
     marginHorizontal: 4,
     gap: 8,
-    borderRadius: 8,
+    borderRadius: 16,
     shadowColor: "#000000",
     shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: 0 }, // 0px 0px offset
@@ -1876,7 +1880,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Futura",
     color: COLORS.black,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   sectionSubTitle: {
     fontSize: 14,
@@ -1885,13 +1889,13 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     fontFamily: "Futura",
     color: "#1D2327",
-    marginBottom: 16,
+    marginBottom: 8,
     marginTop: 8,
   },
 
   /* Form groups */
   formGroup: {
-    marginBottom: 10,
+    marginBottom: 2,
   },
   label: {
     fontSize: 12,
@@ -1905,8 +1909,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gray,
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 8,
     fontSize: 14,
+    minHeight: 42,
     fontWeight: "500",
     fontFamily: "Futura",
     color: COLORS.black,
@@ -1941,9 +1946,9 @@ const styles = StyleSheet.create({
   changePasswordButton: {
     width: "100%",
     backgroundColor: "transparent",
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 50,
     alignItems: "center",
@@ -1951,7 +1956,7 @@ const styles = StyleSheet.create({
   },
   changePasswordButtonText: {
     color: COLORS.green,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 700,
     fontFamily: "Futura",
   },
@@ -1959,15 +1964,15 @@ const styles = StyleSheet.create({
   logoutButton: {
     width: "100%",
     backgroundColor: "transparent",
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
     borderRadius: 50,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: "center",
   },
   logoutButtonText: {
     color: COLORS.green,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 700,
     fontFamily: "Futura",
   },
@@ -1975,14 +1980,13 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: COLORS.red,
     borderRadius: 50,
-    paddingVertical: 16,
-
+    paddingVertical: 12,
     alignItems: "center",
     marginTop: 16,
   },
   deleteButtonText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 700,
     fontFamily: "Futura",
   },
@@ -2047,7 +2051,7 @@ const styles = StyleSheet.create({
   inviteCodeContainer: {
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 16,
     backgroundColor: COLORS.coloredBackgroundFill,
   },
 
@@ -2144,13 +2148,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gray,
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 8,
     fontSize: 14,
     fontWeight: "500",
     fontFamily: "Futura",
     color: COLORS.black,
     marginRight: 16,
-    height: 48,
+    minHeight: 42,
   },
   changeEmailButton: {
     borderColor: COLORS.green,

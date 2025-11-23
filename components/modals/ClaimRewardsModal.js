@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   View,
@@ -12,6 +12,7 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../styles/index";
@@ -50,7 +51,51 @@ const ClaimRewardsModal = ({
   setSelectedClient,
   styles, // Pass styles from parent component
 }) => {
-  // No need for local state as it's passed from parent
+  const slideAnim = useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+  const addressSlideAnim = useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+
+  // Animate claim modal
+  useEffect(() => {
+    if (claimModal && selectedReward !== null && !addressConfirmation) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: Dimensions.get("window").height,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [claimModal, selectedReward, addressConfirmation]);
+
+  // Animate address confirmation modal
+  useEffect(() => {
+    if (
+      addressConfirmation &&
+      (selectedClientData !== null || selectedReward?.rewardFor === "Realtors")
+    ) {
+      Animated.spring(addressSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
+      }).start();
+    } else {
+      Animated.timing(addressSlideAnim, {
+        toValue: Dimensions.get("window").height,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [addressConfirmation, selectedClientData, selectedReward]);
 
   return (
     <>
@@ -68,7 +113,14 @@ const ClaimRewardsModal = ({
           style={{ flex: 1 }}
         >
           <View style={styles.modalOverlay}>
-            <View style={localStyles.claimModal}>
+            <Animated.View
+              style={[
+                localStyles.claimModal,
+                {
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
               <TouchableOpacity
                 style={localStyles.closeButton}
                 onPress={() => {
@@ -76,12 +128,16 @@ const ClaimRewardsModal = ({
                   setSelectedReward(null);
                 }}
               >
-                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
-                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                <Svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 26 26"
+                  fill="#f4f4f4"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <Path
-                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                    fill="#A9A9A9"
+                    d="M13 0C5.82075 0 0 5.8201 0 13C0 20.1799 5.8201 26 13 26C20.1799 26 26 20.1799 26 13C26 5.8201 20.1799 0 13 0ZM13 24.401C6.7275 24.401 1.625 19.2725 1.625 13C1.625 6.7275 6.7275 1.625 13 1.625C19.2725 1.625 24.375 6.7275 24.375 13C24.375 19.2725 19.2725 24.401 13 24.401ZM17.5961 8.4045C17.2793 8.08763 16.7648 8.08763 16.4473 8.4045L13.0007 11.8511L9.55402 8.4045C9.23715 8.08763 8.72202 8.08763 8.4045 8.4045C8.08698 8.72138 8.08763 9.2365 8.4045 9.55338L11.8511 13L8.4045 16.4466C8.08763 16.7635 8.08763 17.2786 8.4045 17.5955C8.72138 17.9124 9.2365 17.9124 9.55402 17.5955L13.0007 14.1489L16.4473 17.5955C16.7642 17.9124 17.2786 17.9124 17.5961 17.5955C17.9137 17.2786 17.913 16.7635 17.5961 16.4466L14.1495 13L17.5961 9.55338C17.914 9.23585 17.914 8.72138 17.5961 8.4045Z"
+                    fill="#797979"
                   />
                 </Svg>
               </TouchableOpacity>
@@ -202,7 +258,7 @@ const ClaimRewardsModal = ({
                             label: c.referenceName,
                             value: c._id,
                           }))}
-                        placeholder="Select a client"
+                        placeholder="Select client first"
                       />
                     </View>
                   )}
@@ -243,17 +299,29 @@ const ClaimRewardsModal = ({
                       {claimLoading ? (
                         <ActivityIndicator color={COLORS.white} />
                       ) : (
-                        <Text style={localStyles.sendButtonText}>
+                        <Text
+                          style={
+                            claimLoading ||
+                            (selectedReward.rewardFor === "Clients" &&
+                              !selectedClient) ||
+                            currentPoints <
+                              Math.ceil(
+                                selectedReward.rewardAmount / POINTS_TO_DOLLARS
+                              )
+                              ? localStyles.sendButtonDisabledText
+                              : [localStyles.sendButtonText]
+                          }
+                        >
                           {selectedReward.rewardFor === "Realtors"
                             ? "Get"
-                            : "Send"}
+                            : "Redeem"}
                         </Text>
                       )}
                     </TouchableOpacity>
                   </View>
                 </>
               )}
-            </View>
+            </Animated.View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -275,7 +343,14 @@ const ClaimRewardsModal = ({
           keyboardVerticalOffset={Platform.OS === "ios" ? -50 : -45}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.addressModal}>
+            <Animated.View
+              style={[
+                styles.addressModal,
+                {
+                  transform: [{ translateY: addressSlideAnim }],
+                },
+              ]}
+            >
               <TouchableOpacity
                 style={localStyles.closeButton}
                 onPress={() => {
@@ -284,12 +359,16 @@ const ClaimRewardsModal = ({
                   setSelectedReward(null);
                 }}
               >
-                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
-                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#FFFFFF" />
-                  <Circle cx="18.5" cy="18.5" r="17.5" fill="#FDFDFD" />
+                <Svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 26 26"
+                  fill="#f4f4f4"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <Path
-                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
-                    fill="#A9A9A9"
+                    d="M13 0C5.82075 0 0 5.8201 0 13C0 20.1799 5.8201 26 13 26C20.1799 26 26 20.1799 26 13C26 5.8201 20.1799 0 13 0ZM13 24.401C6.7275 24.401 1.625 19.2725 1.625 13C1.625 6.7275 6.7275 1.625 13 1.625C19.2725 1.625 24.375 6.7275 24.375 13C24.375 19.2725 19.2725 24.401 13 24.401ZM17.5961 8.4045C17.2793 8.08763 16.7648 8.08763 16.4473 8.4045L13.0007 11.8511L9.55402 8.4045C9.23715 8.08763 8.72202 8.08763 8.4045 8.4045C8.08698 8.72138 8.08763 9.2365 8.4045 9.55338L11.8511 13L8.4045 16.4466C8.08763 16.7635 8.08763 17.2786 8.4045 17.5955C8.72138 17.9124 9.2365 17.9124 9.55402 17.5955L13.0007 14.1489L16.4473 17.5955C16.7642 17.9124 17.2786 17.9124 17.5961 17.5955C17.9137 17.2786 17.913 16.7635 17.5961 16.4466L14.1495 13L17.5961 9.55338C17.914 9.23585 17.914 8.72138 17.5961 8.4045Z"
+                    fill="#797979"
                   />
                 </Svg>
               </TouchableOpacity>
@@ -305,26 +384,29 @@ const ClaimRewardsModal = ({
                 </Text>
               </Text>
 
-              <Text style={styles.label}>Address:</Text>
+              {/* <Text style={styles.label}>Address:</Text> */}
               <TextInput
                 style={styles.input}
                 value={addressToSend.address}
+                placeholder="Address"
                 onChangeText={(text) =>
                   setAddressToSend((prev) => ({ ...prev, address: text }))
                 }
               />
-              <Text style={styles.label}>City:</Text>
+              {/* <Text style={styles.label}>City:</Text> */}
               <TextInput
                 style={styles.input}
                 value={addressToSend.city}
+                placeholder="City"
                 onChangeText={(text) =>
                   setAddressToSend((prev) => ({ ...prev, city: text }))
                 }
               />
-              <Text style={styles.label}>Postal Code:</Text>
+              {/* <Text style={styles.label}>Postal Code:</Text> */}
               <TextInput
                 style={styles.input}
                 value={addressToSend.postalCode}
+                placeholder="Postal code"
                 onChangeText={(text) =>
                   setAddressToSend((prev) => ({ ...prev, postalCode: text }))
                 }
@@ -361,12 +443,12 @@ const ClaimRewardsModal = ({
                     <ActivityIndicator color={COLORS.white} size="small" />
                   ) : (
                     <Text style={localStyles.confirmButtonText}>
-                      Confirm & Submit
+                      Confirm & Send
                     </Text>
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -377,13 +459,16 @@ const ClaimRewardsModal = ({
 const localStyles = StyleSheet.create({
   closeButton: {
     position: "absolute",
-    top: -8, // Half of the circle height (37/2) to position it 50% outside
-    right: -8, // Half of the circle width (37/2) to position it 50% outside
+    top: 8, // Half of the circle height (37/2) to position it 50% outside
+    right: 8, // Half of the circle width (37/2) to position it 50% outside
     zIndex: 150,
+    backgroundColor: COLORS.white,
+    padding: 0,
+    borderRadius: 33,
   },
 
   addressModalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
     fontFamily: "Futura",
     marginTop: 16,
@@ -403,6 +488,7 @@ const localStyles = StyleSheet.create({
   },
 
   boldText: {
+    fontSize: 16,
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.black,
@@ -421,7 +507,8 @@ const localStyles = StyleSheet.create({
     alignItems: "center",
     maxHeight: "90%",
     overflow: "visible",
-    marginTop: 18.5, // Add top margin to account for close button overlay
+    position: "absolute",
+    bottom: 60,
   },
   descriptionScroll: {
     width: "100%",
@@ -519,45 +606,49 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   passButton: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
-    borderRadius: 30,
+    borderRadius: 33,
     paddingVertical: 12,
     paddingHorizontal: 24,
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
     marginRight: 10,
-    height: 50,
   },
   passButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.green,
   },
   sendButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 30,
+    borderRadius: 33,
     paddingVertical: 12,
     paddingHorizontal: 24,
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
     marginLeft: 10,
-    height: 50,
   },
   sendButtonDisabled: {
     backgroundColor: "#CCCCCC",
   },
   sendButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.white,
   },
+  sendButtonDisabledText: {
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "Futura",
+    color: "#797979",
+  },
   cancelButton: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
     backgroundColor: "transparent",
     borderRadius: 33,
@@ -570,7 +661,7 @@ const localStyles = StyleSheet.create({
     marginRight: 10,
   },
   cancelButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.green,
@@ -587,7 +678,7 @@ const localStyles = StyleSheet.create({
     marginLeft: 10,
   },
   confirmButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.white,

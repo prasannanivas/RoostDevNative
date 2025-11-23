@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Modal,
   StyleSheet,
   Image,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,6 +23,27 @@ const COLORS = {
 };
 
 export default function RewardClaimedModal({ visible, onClose }) {
+  const slideAnim = useRef(
+    new Animated.Value(Dimensions.get("window").height)
+  ).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: Dimensions.get("window").height,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
   return (
     <Modal
       visible={visible}
@@ -29,7 +52,14 @@ export default function RewardClaimedModal({ visible, onClose }) {
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Ionicons name="close-circle-outline" size={24} color="#999" />
           </TouchableOpacity>
@@ -50,7 +80,7 @@ export default function RewardClaimedModal({ visible, onClose }) {
           <TouchableOpacity style={styles.okButton} onPress={onClose}>
             <Text style={styles.okButtonText}>OK</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -69,7 +99,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     alignItems: "center",
-    position: "relative",
+    position: "absolute",
+    bottom: 20,
   },
   closeButton: {
     position: "absolute",

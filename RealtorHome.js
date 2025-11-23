@@ -58,7 +58,7 @@ import { trimLeft, trimFull } from "./utils/stringUtils";
 const COLORS = {
   green: "#377473",
   background: "#F6F6F6",
-  black: "#1D2327",
+  black: "#0E1D1D", //  "#1D2327",
   slate: "#707070",
   gray: "#A9A9A9",
   silver: "#F6F6F6",
@@ -115,6 +115,37 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
     checkProfileStatus();
     fetchCustomMessages();
   }, [realtor, invited]);
+
+  // Animate button shrink after 4 seconds when there are clients
+  useEffect(() => {
+    const hasClients =
+      (activeClients?.length || 0) > 0 || (completedClients?.length || 0) > 0;
+
+    if (hasClients) {
+      const timer = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(addButtonWidthAnim, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+          Animated.timing(addButtonTextOpacity, {
+            toValue: 0,
+            duration: 200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    } else {
+      // Reset animation values when no clients
+      addButtonWidthAnim.setValue(1);
+      addButtonTextOpacity.setValue(1);
+    }
+  }, [activeClients?.length, completedClients?.length]);
 
   const navigation = useNavigation();
 
@@ -261,6 +292,10 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   const rightSlideAnim = useRef(new Animated.Value(1000)).current;
   // For bottom slide (client card), start at 1000 (off-screen to the bottom)
   const bottomSlideAnim = useRef(new Animated.Value(1000)).current;
+
+  // Add button animation refs
+  const addButtonWidthAnim = useRef(new Animated.Value(1)).current; // 1 = full width, 0 = icon only
+  const addButtonTextOpacity = useRef(new Animated.Value(1)).current; // 1 = visible, 0 = hidden
 
   // Track whether we're in the middle of animations
   const isAnimating = useRef({
@@ -1170,12 +1205,26 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             onPress={handleRewardsClick}
             width={46}
             height={46}
-            backgroundColor="#1D2327"
+            backgroundColor="#0E1D1D"
             strokeColor="#377473"
             pathColor="#FDFDFD"
           />
         </View>
       </View>
+      <View style={styles.headerExtendedBackground} />
+      <View style={styles.inviteBanner}>
+        <TouchableOpacity
+          style={styles.inviteRealtorsButton}
+          onPress={() => setShowInviteForm(true)}
+        >
+          <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
+        </TouchableOpacity>
+        <Text style={styles.inviteBannerText}>
+          Earn an additional 5% from any from realtor that you refer, once one
+          of their clients completes a mortgage.
+        </Text>
+      </View>
+
       {/* ================= INVITE REALTORS BANNER ================= */}
       <ScrollView
         refreshControl={
@@ -1187,19 +1236,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           />
         }
       >
-        <View style={styles.inviteBanner}>
-          <TouchableOpacity
-            style={styles.inviteRealtorsButton}
-            onPress={() => setShowInviteForm(true)}
-          >
-            <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
-          </TouchableOpacity>
-          <Text style={styles.inviteBannerText}>
-            Earn an additional 5% from any from realtor that you refer, once one
-            of their clients completes a mortgage.
-          </Text>
-        </View>
-        <View style={styles.inviteBanner}>
+        {/* <View style={styles.inviteBanner}>
           <TouchableOpacity
             style={styles.inviteRealtorsButton}
             onPress={handleMortgageApplication}
@@ -1209,7 +1246,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           <Text style={styles.inviteBannerText}>
             Realtors need some extra cash? 8% financing available just for you!
           </Text>
-        </View>
+        </View> */}
         {/* ================= TITLE: CLIENTS ================= */}
 
         {/* ================= SCROLLABLE CLIENT LIST ================= */}
@@ -2413,7 +2450,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 16,
-    shadowColor: "#1D2327",
+    shadowColor: "#0E1D1D",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -2434,24 +2471,23 @@ const styles = StyleSheet.create({
   inviteRealtorsText: {
     color: COLORS.white,
     fontWeight: "700",
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Futura",
     textAlign: "center", // Ensure text is centered
     flexShrink: 1, // Allow text to shrink if needed
   },
   inviteBannerText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 500, // P weight
-    color: COLORS.green,
-    lineHeight: 20,
+    color: "#4D4D4D",
     fontFamily: "Futura",
   },
 
   // Clients section
   clientsTitleContainer: {
-    width: "90%",
-    alignItems: "left",
+    width: "95%",
+    alignItems: "flex-start",
     marginTop: 16,
     alignSelf: "center",
     marginBottom: 4,
@@ -2471,7 +2507,7 @@ const styles = StyleSheet.create({
     letterSpacing: "0.8",
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingBottom: 64, // Increased vertical padding to add more space
     //  gap: 16, // Gap between items in the scroll view
   },
@@ -3300,6 +3336,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     fontFamily: "Futura",
+  },
+  headerExtendedBackground: {
+    position: "absolute",
+    top: 126, // Position it to align with the header above
+    left: 0, // Compensate for ScrollView paddingHorizontal
+    right: 0, // Compensate for ScrollView paddingHorizontal
+    height: 55, // Extends to cover header (126px) + half of statusContainer padding/content
+    backgroundColor: COLORS.black,
+    zIndex: 0,
   },
 });
 

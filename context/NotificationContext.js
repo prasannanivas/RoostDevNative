@@ -171,6 +171,7 @@ export const NotificationProvider = ({ children }) => {
           title: notification.title,
           message: notification.message,
           time: formatTimeAgo(new Date(notification.createdAt)),
+          createdAt: notification.createdAt, // Preserve original date for filtering
           read: notification.read,
           category: notification.type,
           icon: getIconForNotificationType(notification.type),
