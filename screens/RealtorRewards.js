@@ -264,9 +264,9 @@ export default function RealtorRewards({
   return (
     <View style={styles.container}>
       {/* Fixed Header Section */}
+      <View style={styles.header}></View>
       <View style={styles.fixedHeaderSection}>
         {/* Header with REWARDS text */}
-        <View style={styles.header}></View>
 
         {/* Fixed Points Display */}
         <Animated.View
@@ -281,6 +281,7 @@ export default function RealtorRewards({
             },
             isScrolled && {
               backgroundColor: COLORS.white,
+              borderTopLeftRadius: 16,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.5,
@@ -331,7 +332,7 @@ export default function RealtorRewards({
                   inputRange: [20, 50],
                   outputRange: [
                     Dimensions.get("window").width - 20,
-                    Dimensions.get("window").width * 0.3,
+                    Dimensions.get("window").width * 0.275,
                   ],
                   extrapolate: "clamp",
                 }),
@@ -349,14 +350,14 @@ export default function RealtorRewards({
                   {
                     translateY: scrollAnimation.interpolate({
                       inputRange: [20, 50],
-                      outputRange: [0, -50],
+                      outputRange: [0, -52.5],
                       extrapolate: "clamp",
                     }),
                   },
                   {
                     translateX: scrollAnimation.interpolate({
                       inputRange: [20, 50],
-                      outputRange: [0, -130],
+                      outputRange: [0, -135],
                       extrapolate: "clamp",
                     }),
                   },
@@ -366,15 +367,19 @@ export default function RealtorRewards({
               <Animated.View
                 style={[
                   styles.pointsButton,
+                  isScrolled && {
+                    height: 46,
+                    width: "fit-content",
+                  },
                   {
                     paddingVertical: scrollAnimation.interpolate({
                       inputRange: [20, 50],
-                      outputRange: [8, 10],
+                      outputRange: [8, 8],
                       extrapolate: "clamp",
                     }),
                     paddingHorizontal: scrollAnimation.interpolate({
                       inputRange: [20, 50],
-                      outputRange: [8, 10],
+                      outputRange: [8, 16],
                       extrapolate: "clamp",
                     }),
                   },
@@ -478,8 +483,8 @@ export default function RealtorRewards({
           <View style={styles.bonusContainer}>
             <Text style={styles.bonusTitle}>BONUS</Text>
             <Text style={styles.bonusText}>
-              Earn an additional 5% from any from realtor that you refer, once
-              one of their clients completes a mortgage.
+              Earn an additional 5% pts from any activity from your fellow
+              realtor referrals*
             </Text>
             <Text style={styles.bonusExample}>
               Example - Realtor B completes a deal they get 300pts, Realtor A
@@ -511,14 +516,14 @@ export default function RealtorRewards({
           <></>
         )}
         <View style={styles.rewardsContainer}>
-          <Text style={styles.rewardsTitle}>Rewards</Text>
+          {/* <Text style={styles.rewardsTitle}>Rewards</Text> */}
           {/* Client Rewards */}
           <Text style={styles.rewardsSubTitle}>FOR YOUR CLIENTS</Text>
-          <Text style={styles.rewardsDescription}>
+          {/* <Text style={styles.rewardsDescription}>
             These rewards are sent directly to your clients as a gift. We
             include your photo, contact details, and a thank-you message for
             choosing you as their realtor.
-          </Text>
+          </Text> */}
           {fetchingRewards ? (
             <ActivityIndicator />
           ) : (
@@ -552,13 +557,13 @@ export default function RealtorRewards({
                     <View style={styles.rewardCardContent}>
                       <Text style={styles.rewardType}>{reward.rewardName}</Text>
                       <Text style={styles.rewardName}>
-                        {reward.rewardAmount}
+                        ${reward.rewardAmount}
                       </Text>
                       <OrangeProgressBar
                         progress={
                           getRewardProgress(reward.rewardAmount).progress
                         }
-                        style={{ marginBottom: 4 }}
+                        style={{ marginVertical: 8 }}
                       />
                     </View>
                   </TouchableOpacity>
@@ -915,22 +920,23 @@ export default function RealtorRewards({
 const styles = StyleSheet.create({
   container: {
     padding: 0,
-    backgroundColor: "#F6F6F6",
+    backgroundColor: COLORS.black,
     flex: 1,
   },
   fixedHeaderSection: {
-    backgroundColor: "#F6F6F6",
     zIndex: 2,
+    borderTopLeftRadius: 16,
+    backgroundColor: "#F6F6F6",
   },
   scrollContent: {
     flex: 1,
+    backgroundColor: "#F6F6F6",
   },
 
   /* Header */
   header: {
     backgroundColor: COLORS.black,
     paddingTop: 63,
-    padding: 24,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -970,11 +976,9 @@ const styles = StyleSheet.create({
   /* Points display */
   pointsContainer: {
     padding: 20,
-
     width: "100%",
-    // borderBottomWidth: 1,
-    // borderBottomColor: COLORS.lightGray,
     alignItems: "center",
+    borderTopLeftRadius: 16,
   },
   pointsNum: {
     fontSize: 48,
@@ -1113,22 +1117,23 @@ const styles = StyleSheet.create({
   },
 
   bonusTitle: {
-    fontSize: 12,
+    fontSize: 16,
+    fontWeight: 700,
     fontWeight: "bold",
     fontFamily: "Futura",
     marginBottom: 8,
     color: COLORS.black,
   },
   bonusText: {
-    fontSize: 12,
-    fontWeight: 700,
+    fontSize: 14,
+    fontWeight: 500,
     fontFamily: "Futura",
     color: COLORS.green,
     marginBottom: 8,
     lineHeight: 20,
   },
   bonusExample: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 500,
     fontFamily: "Futura",
     color: COLORS.green,
@@ -1149,7 +1154,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: 700,
     fontFamily: "Futura",
-    fontSize: 12,
+    fontSize: 14,
   },
 
   rewardsContainer: {
@@ -1165,13 +1170,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   rewardsSubTitle: {
-    fontSize: 16,
+    fontSize: 11,
     fontWeight: 700,
     fontFamily: "Futura",
     marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 16,
     color: "#707070",
-    paddingHorizontal: 24,
+    letterSpacing: 1,
+    paddingHorizontal: 16,
   },
   rewardsDescription: {
     fontSize: 12,
@@ -1188,7 +1194,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
   rewardCard: {
     width: "48%",

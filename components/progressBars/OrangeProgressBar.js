@@ -1,23 +1,23 @@
 import React from "react";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 
 /**
- * A progress bar component with orange fill and percentage text inside
- * Matches the SVG design with F6F6F6 background, FDFDFD border, and F0913A fill
+ * A progress bar component with orange fill and percentage text outside
+ * New design with E8E8E8 background, F0913A fill, and external percentage text
  *
  * @param {Object} props - Component props
  * @param {number} props.progress - Progress percentage (0-100)
  * @param {Object} props.style - Additional styles for the container
  * @param {boolean} props.showPercentage - Whether to display percentage text (default: true)
  * @param {string} props.customText - Optional custom text to display instead of percentage
- * @param {string} props.textColor - Color of the text (defaults to white)
+ * @param {string} props.textColor - Color of the text (defaults to #797979)
  */
 const OrangeProgressBar = ({
   progress = 0,
   style = {},
   showPercentage = true,
   customText = null,
-  textColor = "#FDFDFD", // Default to white text
+  textColor = "#797979",
 }) => {
   // Ensure progress is within 0-100 range
   const clampedProgress = Math.min(100, Math.max(0, progress));
@@ -25,84 +25,59 @@ const OrangeProgressBar = ({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.shadowContainer}>
-        <View style={styles.background}>
-          <View
-            style={[
-              styles.fill,
-              {
-                width: `${clampedProgress}%`,
-                borderTopRightRadius: clampedProgress === 100 ? 9.5 : 0,
-                borderBottomRightRadius: clampedProgress === 100 ? 9.5 : 0,
-              },
-            ]}
-          />
-          {showPercentage && (
-            <Text style={[styles.barText, { color: textColor }]}>
-              {customText || displayText}
-            </Text>
-          )}
-        </View>
+      {/* Indicator background */}
+      <View style={styles.indicator}>
+        <View
+          style={[
+            styles.progressBar,
+            {
+              width: `${clampedProgress}%`,
+            },
+          ]}
+        />
       </View>
+
+      {/* Percentage text outside */}
+      {showPercentage && (
+        <Text style={[styles.percentageText, { color: textColor }]}>
+          {customText || displayText}
+        </Text>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
-    width: "100%",
-  },
-  shadowContainer: {
-    // Drop shadow exactly like in SVG
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000000",
-        shadowOpacity: 0.25,
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 4,
-      },
-      default: {
-        shadowColor: "#000000",
-        shadowOpacity: 0.25,
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 2,
-      },
-    }),
-  },
-  background: {
-    height: 23, // Exactly as in SVG (23px)
-    backgroundColor: "#F6F6F6", // Exact color from SVG
-    borderRadius: 11.5, // Exactly as in SVG (11.5px)
-    overflow: "hidden", // Critical for iOS
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#FDFDFD", // White border matching SVG
-    position: "relative",
+    padding: 0,
+    gap: 8,
+    height: 13,
   },
-  fill: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: "#F0913A", // Exact color from SVG
-    height: "100%",
-    borderTopLeftRadius: 9.5, // Exactly as in SVG (9.5px)
-    borderBottomLeftRadius: 9.5,
+  indicator: {
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    padding: 0,
+    height: 10,
+    backgroundColor: "#E8E8E8",
+    borderRadius: 50,
+    flex: 1,
+    overflow: "hidden",
   },
-  barText: {
-    fontSize: 12,
-    fontWeight: 700,
+  progressBar: {
+    height: 10,
+    backgroundColor: "#F0913A",
+    borderRadius: 50,
+  },
+  percentageText: {
     fontFamily: "Futura",
-    marginLeft: 10,
-    zIndex: 5,
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+    fontStyle: "normal",
+    fontWeight: "500",
+    fontSize: 10,
+    lineHeight: 13,
+    textAlign: "center",
   },
 });
 
