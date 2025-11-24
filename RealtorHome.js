@@ -81,7 +81,47 @@ import {
 } from "./utils/phoneFormatUtils";
 import { getClientStatusText } from "./utils/statusTextUtils";
 
+const AnimatedTouchableOpacity =
+  Animated.createAnimatedComponent(TouchableOpacity);
+
 const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
+  // Blinking animation for FullyApproved clients with paperwork requested
+  const blinkAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animate = () => {
+      blinkAnim.setValue(0);
+      Animated.sequence([
+        Animated.timing(blinkAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(blinkAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: false,
+        }),
+        Animated.delay(3000),
+      ]).start((result) => {
+        if (result.finished) {
+          animate();
+        }
+      });
+    };
+
+    animate();
+
+    return () => {
+      blinkAnim.stopAnimation();
+    };
+  }, []);
+
+  const blinkingBackgroundColor = blinkAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["rgba(253, 253, 253, 0.18)", "rgba(240, 146, 58, 0.18)"],
+  });
+
   const { auth } = useAuth();
   const realtor = auth.realtor;
   const realtorFromContext = useRealtor();
@@ -1310,10 +1350,19 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                   totalNeeded,
                 });
 
+                const isPaperWorkRequested =
+                  client.clientStatus === "FullyApproved" &&
+                  client.fullyApprovedDetails?.paperWorkRequested;
+
                 return (
-                  <TouchableOpacity
+                  <AnimatedTouchableOpacity
                     key={client.id || client._id || client.inviteeId}
-                    style={styles.clientCard}
+                    style={[
+                      styles.clientCard,
+                      isPaperWorkRequested && {
+                        backgroundColor: blinkingBackgroundColor,
+                      },
+                    ]}
                     onPress={() =>
                       client.clientStatus === "FullyApproved"
                         ? openFullyApprovedModal(client)
@@ -1380,7 +1429,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     {index !== activeClients.length - 1 && (
                       <View style={styles.clientCardBorder} />
                     )}
-                  </TouchableOpacity>
+                  </AnimatedTouchableOpacity>
                 );
               })}
             </View>
