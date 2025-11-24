@@ -45,6 +45,8 @@ import MortgageApplicationModal from "./components/modals/MortgageApplicationMod
 import InviteClientModal from "./components/modals/InviteClientModal";
 import ShareOptionsModal from "./components/modals/ShareOptionsModal";
 import FullyApprovedClientModal from "./components/FullyApprovedClientModal";
+import PurchaseConfirmationModal from "./components/PurchaseConfirmationModal";
+import PurchaseDetailsModal from "./components/PurchaseDetailsModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -914,6 +916,10 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
   const [showFullyApprovedModal, setShowFullyApprovedModal] = useState(false);
   const [selectedFullyApprovedClient, setSelectedFullyApprovedClient] =
     useState(null);
+  const [showPurchaseConfirmationModal, setShowPurchaseConfirmationModal] =
+    useState(false);
+  const [showPurchaseDetailsModal, setShowPurchaseDetailsModal] =
+    useState(false);
   // Custom admin messages modal state (re-added)
   const [customMessages, setCustomMessages] = useState([]);
   const [currentCustomMsgIndex, setCurrentCustomMsgIndex] = useState(0);
@@ -986,7 +992,13 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
   const openFullyApprovedModal = (client) => {
     setSelectedFullyApprovedClient(client);
-    setShowFullyApprovedModal(true);
+    // If paperWorkRequested is true, show old modal (FullyApprovedClientModal)
+    // If paperWorkRequested is false/undefined, show new modal (PurchaseConfirmationModal)
+    if (client?.fullyApprovedDetails?.paperWorkRequested) {
+      setShowFullyApprovedModal(true);
+    } else {
+      setShowPurchaseConfirmationModal(true);
+    }
   };
 
   // Fetch custom messages for realtor
@@ -1322,8 +1334,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                     key={client.id || client._id || client.inviteeId}
                     style={styles.clientCard}
                     onPress={() =>
-                      client.clientStatus === "FullyApproved" &&
-                      client?.fullyApprovedDetails?.paperWorkRequested
+                      client.clientStatus === "FullyApproved"
                         ? openFullyApprovedModal(client)
                         : handleClientClick(client)
                     }
@@ -2202,14 +2213,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           </Animated.View>
         </Animated.View>
       </Modal>
-      {/* Fully Approved Client Modal */}
+      {/* Fully Approved Client Modal (when paperWorkRequested = true) */}
       <Modal
         visible={showFullyApprovedModal}
-        animationType="none"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setShowFullyApprovedModal(false)}
       >
-        <Animated.View style={[styles.modalOverlay]}>
+        <View style={[styles.modalOverlay, { justifyContent: "flex-end" }]}>
           {selectedFullyApprovedClient && (
             <FullyApprovedClientModal
               client={selectedFullyApprovedClient}
@@ -2227,7 +2238,66 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               }}
             />
           )}
-        </Animated.View>
+        </View>
+      </Modal>
+
+      {/* Purchase Confirmation Modal (when paperWorkRequested = false) */}
+      <Modal
+        visible={showPurchaseConfirmationModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowPurchaseConfirmationModal(false)}
+      >
+        <View style={[styles.modalOverlay, { justifyContent: "flex-end" }]}>
+          {selectedFullyApprovedClient && (
+            <PurchaseConfirmationModal
+              client={selectedFullyApprovedClient}
+              onClose={() => setShowPurchaseConfirmationModal(false)}
+              onViewDetails={() => {
+                setShowPurchaseConfirmationModal(false);
+                navigation.navigate("ClientDetails", {
+                  clientId: selectedFullyApprovedClient.inviteeId,
+                  client: selectedFullyApprovedClient,
+                  inviteId: selectedFullyApprovedClient.inviteId,
+                  onDelete: onRefresh,
+                  statusText: "Fully Approved",
+                });
+              }}
+              onPurchased={() => {
+                setShowPurchaseConfirmationModal(false);
+                setShowPurchaseDetailsModal(true);
+              }}
+            />
+          )}
+        </View>
+      </Modal>
+
+      {/* Purchase Details Modal */}
+      <Modal
+        visible={showPurchaseDetailsModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowPurchaseDetailsModal(false)}
+      >
+        <View style={[styles.modalOverlay, { justifyContent: "flex-end" }]}>
+          {selectedFullyApprovedClient && (
+            <PurchaseDetailsModal
+              client={selectedFullyApprovedClient}
+              onClose={() => {
+                setShowPurchaseDetailsModal(false);
+                setSelectedFullyApprovedClient(null);
+              }}
+              onConfirm={(purchaseDetails) => {
+                // Handle the purchase details submission here
+                console.log("Purchase details:", purchaseDetails);
+                // Close the purchase details modal
+                setShowPurchaseDetailsModal(false);
+                // Open the FullyApprovedClientModal (old modal)
+                setShowFullyApprovedModal(true);
+              }}
+            />
+          )}
+        </View>
       </Modal>
 
       {/* Chat Modal */}

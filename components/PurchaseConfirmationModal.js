@@ -4,24 +4,19 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  Linking,
-  Platform,
   Animated,
 } from "react-native";
-import * as MailComposer from "expo-mail-composer";
 import { Ionicons } from "@expo/vector-icons";
 
-const FullyApprovedClientModal = ({
+const PurchaseConfirmationModal = ({
   client,
-  fullyApprovedDocs,
   onClose,
   onViewDetails,
+  onPurchased,
 }) => {
-  const slideAnim = useRef(new Animated.Value(1000)).current; // Start off-screen
+  const slideAnim = useRef(new Animated.Value(1000)).current;
 
   useEffect(() => {
-    // Slide up animation
     Animated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
@@ -29,6 +24,7 @@ const FullyApprovedClientModal = ({
       friction: 10,
     }).start();
   }, []);
+
   const getInitials = (name) => {
     if (!name) return "";
     const parts = name.trim().split(" ");
@@ -36,40 +32,6 @@ const FullyApprovedClientModal = ({
     return (
       parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
     ).toUpperCase();
-  };
-
-  const handleSendEmail = async () => {
-    const email = client?.email || client?.clientEmail;
-    if (!email) {
-      Alert.alert("No email", "No email address available for this client.");
-      return;
-    }
-    const subject = `Mortgage documents for ${client?.referenceName || ""}`;
-    const body = `Please attach the documents for your client here. 
-We need APS, MLS Data Sheet and Receipt of Funds. 
-Alternatively you can send them from your computer to files@roostapp.io`;
-
-    try {
-      const available = await MailComposer.isAvailableAsync();
-      if (available) {
-        await MailComposer.composeAsync({
-          recipients: [email],
-          subject,
-          body,
-        });
-      } else {
-        // Fallback to mailto
-        const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
-          subject
-        )}&body=${encodeURIComponent(body)}`;
-        Linking.openURL(mailtoUrl);
-      }
-    } catch (e) {
-      Alert.alert(
-        "Email composer error",
-        "Please try again or send an email manually."
-      );
-    }
   };
 
   return (
@@ -110,6 +72,11 @@ Alternatively you can send them from your computer to files@roostapp.io`;
           <Text style={styles.viewDetailsButtonText}>View Details</Text>
         </TouchableOpacity>
 
+        {/* They Have Purchased Button */}
+        <TouchableOpacity style={styles.purchasedButton} onPress={onPurchased}>
+          <Text style={styles.purchasedButtonText}>They have purchased!</Text>
+        </TouchableOpacity>
+
         {/* Details Section */}
         <View style={styles.detailsSection}>
           <Text style={styles.subtitle}>
@@ -118,22 +85,17 @@ Alternatively you can send them from your computer to files@roostapp.io`;
 
           {/* Document List */}
           <View style={styles.documentList}>
-            {fullyApprovedDocs.map((doc, idx) => (
-              <Text key={idx} style={styles.documentItem} numberOfLines={2}>
-                {doc}
-              </Text>
-            ))}
+            <Text style={styles.documentItem}>
+              Agreement of Purchase and Sale
+            </Text>
+            <Text style={styles.documentItem}>MLS Data Sheet</Text>
+            <Text style={styles.documentItem}>Receipt of Funds</Text>
           </View>
 
           <Text style={styles.footerInfo}>
             from your computer you can send the documents to files@roostapp.io
           </Text>
         </View>
-
-        {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} onPress={handleSendEmail}>
-          <Text style={styles.sendButtonText}>Send from my phone</Text>
-        </TouchableOpacity>
       </View>
     </Animated.View>
   );
@@ -241,6 +203,25 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: "#377473",
   },
+  purchasedButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 12,
+    paddingHorizontal: 24,
+    width: 338,
+    height: 43,
+    backgroundColor: "#377473",
+    borderRadius: 999,
+    alignSelf: "stretch",
+  },
+  purchasedButtonText: {
+    fontFamily: "Futura",
+    fontWeight: "700",
+    fontSize: 14,
+    lineHeight: 19,
+    color: "#FDFDFD",
+  },
   detailsSection: {
     flexDirection: "column",
     alignItems: "center",
@@ -248,7 +229,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     gap: 16,
     width: 338,
-    backgroundColor: "rgba(240, 145, 58, 0.1)",
+    backgroundColor: "rgba(55, 116, 115, 0.1)",
     borderRadius: 8,
     alignSelf: "stretch",
   },
@@ -284,25 +265,6 @@ const styles = StyleSheet.create({
     color: "#707070",
     width: 280,
   },
-  sendButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 12,
-    paddingHorizontal: 24,
-    width: 338,
-    height: 43,
-    backgroundColor: "#F0913A",
-    borderRadius: 999,
-    alignSelf: "stretch",
-  },
-  sendButtonText: {
-    fontFamily: "Futura",
-    fontWeight: "700",
-    fontSize: 14,
-    lineHeight: 19,
-    color: "#FDFDFD",
-  },
 });
 
-export default FullyApprovedClientModal;
+export default PurchaseConfirmationModal;
