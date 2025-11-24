@@ -20,6 +20,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
 import ReactNativeModal from "react-native-modal";
 import * as Contacts from "expo-contacts";
@@ -119,36 +120,20 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
     fetchCustomMessages();
   }, [realtor, invited]);
 
-  // Animate button shrink after 4 seconds when there are clients
+  // Button animation
+  const buttonAnim = useRef(new Animated.Value(0)).current;
+  const screenWidth = Dimensions.get("window").width;
+
   useEffect(() => {
-    const hasClients =
-      (activeClients?.length || 0) > 0 || (completedClients?.length || 0) > 0;
-
-    if (hasClients) {
-      const timer = setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(addButtonWidthAnim, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-          }),
-          Animated.timing(addButtonTextOpacity, {
-            toValue: 0,
-            duration: 200,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }, 4000);
-
-      return () => clearTimeout(timer);
-    } else {
-      // Reset animation values when no clients
-      addButtonWidthAnim.setValue(1);
-      addButtonTextOpacity.setValue(1);
-    }
-  }, [activeClients?.length, completedClients?.length]);
+    const timer = setTimeout(() => {
+      Animated.timing(buttonAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const navigation = useNavigation();
 
@@ -295,10 +280,6 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   const rightSlideAnim = useRef(new Animated.Value(1000)).current;
   // For bottom slide (client card), start at 1000 (off-screen to the bottom)
   const bottomSlideAnim = useRef(new Animated.Value(1000)).current;
-
-  // Add button animation refs
-  const addButtonWidthAnim = useRef(new Animated.Value(1)).current; // 1 = full width, 0 = icon only
-  const addButtonTextOpacity = useRef(new Animated.Value(1)).current; // 1 = visible, 0 = hidden
 
   // Track whether we're in the middle of animations
   const isAnimating = useRef({
@@ -513,7 +494,7 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
 
   const handleInviteClient = async () => {
     setIsLoading(true);
-    setFeedback({ message: "", type: "" });
+    setFeedback({ message, type: "" });
 
     // Validation
     let hasError = false;
@@ -1239,7 +1220,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       </View>
 
       {/* ================= INVITE REALTORS BANNER ================= */}
-      <ScrollView
+      <Animated.ScrollView
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -1508,27 +1489,111 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           )}
         </ScrollView>
         {/* ================= FLOATING ADD CLIENT BUTTON ================= */}
-      </ScrollView>
+      </Animated.ScrollView>
       {activeClients.length > 0 || completedClients.length > 0 ? (
-        <TouchableOpacity
-          style={styles.floatingAddButton}
-          onPress={() => setShowForm(true)}
-          activeOpacity={0.8}
+        <Animated.View
+          style={[
+            styles.floatingAddButton,
+            {
+              width: buttonAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [screenWidth * 0.9, 59],
+                extrapolate: "clamp",
+              }),
+              height: buttonAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [56, 58],
+                extrapolate: "clamp",
+              }),
+              backgroundColor: buttonAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["#377473", "rgba(55, 116, 115, 0)"],
+                extrapolate: "clamp",
+              }),
+              shadowOpacity: buttonAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.3, 0],
+                extrapolate: "clamp",
+              }),
+              elevation: buttonAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [8, 0],
+                extrapolate: "clamp",
+              }),
+              transform: [
+                {
+                  translateX: buttonAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [
+                      0,
+                      screenWidth * 0.9 - 59, // Move to right side
+                    ],
+                    extrapolate: "clamp",
+                  }),
+                },
+              ],
+              minWidth: 0, // Override minWidth from styles
+              paddingHorizontal: 0,
+            },
+          ]}
         >
-          <View style={styles.addButtonContent}>
-            <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
-              <Rect x="1" y="1" width="54" height="54" rx="27" fill="#377473" />
-              <Path
-                d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
-                stroke="#FDFDFD"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text style={styles.addClientButtonText}>ADD CLIENT</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              width: "100%",
+              height: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row",
+            }}
+            onPress={() => setShowForm(true)}
+            activeOpacity={0.8}
+          >
+            <View style={{ marginRight: 0 }}>
+              <Svg width="56" height="56" viewBox="0 0 59 58" fill="none">
+                <Rect
+                  x="1"
+                  y="1"
+                  width="54"
+                  height="54"
+                  rx="27"
+                  fill="#377473"
+                />
+                <Path
+                  d="M31.8181 36.909C31.8181 34.0974 28.3992 31.8181 24.1818 31.8181C19.9643 31.8181 16.5454 34.0974 16.5454 36.909M36.909 33.0908V29.2727M36.909 29.2727V25.4545M36.909 29.2727H33.0909M36.909 29.2727H40.7272M24.1818 27.9999C21.3701 27.9999 19.0909 25.7207 19.0909 22.909C19.0909 20.0974 21.3701 17.8181 24.1818 17.8181C26.9934 17.8181 29.2727 20.0974 29.2727 22.909C29.2727 25.7207 26.9934 27.9999 24.1818 27.9999Z"
+                  stroke="#FDFDFD"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <Animated.Text
+              style={[
+                styles.addClientButtonText,
+                {
+                  opacity: buttonAnim.interpolate({
+                    inputRange: [0, 0.5],
+                    outputRange: [1, 0],
+                    extrapolate: "clamp",
+                  }),
+                  maxWidth: buttonAnim.interpolate({
+                    inputRange: [0, 0.5],
+                    outputRange: [100, 0],
+                    extrapolate: "clamp",
+                  }),
+                  marginLeft: buttonAnim.interpolate({
+                    inputRange: [0, 0.5],
+                    outputRange: [10, 0],
+                    extrapolate: "clamp",
+                  }),
+                },
+              ]}
+              numberOfLines={1}
+            >
+              ADD CLIENT
+            </Animated.Text>
+          </TouchableOpacity>
+        </Animated.View>
       ) : (
         <TouchableOpacity onPress={() => setShowForm(true)} activeOpacity={0.8}>
           <View style={styles.floatingAddButtonEmptyClients}>
