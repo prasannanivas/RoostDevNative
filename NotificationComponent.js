@@ -86,7 +86,7 @@ export const NotificationMessage = ({
       break;
     case "warning-red":
       containerStyle = styles.notificationMessageRed;
-      iconSvg = warningSvgXml; // Use the same warning icon for red
+      iconSvg = rejectedSvgXml; // Use rejected X icon for red warnings
       break;
     default:
       containerStyle = styles.notificationMessageOrange;

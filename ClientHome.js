@@ -931,73 +931,60 @@ const ClientHome = ({ questionnaireData }) => {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.mainContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={COLORS.green}
-            colors={[COLORS.green]}
-          />
-        }
-      >
-        {/* Extended Background for Header */}
-        <View style={styles.headerExtendedBackground} />
+      <View style={styles.headerExtendedBackground} />
 
-        <View style={styles.contentContainer}>
-          <View style={styles.statusContainer}>
-            {/* Check if client has scheduled a call */}
-            {clientFromContext.status === "PreApproved" ? (
-              <>
-                <Text style={styles.bigTitlePreApproved}>Pre-Approved!</Text>
-                <Text style={styles.moneyPreApproved}>
-                  {(clientFromContext?.preApprovalAmount || 0).toLocaleString(
-                    "en-US",
-                    {
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                    }
+      <View style={styles.statusContainer}>
+        {/* Check if client has scheduled a call */}
+        {clientFromContext.status === "PreApproved" ? (
+          <>
+            <Text style={styles.bigTitlePreApproved}>Pre-Approved!</Text>
+            <Text style={styles.moneyPreApproved}>
+              {(clientFromContext?.preApprovalAmount || 0).toLocaleString(
+                "en-US",
+                {
+                  style: "currency",
+                  currency: "USD",
+                  minimumFractionDigits: 0,
+                }
+              )}
+            </Text>
+            <Text style={styles.subTitlePreApproved}>
+              For the full approval we will need the following documents. By the
+              way if you need more we might be able to help. Click the help
+              button above.
+            </Text>
+          </>
+        ) : clientFromContext.status === "FullyApproved" ? (
+          <>
+            <FullyApprovedModal
+              visible={true}
+              details={clientFromContext.fullyApprovedDetails || {}}
+              onPurchasedPress={() => {
+                // Placeholder: potential navigation or action when user indicates purchase intent
+              }}
+            />
+          </>
+        ) : clientFromContext.status === "Completed" ? (
+          <>
+            <Text style={styles.bigTitlePreApproved}>Approved!</Text>
+
+            {clientFromContext.completionDetails.mortgageDocument && (
+              <View style={{ alignItems: "center" }}>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={handleDownloadMortgageDocument}
+                  disabled={downloadingMortgageDoc}
+                >
+                  <Text style={styles.downloadButtonText}>
+                    {downloadingMortgageDoc
+                      ? `Downloading: ${downloadProgress}%`
+                      : "Download Mortgage Document"}
+                  </Text>
+                  {downloadingMortgageDoc && (
+                    <ActivityIndicator size="small" color={COLORS.white} />
                   )}
-                </Text>
-                <Text style={styles.subTitlePreApproved}>
-                  For the full approval we will need the following documents. By
-                  the way if you need more we might be able to help. Click the
-                  help button above.
-                </Text>
-              </>
-            ) : clientFromContext.status === "FullyApproved" ? (
-              <>
-                <FullyApprovedModal
-                  visible={true}
-                  details={clientFromContext.fullyApprovedDetails || {}}
-                  onPurchasedPress={() => {
-                    // Placeholder: potential navigation or action when user indicates purchase intent
-                  }}
-                />
-              </>
-            ) : clientFromContext.status === "Completed" ? (
-              <>
-                <Text style={styles.bigTitlePreApproved}>Approved!</Text>
-
-                {clientFromContext.completionDetails.mortgageDocument && (
-                  <View style={{ alignItems: "center" }}>
-                    <TouchableOpacity
-                      style={styles.downloadButton}
-                      onPress={handleDownloadMortgageDocument}
-                      disabled={downloadingMortgageDoc}
-                    >
-                      <Text style={styles.downloadButtonText}>
-                        {downloadingMortgageDoc
-                          ? `Downloading: ${downloadProgress}%`
-                          : "Download Mortgage Document"}
-                      </Text>
-                      {downloadingMortgageDoc && (
-                        <ActivityIndicator size="small" color={COLORS.white} />
-                      )}
-                    </TouchableOpacity>
-                    {/* {downloadingMortgageDoc && (
+                </TouchableOpacity>
+                {/* {downloadingMortgageDoc && (
                       <View style={{ marginTop: 10 }}>
                         {indeterminateDownload ? (
                           <Text style={styles.downloadProgressText}>
@@ -1010,74 +997,86 @@ const ClientHome = ({ questionnaireData }) => {
                         )}
                       </View>
                     )} */}
-                  </View>
-                )}
+              </View>
+            )}
 
-                {clientFromContext.completionDetails && (
-                  <View style={styles.completionDetailsContainer}>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Property Price:</Text>
-                      <Text style={styles.detailValue}>
-                        $
-                        {Number(
-                          clientFromContext.completionDetails.propertyPrice || 0
-                        ).toLocaleString()}
-                      </Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Mortgage Amount:</Text>
-                      <Text style={styles.detailValue}>
-                        $
-                        {Number(
-                          clientFromContext.completionDetails.mortgageAmount ||
-                            0
-                        ).toLocaleString()}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-              </>
-            ) : isClientWaitingForCall ? (
-              <View style={styles.waitForCallCard}>
-                <Text style={styles.waitForCallTitle}>Wait for call</Text>
-                <Text style={styles.waitForCallDescription}>
-                  You should be receiving a call at{" "}
-                  {clientFromContext.callSchedulePreference.preferredTime.toLowerCase()}{" "}
-                  {clientFromContext.callSchedulePreference.preferredDay.toLowerCase()}{" "}
-                  from {mortgageBrokerInfo?.name || "your mortgage broker"}
-                </Text>
-                <View style={styles.callActionButtons}>
-                  <TouchableOpacity
-                    style={styles.applyOnlineButton}
-                    onPress={() => {
-                      setShowQuestionnaire(true);
-                    }}
-                  >
-                    <Text style={styles.applyOnlineButtonText}>
-                      Apply online
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.rescheduleButton}
-                    onPress={() => {
-                      setShowRescheduleModal(true);
-                    }}
-                  >
-                    <Text style={styles.rescheduleButtonText}>Reschedule</Text>
-                  </TouchableOpacity>
+            {clientFromContext.completionDetails && (
+              <View style={styles.completionDetailsContainer}>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Property Price:</Text>
+                  <Text style={styles.detailValue}>
+                    $
+                    {Number(
+                      clientFromContext.completionDetails.propertyPrice || 0
+                    ).toLocaleString()}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Mortgage Amount:</Text>
+                  <Text style={styles.detailValue}>
+                    $
+                    {Number(
+                      clientFromContext.completionDetails.mortgageAmount || 0
+                    ).toLocaleString()}
+                  </Text>
                 </View>
               </View>
-            ) : (
-              <>
-                <Text style={styles.bigTitle}>Just Hang in there</Text>
-                <Text style={styles.subTitle}>
-                  We’re working on your pre-approval amount. This usually takes
-                  about an hour, depending on volume and the details you’ve
-                  provided.
-                </Text>
-              </>
             )}
+          </>
+        ) : isClientWaitingForCall ? (
+          <View style={styles.waitForCallCard}>
+            <Text style={styles.waitForCallTitle}>Wait for call</Text>
+            <Text style={styles.waitForCallDescription}>
+              You should be receiving a call at{" "}
+              {clientFromContext.callSchedulePreference.preferredTime.toLowerCase()}{" "}
+              {clientFromContext.callSchedulePreference.preferredDay.toLowerCase()}{" "}
+              from {mortgageBrokerInfo?.name || "your mortgage broker"}
+            </Text>
+            <View style={styles.callActionButtons}>
+              <TouchableOpacity
+                style={styles.applyOnlineButton}
+                onPress={() => {
+                  setShowQuestionnaire(true);
+                }}
+              >
+                <Text style={styles.applyOnlineButtonText}>Apply online</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.rescheduleButton}
+                onPress={() => {
+                  setShowRescheduleModal(true);
+                }}
+              >
+                <Text style={styles.rescheduleButtonText}>Reschedule</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        ) : (
+          <>
+            <Text style={styles.bigTitle}>Just Hang in there</Text>
+            <Text style={styles.subTitle}>
+              We’re working on your pre-approval amount. This usually takes
+              about an hour, depending on volume and the details you’ve
+              provided.
+            </Text>
+          </>
+        )}
+      </View>
+
+      <ScrollView
+        style={styles.mainContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.green}
+            colors={[COLORS.green]}
+          />
+        }
+      >
+        {/* Extended Background for Header */}
+
+        <View style={styles.contentContainer}>
           {loadingDocuments ? (
             <ActivityIndicator
               size="large"
@@ -1478,10 +1477,10 @@ const styles = StyleSheet.create({
 
   headerExtendedBackground: {
     position: "absolute",
-    top: -126, // Position it to align with the header above
-    left: -24, // Compensate for ScrollView paddingHorizontal
-    right: -24, // Compensate for ScrollView paddingHorizontal
-    height: 180, // Extends to cover header (126px) + half of statusContainer padding/content
+    top: 126, // Position it to align with the header above
+    left: 0, // Compensate for ScrollView paddingHorizontal
+    right: 0, // Compensate for ScrollView paddingHorizontal
+    height: 55, // Extends to cover header (126px) + half of statusContainer padding/content
     backgroundColor: COLORS.black,
     zIndex: 0,
   },
@@ -1636,7 +1635,7 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 4,
+    paddingTop: 24,
     marginBottom: 64,
   },
   contentContainer: {
@@ -1647,7 +1646,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginHorizontal: 16,
     zIndex: 2,
     shadowColor: "#00000040",
     shadowOffset: {
@@ -1659,7 +1658,7 @@ const styles = StyleSheet.create({
   },
   bigTitle: {
     fontSize: 24, // H1 size
-    fontWeight: "bold", // H1 weight
+    fontWeight: "700", // H1 weight
     color: COLORS.green,
     marginBottom: 16,
     fontFamily: "Futura",
@@ -1667,7 +1666,7 @@ const styles = StyleSheet.create({
   subTitle: {
     fontSize: 14, // P size
     fontWeight: "500", // P weight
-    color: COLORS.slate,
+    color: "#797979",
     fontFamily: "Futura",
     marginBottom: 8,
   },

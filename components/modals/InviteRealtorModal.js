@@ -60,6 +60,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
   const [inviteLink, setInviteLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [modalReady, setModalReady] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Animation values
   const slideAnim = useRef(new Animated.Value(600)).current;
@@ -73,7 +74,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
 
   // Handle modal visibility with delay to prevent conflicts on app start
   useEffect(() => {
-    if (visible) {
+    if (visible && !isClosing) {
       // Sequential animation: backdrop fades in, then modal slides up
       Animated.sequence([
         Animated.timing(backdropOpacity, {
@@ -98,30 +99,33 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
         // Set modal as ready after animation completes
         setModalReady(true);
       });
-    } else {
+    } else if (isClosing) {
       // Closing animation: modal slides down, then backdrop fades out
+      setModalReady(false);
       Animated.sequence([
         Animated.parallel([
           Animated.timing(slideAnim, {
             toValue: 600,
-            duration: 250,
+            duration: 400,
             useNativeDriver: true,
           }),
           Animated.timing(modalOpacity, {
             toValue: 0,
-            duration: 200,
+            duration: 350,
             useNativeDriver: true,
           }),
         ]),
         Animated.timing(backdropOpacity, {
           toValue: 0,
-          duration: 150,
+          duration: 200,
           useNativeDriver: true,
         }),
-      ]).start();
-      setModalReady(false);
+      ]).start(() => {
+        // Reset isClosing after animation completes
+        setIsClosing(false);
+      });
     }
-  }, [visible]);
+  }, [visible, isClosing]);
 
   // Check if the form is valid to enable the button
   const isFormValid =
@@ -246,6 +250,7 @@ Looking forward to working with you!`;
 
   // Reset the form when closing
   const handleClose = () => {
+    setIsClosing(true);
     setShowShareOptionsModal(false);
     setInviteData({
       firstName: "",
@@ -256,7 +261,11 @@ Looking forward to working with you!`;
     setInviteFeedback({ msg: "", type: "" });
     setInviteLink("");
     setCopied(false);
-    onClose();
+
+    // Delay onClose to allow animation to complete
+    setTimeout(() => {
+      onClose();
+    }, 650); // Total animation time: 400 + 200 + 50ms buffer
   };
 
   // Handlers for share options modal
@@ -331,8 +340,8 @@ Looking forward to working with you!`;
 
                 <View style={styles.titleRow}>
                   <View style={styles.iconContainer}>
-                    <Svg width="59" height="58" viewBox="0 0 59 58" fill="none">
-                      <Circle cx="29.5" cy="29" r="29" fill="#377473" />
+                    <Svg width="56" height="56" viewBox="0 0 59 58" fill="none">
+                      <Circle cx="29" cy="29" r="29" fill="#377473" />
                       <Path
                         d="M34.8181 39.909C34.8181 37.0974 31.3992 34.8181 27.1818 34.8181C22.9643 34.8181 19.5454 37.0974 19.5454 39.909M39.909 36.0908V32.2727M39.909 32.2727V28.4545M39.909 32.2727H36.0909M39.909 32.2727H43.7272M27.1818 30.9999C24.3701 30.9999 22.0909 28.7207 22.0909 25.909C22.0909 23.0974 24.3701 20.8181 27.1818 20.8181C29.9934 20.8181 32.2727 23.0974 32.2727 25.909C32.2727 28.7207 29.9934 30.9999 27.1818 30.9999Z"
                         stroke="#FDFDFD"
@@ -580,6 +589,8 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginRight: 12,
+    height: 56,
+    width: 56,
   },
   title: {
     fontSize: 16,
@@ -665,7 +676,7 @@ const styles = StyleSheet.create({
   },
   shareLinkText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "500",
     color: "#707070",
     marginBottom: 16,
     fontFamily: "Futura",
@@ -679,6 +690,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     alignItems: "center",
+    width: "100%",
     minWidth: 120,
   },
   copyButtonText: {
