@@ -351,7 +351,7 @@ Looking forward to working with you!`;
                       />
                     </Svg>
                   </View>
-                  <Text style={styles.title}>Refer a Realtor</Text>
+                  <Text style={styles.title}>Invite Realtor</Text>
                 </View>
                 <Text style={styles.subTitle}>
                   Invite your Realtor friends to use Roost
@@ -496,6 +496,16 @@ Looking forward to working with you!`;
                   )}
                 </TouchableOpacity>
 
+                <View
+                  style={{
+                    width: "100%",
+                    alignItems: "center",
+                    marginBottom: 16,
+                  }}
+                >
+                  <Text style={styles.orText}> OR </Text>
+                </View>
+
                 {/* Share Link Section */}
                 <View style={styles.shareLinkSection}>
                   <Text style={styles.shareLinkTitle}>
@@ -560,6 +570,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     zIndex: 1,
+  },
+  orText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: 700,
+    color: "#707070",
+    fontFamily: "Futura",
   },
   container: {
     backgroundColor: COLORS.white,
