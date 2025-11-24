@@ -343,11 +343,6 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Coming Soon Card */}
-          <View style={styles.comingSoonCard}>
-            <Text style={styles.comingSoonText}>More coming soon</Text>
-          </View>
-
           {/* Custom Splash Cards */}
           {splashScreens.length > 0 && (
             <View style={styles.splashGrid}>
@@ -472,27 +467,35 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
           return (
             <View style={styles.tabIconContainer}>
               {focused && <View style={styles.activeIndicator} />}
-              <IconComponent width={24} height={24} color={COLORS.black} />
+              <IconComponent
+                width={24}
+                height={24}
+                color="#202020"
+                strokeWidth={2}
+              />
             </View>
           );
         },
         tabBarActiveTintColor: COLORS.black,
         tabBarInactiveTintColor: COLORS.black,
         tabBarStyle: {
-          backgroundColor: COLORS.white,
+          backgroundColor: "#FDFDFD",
           borderTopWidth: 1,
-          borderTopColor: COLORS.gray,
-          height: 70,
-          paddingBottom: 16,
-          paddingTop: 8,
+          borderTopColor: "#E8E8E8",
+          height: 82,
+          paddingBottom: 14,
+          paddingTop: 14,
+          paddingLeft: 36,
+          paddingRight: 24,
+          justifyContent: "center",
           alignItems: "center",
           elevation: 0, // Remove shadow on Android
           shadowOpacity: 0, // Remove shadow on iOS
         },
         tabBarItemStyle: {
           flex: 0,
-          width: 60, // Fixed width to bring icons closer
-          marginHorizontal: 20, // Space between the two icons
+          width: 24, // Icon width
+          marginHorizontal: 28, // Gap of 56px between icons (28px on each side)
         },
         tabBarLabelStyle: {
           display: "none", // Hide labels completely
@@ -638,10 +641,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "#797979",
+    fontSize: 11,
     fontWeight: "700",
-    color: COLORS.slate,
+    color: "#797979",
     fontFamily: "Futura",
     marginBottom: 24,
     letterSpacing: 1,
@@ -662,7 +664,7 @@ const styles = StyleSheet.create({
   },
   offerText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "700",
     color: COLORS.black,
     fontFamily: "Futura",
     lineHeight: 24,
@@ -708,7 +710,7 @@ const styles = StyleSheet.create({
   },
   splashTitle: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "700",
     color: COLORS.black,
     fontFamily: "Futura",
     lineHeight: 22,
@@ -748,20 +750,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    height: 50,
-    width: 50,
+    height: 54,
+    width: 24,
+    paddingTop: 0,
   },
   activeIndicator: {
     position: "absolute",
-    top: 0,
-    width: 40,
+    top: 1,
+    width: 36,
     height: 4,
-    backgroundColor: "#202020",
+    backgroundColor: "#2E2E2E",
     borderBottomLeftRadius: 4,
     borderBottomRightRadius: 4,
   },
   tabIcon: {
-    marginTop: 4,
+    marginTop: 0,
   },
   // Modal styles
   modalOverlay: {

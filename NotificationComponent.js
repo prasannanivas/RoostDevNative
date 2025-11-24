@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginVertical: 8,
     marginHorizontal: 0,
-    overflow: "auto",
+    overflow: "hidden",
     position: "relative",
   },
   notificationMessageOrange: {
