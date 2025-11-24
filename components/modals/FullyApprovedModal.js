@@ -56,14 +56,18 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
 
       <View style={styles.amountRow}>
         <Text style={styles.amountText}>{formattedAmount}</Text>
-        {!!rate && <Text style={styles.rateInline}>Fixed {Number(rate)}%</Text>}
+        {/* {!!rate && <Text style={styles.rateInline}>Fixed {Number(rate)}%</Text>} */}
       </View>
-      {!!lender && <Text style={styles.lenderText}>Lender: {lender}</Text>}
+      {/* {!!lender && <Text style={styles.lenderText}>Lender: {lender}</Text>} */}
 
-      <Text style={styles.termsHeader}>Terms (if any)</Text>
+      {/* <Text style={styles.termsHeader}>Terms (if any)</Text>
       <ScrollView style={styles.termsWrapper} nestedScrollEnabled>
         <Text style={styles.termsText}>{terms}</Text>
-      </ScrollView>
+      </ScrollView> */}
+      <Text style={styles.displayMessage}>
+        You are good to go! Once you’ve purchased a property come back and press
+        the button below!
+      </Text>
 
       {paperWorkRequested ? (
         <View style={styles.disabledButtonContainer}>
@@ -84,7 +88,7 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
             onPress={() => setShowConfirm(true)}
             activeOpacity={0.85}
           >
-            <Text style={styles.primaryButtonText}>Did you purchase yet?</Text>
+            <Text style={styles.primaryButtonText}>Purchased a property</Text>
           </TouchableOpacity>
 
           {/* Confirmation Modal */}
@@ -169,7 +173,7 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
                         ? "Sending..."
                         : requestResult === "success"
                         ? "Sent!"
-                        : "Confirm"}
+                        : "Purchased"}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -195,6 +199,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
   },
+  displayMessage: {
+    marginTop: 16,
+    fontFamily: "Futura",
+    fontWeight: "500",
+    fontSize: 14,
+    textAlign: "left",
+    color: "#797979",
+  },
   cardContainer: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -214,7 +226,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     fontFamily: "Futura",
-    color: COLORS.black,
+    color: COLORS.green,
     marginRight: 12,
     flex: 1,
   },
@@ -226,7 +238,7 @@ const styles = StyleSheet.create({
   },
   amountText: {
     marginTop: 12,
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: "700",
     fontFamily: "Futura",
     color: COLORS.green,
@@ -280,10 +292,12 @@ const styles = StyleSheet.create({
     color: COLORS.green,
   },
   primaryButton: {
-    backgroundColor: COLORS.orange,
+    backgroundColor: COLORS.green,
     paddingVertical: 16,
+    paddingHorizontal: 24,
     borderRadius: 50,
     marginTop: 28,
+    alignSelf: "flex-start",
     alignItems: "center",
   },
   primaryButtonText: {

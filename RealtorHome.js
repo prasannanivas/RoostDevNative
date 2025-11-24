@@ -44,6 +44,7 @@ import ChatModal from "./components/ChatModal";
 import MortgageApplicationModal from "./components/modals/MortgageApplicationModal";
 import InviteClientModal from "./components/modals/InviteClientModal";
 import ShareOptionsModal from "./components/modals/ShareOptionsModal";
+import FullyApprovedClientModal from "./components/FullyApprovedClientModal";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -2209,109 +2210,23 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         onRequestClose={() => setShowFullyApprovedModal(false)}
       >
         <Animated.View style={[styles.modalOverlay]}>
-          <View style={styles.fullyApprovedModalContent}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowFullyApprovedModal(false)}
-            >
-              <Ionicons name="close" size={24} color={COLORS.black} />
-            </TouchableOpacity>
-            {selectedFullyApprovedClient && (
-              <View style={{ width: "100%", alignItems: "center" }}>
-                <View style={styles.fullyApprovedHeaderInitialsRow}>
-                  <View style={styles.initialsCircle}>
-                    <Text style={styles.initialsText}>
-                      {getInitials(selectedFullyApprovedClient.referenceName)}
-                    </Text>
-                  </View>
-                  <Text style={styles.fullyApprovedClientName}>
-                    {selectedFullyApprovedClient.referenceName}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.fullyApprovedDivider}
-                  onPress={() => {
-                    setShowFullyApprovedModal(false);
-                    navigation.navigate("ClientDetails", {
-                      clientId: selectedFullyApprovedClient.inviteeId,
-                      client: selectedFullyApprovedClient,
-                      inviteId: selectedFullyApprovedClient.inviteId,
-                      onDelete: onRefresh,
-                      statusText: "Fully Approved",
-                    });
-                  }}
-                >
-                  <Text style={styles.fullyApprovedDividerTextButton}>
-                    View Details
-                  </Text>
-                </TouchableOpacity>
-                <Text style={styles.fullyApprovedSubtitle}>
-                  These documents are needed to complete the mortgage process
-                </Text>
-                <View style={{ marginTop: 24, width: "100%" }}>
-                  {fullyApprovedDocs.map((doc, idx) => (
-                    <Text
-                      key={idx}
-                      style={styles.fullyApprovedDocItem}
-                      numberOfLines={2}
-                    >
-                      {doc}
-                    </Text>
-                  ))}
-                </View>
-                <Text style={styles.fullyApprovedFooterInfo}>
-                  from your computer you can send the documents to
-                </Text>
-                <Text style={styles.fullyApprovedEmail}>files@roostapp.io</Text>
-                <TouchableOpacity
-                  style={styles.fullyApprovedPrimaryButton}
-                  onPress={async () => {
-                    const email =
-                      selectedFullyApprovedClient?.email ||
-                      selectedFullyApprovedClient?.clientEmail;
-                    if (!email) {
-                      Alert.alert(
-                        "No email",
-                        "No email address available for this client."
-                      );
-                      return;
-                    }
-                    const subject = `Mortgage documents for ${
-                      selectedFullyApprovedClient?.referenceName || ""
-                    }`;
-                    const body = `Please attach the documents for your client here. 
-                    We need APS, MLS Data Sheet and Receipt of Funds. 
-                    Alternatively you can send them from your computer to this address`;
-                    try {
-                      const available = await MailComposer.isAvailableAsync();
-                      if (available) {
-                        await MailComposer.composeAsync({
-                          recipients: [email],
-                          subject,
-                          body,
-                        });
-                      } else {
-                        // Fallback to mailto
-                        const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
-                          subject
-                        )}&body=${encodeURIComponent(body)}`;
-                        Linking.openURL(mailtoUrl);
-                      }
-                    } catch (e) {
-                      Alert.alert(
-                        "Email composer error",
-                        "Please try again or send an email manually."
-                      );
-                    }
-                  }}
-                >
-                  <Text style={styles.fullyApprovedPrimaryButtonText}>
-                    Send from my phone
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
+          {selectedFullyApprovedClient && (
+            <FullyApprovedClientModal
+              client={selectedFullyApprovedClient}
+              fullyApprovedDocs={fullyApprovedDocs}
+              onClose={() => setShowFullyApprovedModal(false)}
+              onViewDetails={() => {
+                setShowFullyApprovedModal(false);
+                navigation.navigate("ClientDetails", {
+                  clientId: selectedFullyApprovedClient.inviteeId,
+                  client: selectedFullyApprovedClient,
+                  inviteId: selectedFullyApprovedClient.inviteId,
+                  onDelete: onRefresh,
+                  statusText: "Fully Approved",
+                });
+              }}
+            />
+          )}
         </Animated.View>
       </Modal>
 

@@ -7,7 +7,7 @@ import { View, Text, StyleSheet } from "react-native";
 const CompleteProgressBar = ({ text, points, date }) => {
   const COLORS = {
     green: "#377473",
-    orange: "#F0913A",
+    orange: "#F0913A4D",
     background: "#F6F6F6",
     black: "#1D2327",
     blue: "#2271B1",
@@ -33,13 +33,16 @@ const CompleteProgressBar = ({ text, points, date }) => {
   }
 
   // For other text, show the progress bar
+  // Use orange for "Share Documents", green for others
+  const barColor = text === "Share Documents" ? COLORS.orange : COLORS.green;
+
   return (
     <View style={styles.container}>
       <View
         style={[
           styles.progressBar,
           {
-            backgroundColor: COLORS.green,
+            backgroundColor: barColor,
           },
         ]}
       >
@@ -47,14 +50,16 @@ const CompleteProgressBar = ({ text, points, date }) => {
           style={[
             styles.fill,
             {
-              backgroundColor: COLORS.green,
+              backgroundColor: barColor,
             },
           ]}
         />
       </View>
-      <Text style={styles.barText}>{`${text}${
-        formattedPoints ? ` - ${formattedPoints} PTS` : ""
-      }${date ? ` - ${date}` : ""}`}</Text>
+      <Text style={styles.barText}>{`${
+        text === "Share Documents" ? "Submit documents" : text
+      }${formattedPoints ? ` - ${formattedPoints} PTS` : ""}${
+        date ? ` - ${date}` : ""
+      }`}</Text>
     </View>
   );
 };
