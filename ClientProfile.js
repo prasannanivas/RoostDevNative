@@ -400,10 +400,11 @@ export default function ClientProfile({ onClose }) {
             styles.header,
             {
               position: "absolute",
-              top: 60,
+              top: 63,
               left: 0,
               right: 0,
               zIndex: 100,
+              borderTopRightRadius: 16,
               backgroundColor: scrollAnimation.interpolate({
                 inputRange: [60, 110],
                 outputRange: [COLORS.background, COLORS.white],
@@ -421,6 +422,8 @@ export default function ClientProfile({ onClose }) {
               }),
             },
             isScrolled && {
+              justifyContent: "center",
+              alignItems: "center",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowRadius: 4,
@@ -436,21 +439,21 @@ export default function ClientProfile({ onClose }) {
                   {
                     translateX: scrollAnimation.interpolate({
                       inputRange: [60, 110],
-                      outputRange: [0, -120],
+                      outputRange: [0, -60],
                       extrapolate: "clamp",
                     }),
                   },
                   {
                     translateY: scrollAnimation.interpolate({
                       inputRange: [60, 110],
-                      outputRange: [0, -38],
+                      outputRange: [0, -10],
                       extrapolate: "clamp",
                     }),
                   },
                   {
                     scale: scrollAnimation.interpolate({
                       inputRange: [60, 110],
-                      outputRange: [1, 0.6],
+                      outputRange: [1, 0.5],
                       extrapolate: "clamp",
                     }),
                   },
@@ -472,16 +475,17 @@ export default function ClientProfile({ onClose }) {
                 justifyContent: "center",
                 top: scrollAnimation.interpolate({
                   inputRange: [60, 110],
-                  outputRange: [136, 20],
+                  outputRange: [120, 60],
                   extrapolate: "clamp",
                 }),
               },
               isScrolled && {
-                left: Dimensions.get("window").width * 0.3,
-                width: Dimensions.get("window").width * 0.5,
-                alignItems: "center",
+                left: "40%",
                 justifyContent: "center",
+                alignItems: "left",
                 height: 84,
+                maxWidth: "45%",
+                marginLeft: 8,
                 top: 0,
               },
             ]}
@@ -495,7 +499,7 @@ export default function ClientProfile({ onClose }) {
                     outputRange: [24, 16],
                     extrapolate: "clamp",
                   }),
-                  textAlign: "center",
+                  textAlign: "left",
                 },
               ]}
               numberOfLines={2}
@@ -715,9 +719,9 @@ export default function ClientProfile({ onClose }) {
           {/* Email Notifications Card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Email</Text>
-            <Text style={styles.cardSubtitle}>
+            {/* <Text style={styles.cardSubtitle}>
               Manage what emails you receive from us
-            </Text>
+            </Text> */}
 
             {/* Terms of Service Updates */}
             {/* <View style={styles.switchRow}>
@@ -830,7 +834,7 @@ export default function ClientProfile({ onClose }) {
               style={styles.passwordButton}
               onPress={() => setShowPasswordModal(true)}
             >
-              <Text style={styles.passwordButtonText}>Change Password</Text>
+              <Text style={styles.passwordButtonText}>Change password</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.logoutButton}
@@ -842,7 +846,7 @@ export default function ClientProfile({ onClose }) {
               style={styles.deleteButton}
               onPress={() => setShowDeleteModal(true)}
             >
-              <Text style={styles.deleteButtonText}>Delete my Account</Text>
+              <Text style={styles.deleteButtonText}>Delete my account</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -910,16 +914,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: 60,
-    paddingHorizontal: 12,
   },
 
   topMargin: {
     width: "110%",
-    height: 60, // Space for avatar and title
+    height: 63, // Space for avatar and title
     backgroundColor: COLORS.black,
     position: "absolute",
     top: 0,
+    zIndex: 999,
   },
   closeButton: {
     position: "absolute",
@@ -934,12 +937,12 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingHorizontal: 16,
+    backgroundColor: COLORS.background,
+    zIndex: 1,
   },
   avatarContainer: {
-    alignItems: "center",
-    zIndex: 1,
-    marginTop: 32,
+    position: "relative",
+    marginTop: 16,
   },
   avatarCircle: {
     width: 90,
@@ -948,10 +951,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: 24,
     color: COLORS.white,
     fontFamily: "Futura",
     fontWeight: "bold",
@@ -972,8 +975,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   scrollContent: {
-    paddingBottom: 160,
+    marginTop: 16,
+    paddingBottom: 120,
     zIndex: 10,
+    paddingHorizontal: 16,
     backgroundColor: COLORS.background,
   },
   // Card style
@@ -1087,9 +1092,9 @@ const styles = StyleSheet.create({
   passwordButton: {
     width: "100%",
     backgroundColor: "transparent",
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 50,
     alignItems: "center",
@@ -1097,23 +1102,24 @@ const styles = StyleSheet.create({
   },
   passwordButtonText: {
     color: COLORS.green,
-    fontSize: 12,
-    fontWeight: 700,
+    fontSize: 14,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   /* Logout Button */
   logoutButton: {
     width: "100%",
     backgroundColor: "transparent",
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.green,
     borderRadius: 50,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     alignItems: "center",
   },
   logoutButtonText: {
     color: COLORS.green,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 700,
     fontFamily: "Futura",
   },
@@ -1123,13 +1129,14 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderColor: COLORS.red,
     borderRadius: 50,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     alignItems: "center",
     marginTop: 16,
   },
   deleteButtonText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 700,
     fontFamily: "Futura",
   },

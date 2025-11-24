@@ -1550,8 +1550,8 @@ const styles = StyleSheet.create({
     maxWidth: "80%", // Limit width to prevent overlap
   },
   initialsCircle: {
-    width: 48,
-    height: 48,
+    width: 45,
+    height: 45,
     borderRadius: 50,
     backgroundColor: COLORS.blue,
     justifyContent: "center",
