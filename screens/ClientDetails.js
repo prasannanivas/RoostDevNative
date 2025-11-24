@@ -45,6 +45,13 @@ const COLORS = {
 const ApprovedIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="12" fill="#377473" />
+    <Path
+      d="M17.3333 8L9.99996 15.3333L6.66663 12"
+      stroke="white"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </Svg>
 );
 
@@ -511,9 +518,9 @@ const ClientDetails = () => {
                 <Path
                   d="M7.50246 2.25722C7.19873 1.4979 6.46332 1 5.64551 1H2.89474C1.8483 1 1 1.8481 1 2.89453C1 11.7892 8.21078 19 17.1055 19C18.1519 19 19 18.1516 19 17.1052L19.0005 14.354C19.0005 13.5361 18.5027 12.8009 17.7434 12.4971L15.1069 11.4429C14.4249 11.1701 13.6483 11.2929 13.0839 11.7632L12.4035 12.3307C11.6089 12.9929 10.4396 12.9402 9.7082 12.2088L7.79222 10.2911C7.06079 9.55962 7.00673 8.39134 7.66895 7.59668L8.23633 6.9163C8.70661 6.35195 8.83049 5.57516 8.55766 4.89309L7.50246 2.25722Z"
                   stroke="#4D4D4D"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </Svg>
 
@@ -532,9 +539,9 @@ const ClientDetails = () => {
                 <Path
                   d="M4 6L10.1076 10.6123L10.1097 10.614C10.7878 11.1113 11.1271 11.3601 11.4988 11.4562C11.8272 11.5412 12.1725 11.5412 12.501 11.4562C12.8729 11.36 13.2132 11.1105 13.8926 10.6123C13.8926 10.6123 17.8101 7.60594 20 6M3 15.8002V8.2002C3 7.08009 3 6.51962 3.21799 6.0918C3.40973 5.71547 3.71547 5.40973 4.0918 5.21799C4.51962 5 5.08009 5 6.2002 5H17.8002C18.9203 5 19.4796 5 19.9074 5.21799C20.2837 5.40973 20.5905 5.71547 20.7822 6.0918C21 6.5192 21 7.07899 21 8.19691V15.8036C21 16.9215 21 17.4805 20.7822 17.9079C20.5905 18.2842 20.2837 18.5905 19.9074 18.7822C19.48 19 18.921 19 17.8031 19H6.19691C5.07899 19 4.5192 19 4.0918 18.7822C3.71547 18.5905 3.40973 18.2842 3.21799 17.9079C3 17.4801 3 16.9203 3 15.8002Z"
                   stroke="#4D4D4D"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </Svg>
 
@@ -553,9 +560,9 @@ const ClientDetails = () => {
                 <Path
                   d="M2 20H4M4 20H14M4 20V6.2002C4 5.08009 4 4.51962 4.21799 4.0918C4.40973 3.71547 4.71547 3.40973 5.0918 3.21799C5.51962 3 6.08009 3 7.2002 3H10.8002C11.9203 3 12.4796 3 12.9074 3.21799C13.2837 3.40973 13.5905 3.71547 13.7822 4.0918C14 4.5192 14 5.07899 14 6.19691V12M14 20H20M14 20V12M20 20H22M20 20V12C20 11.0681 19.9999 10.6024 19.8477 10.2349C19.6447 9.74481 19.2557 9.35523 18.7656 9.15224C18.3981 9 17.9316 9 16.9997 9C16.0679 9 15.6019 9 15.2344 9.15224C14.7443 9.35523 14.3552 9.74481 14.1522 10.2349C14 10.6024 14 11.0681 14 12M7 10H11M7 7H11"
                   stroke="#4D4D4D"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </Svg>
 
@@ -586,7 +593,9 @@ const ClientDetails = () => {
             )}
           </View>
         </View>
+      </ScrollView>
 
+      <View style={styles.bottomContainer}>
         {/* Download Button */}
         <TouchableOpacity
           style={styles.downloadButton}
@@ -722,7 +731,7 @@ const ClientDetails = () => {
         >
           <Text style={styles.deleteButtonText}>Delete user</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
 
       <RequestDocumentModal
         isOpen={isModalOpen}
@@ -745,29 +754,29 @@ const getStatusColor = (status) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    fontFamily: "Futura",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FDFDFD",
   },
   closeButton: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: 8,
+    right: 8,
     zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "transparent",
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "none",
     justifyContent: "center",
     alignItems: "center",
   },
   noDocumentsText: {
     alignSelf: "center",
     fontSize: 14,
+    fontFamily: "Futura",
     color: "#797979",
   },
   scrollContent: {
     paddingTop: 20,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingBottom: 40,
   },
   headerSection: {
@@ -776,127 +785,141 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 32,
-    paddingHorizontal: 8,
+    gap: 16,
+    height: 75,
   },
   initialsCircle: {
-    width: 49,
-    height: 49,
-    borderRadius: 50,
-    backgroundColor: "#5A5A5A",
+    width: 75,
+    height: 75,
+    borderRadius: 45,
+    backgroundColor: "#4D4D4D",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 20,
   },
   initialsText: {
+    fontFamily: "Futura",
     fontSize: 24,
     fontWeight: "700",
+    lineHeight: 32,
     color: "#FDFDFD",
   },
   nameContainer: {
     justifyContent: "center",
+    alignItems: "flex-start",
+    gap: 4,
   },
   clientName: {
+    fontFamily: "Futura",
     fontSize: 16,
     fontWeight: "700",
+    lineHeight: 21,
     color: "#1D2327",
-    marginBottom: 4,
+    textAlign: "center",
   },
   statusLabel: {
+    fontFamily: "Futura",
     fontSize: 14,
-    color: "#797979",
     fontWeight: "500",
+    lineHeight: 19,
+    color: "#797979",
+    textAlign: "center",
   },
   detailsSection: {
-    marginBottom: 32,
+    marginBottom: 16,
   },
   sectionHeader: {
+    fontFamily: "Futura",
     fontSize: 11,
     fontWeight: "700",
-    color: "#5A5A5A",
-    letterSpacing: 0.5,
-    marginBottom: 12,
+    lineHeight: 15,
+    letterSpacing: 0.88,
+    textTransform: "uppercase",
+    color: "#797979",
+    marginBottom: 10,
   },
   detailsCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: "#FDFDFD",
+    borderRadius: 16,
+    padding: 24,
+    gap: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    gap: 16,
   },
   detailText: {
+    fontFamily: "Futura",
     fontSize: 14,
     fontWeight: "500",
-    color: "#1A1A1A",
-    marginLeft: 16,
+    lineHeight: 19,
+    color: "#202020",
     flex: 1,
   },
   documentsSection: {
     marginBottom: 32,
   },
   documentsCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 20,
-    minHeight: 100,
+    backgroundColor: "#FDFDFD",
+    borderRadius: 16,
+    padding: 24,
+    gap: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   documentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
   },
   documentText: {
-    fontSize: 16,
-    color: "#1A1A1A",
+    fontFamily: "Futura",
+    fontSize: 14,
+    fontWeight: "500",
+    lineHeight: 19,
+    color: "#000000",
     flex: 1,
   },
   downloadButton: {
     backgroundColor: "#E8E8E8",
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: 999,
+    height: 43,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 10,
   },
   downloadButtonText: {
-    fontSize: 12,
     fontFamily: "Futura",
-    color: "#797979",
+    fontSize: 14,
     fontWeight: "700",
+    lineHeight: 19,
+    color: "#797979",
   },
   deleteButton: {
-    backgroundColor: COLORS.red,
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    backgroundColor: "#A20E0E",
+    borderRadius: 999,
+    height: 43,
+    justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
   },
   deleteButtonText: {
-    fontSize: 12,
-    color: "#FDFDFD",
     fontFamily: "Futura",
+    fontSize: 14,
     fontWeight: "700",
+    lineHeight: 19,
+    color: "#FDFDFD",
   },
   loadingContainer: {
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FDFDFD",
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -907,7 +930,7 @@ const styles = StyleSheet.create({
     color: "#23231A",
   },
   errorContainer: {
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FDFDFD",
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -917,6 +940,39 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#dc3545",
     marginBottom: 24,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 10,
+  },
+  infoLabel: {
+    fontWeight: "bold",
+    color: "#5A5A5A",
+  },
+  infoValue: {
+    color: "#1D2327",
+    flex: 1,
+    textAlign: "right",
+  },
+  infoValueWithActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    flex: 1,
+  },
+  iconButton: {
+    marginLeft: 8,
+  },
+  linkValue: {
+    color: "#2271B1",
+    textDecorationLine: "underline",
+  },
+  bottomContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 10,
+    backgroundColor: "#FDFDFD",
   },
 });
 
