@@ -307,7 +307,7 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
         <ScrollView
           style={styles.notificationsList}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 16, gap: 16 }}
+          contentContainerStyle={{ paddingVertical: 16 }}
         >
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -324,26 +324,95 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
               </TouchableOpacity>
             </View>
           ) : notifications && notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                markNotificationAsRead={markNotificationAsRead}
-              />
-            ))
+            <>
+              {(() => {
+                const now = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(now.getDate() - 7);
+                const fourteenDaysAgo = new Date();
+                fourteenDaysAgo.setDate(now.getDate() - 14);
+
+                // THIS WEEK: Last 7 days
+                const thisWeek = notifications.filter((n) => {
+                  if (!n.createdAt) return true;
+                  const notifDate = new Date(n.createdAt);
+                  return notifDate >= sevenDaysAgo;
+                });
+
+                // LAST WEEK: 7-14 days ago
+                const lastWeek = notifications.filter((n) => {
+                  if (!n.createdAt) return false;
+                  const notifDate = new Date(n.createdAt);
+                  return (
+                    notifDate < sevenDaysAgo && notifDate >= fourteenDaysAgo
+                  );
+                });
+
+                // PAST: Older than 14 days
+                const past = notifications.filter((n) => {
+                  if (!n.createdAt) return false;
+                  const notifDate = new Date(n.createdAt);
+                  return notifDate < fourteenDaysAgo;
+                });
+
+                return (
+                  <>
+                    {thisWeek.length > 0 && (
+                      <View style={{ marginBottom: 16 }}>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionHeaderText}>
+                            THIS WEEK
+                          </Text>
+                        </View>
+                        {thisWeek.map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                            markNotificationAsRead={markNotificationAsRead}
+                          />
+                        ))}
+                      </View>
+                    )}
+                    {lastWeek.length > 0 && (
+                      <View style={{ marginBottom: 16 }}>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionHeaderText}>
+                            LAST WEEK
+                          </Text>
+                        </View>
+                        {lastWeek.map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                            markNotificationAsRead={markNotificationAsRead}
+                          />
+                        ))}
+                      </View>
+                    )}
+                    {past.length > 0 && (
+                      <View>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionHeaderText}>PAST</Text>
+                        </View>
+                        {past.map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                            markNotificationAsRead={markNotificationAsRead}
+                          />
+                        ))}
+                      </View>
+                    )}
+                  </>
+                );
+              })()}
+            </>
           ) : (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No notifications yet</Text>
             </View>
           )}
         </ScrollView>
-        <TouchableOpacity
-          style={styles.bottomCloseButton}
-          onPress={handleClose}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.bottomCloseButtonText}>Close</Text>
-        </TouchableOpacity>
       </Animated.View>
     </BlurView>
   );
@@ -456,11 +525,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
+    paddingBottom: 16,
     minHeight: 76,
     borderRadius: 16,
-    marginVertical: 0,
+    marginVertical: 8,
     marginHorizontal: 0,
-    overflow: "hidden",
+    overflow: "auto",
     position: "relative",
   },
   notificationMessageOrange: {

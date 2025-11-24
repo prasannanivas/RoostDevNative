@@ -1782,7 +1782,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       <Text style={styles.clientCardName}>
                         {selectedClientCard.referenceName}
                       </Text>
-                      {(() => {
+                      {/* {(() => {
                         const docCount = selectedClientCard.documents
                           ? getDocumentCounts(selectedClientCard.documents)
                           : { approved: 0, pending: 0 };
@@ -1851,7 +1851,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                             }
                           />
                         );
-                      })()}
+                      })()} */}
                     </View>
                   </View>
 
@@ -2558,7 +2558,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
-    gap: 10,
   },
   initialsText: {
     color: COLORS.white,
@@ -2648,6 +2647,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 16,
   },
   formOverlay: {
     flex: 1,
@@ -3017,10 +3017,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
     overflow: "hidden",
     maxHeight: "80%",
+    margin: 16,
+    marginBottom: 48,
     // Animation styles
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
@@ -3045,7 +3046,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   clientCardModalContent: {
-    padding: 24,
+    paddingTop: 16,
+    padding: 8,
   },
   modalCloseButton: {
     position: "absolute",
@@ -3060,12 +3062,12 @@ const styles = StyleSheet.create({
   clientCardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 32,
+    justifyContent: "flex-start",
+    marginBottom: 16,
     paddingHorizontal: 16,
   },
   clientCardInfo: {
     flex: 1,
-    marginLeft: 16,
   },
   clientCardName: {
     fontSize: 20, // H2 size
@@ -3099,7 +3101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 999,
     alignItems: "center",
-    width: "80%",
+    width: "90%",
   },
   viewDetailsButtonText: {
     color: COLORS.green,
