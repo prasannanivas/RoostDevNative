@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {
+  createStackNavigator,
+  CardStyleInterpolators,
+} from "@react-navigation/stack";
 import {
   View,
   Text,
@@ -31,7 +34,7 @@ import { generateInitials } from "../utils/initialsUtils";
 import MortgageApplicationModal from "../components/modals/MortgageApplicationModal";
 import HouseImage from "../assets/house_image.png";
 
-const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 // Design System Colors (matching your RealtorHome)
 const COLORS = {
@@ -48,22 +51,28 @@ const COLORS = {
   red: "#A20E0E",
 };
 
-const CustomTabBar = ({ state, descriptors, navigation }) => {
-  const animatedValue = useRef(new Animated.Value(state.index)).current;
+const CustomTabBar = ({ activeTab, onTabPress }) => {
+  const index = activeTab === "HomeTab" ? 0 : 1;
+  const animatedValue = useRef(new Animated.Value(index)).current;
 
   useEffect(() => {
     Animated.spring(animatedValue, {
-      toValue: state.index,
+      toValue: index,
       useNativeDriver: true,
       friction: 8,
       tension: 40,
     }).start();
-  }, [state.index]);
+  }, [index]);
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
     outputRange: [-40, 40], // -40 for first tab, 40 for second tab (distance 80px)
   });
+
+  const routes = [
+    { key: "HomeTab", name: "HomeTab" },
+    { key: "TagTab", name: "TagTab" },
+  ];
 
   return (
     <View style={styles.tabBarContainer}>
@@ -71,21 +80,8 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
         <Animated.View
           style={[styles.slidingIndicator, { transform: [{ translateX }] }]}
         />
-        {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
-
-          const onPress = () => {
-            const event = navigation.emit({
-              type: "tabPress",
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+        {routes.map((route) => {
+          const isFocused = activeTab === route.name;
 
           let IconComponent;
           if (route.name === "HomeTab") {
@@ -99,9 +95,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               key={route.key}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
-              onPress={onPress}
+              onPress={() => onTabPress(route.name)}
               style={styles.tabItem}
               activeOpacity={1}
             >
@@ -542,56 +536,109 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
 const RealtorBottomTabs = ({ onShowNotifications }) => {
   const realtorHomeRef = useRef(null);
   const [activeTab, setActiveTab] = useState("HomeTab");
+  const navigationRef = useRef(null);
+
+  const handleTabPress = (routeName) => {
+    if (routeName === activeTab) return;
+
+    if (routeName === "HomeTab") {
+      // Going back to Home - Pop
+      if (navigationRef.current && navigationRef.current.canGoBack()) {
+        navigationRef.current.goBack();
+      } else {
+        // Fallback if for some reason we can't go back (shouldn't happen if logic is correct)
+        navigationRef.current?.navigate("HomeTab");
+      }
+    } else {
+      // Going to Tag - Push
+      navigationRef.current?.navigate("TagTab");
+    }
+  };
 
   return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tab.Screen
-        name="HomeTab"
-        children={(props) => (
-          <RealtorHome
-            {...props}
-            ref={realtorHomeRef}
-            onShowNotifications={onShowNotifications}
-          />
-        )}
-        options={{
-          tabBarLabel: "",
+    <View style={{ flex: 1 }}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          cardStyleInterpolator: ({ current, next, layouts }) => {
+            return {
+              cardStyle: {
+                transform: [
+                  {
+                    translateX: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.width, 0],
+                    }),
+                  },
+                  {
+                    translateX: next
+                      ? next.progress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, -layouts.screen.width],
+                        })
+                      : 0,
+                  },
+                ],
+              },
+            };
+          },
         }}
-        listeners={{
-          focus: () => setActiveTab("HomeTab"),
-        }}
-      />
-      <Tab.Screen
-        name="TagTab"
-        children={(props) => (
-          <TagScreen
-            {...props}
-            onShowNotifications={onShowNotifications}
-            onNavigateToHome={(action) => {
-              props.navigation.navigate("HomeTab");
-              setTimeout(() => {
-                if (action === "profile") {
-                  realtorHomeRef.current?.openProfile?.();
-                } else if (action === "rewards") {
-                  realtorHomeRef.current?.openRewards?.();
+        screenListeners={({ navigation, route }) => ({
+          focus: () => {
+            setActiveTab(route.name);
+          },
+          state: () => {
+            // Capture navigation ref from the first available screen or navigator
+            if (!navigationRef.current) {
+              navigationRef.current = navigation;
+            }
+          },
+        })}
+      >
+        <Stack.Screen name="HomeTab">
+          {(props) => {
+            // Capture navigation ref here as well to be safe
+            if (!navigationRef.current)
+              navigationRef.current = props.navigation;
+            return (
+              <RealtorHome
+                {...props}
+                ref={realtorHomeRef}
+                onShowNotifications={onShowNotifications}
+              />
+            );
+          }}
+        </Stack.Screen>
+        <Stack.Screen name="TagTab">
+          {(props) => (
+            <TagScreen
+              {...props}
+              onShowNotifications={onShowNotifications}
+              onNavigateToHome={(action) => {
+                // Handle internal navigation requests from TagScreen
+                if (
+                  navigationRef.current &&
+                  navigationRef.current.canGoBack()
+                ) {
+                  navigationRef.current.goBack();
+                } else {
+                  props.navigation.navigate("HomeTab");
                 }
-              }, 100);
-            }}
-          />
-        )}
-        options={{
-          tabBarLabel: "",
-        }}
-        listeners={{
-          focus: () => setActiveTab("TagTab"),
-        }}
-      />
-    </Tab.Navigator>
+
+                setTimeout(() => {
+                  if (action === "profile") {
+                    realtorHomeRef.current?.openProfile?.();
+                  } else if (action === "rewards") {
+                    realtorHomeRef.current?.openRewards?.();
+                  }
+                }, 300); // Increased timeout for animation
+              }}
+            />
+          )}
+        </Stack.Screen>
+      </Stack.Navigator>
+      <CustomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
+    </View>
   );
 };
 
