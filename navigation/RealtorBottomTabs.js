@@ -11,12 +11,14 @@ import {
   Modal,
   ActivityIndicator,
   RefreshControl,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
 import { Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
 import { useAuth } from "../context/AuthContext";
 import { useRealtor } from "../context/RealtorContext";
 import { useNotification } from "../context/NotificationContext";
@@ -27,6 +29,7 @@ import TagIcon from "../components/icons/TagIcon";
 import RealtorHome from "../RealtorHome";
 import { generateInitials } from "../utils/initialsUtils";
 import MortgageApplicationModal from "../components/modals/MortgageApplicationModal";
+import HouseImage from "../assets/house_image.png";
 
 const Tab = createBottomTabNavigator();
 
@@ -43,6 +46,77 @@ const COLORS = {
   yellow: "#F0DE3A",
   orange: "#F0913A",
   red: "#A20E0E",
+};
+
+const CustomTabBar = ({ state, descriptors, navigation }) => {
+  const animatedValue = useRef(new Animated.Value(state.index)).current;
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: state.index,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 40,
+    }).start();
+  }, [state.index]);
+
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-40, 40], // -40 for first tab, 40 for second tab (distance 80px)
+  });
+
+  return (
+    <View style={styles.tabBarContainer}>
+      <View style={styles.tabBarContent}>
+        <Animated.View
+          style={[styles.slidingIndicator, { transform: [{ translateX }] }]}
+        />
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          let IconComponent;
+          if (route.name === "HomeTab") {
+            IconComponent = HomeIcon;
+          } else if (route.name === "TagTab") {
+            IconComponent = TagIcon;
+          }
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              style={styles.tabItem}
+              activeOpacity={1}
+            >
+              <IconComponent
+                width={24}
+                height={24}
+                color="#202020"
+                strokeWidth={2}
+              />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
 };
 
 // Offers screen for the tag functionality
@@ -115,6 +189,18 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   useEffect(() => {
     fetchSplashScreens();
   }, [realtor?.id]);
+
+  // Preload static assets
+  useEffect(() => {
+    const preloadAssets = async () => {
+      try {
+        await Asset.fromModule(HouseImage).downloadAsync();
+      } catch (e) {
+        console.log("Error preloading HouseImage:", e);
+      }
+    };
+    preloadAssets();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -341,6 +427,11 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
             <Text style={styles.offerText}>
               Get a private 8% mortgage - Simple and easy.
             </Text>
+            <Image
+              source={HouseImage}
+              style={styles.offerImage}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
 
           {/* Custom Splash Cards */}
@@ -454,54 +545,10 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let IconComponent;
-
-          if (route.name === "HomeTab") {
-            IconComponent = HomeIcon;
-          } else if (route.name === "TagTab") {
-            IconComponent = TagIcon;
-          }
-
-          return (
-            <View style={styles.tabIconContainer}>
-              {focused && <View style={styles.activeIndicator} />}
-              <IconComponent
-                width={24}
-                height={24}
-                color="#202020"
-                strokeWidth={2}
-              />
-            </View>
-          );
-        },
-        tabBarActiveTintColor: COLORS.black,
-        tabBarInactiveTintColor: COLORS.black,
-        tabBarStyle: {
-          backgroundColor: "#FDFDFD",
-          borderTopWidth: 1,
-          borderTopColor: "#E8E8E8",
-          height: 82,
-          paddingBottom: 14,
-          paddingTop: 14,
-          paddingLeft: 36,
-          paddingRight: 24,
-          justifyContent: "center",
-          alignItems: "center",
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-        },
-        tabBarItemStyle: {
-          flex: 0,
-          width: 24, // Icon width
-          marginHorizontal: 28, // Gap of 56px between icons (28px on each side)
-        },
-        tabBarLabelStyle: {
-          display: "none", // Hide labels completely
-        },
-        headerShown: false, // We'll handle the header in individual screens
-      })}
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
     >
       <Tab.Screen
         name="HomeTab"
@@ -655,19 +702,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   offerCard: {
-    backgroundColor: "#CDDCDC", // Light blue-green color from the image
-    borderRadius: 14,
-    padding: 24,
-    marginBottom: 16,
-    minHeight: 200,
-    justifyContent: "f",
+    backgroundColor: "#CDDCDC",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 4,
+    height: 200,
+    position: "relative",
   },
   offerText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: COLORS.black,
     fontFamily: "Futura",
-    lineHeight: 24,
+    fontWeight: "700",
+    fontSize: 14,
+    lineHeight: 19,
+    color: "#202020",
+    width: 322,
+    maxWidth: "100%",
+  },
+  offerImage: {
+    position: "absolute",
+    width: 221,
+    height: 144,
+    left: 66,
+    top: 56,
+    zIndex: 1,
   },
   comingSoonCard: {
     backgroundColor: "#CDD0DC", // Light purple color from the image
@@ -746,25 +803,47 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontWeight: "600",
   },
-  tabIconContainer: {
+  tabBarContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    backgroundColor: "#FDFDFD",
+    borderTopWidth: 1,
+    borderTopColor: "#E8E8E8",
+    height: 82,
+    paddingTop: 0,
+    paddingBottom: 34,
+    paddingLeft: 36,
+    paddingRight: 24,
+    width: "100%",
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  tabBarContent: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    height: 54,
-    width: 24,
-    paddingTop: 0,
+    height: 48,
+    gap: 56,
   },
-  activeIndicator: {
+  tabItem: {
+    width: 24,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  slidingIndicator: {
     position: "absolute",
-    top: 1,
+    top: 0,
     width: 36,
     height: 4,
     backgroundColor: "#2E2E2E",
     borderBottomLeftRadius: 4,
     borderBottomRightRadius: 4,
-  },
-  tabIcon: {
-    marginTop: 0,
+    zIndex: 1,
+    left: "50%",
+    marginLeft: -18,
   },
   // Modal styles
   modalOverlay: {
