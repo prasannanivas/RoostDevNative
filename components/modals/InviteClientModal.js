@@ -350,8 +350,8 @@ const InviteClientModal = ({
               <Text style={styles.multipleInviteTitle}>Multiple Invite</Text>
               <Text style={styles.multipleInviteText}>
                 You can always email a file (Excel or .CSV) to us at{" "}
-                <Text style={styles.emailBold}>files@roostapp.io</Text> and we
-                can take care of it for you
+                <Text style={styles.emailBold}>files@inbound.roostapp.io</Text>{" "}
+                and we can take care of it for you
               </Text>
             </View>
           </ScrollView>

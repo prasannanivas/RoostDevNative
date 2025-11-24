@@ -47,7 +47,7 @@ const FullyApprovedClientModal = ({
     const subject = `Mortgage documents for ${client?.referenceName || ""}`;
     const body = `Please attach the documents for your client here. 
 We need APS, MLS Data Sheet and Receipt of Funds. 
-Alternatively you can send them from your computer to files@roostapp.io`;
+Alternatively you can send them from your computer to files@inbound.roostapp.io`;
 
     try {
       const available = await MailComposer.isAvailableAsync();
@@ -126,7 +126,8 @@ Alternatively you can send them from your computer to files@roostapp.io`;
           </View>
 
           <Text style={styles.footerInfo}>
-            from your computer you can send the documents to files@roostapp.io
+            from your computer you can send the documents to
+            files@inbound.roostapp.io
           </Text>
         </View>
 

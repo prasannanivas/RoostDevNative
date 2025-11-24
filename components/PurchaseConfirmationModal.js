@@ -93,7 +93,8 @@ const PurchaseConfirmationModal = ({
           </View>
 
           <Text style={styles.footerInfo}>
-            from your computer you can send the documents to files@roostapp.io
+            from your computer you can send the documents to
+            files@inbound.roostapp.io
           </Text>
         </View>
       </View>
