@@ -325,8 +325,8 @@ export default function LoginScreen() {
   };
 
   const handleResetPassword = () => {
-    // Navigate to the password reset screen
-    navigation.navigate("PasswordReset");
+    // Navigate to the password reset screen with email if available
+    navigation.navigate("PasswordReset", { email: email || "" });
   };
 
   // Load saved identifiers for dropdown suggestions

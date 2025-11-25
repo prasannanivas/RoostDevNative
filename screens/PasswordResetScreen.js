@@ -41,7 +41,7 @@ const COLORS = {
   coloredBgFill: "#3774731A", // Green with 10% opacity
 };
 
-export default function PasswordResetScreen({ navigation }) {
+export default function PasswordResetScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   // Screen stages
   const STAGES = {
@@ -54,7 +54,7 @@ export default function PasswordResetScreen({ navigation }) {
   // State variables
   const [stage, setStage] = useState(STAGES.CONTACT_INFO);
   const [contactMethod, setContactMethod] = useState("email"); // Force to email only
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(route?.params?.email || "");
   // Keep these states for future use
   // const [phone, setPhone] = useState("");
   // const [formattedPhone, setFormattedPhone] = useState("");
@@ -642,7 +642,7 @@ export default function PasswordResetScreen({ navigation }) {
         >
           {/* Back Arrow */}
           <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* Continue Button */}
@@ -678,6 +678,7 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
     alignItems: "center",
     flexGrow: 1,
+    fontFamily: "Futura",
   },
   brandLogo: {
     marginBottom: 32,
@@ -847,7 +848,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     position: "absolute",
     bottom: 0,
-    height: "20%",
+    height: "15%",
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -861,8 +862,8 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   backCircle: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: 50,
     backgroundColor: COLORS.black,
     justifyContent: "center",
@@ -873,16 +874,16 @@ const styles = StyleSheet.create({
   continueButton: {
     backgroundColor: COLORS.green,
     borderRadius: 50,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
   },
   continueButtonDisabled: {
     opacity: 0.7,
   },
   continueButtonText: {
     color: COLORS.white,
-    fontSize: 16, // H3 size
-    fontWeight: "500", // H3 weight
+    fontSize: 14, // H3 size
+    fontWeight: "700", // H3 weight
     fontFamily: "Futura",
   },
   // Add new styles

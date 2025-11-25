@@ -129,11 +129,12 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   const [showMortgageModal, setShowMortgageModal] = useState(false);
   // Splash state - updated to handle multiple splash screens
   const [splashScreens, setSplashScreens] = useState([]);
-  const [splashLoading, setSplashLoading] = useState(false);
+  const [splashLoading, setSplashLoading] = useState(true); // Start with true for initial load
   // Splash modal state
   const [showSplashModal, setShowSplashModal] = useState(false);
   const [selectedSplash, setSelectedSplash] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Placeholder handlers for header actions
   const handleProfileClick = () => {
@@ -158,7 +159,7 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   // API base used by web admin endpoints
   const API_BASE = "http://159.203.58.60:5000";
 
-  // Reusable fetch
+  // Reusable fetch with silent updates
   const fetchSplashScreens = async ({ showSpinner = true } = {}) => {
     if (!realtor?.id) return;
     if (showSpinner) setSplashLoading(true);
@@ -171,17 +172,61 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
       }
       const data = await res.json();
       const list = data.splashScreens || [];
+
+      // Silent update without showing spinner
       setSplashScreens(list);
+
+      // Cache the data for faster subsequent loads
+      if (list.length > 0) {
+        await AsyncStorage.setItem(
+          `splashScreens_${realtor.id}`,
+          JSON.stringify({ data: list, timestamp: Date.now() })
+        );
+      }
     } catch (e) {
       console.log("Error fetching splash:", e);
     } finally {
       if (showSpinner) setSplashLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
-  // Initial load
+  // Load cached data immediately, then fetch fresh data
   useEffect(() => {
-    fetchSplashScreens();
+    const loadCachedAndFetch = async () => {
+      if (!realtor?.id) return;
+
+      try {
+        // Try to load from cache first
+        const cachedData = await AsyncStorage.getItem(
+          `splashScreens_${realtor.id}`
+        );
+        if (cachedData) {
+          const { data, timestamp } = JSON.parse(cachedData);
+          const isFresh = Date.now() - timestamp < 5 * 60 * 1000; // 5 minutes
+
+          // Show cached data immediately
+          setSplashScreens(data);
+          setSplashLoading(false);
+
+          // If data is still fresh, fetch silently in background
+          if (isFresh) {
+            setTimeout(() => fetchSplashScreens({ showSpinner: false }), 1000);
+          } else {
+            // If stale, fetch immediately
+            fetchSplashScreens({ showSpinner: false });
+          }
+        } else {
+          // No cache, fetch with spinner
+          fetchSplashScreens({ showSpinner: true });
+        }
+      } catch (error) {
+        console.log("Error loading cached splash screens:", error);
+        fetchSplashScreens({ showSpinner: true });
+      }
+    };
+
+    loadCachedAndFetch();
   }, [realtor?.id]);
 
   // Preload static assets
@@ -204,18 +249,40 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
 
   const markSplashRead = async (splashId) => {
     try {
+      // Optimistically update UI first
+      setSplashScreens((prev) =>
+        prev.filter((splash) => splash._id !== splashId)
+      );
+
+      // Update cache
+      const updatedScreens = splashScreens.filter(
+        (splash) => splash._id !== splashId
+      );
+      await AsyncStorage.setItem(
+        `splashScreens_${realtor.id}`,
+        JSON.stringify({ data: updatedScreens, timestamp: Date.now() })
+      );
+
+      // Then make API call
       const res = await fetch(
         `${API_BASE}/admin/custom-splash/${splashId}/read`,
         { method: "PUT" }
       );
-      if (res.ok) {
-        // Remove the splash from the list
-        setSplashScreens((prev) =>
-          prev.filter((splash) => splash._id !== splashId)
-        );
+
+      if (!res.ok) {
+        // If API call fails, revert the optimistic update
+        setSplashScreens((prev) => {
+          const original = splashScreens.find((s) => s._id === splashId);
+          return original ? [...prev, original] : prev;
+        });
       }
     } catch (e) {
       console.log("Error marking splash read:", e);
+      // Revert on error
+      setSplashScreens((prev) => {
+        const original = splashScreens.find((s) => s._id === splashId);
+        return original ? [...prev, original] : prev;
+      });
     }
   };
 
@@ -404,7 +471,7 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
           />
         }
       >
-        {splashLoading && (
+        {splashLoading && isInitialLoad && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.green} />
           </View>
