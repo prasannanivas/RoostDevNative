@@ -48,6 +48,7 @@ import ShareOptionsModal from "./components/modals/ShareOptionsModal";
 import FullyApprovedClientModal from "./components/FullyApprovedClientModal";
 import PurchaseConfirmationModal from "./components/PurchaseConfirmationModal";
 import PurchaseDetailsModal from "./components/PurchaseDetailsModal";
+import ClientDetails from "./screens/ClientDetails";
 
 // These are placeholders for your actual components
 import RealtorProfile from "./screens/RealtorProfile.js";
@@ -314,6 +315,9 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   const inviteOptionsFadeAnim = useRef(new Animated.Value(0)).current;
   const inviteOptionsSlideAnim = useRef(new Animated.Value(20)).current;
   const [showClientReferralModal, setShowClientReferralModal] = useState(false);
+  // ClientDetails modal state
+  const [showClientDetailsModal, setShowClientDetailsModal] = useState(false);
+  const [clientDetailsData, setClientDetailsData] = useState(null);
   // For left slide (profile), start at -1000 (off-screen to the left)
   const leftSlideAnim = useRef(new Animated.Value(-1000)).current;
   // For right slide (rewards), start at 1000 (off-screen to the right)
@@ -2121,7 +2125,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                         style={styles.viewDetailsButton}
                         onPress={() => {
                           setShowClientCardModal(false);
-                          navigation.navigate("ClientDetails", {
+                          setClientDetailsData({
                             clientId: selectedClientCard.inviteeId,
                             clientData: selectedClientCard,
                             inviteId: selectedClientCard.inviteId,
@@ -2133,6 +2137,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                               }
                             ),
                           });
+                          setShowClientDetailsModal(true);
                         }}
                       >
                         <Text style={styles.viewDetailsButtonText}>
@@ -2342,13 +2347,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               onClose={() => setShowFullyApprovedModal(false)}
               onViewDetails={() => {
                 setShowFullyApprovedModal(false);
-                navigation.navigate("ClientDetails", {
+                setClientDetailsData({
                   clientId: selectedFullyApprovedClient.inviteeId,
-                  client: selectedFullyApprovedClient,
+                  clientData: selectedFullyApprovedClient,
                   inviteId: selectedFullyApprovedClient.inviteId,
                   onDelete: onRefresh,
                   statusText: "Fully Approved",
                 });
+                setShowClientDetailsModal(true);
               }}
             />
           )}
@@ -2369,13 +2375,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
               onClose={() => setShowPurchaseConfirmationModal(false)}
               onViewDetails={() => {
                 setShowPurchaseConfirmationModal(false);
-                navigation.navigate("ClientDetails", {
+                setClientDetailsData({
                   clientId: selectedFullyApprovedClient.inviteeId,
-                  client: selectedFullyApprovedClient,
+                  clientData: selectedFullyApprovedClient,
                   inviteId: selectedFullyApprovedClient.inviteId,
                   onDelete: onRefresh,
                   statusText: "Fully Approved",
                 });
+                setShowClientDetailsModal(true);
               }}
               onPurchased={() => {
                 setShowPurchaseConfirmationModal(false);
@@ -2431,6 +2438,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         onConfirm={handleMortgageConfirm}
         realtorInfo={realtorFromContext?.realtorInfo || realtor}
       />
+
+      {/* Client Details Modal */}
+      {clientDetailsData && (
+        <ClientDetails
+          visible={showClientDetailsModal}
+          onClose={() => {
+            setShowClientDetailsModal(false);
+            setClientDetailsData(null);
+          }}
+          clientId={clientDetailsData.clientId}
+          statusText={clientDetailsData.statusText}
+          inviteId={clientDetailsData.inviteId}
+          onDelete={clientDetailsData.onDelete}
+          clientData={clientDetailsData.clientData}
+        />
+      )}
     </View>
   );
 });
