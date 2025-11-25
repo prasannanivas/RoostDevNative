@@ -25,7 +25,7 @@ export default function App() {
   const [isSplashVisible, setSplashVisible] = useState(true);
   const hideSplash = () => setSplashVisible(false);
 
-  const bgColor = Platform.OS === "android" ? "#F6F6F6" : "#CB003F";
+  const bgColor = Platform.OS === "android" ? "#F6F6F6" : "#ffffff";
 
   const navTheme = {
     ...DefaultTheme,

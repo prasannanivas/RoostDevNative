@@ -493,278 +493,282 @@ const ClientDetails = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.modalContainer}>
-        {/* Close Button */}
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Svg
-            width="26"
-            height="26"
-            viewBox="0 0 26 26"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <Path
-              d="M13 0C5.82075 0 0 5.8201 0 13C0 20.1799 5.8201 26 13 26C20.1799 26 26 20.1799 26 13C26 5.8201 20.1799 0 13 0ZM13 24.401C6.7275 24.401 1.625 19.2725 1.625 13C1.625 6.7275 6.7275 1.625 13 1.625C19.2725 1.625 24.375 6.7275 24.375 13C24.375 19.2725 19.2725 24.401 13 24.401ZM17.5961 8.4045C17.2793 8.08763 16.7648 8.08763 16.4473 8.4045L13.0007 11.8511L9.55402 8.4045C9.23715 8.08763 8.72202 8.08763 8.4045 8.4045C8.08698 8.72138 8.08763 9.2365 8.4045 9.55338L11.8511 13L8.4045 16.4466C8.08763 16.7635 8.08763 17.2786 8.4045 17.5955C8.72138 17.9124 9.2365 17.9124 9.55402 17.5955L13.0007 14.1489L16.4473 17.5955C16.7642 17.9124 17.2786 17.9124 17.5961 17.5955C17.9137 17.2786 17.913 16.7635 17.5961 16.4466L14.1495 13L17.5961 9.55338C17.914 9.23585 17.914 8.72138 17.5961 8.4045Z"
-              fill="#797979"
-            />
-          </Svg>
-        </TouchableOpacity>
+      <View style={styles.modalWrapper}>
+        <View style={styles.modalContainer}>
+          {/* Close Button */}
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Svg
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <Path
+                d="M13 0C5.82075 0 0 5.8201 0 13C0 20.1799 5.8201 26 13 26C20.1799 26 26 20.1799 26 13C26 5.8201 20.1799 0 13 0ZM13 24.401C6.7275 24.401 1.625 19.2725 1.625 13C1.625 6.7275 6.7275 1.625 13 1.625C19.2725 1.625 24.375 6.7275 24.375 13C24.375 19.2725 19.2725 24.401 13 24.401ZM17.5961 8.4045C17.2793 8.08763 16.7648 8.08763 16.4473 8.4045L13.0007 11.8511L9.55402 8.4045C9.23715 8.08763 8.72202 8.08763 8.4045 8.4045C8.08698 8.72138 8.08763 9.2365 8.4045 9.55338L11.8511 13L8.4045 16.4466C8.08763 16.7635 8.08763 17.2786 8.4045 17.5955C8.72138 17.9124 9.2365 17.9124 9.55402 17.5955L13.0007 14.1489L16.4473 17.5955C16.7642 17.9124 17.2786 17.9124 17.5961 17.5955C17.9137 17.2786 17.913 16.7635 17.5961 16.4466L14.1495 13L17.5961 9.55338C17.914 9.23585 17.914 8.72138 17.5961 8.4045Z"
+                fill="#797979"
+              />
+            </Svg>
+          </TouchableOpacity>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header Section */}
-          <View style={styles.headerSection}>
-            <View style={styles.initialsCircle}>
-              <Text style={styles.initialsText}>
-                {generateInitialsFromFullName(client.name)}
-              </Text>
-            </View>
-            <View style={styles.nameContainer}>
-              <Text style={styles.clientName}>{client.name}</Text>
-              <Text style={styles.statusLabel}>{statusText || "Invited"}</Text>
-            </View>
-          </View>
-
-          {/* Client Details Section */}
-          <View style={styles.detailsSection}>
-            <Text style={styles.sectionHeader}>CLIENT DETAILS</Text>
-            <View style={styles.detailsCard}>
-              <View style={styles.detailRow}>
-                <Svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M7.50246 2.25722C7.19873 1.4979 6.46332 1 5.64551 1H2.89474C1.8483 1 1 1.8481 1 2.89453C1 11.7892 8.21078 19 17.1055 19C18.1519 19 19 18.1516 19 17.1052L19.0005 14.354C19.0005 13.5361 18.5027 12.8009 17.7434 12.4971L15.1069 11.4429C14.4249 11.1701 13.6483 11.2929 13.0839 11.7632L12.4035 12.3307C11.6089 12.9929 10.4396 12.9402 9.7082 12.2088L7.79222 10.2911C7.06079 9.55962 7.00673 8.39134 7.66895 7.59668L8.23633 6.9163C8.70661 6.35195 8.83049 5.57516 8.55766 4.89309L7.50246 2.25722Z"
-                    stroke="#4D4D4D"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-
-                <Text style={styles.detailText}>
-                  {formatPhoneNumber(client.phone) || "(416)829-0000"}
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            {/* Header Section */}
+            <View style={styles.headerSection}>
+              <View style={styles.initialsCircle}>
+                <Text style={styles.initialsText}>
+                  {generateInitialsFromFullName(client.name)}
                 </Text>
               </View>
-              <View style={styles.detailRow}>
-                <Svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M4 6L10.1076 10.6123L10.1097 10.614C10.7878 11.1113 11.1271 11.3601 11.4988 11.4562C11.8272 11.5412 12.1725 11.5412 12.501 11.4562C12.8729 11.36 13.2132 11.1105 13.8926 10.6123C13.8926 10.6123 17.8101 7.60594 20 6M3 15.8002V8.2002C3 7.08009 3 6.51962 3.21799 6.0918C3.40973 5.71547 3.71547 5.40973 4.0918 5.21799C4.51962 5 5.08009 5 6.2002 5H17.8002C18.9203 5 19.4796 5 19.9074 5.21799C20.2837 5.40973 20.5905 5.71547 20.7822 6.0918C21 6.5192 21 7.07899 21 8.19691V15.8036C21 16.9215 21 17.4805 20.7822 17.9079C20.5905 18.2842 20.2837 18.5905 19.9074 18.7822C19.48 19 18.921 19 17.8031 19H6.19691C5.07899 19 4.5192 19 4.0918 18.7822C3.71547 18.5905 3.40973 18.2842 3.21799 17.9079C3 17.4801 3 16.9203 3 15.8002Z"
-                    stroke="#4D4D4D"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-
-                <Text style={styles.detailText}>
-                  {client.email || "Email@gmail.com"}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M2 20H4M4 20H14M4 20V6.2002C4 5.08009 4 4.51962 4.21799 4.0918C4.40973 3.71547 4.71547 3.40973 5.0918 3.21799C5.51962 3 6.08009 3 7.2002 3H10.8002C11.9203 3 12.4796 3 12.9074 3.21799C13.2837 3.40973 13.5905 3.71547 13.7822 4.0918C14 4.5192 14 5.07899 14 6.19691V12M14 20H20M14 20V12M20 20H22M20 20V12C20 11.0681 19.9999 10.6024 19.8477 10.2349C19.6447 9.74481 19.2557 9.35523 18.7656 9.15224C18.3981 9 17.9316 9 16.9997 9C16.0679 9 15.6019 9 15.2344 9.15224C14.7443 9.35523 14.3552 9.74481 14.1522 10.2349C14 10.6024 14 11.0681 14 12M7 10H11M7 7H11"
-                    stroke="#4D4D4D"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-
-                <Text style={styles.detailText}>
-                  {client.employmentType || "Employment type: unknown"}
+              <View style={styles.nameContainer}>
+                <Text style={styles.clientName}>{client.name}</Text>
+                <Text style={styles.statusLabel}>
+                  {statusText || "Invited"}
                 </Text>
               </View>
             </View>
-          </View>
 
-          {/* Documents Section */}
-          <View style={styles.documentsSection}>
-            <Text style={styles.sectionHeader}>DOCUMENTS SUBMITTED</Text>
-            <View style={styles.documentsCard}>
-              {client.documents && client.documents.length > 0 ? (
-                client.documents.map((doc, index) => (
-                  <View key={index} style={styles.documentRow}>
-                    <Text style={styles.documentText}>{doc.docType}</Text>
-                    {doc.status.toLowerCase() === "approved" ? (
-                      <ApprovedIcon />
-                    ) : (
-                      <RejectedIcon />
-                    )}
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noDocumentsText}>
-                  No documents submitted
-                </Text>
-              )}
+            {/* Client Details Section */}
+            <View style={styles.detailsSection}>
+              <Text style={styles.sectionHeader}>CLIENT DETAILS</Text>
+              <View style={styles.detailsCard}>
+                <View style={styles.detailRow}>
+                  <Svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <Path
+                      d="M7.50246 2.25722C7.19873 1.4979 6.46332 1 5.64551 1H2.89474C1.8483 1 1 1.8481 1 2.89453C1 11.7892 8.21078 19 17.1055 19C18.1519 19 19 18.1516 19 17.1052L19.0005 14.354C19.0005 13.5361 18.5027 12.8009 17.7434 12.4971L15.1069 11.4429C14.4249 11.1701 13.6483 11.2929 13.0839 11.7632L12.4035 12.3307C11.6089 12.9929 10.4396 12.9402 9.7082 12.2088L7.79222 10.2911C7.06079 9.55962 7.00673 8.39134 7.66895 7.59668L8.23633 6.9163C8.70661 6.35195 8.83049 5.57516 8.55766 4.89309L7.50246 2.25722Z"
+                      stroke="#4D4D4D"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+
+                  <Text style={styles.detailText}>
+                    {formatPhoneNumber(client.phone) || "(416)829-0000"}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <Path
+                      d="M4 6L10.1076 10.6123L10.1097 10.614C10.7878 11.1113 11.1271 11.3601 11.4988 11.4562C11.8272 11.5412 12.1725 11.5412 12.501 11.4562C12.8729 11.36 13.2132 11.1105 13.8926 10.6123C13.8926 10.6123 17.8101 7.60594 20 6M3 15.8002V8.2002C3 7.08009 3 6.51962 3.21799 6.0918C3.40973 5.71547 3.71547 5.40973 4.0918 5.21799C4.51962 5 5.08009 5 6.2002 5H17.8002C18.9203 5 19.4796 5 19.9074 5.21799C20.2837 5.40973 20.5905 5.71547 20.7822 6.0918C21 6.5192 21 7.07899 21 8.19691V15.8036C21 16.9215 21 17.4805 20.7822 17.9079C20.5905 18.2842 20.2837 18.5905 19.9074 18.7822C19.48 19 18.921 19 17.8031 19H6.19691C5.07899 19 4.5192 19 4.0918 18.7822C3.71547 18.5905 3.40973 18.2842 3.21799 17.9079C3 17.4801 3 16.9203 3 15.8002Z"
+                      stroke="#4D4D4D"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+
+                  <Text style={styles.detailText}>
+                    {client.email || "Email@gmail.com"}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <Path
+                      d="M2 20H4M4 20H14M4 20V6.2002C4 5.08009 4 4.51962 4.21799 4.0918C4.40973 3.71547 4.71547 3.40973 5.0918 3.21799C5.51962 3 6.08009 3 7.2002 3H10.8002C11.9203 3 12.4796 3 12.9074 3.21799C13.2837 3.40973 13.5905 3.71547 13.7822 4.0918C14 4.5192 14 5.07899 14 6.19691V12M14 20H20M14 20V12M20 20H22M20 20V12C20 11.0681 19.9999 10.6024 19.8477 10.2349C19.6447 9.74481 19.2557 9.35523 18.7656 9.15224C18.3981 9 17.9316 9 16.9997 9C16.0679 9 15.6019 9 15.2344 9.15224C14.7443 9.35523 14.3552 9.74481 14.1522 10.2349C14 10.6024 14 11.0681 14 12M7 10H11M7 7H11"
+                      stroke="#4D4D4D"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+
+                  <Text style={styles.detailText}>
+                    {client.employmentType || "Employment type: unknown"}
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
-        </ScrollView>
 
-        <View style={styles.bottomContainer}>
-          {/* Download Button */}
-          <TouchableOpacity
-            style={styles.downloadButton}
-            disabled={loadingDownload}
-            onPress={async () => {
-              setLoadingDownload(true);
-              setDownloadProgress(0);
-              try {
-                const xhr = new XMLHttpRequest();
-                xhr.open(
-                  "POST",
-                  "https://signup.roostapp.io/pdf/download-filled-pdf",
-                  true
-                );
-                xhr.setRequestHeader("Content-Type", "application/json");
-                xhr.responseType = "blob";
-                xhr.onprogress = (event) => {
-                  if (event.lengthComputable) {
-                    setDownloadProgress(
-                      Math.round((event.loaded / event.total) * 100)
-                    );
-                  }
-                };
-                xhr.onload = async function () {
-                  if (xhr.status === 200) {
-                    try {
-                      const blob = xhr.response;
-                      const reader = new FileReader();
-                      reader.onloadend = async () => {
-                        try {
-                          const base64data = reader.result.split(",")[1];
-                          const fileUri =
-                            FileSystem.cacheDirectory + "referral.pdf";
-                          await FileSystem.writeAsStringAsync(
-                            fileUri,
-                            base64data,
-                            {
-                              encoding: FileSystem.EncodingType.Base64,
+            {/* Documents Section */}
+            <View style={styles.documentsSection}>
+              <Text style={styles.sectionHeader}>DOCUMENTS SUBMITTED</Text>
+              <View style={styles.documentsCard}>
+                {client.documents && client.documents.length > 0 ? (
+                  client.documents.map((doc, index) => (
+                    <View key={index} style={styles.documentRow}>
+                      <Text style={styles.documentText}>{doc.docType}</Text>
+                      {doc.status.toLowerCase() === "approved" ? (
+                        <ApprovedIcon />
+                      ) : (
+                        <RejectedIcon />
+                      )}
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.noDocumentsText}>
+                    No documents submitted
+                  </Text>
+                )}
+              </View>
+            </View>
+          </ScrollView>
+
+          <View style={styles.bottomContainer}>
+            {/* Download Button */}
+            <TouchableOpacity
+              style={styles.downloadButton}
+              disabled={loadingDownload}
+              onPress={async () => {
+                setLoadingDownload(true);
+                setDownloadProgress(0);
+                try {
+                  const xhr = new XMLHttpRequest();
+                  xhr.open(
+                    "POST",
+                    "https://signup.roostapp.io/pdf/download-filled-pdf",
+                    true
+                  );
+                  xhr.setRequestHeader("Content-Type", "application/json");
+                  xhr.responseType = "blob";
+                  xhr.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                      setDownloadProgress(
+                        Math.round((event.loaded / event.total) * 100)
+                      );
+                    }
+                  };
+                  xhr.onload = async function () {
+                    if (xhr.status === 200) {
+                      try {
+                        const blob = xhr.response;
+                        const reader = new FileReader();
+                        reader.onloadend = async () => {
+                          try {
+                            const base64data = reader.result.split(",")[1];
+                            const fileUri =
+                              FileSystem.cacheDirectory + "referral.pdf";
+                            await FileSystem.writeAsStringAsync(
+                              fileUri,
+                              base64data,
+                              {
+                                encoding: FileSystem.EncodingType.Base64,
+                              }
+                            );
+                            if (await Sharing.isAvailableAsync()) {
+                              await Sharing.shareAsync(fileUri);
                             }
-                          );
-                          if (await Sharing.isAvailableAsync()) {
-                            await Sharing.shareAsync(fileUri);
+                            setLoadingDownload(false);
+                          } catch (err) {
+                            console.log(err);
+                            setLoadingDownload(false);
                           }
-                          setLoadingDownload(false);
-                        } catch (err) {
-                          console.log(err);
-                          setLoadingDownload(false);
-                        }
-                      };
-                      reader.readAsDataURL(blob);
-                    } catch (err) {
-                      console.log(err);
+                        };
+                        reader.readAsDataURL(blob);
+                      } catch (err) {
+                        console.log(err);
+                        setLoadingDownload(false);
+                      }
+                    } else {
                       setLoadingDownload(false);
                     }
-                  } else {
+                  };
+                  xhr.onerror = function () {
                     setLoadingDownload(false);
-                  }
-                };
-                xhr.onerror = function () {
+                  };
+                  xhr.send(
+                    JSON.stringify({
+                      clientId: clientId,
+                      type: "realtorRewardPdf",
+                    })
+                  );
+                } catch (err) {
+                  console.log(err);
                   setLoadingDownload(false);
-                };
-                xhr.send(
-                  JSON.stringify({
-                    clientId: clientId,
-                    type: "realtorRewardPdf",
-                  })
-                );
-              } catch (err) {
-                console.log(err);
-                setLoadingDownload(false);
-              }
-            }}
-          >
-            {loadingDownload ? (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <ActivityIndicator size="small" color={COLORS.gray} />
-                <Text style={[styles.downloadButtonText, { marginLeft: 10 }]}>
-                  {`Downloading... ${downloadProgress}%`}
+                }
+              }}
+            >
+              {loadingDownload ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <ActivityIndicator size="small" color={COLORS.gray} />
+                  <Text style={[styles.downloadButtonText, { marginLeft: 10 }]}>
+                    {`Downloading... ${downloadProgress}%`}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.downloadButtonText}>
+                  Download referral document
                 </Text>
-              </View>
-            ) : (
-              <Text style={styles.downloadButtonText}>
-                Download referral document
-              </Text>
-            )}
-          </TouchableOpacity>
+              )}
+            </TouchableOpacity>
 
-          {/* Delete Button */}
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={async () => {
-              Alert.alert(
-                "Delete Client",
-                "Are you sure you want to delete this client?",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                      try {
-                        setLoading(true);
-                        const response = await fetch(
-                          `https://signup.roostapp.io/Realtor/DeleteClient`,
-                          {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ inviteId, realtorId }),
-                          }
-                        );
-                        setLoading(false);
-                        if (response.ok) {
-                          Alert.alert(
-                            "Success",
-                            "Client deleted successfully",
-                            [
-                              {
-                                text: "OK",
-                                onPress: () => {
-                                  navigation.goBack();
-                                },
-                              },
-                            ]
+            {/* Delete Button */}
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={async () => {
+                Alert.alert(
+                  "Delete Client",
+                  "Are you sure you want to delete this client?",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          setLoading(true);
+                          const response = await fetch(
+                            `https://signup.roostapp.io/Realtor/DeleteClient`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ inviteId, realtorId }),
+                            }
                           );
-                        } else {
+                          setLoading(false);
+                          if (response.ok) {
+                            Alert.alert(
+                              "Success",
+                              "Client deleted successfully",
+                              [
+                                {
+                                  text: "OK",
+                                  onPress: () => {
+                                    navigation.goBack();
+                                  },
+                                },
+                              ]
+                            );
+                          } else {
+                            Alert.alert("Error", "Failed to delete client");
+                          }
+                        } catch (error) {
+                          setLoading(false);
                           Alert.alert("Error", "Failed to delete client");
                         }
-                      } catch (error) {
-                        setLoading(false);
-                        Alert.alert("Error", "Failed to delete client");
-                      }
+                      },
                     },
-                  },
-                ]
-              );
-            }}
-          >
-            <Text style={styles.deleteButtonText}>Delete user</Text>
-          </TouchableOpacity>
-        </View>
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.deleteButtonText}>Delete user</Text>
+            </TouchableOpacity>
+          </View>
 
-        <RequestDocumentModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleRequestDocument}
-        />
+          <RequestDocumentModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleRequestDocument}
+          />
+        </View>
       </View>
     </Modal>
   );
@@ -780,9 +784,19 @@ const getStatusColor = (status) => {
 };
 
 const styles = StyleSheet.create({
+  modalWrapper: {
+    flex: 1,
+    backgroundColor: "transparent",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 0,
+    overflow: "hidden",
+  },
   modalContainer: {
     flex: 1,
     backgroundColor: "#FDFDFD",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 0,
+    overflow: "hidden",
   },
   container: {
     flex: 1,
@@ -1003,7 +1017,7 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 10,
+    paddingBottom: 36,
     backgroundColor: "#FDFDFD",
   },
 });
