@@ -63,16 +63,14 @@ const MultipleChoice = ({
           </TouchableOpacity>
         ))}
 
-        {fieldErrors[question.id] && (
-          <AnimatedDropdown
-            visible={true}
-            style={styles.errorBox}
-            maxHeight={100}
-            contentKey={fieldErrors[question.id]}
-          >
-            <Text style={styles.errorText}>{fieldErrors[question.id]}</Text>
-          </AnimatedDropdown>
-        )}
+        <AnimatedDropdown
+          visible={!!fieldErrors[question.id]}
+          style={styles.errorBox}
+          maxHeight={100}
+          contentKey={fieldErrors[question.id]}
+        >
+          <Text style={styles.errorText}>{fieldErrors[question.id]}</Text>
+        </AnimatedDropdown>
       </View>
     </View>
   );
@@ -132,7 +130,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   errorBox: {
-    backgroundColor: "#F0913A80", // Using notice container background with 25% opacity
+    backgroundColor: "#F0DE3A40", // Using notice container background with 25% opacity
     borderRadius: 8,
     padding: 16,
     marginTop: 16,

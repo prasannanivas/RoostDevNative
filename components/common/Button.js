@@ -12,11 +12,13 @@ const Button = ({
   Icon,
   onPress,
   disabled = false,
+  canClickDisabled = false,
   loading = false,
   variant = "primary",
   style,
 }) => {
   const isDisabled = disabled || loading;
+  const shouldActuallyDisable = isDisabled && !canClickDisabled;
 
   return (
     <TouchableOpacity
@@ -27,7 +29,7 @@ const Button = ({
         style,
       ]}
       onPress={onPress}
-      disabled={isDisabled}
+      disabled={shouldActuallyDisable}
       activeOpacity={0.7}
     >
       {loading ? (

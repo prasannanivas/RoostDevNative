@@ -610,6 +610,39 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
     return Object.keys(errors).length === 0;
   };
 
+  // Helper function to check if Continue button should look disabled
+  const shouldShowDisabledStyle = () => {
+    // Check if current question is a required MCQ
+    if (
+      currentQuestion?.type === "multipleChoice" &&
+      currentQuestion?.required
+    ) {
+      return !currentResponse;
+    }
+
+    // Check if current question is a form with required fields
+    if (currentQuestion?.type === "form" && currentQuestion?.fields) {
+      // Check if any required field is missing or empty
+      const missingRequiredField = currentQuestion.fields.some((field) => {
+        if (field.required) {
+          // If no response object at all, the field is missing
+          if (!currentResponse) return true;
+
+          const value = currentResponse[field.key];
+          // Check if value is null, undefined, or empty string
+          return !value || (typeof value === "string" && value.trim() === "");
+        }
+        return false;
+      });
+
+      if (missingRequiredField) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const validateRequiredFields = () => {
     const errors = {};
 
@@ -871,6 +904,8 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
   };
 
   const handleNext = async () => {
+    // First check if this is a required MCQ with no response - show error and stop
+
     // First validate name fields if applicable
     if (!validateNameFields()) {
       return; // Stop if validation fails
@@ -893,6 +928,56 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
     // Validate assets and properties fields (Question 13, 14, 117, 119)
     if (!validateAssetsAndProperties()) {
       return; // Stop if validation fails
+    }
+
+    if (shouldShowDisabledStyle()) {
+      // Handle Form Questions
+      if (currentQuestion?.type === "form" && currentQuestion?.fields) {
+        const newFieldErrors = {};
+        currentQuestion.fields.forEach((field) => {
+          if (field.required) {
+            const value = currentResponse?.[field.key];
+            if (!value || (typeof value === "string" && value.trim() === "")) {
+              newFieldErrors[field.key] = "This field is required";
+            }
+          }
+        });
+        setFieldErrors(newFieldErrors);
+        return;
+      }
+      if (
+        currentQuestion?.type === "multipleChoice" &&
+        currentQuestion?.required &&
+        !currentResponse
+      ) {
+        setFieldErrors({
+          [currentQuestion?.id]:
+            currentQuestion?.errorMessage || "This field is required",
+        });
+        return;
+      }
+
+      // // Set the error message
+      // let errorMessage = "This field is required";
+
+      // if (currentQuestion?.id === 5) {
+      //   errorMessage =
+      //     "Your selection is missing, don't worry you can always add a co-signer later";
+      // } else if (
+      //   [9, "9", 106, "106", 110, "110"].includes(currentQuestion?.id)
+      // ) {
+      //   errorMessage =
+      //     "Your selection is missing, this field is mandatory for your application";
+      // } else if (currentQuestion?.id === 1) {
+      //   errorMessage = "Please select an option to continue";
+      // } else if (currentQuestion?.id === 4) {
+      //   errorMessage = "Please select an option to continue";
+      // }
+
+      setFieldErrors({
+        [currentQuestion?.id]: errorMessage,
+      });
+      return; // Stop here - don't proceed
     }
 
     const nextQuestionId = getNextQuestionId();
@@ -1262,7 +1347,12 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
               onPress={handleNext}
               variant="primary"
               loading={isSubmitting}
-              style={styles.looksGoodButton}
+              disabled={shouldShowDisabledStyle()}
+              canClickDisabled={true}
+              style={[
+                styles.looksGoodButton,
+                shouldShowDisabledStyle() && styles.disabledButton,
+              ]}
             />
 
             {(canGoBack || currentQuestionId === 1) && (
@@ -1415,6 +1505,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginRight: 12,
+  },
+  disabledButton: {
+    backgroundColor: "#E8E8E8",
+    borderColor: "#E8E8E8",
+    color: "#797979",
   },
   fullWidthButton: {
     flex: 1,

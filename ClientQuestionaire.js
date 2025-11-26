@@ -16,6 +16,7 @@ export default function ClientQuestionaire({
   const { auth } = useAuth();
   const [showPreview, setShowPreview] = useState(true);
   const [hasDraft, setHasDraft] = useState(false);
+  const [isStartingOver, setIsStartingOver] = useState(false);
 
   useEffect(() => {
     const checkDraft = async () => {
@@ -53,6 +54,7 @@ export default function ClientQuestionaire({
       console.warn("Failed to clear questionnaire draft:", e);
     } finally {
       // Proceed to questionnaire fresh
+      setIsStartingOver(true);
       setShowPreview(false);
       setHasDraft(false);
     }
@@ -117,7 +119,7 @@ export default function ClientQuestionaire({
       {!showPreview && (
         <Questionnaire
           navigation={navigation}
-          questionnaireData={questionnaireData}
+          questionnaireData={isStartingOver ? null : questionnaireData}
           showCloseButton={showCloseButton}
           onBack={onBack}
         />

@@ -84,7 +84,8 @@ const questions = [
       { value: "still_looking", label: "Still looking" },
       { value: "yes", label: "Yes" },
     ],
-
+    required: true,
+    errorMessage: "Please select an option to continue",
     nextQuestion: 2,
   },
   {
@@ -131,7 +132,8 @@ const questions = [
       },
       { value: "secondary_home", label: "Secondary home" },
     ],
-
+    required: true,
+    errorMessage: "Please select an option to continue",
     nextQuestion: 5,
   },
   {
@@ -144,6 +146,9 @@ const questions = [
       { value: "just_me", label: "Just me" },
       { value: "co_signer", label: "Me and a co-signer" },
     ],
+    required: true,
+    errorMessage:
+      "Your selection is missing, don't worry you can always add a co-signer later",
     nextQuestionMap: {
       just_me: 6, // Continue with primary applicant flow
       co_signer: 100, // Jump to co-applicant flow
@@ -298,7 +303,9 @@ const questions = [
       { value: "pension", label: "Pension" },
       { value: "other", label: "Other" },
     ],
-
+    required: true,
+    errorMessage:
+      "Your selection is missing, this field is mandatory for your application",
     nextQuestionMap: {
       employed: 10,
       self_employed: 10,
@@ -685,6 +692,9 @@ const questions = [
       { value: "pension", label: "Pension" },
       { value: "other", label: "Other" },
     ],
+    required: true,
+    errorMessage:
+      "Your selection is missing, this field is mandatory for your application",
     nextQuestionMap: {
       employed: 107,
       self_employed: 107,
@@ -1061,6 +1071,9 @@ const questions = [
       { value: "pension", label: "Pension" },
       { value: "other", label: "Other" },
     ],
+    required: true,
+    errorMessage:
+      "Your selection is missing, this field is mandatory for your application",
     nextQuestionMap: {
       employed: 111,
       self_employed: 111,

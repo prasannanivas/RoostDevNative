@@ -19,27 +19,24 @@ export const QuestionnaireProvider = ({ children }) => {
     clientInfo?.name.split(" ")[1] || ""
   );
 
+  // Helper function to get pre-filled auth data
+  const getAuthDefaults = () => {
+    const name = clientInfo?.name || auth?.client?.name || "";
+    const parts = typeof name === "string" ? name.trim().split(/\s+/) : [];
+    const first = parts[0] || "";
+    const last = parts.slice(1).join(" ") || "";
+    const email = clientInfo?.email || auth?.client?.email || "";
+    const phone = clientInfo?.phone || auth?.client?.phone || "";
+
+    return { firstName: first, lastName: last, email, phone };
+  };
+
   const defaultResponses = {
     11: { bonuses: "no", benefits: "no" }, // Default value for question 10
-
     14: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 14
     13: { hasAssets: "no", items: [] }, // Default value for question 15
-    6: {
-      firstName:
-        clientInfo?.name.split(" ")[0] || auth.client.name.split(" ")[0] || "",
-      lastName:
-        clientInfo?.name.split(" ")[1] || auth.client.name.split(" ")[1] || "",
-      email: clientInfo?.email || auth?.client?.email || "",
-      phone: clientInfo?.phone || auth?.client?.phone || "",
-    }, // Default value for question 6
-    100: {
-      firstName:
-        clientInfo?.name.split(" ")[0] || auth.client.name.split(" ")[0] || "",
-      lastName:
-        clientInfo?.name.split(" ")[1] || auth.client.name.split(" ")[1] || "",
-      email: clientInfo?.email || auth.client.email || "",
-      phone: clientInfo?.phone || auth.client.phone || "",
-    }, // Default value for question 100
+    6: getAuthDefaults(), // Default value for question 6
+    100: getAuthDefaults(), // Default value for question 100
     108: { bonuses: "no", benefits: "no" }, // Default value for question 108
     116: { hasAssets: "no", items: [] }, // Default value for question 116
     118: { hasOtherProperties: "no", hasMortgage: "no", planningSelling: "no" }, // Default value for question 118
@@ -151,7 +148,13 @@ export const QuestionnaireProvider = ({ children }) => {
 
   const resetQuestionnaire = () => {
     setCurrentQuestionId(1);
-    setResponses({ ...defaultResponses });
+    // Recalculate defaults with current auth data
+    const freshDefaults = {
+      ...defaultResponses,
+      6: getAuthDefaults(),
+      100: getAuthDefaults(),
+    };
+    setResponses(freshDefaults);
     setIsCompleted(false);
     setVisitedQuestions(new Set([1]));
     setQuestionHistory([1]);
