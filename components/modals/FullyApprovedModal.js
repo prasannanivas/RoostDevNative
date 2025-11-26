@@ -126,13 +126,6 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
                 </Text>
                 <View style={styles.confirmButtonsRow}>
                   <TouchableOpacity
-                    style={styles.outlineButton}
-                    onPress={() => setShowConfirm(false)}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.outlineButtonText}>Not yet</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
                     style={[styles.solidButton, requesting && { opacity: 0.6 }]}
                     disabled={requesting}
                     onPress={async () => {
@@ -175,6 +168,13 @@ const FullyApprovedModal = ({ details = {}, onPurchasedPress }) => {
                         ? "Sent!"
                         : "Purchased"}
                     </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.outlineButton}
+                    onPress={() => setShowConfirm(false)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.outlineButtonText}>Not yet</Text>
                   </TouchableOpacity>
                 </View>
                 {requestResult === "error" && (
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   confirmCard: {
     backgroundColor: COLORS.white,
     borderRadius: 28,
-    padding: 32,
+    padding: 16,
     width: "100%",
     maxWidth: 480,
     shadowColor: "#000",
@@ -378,15 +378,15 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
   },
   confirmButtonsRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 32,
     gap: 16,
   },
   outlineButton: {
-    flex: 1,
     borderWidth: 1,
+    width: "100%",
     borderColor: COLORS.green,
     borderRadius: 33,
     paddingVertical: 13,
@@ -397,11 +397,11 @@ const styles = StyleSheet.create({
   outlineButtonText: {
     color: COLORS.green,
     fontWeight: "700",
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Futura",
   },
   solidButton: {
-    flex: 1,
+    width: "100%",
     backgroundColor: COLORS.green,
     borderRadius: 33,
     paddingVertical: 13,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   solidButtonText: {
     color: COLORS.white,
     fontWeight: "700",
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Futura",
   },
   errorText: {
