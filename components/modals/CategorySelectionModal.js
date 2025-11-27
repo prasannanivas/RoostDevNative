@@ -32,6 +32,7 @@ import Logo from "../Logo";
 import Button from "../common/Button";
 import BackButton from "../icons/BackButton";
 import Svg, { Path, Rect } from "react-native-svg";
+import AnimatedRadialBackground from "../AnimatedRadialBackground";
 
 /**
  * Category Selection Modal Component for editing specific sections of the questionnaire
@@ -1409,6 +1410,8 @@ const CategorySelectionModal = ({
           {!showQuestions ? (
             // Category selection view
             <View style={styles.container}>
+              {/* Animated Radial Background */}
+              <AnimatedRadialBackground />
               {/* Logo at the top */}
               <View style={styles.logoContainer}>
                 <Logo
@@ -1564,6 +1567,7 @@ const CategorySelectionModal = ({
           ) : (
             // Question view - displays when a category is selected
             <View style={styles.container}>
+              <AnimatedRadialBackground />
               {/* Header with progress bar */}
               <View style={styles.header}>
                 {/* Fixed progress for simplicity, can be dynamic */}
@@ -1748,6 +1752,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 20,
+
     paddingTop: 5,
   },
   logoContainer: {

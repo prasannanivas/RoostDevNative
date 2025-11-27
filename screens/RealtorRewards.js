@@ -24,6 +24,7 @@ import CashoutModal from "../components/modals/CashoutModal";
 import CashoutMinimumModal from "../components/modals/CashoutMinimumModal";
 import RewardClaimedModal from "../components/modals/RewardClaimedModal";
 import { useRealtor } from "../context/RealtorContext";
+import AnimatedRadialBackground from "../components/AnimatedRadialBackground";
 
 // Design System Colors
 const COLORS = {
@@ -457,6 +458,7 @@ export default function RealtorRewards({
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
+        <AnimatedRadialBackground />
         {/* <View>
           <Text style={styles.sectionTitle}>Referral program</Text>
         </View> */}

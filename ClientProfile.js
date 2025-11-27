@@ -31,6 +31,7 @@ import DeleteAccountModal from "./components/DeleteAccountModal";
 import ChatModal from "./components/ChatModal";
 import ChangePasswordModal from "./components/modals/ChangePasswordModal";
 import ChangeEmailModal from "./components/modals/ChangeEmailModal";
+import AnimatedRadialBackground from "./components/AnimatedRadialBackground";
 
 // Design System Colors
 const COLORS = {
@@ -536,6 +537,7 @@ export default function ClientProfile({ onClose }) {
           )}
           scrollEventThrottle={16}
         >
+          <AnimatedRadialBackground />
           {/* Personal Info Card */}
           <View style={styles.card}>
             <Text style={styles.profileSubtitle}>

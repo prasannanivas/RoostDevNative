@@ -43,6 +43,7 @@ import ChatModal from "./components/ChatModal";
 import ScheduleCallScreen from "./screens/ScheduleCallScreen";
 import RescheduleCallModal from "./components/modals/RescheduleCallModal";
 import Svg, { Path } from "react-native-svg";
+import AnimatedRadialBackground from "./components/AnimatedRadialBackground";
 
 /**
  * Color palette from UX team design system
@@ -1077,6 +1078,8 @@ const ClientHome = ({ questionnaireData }) => {
         {/* Extended Background for Header */}
 
         <View style={styles.contentContainer}>
+          {/* Animated Radial Background */}
+          <AnimatedRadialBackground />
           {loadingDocuments ? (
             <ActivityIndicator
               size="large"

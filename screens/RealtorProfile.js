@@ -34,6 +34,7 @@ import ChatModal from "../components/ChatModal";
 import ChangePasswordModal from "../components/modals/ChangePasswordModal";
 import ChangeEmailModal from "../components/modals/ChangeEmailModal";
 import { trimLeft, trimFull } from "../utils/stringUtils";
+import AnimatedRadialBackground from "../components/AnimatedRadialBackground";
 
 // Design System Colors
 const COLORS = {
@@ -1122,6 +1123,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
         )}
         scrollEventThrottle={16}
       >
+        <AnimatedRadialBackground />
         <View style={styles.section}>
           <Text style={styles.sectionSubTitle2}>
             Keep your personal info up-to-date

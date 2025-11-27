@@ -81,6 +81,7 @@ import {
   unFormatPhoneNumber,
 } from "./utils/phoneFormatUtils";
 import { getClientStatusText } from "./utils/statusTextUtils";
+import AnimatedRadialBackground from "./components/AnimatedRadialBackground.js";
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -1342,6 +1343,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             />
           }
         >
+          <AnimatedRadialBackground />
           <View style={styles.clientsTitleContainer}>
             {/* <Text style={styles.clientsTitle}>Clients</Text> */}
             <Text style={styles.ActiveText}>ACTIVE CLIENTS</Text>
