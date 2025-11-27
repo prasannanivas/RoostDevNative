@@ -132,9 +132,6 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   // Splash state - updated to handle multiple splash screens
   const [splashScreens, setSplashScreens] = useState([]);
   const [splashLoading, setSplashLoading] = useState(true); // Start with true for initial load
-  // Splash modal state
-  const [showSplashModal, setShowSplashModal] = useState(false);
-  const [selectedSplash, setSelectedSplash] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -201,9 +198,15 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
     if (showSpinner) setSplashLoading(true);
     try {
       const res = await fetch(
-        `${API_BASE}/admin/custom-splash?userId=${realtor.id}`
+        `${API_BASE}/admin/custom-splash?userId=${realtor.id}`,
+        {
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        }
       );
       if (!res.ok) {
+        console.log("Failed to fetch splash screens:", res.status);
         return;
       }
       const data = await res.json();
@@ -213,12 +216,10 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
       setSplashScreens(list);
 
       // Cache the data for faster subsequent loads
-      if (list.length > 0) {
-        await AsyncStorage.setItem(
-          `splashScreens_${realtor.id}`,
-          JSON.stringify({ data: list, timestamp: Date.now() })
-        );
-      }
+      await AsyncStorage.setItem(
+        `splashScreens_${realtor.id}`,
+        JSON.stringify({ data: list, timestamp: Date.now() })
+      );
     } catch (e) {
       console.log("Error fetching splash:", e);
     } finally {
@@ -279,8 +280,13 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchSplashScreens({ showSpinner: false });
-    setRefreshing(false);
+    try {
+      await fetchSplashScreens({ showSpinner: false });
+    } catch (error) {
+      console.log("Error during refresh:", error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const markSplashRead = async (splashId) => {
@@ -322,32 +328,20 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
     }
   };
 
-  const handleSplashCardClick = (splash) => {
-    setSelectedSplash(splash);
-    setShowSplashModal(true);
-  };
-
-  const handleOpenSplashLink = async (link, splashId) => {
-    if (!link) return;
-    try {
-      const supported = await Linking.canOpenURL(link);
-      if (supported) {
-        await Linking.openURL(link);
+  const handleSplashCardClick = async (splash) => {
+    // Open link directly and mark as read
+    if (splash.link) {
+      try {
+        const supported = await Linking.canOpenURL(splash.link);
+        if (supported) {
+          await Linking.openURL(splash.link);
+        }
+      } catch (e) {
+        console.log("Error opening link:", e);
       }
-    } catch (e) {
-      console.log("Error opening link:", e);
-    } finally {
-      // mark read after attempting to open
-      if (splashId) markSplashRead(splashId);
-      // Close modal
-      setShowSplashModal(false);
-      setSelectedSplash(null);
     }
-  };
-
-  const closeSplashModal = () => {
-    setShowSplashModal(false);
-    setSelectedSplash(null);
+    // Mark as read after opening link
+    // if (splash._id) markSplashRead(splash._id);
   };
 
   const handleMortgageConfirm = async () => {
@@ -442,67 +436,6 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
         onConfirm={handleMortgageConfirm}
         realtorInfo={realtorFromContext?.realtorInfo || realtor}
       />
-
-      {/* Splash Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showSplashModal}
-        onRequestClose={closeSplashModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={closeSplashModal}
-            >
-              <Text style={styles.modalCloseText}>×</Text>
-            </TouchableOpacity>
-
-            {selectedSplash && (
-              <>
-                <Text style={styles.modalTitle}>{selectedSplash.title}</Text>
-
-                {/* {selectedSplash.imageUrl && (
-                  <Image
-                    source={{ uri: selectedSplash.imageUrl }}
-                    style={styles.modalImage}
-                    resizeMode="contain"
-                  />
-                )} */}
-
-                {selectedSplash.description && (
-                  <Text style={styles.modalDescription}>
-                    {selectedSplash.description}
-                  </Text>
-                )}
-
-                {selectedSplash.link && (
-                  <TouchableOpacity
-                    style={[
-                      styles.modalActionButton,
-                      {
-                        backgroundColor:
-                          selectedSplash.buttonColor || COLORS.green,
-                      },
-                    ]}
-                    onPress={() =>
-                      handleOpenSplashLink(
-                        selectedSplash.link,
-                        selectedSplash._id
-                      )
-                    }
-                  >
-                    <Text style={styles.modalActionButtonText}>
-                      {selectedSplash.buttonText || "Learn More"}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -579,26 +512,42 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
 
   const handleProfileClick = () => {
     console.log("Profile clicked - navigating to Home");
-    if (navigationRef.current && navigationRef.current.canGoBack()) {
-      navigationRef.current.goBack();
-    } else {
-      navigationRef.current?.navigate("HomeTab");
-    }
+    // Open profile modal immediately
+    realtorHomeRef.current?.openProfile?.();
+    // Navigate in background with slight delay
     setTimeout(() => {
-      realtorHomeRef.current?.openProfile?.();
-    }, 300);
+      if (navigationRef.current && navigationRef.current.canGoBack()) {
+        navigationRef.current.goBack();
+      } else {
+        navigationRef.current?.navigate("HomeTab");
+      }
+    }, 350);
   };
 
   const handleRewardsClick = () => {
     console.log("Rewards clicked - navigating to Home");
+    // Open rewards modal immediately
+    realtorHomeRef.current?.openRewards?.();
+    // Navigate in background with slight delay
+    setTimeout(() => {
+      if (navigationRef.current && navigationRef.current.canGoBack()) {
+        navigationRef.current.goBack();
+      } else {
+        navigationRef.current?.navigate("HomeTab");
+      }
+    }, 350);
+  };
+
+  const handleNotificationClick = () => {
+    console.log("Notification clicked - navigating to Home");
+    // Open notifications immediately
+    onShowNotifications?.();
+    // Navigate in background
     if (navigationRef.current && navigationRef.current.canGoBack()) {
       navigationRef.current.goBack();
     } else {
       navigationRef.current?.navigate("HomeTab");
     }
-    setTimeout(() => {
-      realtorHomeRef.current?.openRewards?.();
-    }, 300);
   };
 
   return (
@@ -696,7 +645,7 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
             showBadge={unreadCount > 0}
             badgeCount={unreadCount}
             style={styles.notificationBell}
-            onPress={onShowNotifications}
+            onPress={handleNotificationClick}
           />
           <GiftIcon
             onPress={handleRewardsClick}

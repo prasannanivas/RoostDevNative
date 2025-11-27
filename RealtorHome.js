@@ -758,6 +758,24 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
     setShowRewards(true);
   };
 
+  // Close handlers with animation
+  const handleCloseClientCardModal = () => {
+    slideOut("bottom", () => {
+      setTimeout(() => {
+        setShowClientCardModal(false);
+        setShowResendInviteOptions(false);
+      }, 650);
+    });
+  };
+
+  const handleCloseClientReferralModal = () => {
+    slideOut("bottom", () => {
+      setTimeout(() => {
+        setShowClientReferralModal(false);
+      }, 650);
+    });
+  };
+
   // Handler for mortgage application
   const handleMortgageApplication = () => {
     setShowMortgageModal(true);
@@ -1910,10 +1928,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             <View style={styles.clientCardModalContent}>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                onPress={() => {
-                  setShowClientCardModal(false);
-                  setShowResendInviteOptions(false);
-                }}
+                onPress={handleCloseClientCardModal}
               >
                 <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
                   <Circle cx="18.5" cy="18.5" r="18.5" fill="#ffffffff" />
@@ -2109,10 +2124,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
 
                           <TouchableOpacity
                             style={styles.inviteSkipButton}
-                            onPress={() => {
-                              setShowClientCardModal(false);
-                              setShowResendInviteOptions(false);
-                            }}
+                            onPress={handleCloseClientCardModal}
                           >
                             <Text style={styles.inviteSkipButtonText}>
                               Roost Invite
@@ -2148,20 +2160,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       <TouchableOpacity
                         style={styles.viewDetailsButton}
                         onPress={() => {
-                          setShowClientCardModal(false);
-                          setClientDetailsData({
-                            clientId: selectedClientCard.inviteeId,
-                            clientData: selectedClientCard,
-                            inviteId: selectedClientCard.inviteId,
-                            onDelete: onRefresh,
-                            statusText: getClientStatusText(
-                              selectedClientCard,
-                              {
-                                isShortForm: true,
-                              }
-                            ),
+                          slideOut("bottom", () => {
+                            setShowClientCardModal(false);
+                            setClientDetailsData({
+                              clientId: selectedClientCard.inviteeId,
+                              clientData: selectedClientCard,
+                              inviteId: selectedClientCard.inviteId,
+                              onDelete: onRefresh,
+                              statusText: getClientStatusText(
+                                selectedClientCard,
+                                {
+                                  isShortForm: true,
+                                }
+                              ),
+                            });
+                            setShowClientDetailsModal(true);
                           });
-                          setShowClientDetailsModal(true);
                         }}
                       >
                         <Text style={styles.viewDetailsButtonText}>
@@ -2202,7 +2216,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
             <View style={styles.clientCardModalContent}>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                onPress={() => setShowClientReferralModal(false)}
+                onPress={handleCloseClientReferralModal}
               >
                 <Ionicons name="close" size={24} color={COLORS.black} />
               </TouchableOpacity>
@@ -2364,24 +2378,23 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         onRequestClose={() => setShowFullyApprovedModal(false)}
       >
         <View style={[styles.modalOverlay, { justifyContent: "flex-end" }]}>
-          {selectedFullyApprovedClient && (
-            <FullyApprovedClientModal
-              client={selectedFullyApprovedClient}
-              fullyApprovedDocs={fullyApprovedDocs}
-              onClose={() => setShowFullyApprovedModal(false)}
-              onViewDetails={() => {
-                setShowFullyApprovedModal(false);
-                setClientDetailsData({
-                  clientId: selectedFullyApprovedClient.inviteeId,
-                  clientData: selectedFullyApprovedClient,
-                  inviteId: selectedFullyApprovedClient.inviteId,
-                  onDelete: onRefresh,
-                  statusText: "Fully Approved",
-                });
-                setShowClientDetailsModal(true);
-              }}
-            />
-          )}
+          <FullyApprovedClientModal
+            visible={showFullyApprovedModal}
+            client={selectedFullyApprovedClient}
+            fullyApprovedDocs={fullyApprovedDocs}
+            onClose={() => setShowFullyApprovedModal(false)}
+            onViewDetails={() => {
+              setShowFullyApprovedModal(false);
+              setClientDetailsData({
+                clientId: selectedFullyApprovedClient.inviteeId,
+                clientData: selectedFullyApprovedClient,
+                inviteId: selectedFullyApprovedClient.inviteId,
+                onDelete: onRefresh,
+                statusText: "Fully Approved",
+              });
+              setShowClientDetailsModal(true);
+            }}
+          />
         </View>
       </Modal>
 
@@ -2393,27 +2406,26 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         onRequestClose={() => setShowPurchaseConfirmationModal(false)}
       >
         <View style={[styles.modalOverlay, { justifyContent: "flex-end" }]}>
-          {selectedFullyApprovedClient && (
-            <PurchaseConfirmationModal
-              client={selectedFullyApprovedClient}
-              onClose={() => setShowPurchaseConfirmationModal(false)}
-              onViewDetails={() => {
-                setShowPurchaseConfirmationModal(false);
-                setClientDetailsData({
-                  clientId: selectedFullyApprovedClient.inviteeId,
-                  clientData: selectedFullyApprovedClient,
-                  inviteId: selectedFullyApprovedClient.inviteId,
-                  onDelete: onRefresh,
-                  statusText: "Fully Approved",
-                });
-                setShowClientDetailsModal(true);
-              }}
-              onPurchased={() => {
-                setShowPurchaseConfirmationModal(false);
-                setShowPurchaseDetailsModal(true);
-              }}
-            />
-          )}
+          <PurchaseConfirmationModal
+            visible={showPurchaseConfirmationModal}
+            client={selectedFullyApprovedClient}
+            onClose={() => setShowPurchaseConfirmationModal(false)}
+            onViewDetails={() => {
+              setShowPurchaseConfirmationModal(false);
+              setClientDetailsData({
+                clientId: selectedFullyApprovedClient.inviteeId,
+                clientData: selectedFullyApprovedClient,
+                inviteId: selectedFullyApprovedClient.inviteId,
+                onDelete: onRefresh,
+                statusText: "Fully Approved",
+              });
+              setShowClientDetailsModal(true);
+            }}
+            onPurchased={() => {
+              setShowPurchaseConfirmationModal(false);
+              setShowPurchaseDetailsModal(true);
+            }}
+          />
         </View>
       </Modal>
 
@@ -2425,23 +2437,22 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         onRequestClose={() => setShowPurchaseDetailsModal(false)}
       >
         <View style={[styles.modalOverlay, { justifyContent: "flex-end" }]}>
-          {selectedFullyApprovedClient && (
-            <PurchaseDetailsModal
-              client={selectedFullyApprovedClient}
-              onClose={() => {
-                setShowPurchaseDetailsModal(false);
-                setSelectedFullyApprovedClient(null);
-              }}
-              onConfirm={(purchaseDetails) => {
-                // Handle the purchase details submission here
-                console.log("Purchase details:", purchaseDetails);
-                // Close the purchase details modal
-                setShowPurchaseDetailsModal(false);
-                // Open the FullyApprovedClientModal (old modal)
-                setShowFullyApprovedModal(true);
-              }}
-            />
-          )}
+          <PurchaseDetailsModal
+            visible={showPurchaseDetailsModal}
+            client={selectedFullyApprovedClient}
+            onClose={() => {
+              setShowPurchaseDetailsModal(false);
+              setSelectedFullyApprovedClient(null);
+            }}
+            onConfirm={(purchaseDetails) => {
+              // Handle the purchase details submission here
+              console.log("Purchase details:", purchaseDetails);
+              // Close the purchase details modal
+              setShowPurchaseDetailsModal(false);
+              // Open the FullyApprovedClientModal (old modal)
+              setShowFullyApprovedModal(true);
+            }}
+          />
         </View>
       </Modal>
 
@@ -2694,7 +2705,7 @@ const styles = StyleSheet.create({
     left: "20%",
     width: "80%",
     height: 0.5,
-    backgroundColor: "#686767ff",
+    backgroundColor: "#7773736a",
   },
   lastClientCard: {
     borderBottomWidth: 0,

@@ -14,17 +14,38 @@ const PurchaseConfirmationModal = ({
   onClose,
   onViewDetails,
   onPurchased,
+  visible = true,
 }) => {
   const slideAnim = useRef(new Animated.Value(1000)).current;
 
   useEffect(() => {
-    Animated.spring(slideAnim, {
-      toValue: 0,
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 10,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 1000,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    Animated.timing(slideAnim, {
+      toValue: 1000,
+      duration: 300,
       useNativeDriver: true,
-      tension: 65,
-      friction: 10,
-    }).start();
-  }, []);
+    }).start(() => {
+      setTimeout(() => {
+        onClose();
+      }, 50);
+    });
+  };
 
   const getInitials = (name) => {
     if (!name) return "";
@@ -45,7 +66,7 @@ const PurchaseConfirmationModal = ({
       ]}
     >
       {/* Close Button */}
-      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+      <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
         <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
           <Circle cx="18.5" cy="18.5" r="18.5" fill="#ffffff" />
           <Path

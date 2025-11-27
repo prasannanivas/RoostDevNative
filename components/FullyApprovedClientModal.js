@@ -18,18 +18,39 @@ const FullyApprovedClientModal = ({
   fullyApprovedDocs,
   onClose,
   onViewDetails,
+  visible = true,
 }) => {
   const slideAnim = useRef(new Animated.Value(1000)).current; // Start off-screen
 
   useEffect(() => {
-    // Slide up animation
-    Animated.spring(slideAnim, {
-      toValue: 0,
+    if (visible) {
+      // Slide up animation
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 10,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 1000,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+  const handleClose = () => {
+    Animated.timing(slideAnim, {
+      toValue: 1000,
+      duration: 300,
       useNativeDriver: true,
-      tension: 65,
-      friction: 10,
-    }).start();
-  }, []);
+    }).start(() => {
+      setTimeout(() => {
+        onClose();
+      }, 50);
+    });
+  };
+
   const getInitials = (name) => {
     if (!name) return "";
     const parts = name.trim().split(" ");
