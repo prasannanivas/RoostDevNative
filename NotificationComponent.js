@@ -274,7 +274,7 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
         style={[
           styles.notificationsContainer,
           {
-            opacity: fadeAnim,
+            // opacity: fadeAnim,
             transform: [
               {
                 translateX: slideAnim.interpolate({

@@ -446,7 +446,7 @@ export default function ClientProfile({ onClose }) {
                   {
                     translateY: scrollAnimation.interpolate({
                       inputRange: [60, 110],
-                      outputRange: [0, -10],
+                      outputRange: [0, -4],
                       extrapolate: "clamp",
                     }),
                   },
@@ -509,6 +509,16 @@ export default function ClientProfile({ onClose }) {
             </Animated.Text>
           </Animated.View>
         </Animated.View>
+        <View
+          style={{
+            position: "absolute",
+            width: "100%",
+            top: 63,
+            backgroundColor: COLORS.black,
+            height: 16,
+            zIndex: 50,
+          }}
+        ></View>
 
         <ScrollView
           style={{ zIndex: 20 }}
@@ -584,7 +594,7 @@ export default function ClientProfile({ onClose }) {
           {/* Address Card */}
           <View style={styles.card}>
             {/* <Text style={styles.cardTitle}>My address</Text> */}
-            <Text style={styles.cardSubtitle}>current address</Text>
+            <Text style={styles.cardSubtitle}>Current address</Text>
             <View style={styles.formGroup}>
               {/* <TextInput
                 style={[styles.input, { backgroundColor: COLORS.silver }]}
@@ -964,7 +974,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Futura",
     color: COLORS.black,
-    marginBottom: 8,
   },
   profileSubtitle: {
     fontSize: 14,
@@ -984,7 +993,7 @@ const styles = StyleSheet.create({
   // Card style
   card: {
     backgroundColor: COLORS.white,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     zIndex: 10,
@@ -998,8 +1007,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: 700,
     fontFamily: "Futura",
     alignSelf: "center",
     color: COLORS.black,
@@ -1014,10 +1023,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // Form
-  formGroup: {
-    marginBottom: 16,
-  },
   input: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
@@ -1236,7 +1241,7 @@ const styles = StyleSheet.create({
   emailContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   emailInput: {
     flex: 1,
@@ -1375,7 +1380,7 @@ const styles = StyleSheet.create({
   },
   supportChatButtonText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     fontFamily: "Futura",
   },

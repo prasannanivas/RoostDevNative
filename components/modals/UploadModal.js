@@ -65,9 +65,11 @@ const UploadModal = ({
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
+  const [internalVisible, setInternalVisible] = useState(false);
 
   useEffect(() => {
     if (visible) {
+      setInternalVisible(true);
       // Sequential animation: backdrop fades in, then modal slides up
       Animated.sequence([
         Animated.timing(backdropOpacity, {
@@ -89,10 +91,6 @@ const UploadModal = ({
           }),
         ]),
       ]).start();
-    } else {
-      slideAnim.setValue(600);
-      backdropOpacity.setValue(0);
-      modalOpacity.setValue(0);
     }
   }, [visible]);
 
@@ -369,14 +367,36 @@ const UploadModal = ({
 
   // Close modal and reset state
   const handleClose = () => {
-    setSelectedFile(null);
-    setCapturedImages([]);
-    onClose();
+    // Closing animation: reverse of opening (modal slides down, then backdrop fades out)
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 600,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(modalOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setInternalVisible(false);
+      setSelectedFile(null);
+      setCapturedImages([]);
+      onClose();
+    });
   };
 
   return (
     <Modal
-      visible={visible}
+      visible={internalVisible}
       animationType="none"
       transparent
       onRequestClose={handleClose}
@@ -414,7 +434,7 @@ const UploadModal = ({
               style={styles.closeModalButton}
               onPress={handleClose}
             >
-              <CloseIconSvg />
+              <CloseIconSvg width={26} height={26} color="#797979" />
             </TouchableOpacity>
           </View>
 
@@ -613,17 +633,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 10,
+    paddingBottom: 48,
+    paddingHorizontal: 16,
     zIndex: 1,
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
     padding: 16,
-    paddingBottom: 48,
+    margin: 16,
     width: "100%",
-    maxWidth: "100%",
+    alignItems: "center",
     position: "relative",
     zIndex: 2,
   },
@@ -640,7 +660,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    marginBottom: 16,
+    marginBottom: 4,
     paddingTop: 10,
     position: "relative",
   },
@@ -649,7 +669,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.slate,
     textAlign: "center",
-    marginBottom: 8,
     fontFamily: "Futura",
   },
   infotext: {
@@ -669,8 +688,8 @@ const styles = StyleSheet.create({
   },
   closeModalButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 0,
+    right: 0,
     width: 42,
     height: 42,
     borderRadius: 21,
@@ -817,13 +836,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     alignItems: "center",
     justifyContent: "center",
-    width: "90%",
+    width: "100%",
   },
   actionButtonHalf: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.green,
-    width: "90%",
+    width: "100%",
   },
   actionButtonHalfText: {
     color: COLORS.green,

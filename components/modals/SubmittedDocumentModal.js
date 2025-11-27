@@ -51,9 +51,11 @@ const SubmittedDocumentModal = ({
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
+  const [internalVisible, setInternalVisible] = React.useState(false);
 
   useEffect(() => {
     if (visible) {
+      setInternalVisible(true);
       // Sequential animation: backdrop fades in, then modal slides up
       Animated.sequence([
         Animated.timing(backdropOpacity, {
@@ -75,12 +77,34 @@ const SubmittedDocumentModal = ({
           }),
         ]),
       ]).start();
-    } else {
-      slideAnim.setValue(600);
-      backdropOpacity.setValue(0);
-      modalOpacity.setValue(0);
     }
   }, [visible]);
+
+  const handleClose = () => {
+    // Closing animation: reverse of opening (modal slides down, then backdrop fades out)
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 600,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(modalOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setInternalVisible(false);
+      onClose();
+    });
+  };
 
   // Delete document
   const handleDeleteDocument = async () => {
@@ -114,7 +138,7 @@ const SubmittedDocumentModal = ({
       }
 
       Alert.alert("Success", "Document deleted successfully");
-      onClose();
+      handleClose();
     } catch (error) {
       Alert.alert("Error", "Failed to delete document");
       console.error(error);
@@ -125,10 +149,10 @@ const SubmittedDocumentModal = ({
 
   return (
     <Modal
-      visible={visible}
+      visible={internalVisible}
       animationType="none"
       transparent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <Animated.View
         style={[styles.modalOverlay, { opacity: backdropOpacity }]}
@@ -146,8 +170,11 @@ const SubmittedDocumentModal = ({
             <Text style={styles.modalTitle}>
               {document?.displayName || document?.docType || "Document"}
             </Text>
-            <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-              <CloseIconSvg />
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={handleClose}
+            >
+              <CloseIconSvg height={26} width={26} color="#797979" />
             </TouchableOpacity>
           </View>
 
@@ -178,7 +205,7 @@ const SubmittedDocumentModal = ({
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.nevermindButton]}
-              onPress={onClose}
+              onPress={handleClose}
             >
               <Text style={styles.modalButtonText}>Never Mind</Text>
             </TouchableOpacity>
@@ -199,15 +226,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 10,
+    paddingBottom: 48,
+    paddingHorizontal: 16,
     zIndex: 1,
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
     padding: 16,
-    paddingBottom: 48,
+    paddingBottom: 24,
     width: "100%",
     maxWidth: "100%",
     position: "relative",
@@ -231,8 +258,8 @@ const styles = StyleSheet.create({
   },
   closeModalButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 0,
+    right: 0,
     width: 42,
     height: 42,
     borderRadius: 21,
@@ -246,7 +273,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.slate,
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 4,
     fontFamily: "Futura",
   },
   completeModalText: {

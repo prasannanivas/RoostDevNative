@@ -1158,6 +1158,7 @@ const ClientHome = ({ questionnaireData }) => {
       </ReactNativeModal>
       {/* Upload Modal */}
       <UploadModal
+        key={`upload-modal-${showModal}`}
         visible={showModal}
         onClose={closeModal}
         selectedDocType={selectedDocType}
@@ -1193,6 +1194,7 @@ const ClientHome = ({ questionnaireData }) => {
 
       {/* Complete Document Modal */}
       <CompleteDocumentModal
+        key={`complete-modal-${showCompleteModal}`}
         visible={showCompleteModal}
         onClose={() => setShowCompleteModal(false)}
         document={selectedCompleteDoc}
@@ -1202,6 +1204,7 @@ const ClientHome = ({ questionnaireData }) => {
       />
       {/* Submitted Document Modal */}
       <SubmittedDocumentModal
+        key={`submitted-modal-${showSubmittedModal}`}
         visible={showSubmittedModal}
         onClose={() => setShowSubmittedModal(false)}
         document={selectedSubmittedDoc}
@@ -1491,7 +1494,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
     paddingTop: 60, // Reserve 68px for mobile status bar
     paddingBottom: 8,
     backgroundColor: COLORS.black, // Restore original background color
@@ -1555,7 +1558,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.blue,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 8,
   },
 
   sideModal: {

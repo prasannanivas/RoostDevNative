@@ -46,9 +46,11 @@ const CompleteDocumentModal = ({
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
+  const [internalVisible, setInternalVisible] = React.useState(false);
 
   useEffect(() => {
     if (visible) {
+      setInternalVisible(true);
       // Sequential animation: backdrop fades in, then modal slides up
       Animated.sequence([
         Animated.timing(backdropOpacity, {
@@ -70,19 +72,41 @@ const CompleteDocumentModal = ({
           }),
         ]),
       ]).start();
-    } else {
-      slideAnim.setValue(600);
-      backdropOpacity.setValue(0);
-      modalOpacity.setValue(0);
     }
   }, [visible]);
 
+  const handleClose = () => {
+    // Closing animation: reverse of opening (modal slides down, then backdrop fades out)
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 600,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(modalOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setInternalVisible(false);
+      onClose();
+    });
+  };
+
   return (
     <Modal
-      visible={visible}
+      visible={internalVisible}
       animationType="none"
       transparent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <Animated.View
         style={[styles.modalOverlay, { opacity: backdropOpacity }]}
@@ -100,8 +124,11 @@ const CompleteDocumentModal = ({
             <Text style={styles.modalTitle}>
               {document?.displayName || document?.docType || "Document"}
             </Text>
-            <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-              <CloseIconSvg />
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={handleClose}
+            >
+              <CloseIconSvg width={24} height={24} color="#797979" />
             </TouchableOpacity>
           </View>
 
@@ -113,7 +140,7 @@ const CompleteDocumentModal = ({
             You have already submitted this document and accepted as valid
           </Text>
 
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -132,15 +159,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 10,
+    paddingBottom: 46,
+    paddingHorizontal: 16,
     zIndex: 1,
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
+
     padding: 16,
-    paddingBottom: 48,
+    paddingBottom: 24,
     width: "100%",
     maxWidth: "100%",
     position: "relative",
@@ -164,8 +192,8 @@ const styles = StyleSheet.create({
   },
   closeModalButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 0,
+    right: 0,
     width: 42,
     height: 42,
     borderRadius: 21,
