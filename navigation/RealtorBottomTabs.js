@@ -3,6 +3,7 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
 } from "@react-navigation/stack";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -40,7 +41,7 @@ const Stack = createStackNavigator();
 const COLORS = {
   green: "#377473",
   background: "#F6F6F6",
-  black: "#1D2327",
+  black: "#0E1D1D", // Match RealtorHome color
   slate: "#707070",
   gray: "#A9A9A9",
   silver: "#F6F6F6",
@@ -135,6 +136,30 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   const [selectedSplash, setSelectedSplash] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Animation for header extended background
+  const headerExtendedAnim = useRef(new Animated.Value(55)).current; // Start with full height
+
+  // Animate header extended background on focus/blur
+  useFocusEffect(
+    React.useCallback(() => {
+      // Collapse to 0 when screen is focused
+      Animated.timing(headerExtendedAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+
+      // Cleanup: expand back to 55 when screen loses focus
+      return () => {
+        Animated.timing(headerExtendedAnim, {
+          toValue: 55,
+          duration: 300,
+          useNativeDriver: false,
+        }).start();
+      };
+    }, [])
+  );
 
   // Placeholder handlers for header actions
   const handleProfileClick = () => {
@@ -320,144 +345,15 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   };
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
-      {/* ================= TOP HEADER (Same as RealtorHome) ================= */}
-      <View style={styles.headerContainer} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.userInfoContainer}
-          onPress={handleProfileClick}
-          activeOpacity={0.7}
-        >
-          {realtor.id && (
-            <>
-              {/* Always show initials avatar, overlay image when loaded */}
-              <View
-                style={[
-                  styles.avatar,
-                  {
-                    backgroundColor: "#2271B1",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    position: "relative",
-                  },
-                ]}
-              >
-                <Text style={styles.avatarText}>
-                  {generateInitials(
-                    realtorFromContext?.realtorInfo?.name || realtor.name
-                  )}
-                </Text>
-                {!imageLoadError && (
-                  <Image
-                    source={
-                      cachedImageBase64
-                        ? { uri: `data:image/jpeg;base64,${cachedImageBase64}` }
-                        : {
-                            uri: `https://signup.roostapp.io/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
-                          }
-                    }
-                    style={[
-                      styles.avatar,
-                      { position: "absolute", top: 0, left: 0 },
-                    ]}
-                    onError={() => setImageLoadError(true)}
-                    onLoad={async () => {
-                      try {
-                        // Only download if we don't have cached image
-                        if (!cachedImageBase64) {
-                          const imageUri = `https://signup.roostapp.io/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`;
-                          const localUri =
-                            FileSystem.cacheDirectory +
-                            `profile_${realtor.id}.jpg`;
-
-                          // Download the image to local cache
-                          await FileSystem.downloadAsync(imageUri, localUri);
-
-                          // Read the file as base64
-                          const base64 = await FileSystem.readAsStringAsync(
-                            localUri,
-                            {
-                              encoding: FileSystem.EncodingType.Base64,
-                            }
-                          );
-
-                          // Save to state
-                          setCachedImageBase64(base64);
-
-                          // Also save to AsyncStorage for persistence
-                          const imageData = {
-                            base64: base64,
-                            timestamp: Date.now(),
-                          };
-
-                          await AsyncStorage.setItem(
-                            `profileImage_${realtor.id}`,
-                            JSON.stringify(imageData)
-                          );
-                        }
-                      } catch (error) {
-                        console.log("Error caching profile image:", error);
-                      }
-                    }}
-                  />
-                )}
-              </View>
-            </>
-          )}
-          <View style={styles.nameAgencyContainer}>
-            <Text
-              style={styles.realtorName}
-              numberOfLines={1}
-              ellipsizeMode="clip"
-            >
-              {realtorFromContext?.realtorInfo?.name || realtor.name}
-            </Text>
-            <Text
-              style={styles.agencyName}
-              numberOfLines={1}
-              ellipsizeMode="clip"
-            >
-              {realtorFromContext?.realtorInfo?.brokerageInfo?.brokerageName ||
-                realtor?.brokerageInfo?.brokerageName ||
-                null}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <View style={styles.iconsContainer}>
-          <NotificationBell
-            size={26}
-            bellColor="#ffffff"
-            badgeColor="#F0913A"
-            showBadge={unreadCount > 0}
-            badgeCount={unreadCount}
-            style={styles.notificationBell}
-            onPress={() => {
-              console.log("Notification bell pressed in TagScreen");
-              onShowNotifications?.();
-            }}
-          />
-          {/* <TouchableOpacity
-            style={styles.chatIconContainer}
-            onPress={handleChatPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chatbubble-outline"
-              size={24}
-              color={COLORS.white}
-            />
-          </TouchableOpacity> */}
-          <GiftIcon
-            onPress={handleRewardsClick}
-            width={46}
-            height={46}
-            backgroundColor="#1D2327"
-            strokeColor="#377473"
-            pathColor="#FDFDFD"
-          />
-        </View>
-      </View>
-
+    <View style={styles.tagScreenContainer}>
+      <Animated.View
+        style={[
+          styles.headerExtendedBackground,
+          {
+            height: headerExtendedAnim,
+          },
+        ]}
+      />
       {/* Content */}
       <ScrollView
         style={styles.scrollContent}
@@ -604,6 +500,54 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
   const realtorHomeRef = useRef(null);
   const [activeTab, setActiveTab] = useState("HomeTab");
   const navigationRef = useRef(null);
+  const { auth } = useAuth();
+  const realtor = auth.realtor;
+  const realtorFromContext = useRealtor();
+  const { unreadCount } = useNotification();
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
+  const [cachedImageBase64, setCachedImageBase64] = useState(null);
+
+  // Effect to refresh profile picture when realtor data changes (same as RealtorHome)
+  useEffect(() => {
+    if (realtorFromContext?.realtorInfo) {
+      // Reset image load error state and refresh key when realtor data updates
+      setImageLoadError(false);
+      setImageRefreshKey(Date.now());
+
+      // Try to load profile image from local storage
+      const loadCachedProfileImage = async () => {
+        try {
+          if (realtor && realtor.id) {
+            const cachedImageData = await AsyncStorage.getItem(
+              `profileImage_${realtor.id}`
+            );
+
+            if (cachedImageData) {
+              const { base64, timestamp } = JSON.parse(cachedImageData);
+
+              // Check if cached image is less than 24 hours old
+              const now = Date.now();
+              const isRecent = now - timestamp < 24 * 60 * 60 * 1000; // 24 hours
+
+              if (isRecent && base64) {
+                console.log("Loaded profile image from local storage");
+                setCachedImageBase64(base64);
+              } else {
+                // Clear outdated cache
+                console.log("Cached image is outdated, clearing cache");
+                await AsyncStorage.removeItem(`profileImage_${realtor.id}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error loading cached profile image:", error);
+        }
+      };
+
+      loadCachedProfileImage();
+    }
+  }, [realtorFromContext?.realtorInfo]);
 
   const handleTabPress = (routeName) => {
     if (routeName === activeTab) return;
@@ -622,8 +566,138 @@ const RealtorBottomTabs = ({ onShowNotifications }) => {
     }
   };
 
+  const handleProfileClick = () => {
+    console.log("Profile clicked - navigating to Home");
+    if (navigationRef.current && navigationRef.current.canGoBack()) {
+      navigationRef.current.goBack();
+    } else {
+      navigationRef.current?.navigate("HomeTab");
+    }
+    setTimeout(() => {
+      realtorHomeRef.current?.openProfile?.();
+    }, 300);
+  };
+
+  const handleRewardsClick = () => {
+    console.log("Rewards clicked - navigating to Home");
+    if (navigationRef.current && navigationRef.current.canGoBack()) {
+      navigationRef.current.goBack();
+    } else {
+      navigationRef.current?.navigate("HomeTab");
+    }
+    setTimeout(() => {
+      realtorHomeRef.current?.openRewards?.();
+    }, 300);
+  };
+
   return (
     <View style={{ flex: 1 }}>
+      {/* ================= SHARED HEADER ================= */}
+      <View style={styles.sharedHeaderContainer}>
+        <TouchableOpacity
+          style={styles.userInfoContainer}
+          onPress={handleProfileClick}
+          activeOpacity={0.7}
+        >
+          {realtor?.id && (
+            <>
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor: "#2271B1",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                  },
+                ]}
+              >
+                <Text style={styles.avatarText}>
+                  {generateInitials(
+                    realtorFromContext?.realtorInfo?.name || realtor.name
+                  )}
+                </Text>
+                {!imageLoadError && (
+                  <Image
+                    source={
+                      cachedImageBase64
+                        ? { uri: `data:image/jpeg;base64,${cachedImageBase64}` }
+                        : {
+                            uri: `https://signup.roostapp.io/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`,
+                          }
+                    }
+                    style={[
+                      styles.avatar,
+                      { position: "absolute", top: 0, left: 0 },
+                    ]}
+                    onError={() => setImageLoadError(true)}
+                    onLoad={async () => {
+                      try {
+                        if (!cachedImageBase64) {
+                          const imageUri = `https://signup.roostapp.io/realtor/profilepic/${realtor.id}?t=${imageRefreshKey}`;
+                          const localUri =
+                            FileSystem.cacheDirectory +
+                            `profile_${realtor.id}.jpg`;
+                          await FileSystem.downloadAsync(imageUri, localUri);
+                          const base64 = await FileSystem.readAsStringAsync(
+                            localUri,
+                            { encoding: FileSystem.EncodingType.Base64 }
+                          );
+                          setCachedImageBase64(base64);
+                          await AsyncStorage.setItem(
+                            `profileImage_${realtor.id}`,
+                            JSON.stringify({ base64, timestamp: Date.now() })
+                          );
+                        }
+                      } catch (error) {
+                        console.log("Error caching profile image:", error);
+                      }
+                    }}
+                  />
+                )}
+              </View>
+            </>
+          )}
+          <View style={styles.nameAgencyContainer}>
+            <Text
+              style={styles.realtorName}
+              numberOfLines={1}
+              ellipsizeMode="clip"
+            >
+              {realtorFromContext?.realtorInfo?.name || realtor?.name}
+            </Text>
+            <Text
+              style={styles.agencyName}
+              numberOfLines={1}
+              ellipsizeMode="clip"
+            >
+              {realtorFromContext?.realtorInfo?.brokerageInfo?.brokerageName ||
+                realtor?.brokerageInfo?.brokerageName ||
+                null}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <View style={styles.iconsContainer}>
+          <NotificationBell
+            size={26}
+            bellColor="#ffffff"
+            badgeColor="#F0913A"
+            showBadge={unreadCount > 0}
+            badgeCount={unreadCount}
+            style={styles.notificationBell}
+            onPress={onShowNotifications}
+          />
+          <GiftIcon
+            onPress={handleRewardsClick}
+            width={46}
+            height={46}
+            backgroundColor="#0E1D1D"
+            strokeColor="#377473"
+            pathColor="#FDFDFD"
+          />
+        </View>
+      </View>
+
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -714,18 +788,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  headerContainer: {
+  tagScreenContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  sharedHeaderContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
     width: "100%",
     height: 126,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 8,
     backgroundColor: COLORS.black,
+    zIndex: 1,
+    elevation: 1,
+  },
+  headerExtendedBackground: {
+    position: "absolute",
+    top: 126,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: 55,
+    backgroundColor: COLORS.black,
     zIndex: 10,
-    elevation: 10,
   },
   iconsContainer: {
     flexDirection: "row",
@@ -797,6 +889,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
+    marginTop: 126, // Add top margin to account for fixed header
   },
   offersSection: {
     flex: 1,

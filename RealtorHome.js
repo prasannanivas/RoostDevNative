@@ -86,6 +86,30 @@ const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
 
 const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
+  // Animation for header extended background
+  const headerExtendedAnim = useRef(new Animated.Value(0)).current; // Start collapsed
+
+  // Animate header extended background on focus/blur
+  useFocusEffect(
+    React.useCallback(() => {
+      // Expand to 55 when screen is focused
+      Animated.timing(headerExtendedAnim, {
+        toValue: 55,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+
+      // Cleanup: collapse to 0 when screen loses focus
+      return () => {
+        Animated.timing(headerExtendedAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: false,
+        }).start();
+      };
+    }, [])
+  );
+
   // Blinking animation for FullyApproved clients with paperwork requested
   const blinkAnim = useRef(new Animated.Value(0)).current;
 
@@ -1249,7 +1273,14 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           />
         </View>
       </View>
-      <View style={styles.headerExtendedBackground} />
+      <Animated.View
+        style={[
+          styles.headerExtendedBackground,
+          {
+            height: headerExtendedAnim,
+          },
+        ]}
+      />
       <View style={styles.inviteBanner}>
         <TouchableOpacity
           style={styles.inviteRealtorsButton}
@@ -2472,10 +2503,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
     paddingTop: 60, // Reserve 68px for mobile status bar
     paddingBottom: 8,
     backgroundColor: COLORS.black,
+    zIndex: 200,
+    elevation: 200,
     // Content area is 64px high starting at top: 68px
   },
   iconsContainer: {
@@ -2574,9 +2607,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     shadowColor: "#0E1D1D",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+    zIndex: 10,
+    overflow: "visible",
   },
   inviteRealtorsButton: {
     backgroundColor: COLORS.green,
@@ -2640,9 +2675,8 @@ const styles = StyleSheet.create({
   },
   clientsGroupWrapper: {
     alignSelf: "center",
-    width: "95%",
-    minWidth: 358,
-    maxWidth: 528,
+    width: "100%",
+
     marginVertical: 8,
     borderRadius: 16,
     backgroundColor: COLORS.white,
@@ -3278,7 +3312,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     color: "#FDFDFD",
     paddingVertical: 30,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     // iOS shadow
     shadowColor: "#000000",
     shadowOffset: {
