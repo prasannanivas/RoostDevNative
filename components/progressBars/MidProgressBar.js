@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     borderRadius: 10.5,
   },
   barText: {
-    color: "#000000",
+    color: "#797979",
     fontSize: 10,
     fontWeight: "500",
     fontFamily: "Futura",

@@ -87,28 +87,28 @@ const AnimatedTouchableOpacity =
 
 const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   // Animation for header extended background
-  const headerExtendedAnim = useRef(new Animated.Value(0)).current; // Start collapsed
+  // const headerExtendedAnim = useRef(new Animated.Value(0)).current; // Start collapsed
 
-  // Animate header extended background on focus/blur
-  useFocusEffect(
-    React.useCallback(() => {
-      // Expand to 55 when screen is focused
-      Animated.timing(headerExtendedAnim, {
-        toValue: 55,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
+  // // Animate header extended background on focus/blur
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     // Expand to 55 when screen is focused
+  //     Animated.timing(headerExtendedAnim, {
+  //       toValue: 55,
+  //       duration: 300,
+  //       useNativeDriver: false,
+  //     }).start();
 
-      // Cleanup: collapse to 0 when screen loses focus
-      return () => {
-        Animated.timing(headerExtendedAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: false,
-        }).start();
-      };
-    }, [])
-  );
+  //     // Cleanup: collapse to 0 when screen loses focus
+  //     return () => {
+  //       Animated.timing(headerExtendedAnim, {
+  //         toValue: 0,
+  //         duration: 300,
+  //         useNativeDriver: false,
+  //       }).start();
+  //     };
+  //   }, [])
+  // );
 
   // Blinking animation for FullyApproved clients with paperwork requested
   const blinkAnim = useRef(new Animated.Value(0)).current;
@@ -1273,14 +1273,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
           />
         </View>
       </View>
-      <Animated.View
-        style={[
-          styles.headerExtendedBackground,
-          {
-            height: headerExtendedAnim,
-          },
-        ]}
-      />
+      <Animated.View style={[styles.headerExtendedBackground]} />
       <View style={styles.inviteBanner}>
         <TouchableOpacity
           style={styles.inviteRealtorsButton}
@@ -2717,7 +2710,7 @@ const styles = StyleSheet.create({
   },
   initialsText: {
     color: COLORS.white,
-    fontSize: 14, // H3 size
+    fontSize: 20, // H3 size
     fontWeight: "700", // H3 weight
     fontFamily: "Futura",
   },

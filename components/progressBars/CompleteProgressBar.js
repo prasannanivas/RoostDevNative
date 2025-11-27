@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     borderRadius: 10.5,
   },
   barText: {
-    color: "#000000ff", // White color for text
+    color: "#797979", // White color for text
     fontSize: 10,
     fontWeight: "500",
     fontFamily: "Futura",

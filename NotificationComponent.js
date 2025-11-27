@@ -248,7 +248,7 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
-        toValue: 0.95,
+        toValue: 1,
         tension: 65,
         friction: 11,
         useNativeDriver: true,
@@ -309,11 +309,11 @@ const NotificationComponent = ({ visible, onClose, userId }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 16 }}
         >
-          {loading ? (
+          {loading && (!notifications || notifications.length === 0) ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#019B8E" />
             </View>
-          ) : error ? (
+          ) : error && (!notifications || notifications.length === 0) ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>Failed to load notifications</Text>
               <TouchableOpacity
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   notificationsContainer: {
     backgroundColor: "#FDFDFD",
-    borderTopLeftRadius: 32,
+    borderTopLeftRadius: 16,
     borderBottomLeftRadius: 0,
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,

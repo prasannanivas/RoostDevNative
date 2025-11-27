@@ -46,11 +46,11 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     height: "100%",
-    backgroundColor: "rgba(240, 145, 58, 0.2)",
+    backgroundColor: "#CDDCDC",
     borderRadius: 10.5,
   },
   barText: {
-    color: "#1D2327",
+    color: "#797979",
     fontSize: 10,
     fontWeight: "500",
     fontFamily: "Futura",

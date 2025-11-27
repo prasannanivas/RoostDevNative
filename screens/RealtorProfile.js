@@ -1092,6 +1092,16 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           </Animated.Text>
         </Animated.View>
       </Animated.View>
+      <View
+        style={{
+          position: "absolute",
+          width: "100%",
+          top: 63,
+          backgroundColor: COLORS.black,
+          height: 16,
+          zIndex: 50,
+        }}
+      ></View>
 
       {/* Scrollable Content */}
       <ScrollView
@@ -1113,7 +1123,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
         scrollEventThrottle={16}
       >
         <View style={styles.section}>
-          <Text style={styles.sectionSubTitle}>
+          <Text style={styles.sectionSubTitle2}>
             Keep your personal info up-to-date
           </Text>
           <View style={styles.formGroup}>
@@ -1160,7 +1170,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               placeholder="Phone"
             />
           </View>
-          <Text style={styles.sectionSubTitle}>Send my rewards to:</Text>
+          <Text style={styles.sectionSubTitle2}>Send my rewards to:</Text>
           <View style={styles.formGroup}>
             <TextInput
               style={styles.input}
@@ -1219,7 +1229,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
         </TouchableOpacity>
         {/* Brokerage Info (Editable) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Brokerage Information</Text>
+          <Text style={styles.sectionTitle}>Brokerage Info</Text>
           <Text style={styles.sectionSubTitle}>
             Make sure thing info is complete and up to date
           </Text>
@@ -1827,7 +1837,6 @@ const styles = StyleSheet.create({
     fontFamily: "Futura",
     textAlign: "center",
     color: COLORS.black,
-    marginBottom: 8,
   },
   infoSubtitle: {
     fontSize: 14,
@@ -1876,20 +1885,29 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     alignSelf: "center",
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Futura",
     color: COLORS.black,
-    marginBottom: 8,
+    marginBottom: 2,
   },
   sectionSubTitle: {
+    fontSize: 10,
+    fontWeight: "500", // Adding quotes around the fontWeight value
+    // lineHeight: 14, // Changed from "100%" to a numeric value
+    alignSelf: "center",
+    fontFamily: "Futura",
+    color: "#707070",
+    marginBottom: 8,
+  },
+  sectionSubTitle2: {
     fontSize: 14,
     fontWeight: "500", // Adding quotes around the fontWeight value
     lineHeight: 14, // Changed from "100%" to a numeric value
     alignSelf: "center",
     fontFamily: "Futura",
     color: "#1D2327",
-    marginBottom: 8,
+    marginBottom: 4,
     marginTop: 8,
   },
 

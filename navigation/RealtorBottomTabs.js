@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
@@ -143,23 +144,33 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   // Animate header extended background on focus/blur
   useFocusEffect(
     React.useCallback(() => {
-      // Collapse to 0 when screen is focused
-      Animated.timing(headerExtendedAnim, {
+      // Collapse to 0 when screen is focused with a spring animation for smoother feel
+      Animated.spring(headerExtendedAnim, {
         toValue: 0,
-        duration: 300,
         useNativeDriver: false,
+        friction: 10,
+        tension: 50,
       }).start();
 
-      // Cleanup: expand back to 55 when screen loses focus
-      return () => {
-        Animated.timing(headerExtendedAnim, {
-          toValue: 55,
-          duration: 300,
-          useNativeDriver: false,
-        }).start();
-      };
+      // No cleanup needed - we'll handle blur separately
+      return () => {};
     }, [])
   );
+
+  // Use useEffect with navigation to handle blur animation
+  useEffect(() => {
+    const unsubscribe = navigation?.addListener("blur", () => {
+      // Expand back to 55 when screen loses focus
+      Animated.spring(headerExtendedAnim, {
+        toValue: 55,
+        useNativeDriver: false,
+        friction: 10,
+        tension: 50,
+      }).start();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   // Placeholder handlers for header actions
   const handleProfileClick = () => {
