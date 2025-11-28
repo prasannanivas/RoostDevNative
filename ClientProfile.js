@@ -996,7 +996,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
-    padding: 16,
+    padding: 24,
     marginBottom: 24,
     zIndex: 10,
     shadowColor: COLORS.black,

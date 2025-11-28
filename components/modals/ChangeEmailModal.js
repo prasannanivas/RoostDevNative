@@ -320,7 +320,7 @@ export default function ChangeEmailModal({
                   code to this address.
                 </Text>
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>New Email Address</Text>
+                  {/* <Text style={styles.label}>New Email Address</Text> */}
                   <TextInput
                     style={styles.input}
                     placeholder="Enter new email address"

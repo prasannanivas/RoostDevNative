@@ -1875,7 +1875,7 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 16,
     backgroundColor: COLORS.white,
-    padding: 16,
+    padding: 24,
     marginHorizontal: 4,
     gap: 8,
     borderRadius: 16,
@@ -1891,7 +1891,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Futura",
     color: COLORS.black,
-    marginBottom: 2,
+    marginBottom: 8,
   },
   sectionSubTitle: {
     fontSize: 10,
