@@ -22,8 +22,8 @@ const CompleteProgressBar = ({ text, points, date }) => {
   // If text is "COMPLETED", only show points and date
   if (text === "COMPLETED") {
     return (
-      <View style={styles.container}>
-        <Text style={styles.barText}>
+      <View style={[styles.container, { paddingVertical: 4 }]}>
+        <Text style={[styles.barText, { marginLeft: 0 }]}>
           {date || ""}
           {formattedPoints && date ? " - " : ""}
           {formattedPoints ? `${formattedPoints} PTS` : ""}

@@ -762,18 +762,18 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   // Close handlers with animation
   const handleCloseClientCardModal = () => {
     slideOut("bottom", () => {
-      setTimeout(() => {
-        setShowClientCardModal(false);
-        setShowResendInviteOptions(false);
-      }, 650);
+      setShowClientCardModal(false);
+      setShowResendInviteOptions(false);
+      // Clear selected client card to ensure clean state
+      setSelectedClientCard(null);
     });
   };
 
   const handleCloseClientReferralModal = () => {
     slideOut("bottom", () => {
-      setTimeout(() => {
-        setShowClientReferralModal(false);
-      }, 650);
+      setShowClientReferralModal(false);
+      // Clear selected client card to ensure clean state
+      setSelectedClientCard(null);
     });
   };
 
@@ -1559,7 +1559,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       </Text>
                     </View>
                     <View style={styles.clientDetails}>
-                      <Text style={styles.clientName}>{client.name}</Text>
+                      <Text style={[styles.clientName, { marginBottom: 0 }]}>
+                        {client.name}
+                      </Text>
                       <CompleteProgressBar
                         text="COMPLETED"
                         points={client?.completionDetails?.referralReward || ""}
@@ -1909,6 +1911,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         visible={showClientCardModal}
         animationType="none"
         transparent={true}
+        onRequestClose={handleCloseClientCardModal}
       >
         <Animated.View
           style={[
@@ -2197,6 +2200,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         visible={showClientReferralModal}
         animationType="none"
         transparent={true}
+        onRequestClose={handleCloseClientReferralModal}
       >
         <Animated.View
           style={[
@@ -2220,7 +2224,13 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                 style={styles.modalCloseButton}
                 onPress={handleCloseClientReferralModal}
               >
-                <Ionicons name="close" size={24} color={COLORS.black} />
+                <Svg width="37" height="37" viewBox="0 0 37 37" fill="none">
+                  <Circle cx="18.5" cy="18.5" r="18.5" fill="#ffffffff" />
+                  <Path
+                    d="M18.5 6C11.5969 6 6 11.5963 6 18.5C6 25.4037 11.5963 31 18.5 31C25.4037 31 31 25.4037 31 18.5C31 11.5963 25.4037 6 18.5 6ZM18.5 29.4625C12.4688 29.4625 7.5625 24.5312 7.5625 18.5C7.5625 12.4688 12.4688 7.5625 18.5 7.5625C24.5312 7.5625 29.4375 12.4688 29.4375 18.5C29.4375 24.5312 24.5312 29.4625 18.5 29.4625ZM22.9194 14.0812C22.6147 13.7766 22.12 13.7766 21.8147 14.0812L18.5006 17.3953L15.1866 14.0812C14.8819 13.7766 14.3866 13.7766 14.0812 14.0812C13.7759 14.3859 13.7766 14.8813 14.0812 15.1859L17.3953 18.5L14.0812 21.8141C13.7766 22.1187 13.7766 22.6141 14.0812 22.9188C14.3859 23.2234 14.8812 23.2234 15.1866 22.9188L18.5006 19.6047L21.8147 22.9188C22.1194 23.2234 22.6141 23.2234 22.9194 22.9188C23.2247 22.6141 23.2241 22.1187 22.9194 21.8141L19.6053 18.5L22.9194 15.1859C23.225 14.8806 23.225 14.3859 22.9194 14.0812Z"
+                    fill="#5a5959ff"
+                  />
+                </Svg>
               </TouchableOpacity>
 
               {selectedClientCard && (
@@ -2235,7 +2245,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                       <Text style={styles.clientCardName}>
                         {selectedClientCard.name}
                       </Text>
-                      {(() => {
+                      {/* {(() => {
                         return (
                           <CompleteProgressBar
                             text="COMPLETED"
@@ -2256,15 +2266,12 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                             }
                           />
                         );
-                      })()}
+                      })()} */}
                     </View>
                   </View>
                   <View style={styles.clientCardActions}>
                     <TouchableOpacity
-                      style={[
-                        styles.viewDetailsButton,
-                        { backgroundColor: COLORS.blue, borderRadius: 33 },
-                      ]}
+                      style={[styles.viewDetailsButton, { borderRadius: 33 }]}
                       onPress={async () => {
                         setLoadingDownload(true);
                         setDownloadProgress(0);
