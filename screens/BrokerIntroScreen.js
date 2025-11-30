@@ -1,5 +1,13 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import Button from "../components/common/Button";
 import Logo from "../components/Logo";
 import Svg, { Path } from "react-native-svg";
@@ -12,17 +20,221 @@ const COLORS = {
 };
 
 const BrokerIntroScreen = ({ brokerName, brokerImage, onContinue }) => {
+  // Animation values
+  const logoPosition = useRef(new Animated.Value(0)).current; // Start at center
+  const brokerPosition = useRef(new Animated.Value(0)).current; // Start at center (stacked behind logo)
+  const brokerOpacity = useRef(new Animated.Value(1)).current; // Start visible
+
+  // Text animations
+  const subtitleOpacity = useRef(new Animated.Value(0)).current;
+  const subtitlePosition = useRef(new Animated.Value(-20)).current; // Start 20px up and right
+  const instructionsOpacity = useRef(new Animated.Value(0)).current;
+  const instructionsPosition = useRef(new Animated.Value(20)).current; // Start 20px down and right
+
+  // Star animations - 4 stars going to corners
+  const star1Opacity = useRef(new Animated.Value(1)).current; // Top-left star
+  const star1X = useRef(new Animated.Value(0)).current;
+  const star1Y = useRef(new Animated.Value(0)).current;
+
+  const star2Opacity = useRef(new Animated.Value(1)).current; // Top-right star
+  const star2X = useRef(new Animated.Value(0)).current;
+  const star2Y = useRef(new Animated.Value(0)).current;
+
+  const star3Opacity = useRef(new Animated.Value(1)).current; // Bottom-left star
+  const star3X = useRef(new Animated.Value(0)).current;
+  const star3Y = useRef(new Animated.Value(0)).current;
+
+  const star4Opacity = useRef(new Animated.Value(1)).current; // Bottom-right star
+  const star4X = useRef(new Animated.Value(0)).current;
+  const star4Y = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Start animations after a brief delay
+    setTimeout(() => {
+      Animated.parallel([
+        // Move logo circle to the left
+        Animated.timing(logoPosition, {
+          toValue: -65, // Move 65px to the left from center
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Move broker image to the right
+        Animated.timing(brokerPosition, {
+          toValue: 65, // Move 65px to the right from center
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Fade in and move subtitle
+        Animated.timing(subtitleOpacity, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(subtitlePosition, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Fade in and move instructions
+        Animated.timing(instructionsOpacity, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(instructionsPosition, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Star 1 - Top-left corner
+        Animated.timing(star1X, {
+          toValue: -150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star1Y, {
+          toValue: -150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star1Opacity, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Star 2 - Top-right corner
+        Animated.timing(star2X, {
+          toValue: 150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star2Y, {
+          toValue: -150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star2Opacity, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Star 3 - Bottom-left corner
+        Animated.timing(star3X, {
+          toValue: -150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star3Y, {
+          toValue: 150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star3Opacity, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        // Star 4 - Bottom-right corner
+        Animated.timing(star4X, {
+          toValue: 150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star4Y, {
+          toValue: 150,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(star4Opacity, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 300); // Small delay before starting animations
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Meet {brokerName}!</Text>
 
-        <Text style={styles.subtitle}>
+        <Animated.Text
+          style={[
+            styles.subtitle,
+            {
+              opacity: subtitleOpacity,
+              transform: [
+                { translateY: subtitlePosition },
+                { translateX: subtitlePosition },
+              ],
+            },
+          ]}
+        >
           You will be able to chat and share with {brokerName} in the app
-        </Text>
+        </Animated.Text>
 
         <View style={styles.imagesContainer}>
-          <View style={styles.logoCircle}>
+          {/* Star 1 - Top-left */}
+          <Animated.View
+            style={[
+              styles.star,
+              {
+                opacity: star1Opacity,
+                transform: [{ translateX: star1X }, { translateY: star1Y }],
+              },
+            ]}
+          >
+            <Ionicons name="star" size={48} color={COLORS.white} />
+          </Animated.View>
+
+          {/* Star 2 - Top-right */}
+          <Animated.View
+            style={[
+              styles.star,
+              {
+                opacity: star2Opacity,
+                transform: [{ translateX: star2X }, { translateY: star2Y }],
+              },
+            ]}
+          >
+            <Ionicons name="star" size={48} color={COLORS.white} />
+          </Animated.View>
+
+          {/* Star 3 - Bottom-left */}
+          <Animated.View
+            style={[
+              styles.star,
+              {
+                opacity: star3Opacity,
+                transform: [{ translateX: star3X }, { translateY: star3Y }],
+              },
+            ]}
+          >
+            <Ionicons name="star" size={48} color={COLORS.white} />
+          </Animated.View>
+
+          {/* Star 4 - Bottom-right */}
+          <Animated.View
+            style={[
+              styles.star,
+              {
+                opacity: star4Opacity,
+                transform: [{ translateX: star4X }, { translateY: star4Y }],
+              },
+            ]}
+          >
+            <Ionicons name="star" size={48} color={COLORS.white} />
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.logoCircle,
+              {
+                transform: [{ translateX: logoPosition }],
+              },
+            ]}
+          >
             <Svg
               width="114"
               height="111"
@@ -55,9 +267,16 @@ const BrokerIntroScreen = ({ brokerName, brokerImage, onContinue }) => {
                 fill="#8B1C41"
               />
             </Svg>
-          </View>
+          </Animated.View>
 
-          <View style={styles.brokerImageCircle}>
+          <Animated.View
+            style={[
+              styles.brokerImageCircle,
+              {
+                transform: [{ translateX: brokerPosition }],
+              },
+            ]}
+          >
             {brokerImage ? (
               <Image
                 source={{ uri: brokerImage }}
@@ -71,12 +290,23 @@ const BrokerIntroScreen = ({ brokerName, brokerImage, onContinue }) => {
                 </Text>
               </View>
             )}
-          </View>
+          </Animated.View>
         </View>
 
-        <Text style={styles.instructions}>
+        <Animated.Text
+          style={[
+            styles.instructions,
+            {
+              opacity: instructionsOpacity,
+              transform: [
+                { translateY: instructionsPosition },
+                { translateX: instructionsPosition },
+              ],
+            },
+          ]}
+        >
           Just click the "HELP" button once you complete the application
-        </Text>
+        </Animated.Text>
       </View>
 
       <View style={styles.footer}>
@@ -123,8 +353,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 80,
     position: "relative",
-    width: 280,
+    width: "100%",
     height: 150,
+  },
+  star: {
+    position: "absolute",
+    zIndex: 5,
+  },
+  starText: {
+    fontSize: 48,
+    color: COLORS.white,
   },
   logoCircle: {
     width: 150,
@@ -136,7 +374,6 @@ const styles = StyleSheet.create({
     borderWidth: 5,
     borderColor: COLORS.white,
     position: "absolute",
-    left: 0,
     zIndex: 3,
   },
   brokerImageCircle: {
@@ -150,7 +387,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
     overflow: "hidden",
     position: "absolute",
-    right: 0,
     zIndex: 2,
   },
   brokerImage: {

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import TextInput from "../../common/TextInput";
+import ButtonGroup from "../../common/ButtonGroup";
+import ToggleButtonGroupComponent from "./ToggleButtonGroup";
+import ChoiceInput from "./ChoiceInput";
 import { validateField } from "../../../utils/questionnaireUtils";
 
 const COLORS = {
@@ -108,28 +111,68 @@ const Form = ({
         <Text style={styles.questionText}>{question.text}</Text>
       )}
       <View style={styles.fieldsContainer}>
-        {question.fields.map((field) => (
-          <View key={field.key} style={styles.fieldContainer}>
-            <TextInput
-              key={field.key}
-              label={getLabelWithRequired(field)}
-              prefix={field.prefix}
-              value={formData[field.key] || ""}
-              error={allErrors[field.key] || ""}
-              onChangeText={(text) => handleFieldChange(field.key, text)}
-              placeholder={field.placeholder}
-              keyboardType={field.keyboard || "default"}
-              style={[
-                styles.field,
-                allErrors[field.key] ? styles.errorField : null,
-              ]}
-              isRequired={field.required}
-            />
-            {/* {allErrors[field.key] && (
-              <Text style={styles.errorText}>{allErrors[field.key]}</Text>
-            )} */}
-          </View>
-        ))}
+        {question.fields.map((field) => {
+          console.log(
+            "Form field:",
+            field.key,
+            "type:",
+            field.type,
+            "options:",
+            field.options
+          );
+          return (
+            <View key={field.key} style={styles.fieldContainer}>
+              {field.type === "buttonGroup" ? (
+                <ButtonGroup
+                  label={field.label}
+                  value={formData[field.key] || ""}
+                  onValueChange={(value) => handleFieldChange(field.key, value)}
+                  options={field.options || []}
+                  placeholder={field.placeholder}
+                  error={allErrors[field.key] || ""}
+                  isRequired={field.required}
+                />
+              ) : field.type === "toggleButtonGroup" ? (
+                <ToggleButtonGroupComponent
+                  question={{
+                    label: field.label,
+                    options: field.options || [],
+                  }}
+                  value={formData[field.key] || ""}
+                  onValueChange={(value) => handleFieldChange(field.key, value)}
+                />
+              ) : field.type === "choiceInput" ? (
+                <ChoiceInput
+                  label={field.label}
+                  value={formData[field.key] || ""}
+                  onValueChange={(value) => handleFieldChange(field.key, value)}
+                  options={field.options || []}
+                  error={allErrors[field.key] || ""}
+                  isRequired={field.required}
+                />
+              ) : (
+                <TextInput
+                  key={field.key}
+                  label={getLabelWithRequired(field)}
+                  prefix={field.prefix}
+                  value={formData[field.key] || ""}
+                  error={allErrors[field.key] || ""}
+                  onChangeText={(text) => handleFieldChange(field.key, text)}
+                  placeholder={field.placeholder}
+                  keyboardType={field.keyboard || "default"}
+                  style={[
+                    styles.field,
+                    allErrors[field.key] ? styles.errorField : null,
+                  ]}
+                  isRequired={field.required}
+                />
+              )}
+              {/* {allErrors[field.key] && (
+                <Text style={styles.errorText}>{allErrors[field.key]}</Text>
+              )} */}
+            </View>
+          );
+        })}
       </View>
       {/* {Object.keys(allErrors).length > 0 && (
         <Text style={styles.requiredNote}>* Required fields</Text>
