@@ -1289,6 +1289,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
                     userInfo.initials && userInfo.initials.trim() !== "";
                   return hasInitials &&
                     currentQuestion.id > 5 &&
+                    currentQuestion.id <= 1000 &&
                     currentQuestion?.type !== "finalStep" ? (
                     <View
                       style={[

@@ -102,9 +102,14 @@ const questions = [
     fields: [
       {
         key: "consideringType",
-        label: "What are you considering?",
-        type: "textInput",
-        placeholder: "e.g., Single family home, Townhouse, etc.",
+        label: "Where are you considering?",
+        type: "select",
+        options: [
+          { value: "toronto", label: "Toronto" },
+          { value: "halton", label: "Halton" },
+          { value: "durham", label: "Durham" },
+          { value: "other", label: "Other" },
+        ],
         required: true,
       },
       {
@@ -148,15 +153,25 @@ const questions = [
       {
         key: "renewalDate",
         label: "When do you need to renew?",
-        type: "textInput",
-        placeholder: "e.g., January 2026",
+        type: "select",
+        options: [
+          { value: "less_than_1_month", label: "Less than 1 month" },
+          { value: "1_2_months", label: "1 - 2 months" },
+          { value: "2_3_months", label: "2 - 3 months" },
+          { value: "3_plus_months", label: "3+ months" },
+        ],
         required: true,
       },
       {
         key: "refinanceCity",
         label: "What's the city?",
-        type: "textInput",
-        placeholder: "City",
+        type: "select",
+        options: [
+          { value: "toronto", label: "Toronto" },
+          { value: "halton", label: "Halton" },
+          { value: "durham", label: "Durham" },
+          { value: "other", label: "Other" },
+        ],
         required: true,
       },
     ],
@@ -190,7 +205,13 @@ const questions = [
       {
         key: "cityOfPurchase",
         label: "Whats the city?",
-        type: "textInput",
+        type: "select",
+        options: [
+          { value: "toronto", label: "Toronto" },
+          { value: "halton", label: "Halton" },
+          { value: "durham", label: "Durham" },
+          { value: "other", label: "Other" },
+        ],
         required: true,
       },
     ],

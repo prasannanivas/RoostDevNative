@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import TextInput from "../../common/TextInput";
 import ButtonGroup from "../../common/ButtonGroup";
 import ToggleButtonGroupComponent from "./ToggleButtonGroup";
 import ChoiceInput from "./ChoiceInput";
+import SelectInput from "./SelectInput";
 import { validateField } from "../../../utils/questionnaireUtils";
 
 const COLORS = {
@@ -84,13 +85,17 @@ const Form = ({
     }
   }, [formData, question.fields, onValidationChange]);
 
-  useEffect(() => {
-    // Only call onValueChange if formData has actually changed
+  // Memoize the onValueChange callback to prevent infinite loops
+  const handleValueChangeCallback = useCallback(() => {
     if (JSON.stringify(formData) !== JSON.stringify(previousFormData.current)) {
       onValueChange(formData);
       previousFormData.current = formData;
     }
   }, [formData, onValueChange]);
+
+  useEffect(() => {
+    handleValueChangeCallback();
+  }, [handleValueChangeCallback]);
 
   const handleFieldChange = (fieldKey, fieldValue) => {
     console.log(`Field changed: ${fieldKey} = ${fieldValue}`);
@@ -150,6 +155,21 @@ const Form = ({
                   error={allErrors[field.key] || ""}
                   isRequired={field.required}
                 />
+              ) : field.type === "select" ? (
+                <>
+                  {console.log("Rendering SelectInput for field:", field.key)}
+                  <SelectInput
+                    label={field.label}
+                    value={formData[field.key] || ""}
+                    onValueChange={(value) =>
+                      handleFieldChange(field.key, value)
+                    }
+                    options={field.options || []}
+                    placeholder={field.placeholder || "Select an option"}
+                    error={allErrors[field.key] || ""}
+                    isRequired={field.required}
+                  />
+                </>
               ) : (
                 <TextInput
                   key={field.key}

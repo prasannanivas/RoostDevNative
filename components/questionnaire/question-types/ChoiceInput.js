@@ -70,11 +70,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   label: {
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: "Futura",
-    color: COLORS.black,
-    marginBottom: 12,
-    fontWeight: "500",
+    fontWeight: "700",
+    color: "#1D2327",
+    letterSpacing: 0,
+    marginBottom: 8,
   },
   requiredIndicator: {
     color: COLORS.error,
@@ -106,8 +107,8 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 14,
     fontFamily: "Futura",
+    fontWeight: "500",
     color: COLORS.green,
-    fontWeight: "700",
   },
   optionTextSelected: {
     color: COLORS.white,
