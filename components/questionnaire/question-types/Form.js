@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import axios from "axios";
 import TextInput from "../../common/TextInput";
 import ButtonGroup from "../../common/ButtonGroup";
 import ToggleButtonGroupComponent from "./ToggleButtonGroup";
 import ChoiceInput from "./ChoiceInput";
 import SelectInput from "./SelectInput";
 import { validateField } from "../../../utils/questionnaireUtils";
+import { getAuthHeaders } from "../../../utils/authHeaders";
+import { fetchWithCache } from "../../../utils/apiCache";
 
 const COLORS = {
   green: "#377473",
@@ -29,6 +32,7 @@ const Form = ({
 }) => {
   const [formData, setFormData] = useState(value || {});
   const [localFieldErrors, setLocalFieldErrors] = useState({});
+  const [dynamicOptions, setDynamicOptions] = useState({});
   const previousFormData = useRef(value || {});
   const previousValueProp = useRef(value || {});
 
@@ -47,6 +51,120 @@ const Form = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
+
+  // Fetch dynamic options for fields that have optionsApi
+  useEffect(() => {
+    const fetchDynamicOptions = async () => {
+      const fieldsWithApi = question.fields.filter((field) => field.optionsApi);
+
+      console.log(`=== DYNAMIC OPTIONS FETCH START ===`);
+      console.log(`Found ${fieldsWithApi.length} fields with optionsApi`);
+      fieldsWithApi.forEach((f) =>
+        console.log(`  - ${f.key}: ${f.optionsApi}`)
+      );
+
+      // Group fields by API URL to fetch each unique URL only once
+      const apiUrlMap = new Map();
+      fieldsWithApi.forEach((field) => {
+        if (!apiUrlMap.has(field.optionsApi)) {
+          apiUrlMap.set(field.optionsApi, []);
+        }
+        apiUrlMap.get(field.optionsApi).push(field);
+      });
+
+      console.log(`Unique API URLs: ${apiUrlMap.size}`);
+
+      // Fetch each unique API URL once and apply to all fields using it
+      for (const [apiUrl, fields] of apiUrlMap) {
+        try {
+          console.log(`\n[API] Fetching: ${apiUrl}`);
+          console.log(
+            `[API] Will be used by fields: ${fields
+              .map((f) => f.key)
+              .join(", ")}`
+          );
+
+          // Use cached fetch - only makes actual API call on first request
+          const responseData = await fetchWithCache(apiUrl, false, 300000); // 5 min cache
+
+          console.log(
+            `[API] Response data:`,
+            JSON.stringify(responseData, null, 2)
+          );
+
+          // Apply the response to all fields that use this API
+          for (const field of fields) {
+            try {
+              // Extract the options array from the response
+              let dataArray;
+              if (responseData.success && responseData.data) {
+                dataArray = responseData.data;
+              } else if (field.optionsApiKey) {
+                dataArray = responseData[field.optionsApiKey];
+              } else {
+                dataArray = responseData;
+              }
+
+              console.log(
+                `[${field.key}] Extracted dataArray length: ${dataArray?.length}`
+              );
+
+              if (
+                dataArray &&
+                Array.isArray(dataArray) &&
+                dataArray.length > 0
+              ) {
+                // If data already has value/label format, use it directly
+                const options = dataArray.map((item) => {
+                  if (item.value && item.label) {
+                    return item;
+                  }
+                  return {
+                    value: field.optionsValueKey
+                      ? item[field.optionsValueKey]
+                      : item,
+                    label: field.optionsLabelKey
+                      ? item[field.optionsLabelKey]
+                      : item,
+                  };
+                });
+
+                console.log(
+                  `[${field.key}] ✅ Successfully mapped ${options.length} options`
+                );
+                setDynamicOptions((prev) => ({
+                  ...prev,
+                  [field.key]: options,
+                }));
+              } else {
+                console.log(
+                  `[${field.key}] ⚠️ No valid data array, using static fallback`
+                );
+              }
+            } catch (fieldError) {
+              console.error(
+                `[${field.key}] Error processing field:`,
+                fieldError
+              );
+            }
+          }
+        } catch (error) {
+          console.error(`[API] ❌ ERROR fetching ${apiUrl}:`);
+          console.error(`[API] Error name: ${error.name}`);
+          console.error(`[API] Error name: ${error.name}`);
+          console.error(`[API] Error message: ${error.message}`);
+          if (error.response) {
+            console.error(`[API] Response status: ${error.response.status}`);
+            console.error(`[API] Response data:`, error.response.data);
+          }
+          // On error, fields will fallback to static options
+        }
+      }
+      console.log(`\n=== DYNAMIC OPTIONS FETCH END ===\n`);
+    };
+
+    fetchDynamicOptions();
+  }, [question.fields]);
 
   // Expose validation method to parent
   useEffect(() => {
@@ -164,7 +282,7 @@ const Form = ({
                     onValueChange={(value) =>
                       handleFieldChange(field.key, value)
                     }
-                    options={field.options || []}
+                    options={dynamicOptions[field.key] || field.options || []}
                     placeholder={field.placeholder || "Select an option"}
                     error={allErrors[field.key] || ""}
                     isRequired={field.required}

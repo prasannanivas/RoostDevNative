@@ -101,9 +101,11 @@ const questions = [
     type: "form",
     fields: [
       {
-        key: "consideringType",
+        key: "consideringCity",
         label: "Where are you considering?",
         type: "select",
+        optionsApi:
+          "http://159.203.58.60:5000/admin/preapproval-settings/cities",
         options: [
           { value: "toronto", label: "Toronto" },
           { value: "halton", label: "Halton" },
@@ -166,6 +168,8 @@ const questions = [
         key: "refinanceCity",
         label: "What's the city?",
         type: "select",
+        optionsApi:
+          "http://159.203.58.60:5000/admin/preapproval-settings/cities",
         options: [
           { value: "toronto", label: "Toronto" },
           { value: "halton", label: "Halton" },
@@ -206,6 +210,8 @@ const questions = [
         key: "cityOfPurchase",
         label: "Whats the city?",
         type: "select",
+        optionsApi:
+          "http://159.203.58.60:5000/admin/preapproval-settings/cities",
         options: [
           { value: "toronto", label: "Toronto" },
           { value: "halton", label: "Halton" },
