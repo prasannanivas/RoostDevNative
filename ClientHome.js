@@ -39,6 +39,7 @@ import CategorySelectionModal from "./components/modals/CategorySelectionModal";
 import FullyApprovedModal from "./components/modals/FullyApprovedModal";
 import CustomAdminMessagesModal from "./components/modals/CustomAdminMessagesModal";
 import PhotoIDVerificationModal from "./components/modals/PhotoIDVerificationModal";
+import SINInputModal from "./components/modals/SINInputModal";
 import ChatModal from "./components/ChatModal";
 import ScheduleCallScreen from "./screens/ScheduleCallScreen";
 import RescheduleCallModal from "./components/modals/RescheduleCallModal";
@@ -127,6 +128,9 @@ const ClientHome = ({ questionnaireData }) => {
 
   // PhotoID verification modal state
   const [showPhotoIDModal, setShowPhotoIDModal] = useState(false);
+
+  // SIN input modal state
+  const [showSINModal, setShowSINModal] = useState(false);
 
   // Button loading states
   const [actionLoading, setActionLoading] = useState(false);
@@ -349,8 +353,12 @@ const ClientHome = ({ questionnaireData }) => {
   const handleAdd = (doc) => {
     setSelectedDocType(doc);
 
+    // Check if it's a SIN Number document type
+    if (doc.docType?.toLowerCase() === "sin_number") {
+      setShowSINModal(true);
+    }
     // Check if it's a PhotoID document type
-    if (doc.docType?.toLowerCase() === "photoid") {
+    else if (doc.docType?.toLowerCase() === "photoid") {
       setShowPhotoIDModal(true);
     } else {
       setShowModal(true);
@@ -1182,6 +1190,24 @@ const ClientHome = ({ questionnaireData }) => {
         visible={showPhotoIDModal}
         onClose={() => {
           setShowPhotoIDModal(false);
+          setSelectedDocType(null);
+        }}
+        clientId={clientId}
+        clientName={clientFromContext.name}
+        onUploadSuccess={() =>
+          fetchRefreshData(clientId).then((result) => {
+            if (result?.neededDocsResponse?.documents_needed) {
+              setDocumentsFromApi(result.neededDocsResponse.documents_needed);
+            }
+          })
+        }
+      />
+
+      {/* SIN Input Modal */}
+      <SINInputModal
+        visible={showSINModal}
+        onClose={() => {
+          setShowSINModal(false);
           setSelectedDocType(null);
         }}
         clientId={clientId}
