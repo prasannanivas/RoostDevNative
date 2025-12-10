@@ -53,6 +53,13 @@ const COLORS = {
   coloredBackgroundFill: "rgba(55, 116, 115, 0.2)", // 10% green opacity
 };
 
+// Scroll Animation Thresholds
+const SCROLL_ANIMATION = {
+  START: 60,  // Animation starts at this scroll position
+  END: 110,   // Animation completes at this scroll position
+  HEADER_SWITCH: 100, // isScrolled state changes at this position
+};
+
 export default function RealtorProfile({ onClose, preloadedImage }) {
   const { realtorInfo, fetchRefreshData } = useRealtor();
   const { logout } = useAuth();
@@ -919,17 +926,17 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             zIndex: 100,
             borderTopRightRadius: 16,
             backgroundColor: scrollAnimation.interpolate({
-              inputRange: [60, 110],
+              inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
               outputRange: [COLORS.background, COLORS.white],
               extrapolate: "clamp",
             }),
             height: scrollAnimation.interpolate({
-              inputRange: [60, 110],
+              inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
               outputRange: [172, 84],
               extrapolate: "clamp",
             }),
             shadowOpacity: scrollAnimation.interpolate({
-              inputRange: [60, 110],
+              inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
               outputRange: [0, 0.5],
               extrapolate: "clamp",
             }),
@@ -951,21 +958,21 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               transform: [
                 {
                   translateX: scrollAnimation.interpolate({
-                    inputRange: [60, 110],
+                    inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                     outputRange: [0, -60],
                     extrapolate: "clamp",
                   }),
                 },
                 {
                   translateY: scrollAnimation.interpolate({
-                    inputRange: [60, 110],
+                    inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                     outputRange: [0, -10],
                     extrapolate: "clamp",
                   }),
                 },
                 {
                   scale: scrollAnimation.interpolate({
-                    inputRange: [60, 110],
+                    inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                     outputRange: [1, 0.5],
                     extrapolate: "clamp",
                   }),
@@ -1057,7 +1064,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               alignItems: "center",
               justifyContent: "center",
               top: scrollAnimation.interpolate({
-                inputRange: [60, 110],
+                inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                 outputRange: [120, 60],
                 extrapolate: "clamp",
               }),
@@ -1078,7 +1085,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
               styles.realtorName,
               {
                 fontSize: scrollAnimation.interpolate({
-                  inputRange: [60, 110],
+                  inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                   outputRange: [24, 16],
                   extrapolate: "clamp",
                 }),
@@ -1117,7 +1124,7 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
             useNativeDriver: false,
             listener: (event) => {
               const scrollY = event.nativeEvent.contentOffset.y;
-              setIsScrolled(scrollY > 100);
+              setIsScrolled(scrollY > SCROLL_ANIMATION.HEADER_SWITCH);
             },
           }
         )}

@@ -62,7 +62,6 @@ const QuestionRenderer = ({
           value={value}
           fieldErrors={fieldErrors}
           onValueChange={onValueChange}
-          onAutoNavigate={onAutoNavigate}
         />
       );
 

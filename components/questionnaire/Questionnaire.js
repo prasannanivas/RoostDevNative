@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuestionnaire } from "../../context/QuestionnaireContext";
 import { questions } from "../../data/questionnaireData";
 import QuestionRenderer from "./QuestionRenderer";
+import SlideTransition from "./SlideTransition";
 import ProgressBar from "./ProgressBar";
 import Button from "../common/Button";
 import BackButton from "../icons/BackButton";
@@ -70,6 +71,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [storageReady, setStorageReady] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [direction, setDirection] = useState("next");
 
   // Keys builder
   const getKeys = () => {
@@ -484,6 +486,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
 
     if (nextQuestionId) {
       console.log("Questionnaire: Going to next question:", nextQuestionId);
+      setDirection("next");
       goToNextQuestion(nextQuestionId);
     } else {
       // This could be either final question or no valid next question
@@ -983,6 +986,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
     const nextQuestionId = getNextQuestionId();
 
     if (nextQuestionId) {
+      setDirection("next");
       goToNextQuestion(nextQuestionId);
     } else {
       // This is the final question
@@ -1139,6 +1143,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
       onBack();
     } else {
       // Otherwise use normal back navigation
+      setDirection("back");
       goToPreviousQuestion();
     }
   };
@@ -1320,18 +1325,23 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
               </View>
               {/* Question Content */}
               <View style={styles.questionContent}>
-                <QuestionRenderer
-                  question={{
-                    ...currentQuestion,
-                    text: "", // Text is already displayed in the header
-                    profileInitials: null,
-                  }}
-                  value={currentResponse}
-                  onValueChange={handleResponseChange}
-                  allResponses={responses} // Pass all responses for dynamic text replacement
-                  onAutoNavigate={handleAutoNavigate}
-                  fieldErrors={fieldErrors} // Pass field errors for display
-                />
+                <SlideTransition
+                  id={currentQuestionId}
+                  direction={direction}
+                >
+                  <QuestionRenderer
+                    question={{
+                      ...currentQuestion,
+                      text: "", // Text is already displayed in the header
+                      profileInitials: null,
+                    }}
+                    value={currentResponse}
+                    onValueChange={handleResponseChange}
+                    allResponses={responses} // Pass all responses for dynamic text replacement
+                    onAutoNavigate={handleAutoNavigate}
+                    fieldErrors={fieldErrors} // Pass field errors for display
+                  />
+                </SlideTransition>
               </View>
             </View>
           </View>

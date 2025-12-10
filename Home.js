@@ -245,8 +245,10 @@ const Home = () => {
       setTimeout(() => {
         setShowLoading(false);
         if (currentBrokerInfo) {
+
           setShowBrokerIntro(true);
         } else {
+          console.error("Failed to fetch mortgage broker");
           // If broker fetch failed, go to pre-questionnaire
           setShowPreQuestionnaire(true);
         }
