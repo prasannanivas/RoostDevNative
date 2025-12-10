@@ -50,6 +50,13 @@ const COLORS = {
   coloredBackgroundFill: "rgba(55, 116, 115, 0.1)", // 10% green opacity
 };
 
+// Scroll Animation Thresholds
+const SCROLL_ANIMATION = {
+  START: 10,  // Animation starts at this scroll position
+  END: 90,   // Animation completes at this scroll position
+  HEADER_SWITCH: 100, // isScrolled state changes at this position
+};
+
 // Custom Close Button Component using SVG
 const CloseButton = ({ onPress, style }) => {
   return (
@@ -407,17 +414,17 @@ export default function ClientProfile({ onClose }) {
               zIndex: 100,
               borderTopRightRadius: 16,
               backgroundColor: scrollAnimation.interpolate({
-                inputRange: [60, 110],
+                inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                 outputRange: [COLORS.background, COLORS.white],
                 extrapolate: "clamp",
               }),
               height: scrollAnimation.interpolate({
-                inputRange: [60, 110],
+                inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                 outputRange: [172, 84],
                 extrapolate: "clamp",
               }),
               shadowOpacity: scrollAnimation.interpolate({
-                inputRange: [60, 110],
+                inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                 outputRange: [0, 0.5],
                 extrapolate: "clamp",
               }),
@@ -439,21 +446,21 @@ export default function ClientProfile({ onClose }) {
                 transform: [
                   {
                     translateX: scrollAnimation.interpolate({
-                      inputRange: [60, 110],
+                      inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                       outputRange: [0, -60],
                       extrapolate: "clamp",
                     }),
                   },
                   {
                     translateY: scrollAnimation.interpolate({
-                      inputRange: [60, 110],
+                      inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                       outputRange: [0, -4],
                       extrapolate: "clamp",
                     }),
                   },
                   {
                     scale: scrollAnimation.interpolate({
-                      inputRange: [60, 110],
+                      inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                       outputRange: [1, 0.5],
                       extrapolate: "clamp",
                     }),
@@ -475,7 +482,7 @@ export default function ClientProfile({ onClose }) {
                 alignItems: "center",
                 justifyContent: "center",
                 top: scrollAnimation.interpolate({
-                  inputRange: [60, 110],
+                  inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                   outputRange: [120, 60],
                   extrapolate: "clamp",
                 }),
@@ -496,7 +503,7 @@ export default function ClientProfile({ onClose }) {
                 styles.profileTitle,
                 {
                   fontSize: scrollAnimation.interpolate({
-                    inputRange: [60, 110],
+                    inputRange: [SCROLL_ANIMATION.START, SCROLL_ANIMATION.END],
                     outputRange: [24, 16],
                     extrapolate: "clamp",
                   }),
@@ -531,7 +538,7 @@ export default function ClientProfile({ onClose }) {
               useNativeDriver: false,
               listener: (event) => {
                 const scrollY = event.nativeEvent.contentOffset.y;
-                setIsScrolled(scrollY > 100);
+                setIsScrolled(scrollY > SCROLL_ANIMATION.HEADER_SWITCH);
               },
             }
           )}
@@ -938,10 +945,10 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 66,
-    right: 16,
-    width: 37,
-    height: 37,
+    top: 63+8,
+    right: 8,
+    width: 24,
+    height: 24,
     justifyContent: "center",
     backgroundColor: "rgba(255, 255, 255, 0)",
     alignItems: "center",

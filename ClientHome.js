@@ -1667,12 +1667,12 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 24,
-    marginBottom: 64,
+    paddingVertical: 24,
+    marginBottom: 0,
   },
   contentContainer: {
     flex: 1,
-    paddingBottom: 24,
+    paddingBottom: 48,
   },
   statusContainer: {
     backgroundColor: COLORS.white,
@@ -2182,6 +2182,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
+    backgroundColor: "transparent",
     width: "90%",
     bottom: 24,
     zIndex: 66, // Ensure it appears above other content

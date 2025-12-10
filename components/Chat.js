@@ -26,7 +26,7 @@ import { useChatUnread } from "../context/ChatUnreadContext";
 import ChatService from "../services/ChatService";
 import TypingIndicator from "./TypingIndicator";
 import { generateInitials } from "../utils/initialsUtils";
-import Svg, { Path } from "react-native-svg";
+import Svg, { G, Path } from "react-native-svg";
 
 // Pre-cache the Roost logo image
 const roostLogoImage = require("../assets/app-icon.png");
@@ -1722,17 +1722,49 @@ const Chat = ({
                 />
               )
             ) : (
-              <Ionicons
-                name="headset"
-                size={18}
-                color={COLORS.white}
-                style={styles.headerIcon}
-              />
+              <Svg
+                width="38"
+                height="38"
+                viewBox="0 0 38 38"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <G clip-path="url(#clip0_2660_2900)">
+                  <Path
+                    d="M28.8577 0H9.14228C4.09314 0 0 4.27929 0 9.55806V28.4419C0 33.7207 4.09314 38 9.14228 38H28.8577C33.9069 38 38 33.7207 38 28.4419V9.55806C38 4.27929 33.9069 0 28.8577 0Z"
+                    fill="#C41E3D"
+                  />
+                  <Path
+                    d="M26.9711 11.9267L24.4148 16.5836C23.8251 14.0886 21.7017 12.3023 19.1503 12.1589C13.7812 12.0257 11.5467 12.2272 10.6711 12.4714C9.70252 14.0664 9.14062 15.9569 9.14062 17.9856C9.14062 23.6774 18.9983 36.0156 18.9983 36.0156C18.9983 36.0156 28.8561 23.6774 28.8561 17.9856C28.8561 15.7212 28.1553 13.6275 26.9711 11.9267Z"
+                    fill="white"
+                  />
+                  <Path
+                    d="M19.3267 19.7668C20.4481 19.7668 21.3571 18.8164 21.3571 17.6441C21.3571 16.4718 20.4481 15.5214 19.3267 15.5214C18.2054 15.5214 17.2964 16.4718 17.2964 17.6441C17.2964 18.8164 18.2054 19.7668 19.3267 19.7668Z"
+                    fill="#8B1C41"
+                  />
+                  <Path
+                    d="M24.6745 26.8879V21.9919H30.6528L25.2658 17.4733C24.9162 18.7626 23.5213 20.7145 22.5935 21.7545C19.5014 25.7164 15.6204 27.0911 18.9085 29.7279C18.9085 29.7449 18.9052 29.7603 18.9052 29.7774C18.9052 31.6678 20.5876 33.2013 22.6621 33.2013C24.7365 33.2013 26.419 31.6678 26.419 29.7774C26.419 28.5615 25.7215 27.4959 24.6745 26.8896V26.8879Z"
+                    fill="#8B1C41"
+                  />
+                  <Path
+                    d="M15.4326 8.37804C14.9589 8.5693 14.5048 8.79984 14.0703 9.06112C15.6792 9.42316 17.3862 9.69468 17.3862 9.69468C16.6005 9.48976 15.9569 8.99964 15.4326 8.37633V8.37804Z"
+                    fill="white"
+                  />
+                  <Path
+                    d="M21.0304 10.0294C21.1807 9.59051 21.4551 8.90059 21.8716 8.12529C21.5351 8.01771 21.1905 7.93061 20.8409 7.8623C20.8311 9.12089 21.0304 10.0294 21.0304 10.0294Z"
+                    fill="white"
+                  />
+                  <Path
+                    d="M24.4785 4.86526C23.291 5.83354 22.4448 7.05967 21.8715 8.12529C21.4533 8.90059 21.1806 9.5905 21.0303 10.0294C21.0303 10.0294 20.831 9.12088 20.8408 7.8623C20.8539 6.32194 21.1806 4.25903 22.5771 2.68281C21.5203 1.78455 20.2756 1.21076 18.8399 1.31322C16.3195 1.49424 15.0797 4.11045 14.4737 6.87353C14.7367 7.40634 15.0552 7.92719 15.4342 8.37803C15.9585 8.99963 16.6021 9.49145 17.3878 9.69638C17.3878 9.69638 15.6808 9.42485 14.0719 9.06282C12.9269 9.75615 11.9272 10.68 11.1334 11.7781C10.9717 12.0018 10.4375 12.7088 9.89197 14.0459C10.7675 13.8017 13.7828 12.0257 19.1519 12.1606C21.7016 12.3041 23.8267 14.0903 24.4164 16.5853L26.9727 11.9284L27.0168 11.8481C27.0168 11.8481 26.1707 7.36365 24.4801 4.86697L24.4785 4.86526Z"
+                    fill="#8B1C41"
+                  />
+                </G>
+              </Svg>
             )}
             <Text style={styles.headerTitle}>
               {chatType === "mortgage-broker"
                 ? supportName || "Mortgage Broker"
-                : "General Support"}
+                : "Support - David"}
             </Text>
           </View>
           {/* <View style={styles.statusContainer}>
@@ -1761,8 +1793,8 @@ const Chat = ({
 
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Svg
-            width="32"
-            height="32"
+            width="26"
+            height="26"
             viewBox="0 0 26 26"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -1984,9 +2016,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#9BB9B9",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: Platform.OS === "ios" ? 10 : 16,
+    paddingHorizontal: 16,
+    minHeight: 70,
+   
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -1997,15 +2029,16 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   headerInfo: {
+   
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitleRow: {
     flexDirection: "row",
+    gap: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
   },
   headerIcon: {
     marginRight: 8,
@@ -2043,7 +2076,6 @@ const styles = StyleSheet.create({
   closeButton: {
     backgroundColor: "#F4F4F4",
     borderRadius: 53,
-
     justifyContent: "center",
     alignItems: "center",
   },
