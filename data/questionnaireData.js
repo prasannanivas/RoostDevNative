@@ -406,7 +406,7 @@ const questions = [
     type: "multipleChoice",
     options: [
       { value: "employed", label: "Employed" },
-      { value: "self_employed", label: "Self-Employed" },
+      { value: "self_employed", label: "Self Employed" },
       { value: "pension", label: "Pension" },
       { value: "other", label: "Other" },
     ],
@@ -415,11 +415,29 @@ const questions = [
       "Your selection is missing, this field is mandatory for your application",
     nextQuestionMap: {
       employed: 10,
-      self_employed: 10,
+      self_employed: 999,
       pension: 12,
       other: 12,
     },
   },
+  {
+    id: 999,
+    category: "employment_details",
+    text: "Is your business a",
+     type: "multipleChoice",
+     options: [
+      {value : "self_employed_sole_proprietor", label: "Sole proprietor"},
+      {value: "self_employed_corporation", label: "Corporation"}
+     ],
+      required: true,
+      errorMessage:
+      "Your selection is missing, this field is mandatory for your application",
+      nextQuestionMap: {
+        self_employed_sole_proprietor: 10,
+        self_employed_corporation: 10,
+      },
+  },
+
 
   {
     id: 10,
