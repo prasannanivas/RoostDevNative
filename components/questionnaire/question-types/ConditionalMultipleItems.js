@@ -255,51 +255,45 @@ const ConditionalMultipleItems = ({
     formData[question.initialField.key] === "yes";
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 200 : undefined}
-      style={{ flex: 1 }}
-    >
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.formContainer}>
-          {/* Initial toggle field */}
-          <View style={styles.fieldContainer}>
-            <View style={styles.toggleGroup}>
-              <ToggleButtonGroup
-                question={question.initialField}
-                options={question.initialField.options}
-                value={formData[question.initialField.key]}
-                onValueChange={handleInitialFieldChange}
-              />
+    <View style={styles.container}>
+      <View style={styles.formContainer}>
+        {/* Initial toggle field */}
+        <View style={styles.fieldContainer}>
+          <View style={styles.toggleGroup}>
+            <ToggleButtonGroup
+              question={question.initialField}
+              options={question.initialField.options}
+              value={formData[question.initialField.key]}
+              onValueChange={handleInitialFieldChange}
+            />
+          </View>
+        </View>
+
+        {/* Conditional items section */}
+        {shouldShowConditionalFields && (
+          <View style={styles.conditionalSection}>
+            {items.map((item, index) => renderItem(item, index))}
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                onPress={addAnotherItem}
+                style={styles.addButton}
+              >
+                <Text style={styles.addButtonText}>
+                  {question.addButtonText || "Add Another"}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-
-          {/* Conditional items section */}
-          {shouldShowConditionalFields && (
-            <View style={styles.conditionalSection}>
-              {items.map((item, index) => renderItem(item, index))}
-
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  onPress={addAnotherItem}
-                  style={styles.addButton}
-                >
-                  <Text style={styles.addButtonText}>
-                    {question.addButtonText || "Add Another"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        )}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: "100%",
   },
 
   formContainer: {

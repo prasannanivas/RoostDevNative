@@ -299,8 +299,8 @@ const SignUpDetailsScreen = React.forwardRef(
             accessible={true}
           >
             <Logo
-              width={120}
-              height={42}
+              width={112}
+              height={39}
               variant="black"
               style={styles.brandLogo}
             />

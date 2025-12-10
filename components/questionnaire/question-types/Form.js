@@ -321,7 +321,6 @@ const Form = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingTop: 8,
     width: "100%", // Ensure form uses full width
     alignItems: "stretch", // Stretch to fill container width

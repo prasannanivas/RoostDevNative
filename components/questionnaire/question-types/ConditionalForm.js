@@ -226,7 +226,7 @@ const ConditionalForm = ({
   const shouldShowConditionalFields =
     formData[question.initialField.key] === "yes";
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <View style={styles.formContainer}>
         {/* Initial toggle field */}
         <View style={styles.fieldContainer}>
@@ -247,13 +247,13 @@ const ConditionalForm = ({
           </View>
         )}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: "100%",
   },
 
   formContainer: {

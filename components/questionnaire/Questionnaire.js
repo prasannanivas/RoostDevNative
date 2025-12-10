@@ -1254,7 +1254,7 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <ProgressBar progress={getProgress()} />
+        {/* <ProgressBar progress={getProgress()} /> */}
         {showCloseButton && (
           <TouchableOpacity
             style={styles.closeModalButton}
@@ -1277,8 +1277,8 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
         >
           <View style={styles.logoContainer}>
             <Logo
-              width={120}
-              height={42}
+              width={112}
+              height={39}
               variant="black"
               style={styles.brandLogo}
             />
@@ -1391,12 +1391,12 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 32, // Add padding at the bottom for better scrolling experience
+    paddingBottom: 120, // Add padding at the bottom for better scrolling experience and footer clearance
   },
   logoContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 48, // 8px increment spacing
+    marginTop: 24, // Add some top margin
     marginBottom: 32,
   },
   brandLogo: {
@@ -1406,12 +1406,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 8,
     borderBottomWidth: 0,
+    backgroundColor: "transparent",
   },
   content: {
-    minHeight: "70%", // Ensure content takes up most of the screen
+    flex: 1, // Ensure content takes up available space
     paddingHorizontal: 48, // 8px increment spacing
     overflow: "visible", // Prevent content overflow
     paddingVertical: 24,
+  //  backgroundColor: "#952929ff",
     paddingBottom: 120, // No bottom padding to align with footer
     justifyContent: "center", // Center questions vertically
     alignItems: "center",
@@ -1419,8 +1421,9 @@ const styles = StyleSheet.create({
   contentWrapper: {
     maxWidth: 500, // Consistent maximum width
     minWidth: 310, // Consistent minimum width
-    //alignItems: "stretch", // Stretch items to fill container width
-    justifyContent: "space-between", // Space between vertically
+    width: "100%",
+   /// backgroundColor: "yellow",
+    justifyContent: "center", // Center content vertically
   },
   questionHeaderRow: {
     flexDirection: "row",

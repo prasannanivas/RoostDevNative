@@ -78,7 +78,6 @@ const MultipleChoice = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingTop: 0,
     width: "100%", // Full width
   },

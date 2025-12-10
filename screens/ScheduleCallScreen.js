@@ -8,11 +8,14 @@ import {
   Alert,
   SafeAreaView,
   Platform,
+  ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import Button from "../components/common/Button";
 import BackButton from "../components/icons/BackButton";
 import Logo from "../components/Logo";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import SlideTransition from "../components/questionnaire/SlideTransition";
 
 const COLORS = {
   green: "#377473",
@@ -25,6 +28,7 @@ const COLORS = {
 
 const ScheduleCallScreen = ({ clientId, brokerName, onComplete, onBack }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1 = day selection, 2 = time selection, 3 = custom date/time
+  const [direction, setDirection] = useState("next");
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [customDate, setCustomDate] = useState(new Date());
@@ -59,6 +63,7 @@ const ScheduleCallScreen = ({ clientId, brokerName, onComplete, onBack }) => {
 
   const handleContinueFromDay = () => {
     if (selectedDay) {
+      setDirection("next");
       if (selectedDay === "Other") {
         setCurrentStep(3); // Go to custom date/time picker
       } else {
@@ -68,10 +73,12 @@ const ScheduleCallScreen = ({ clientId, brokerName, onComplete, onBack }) => {
   };
 
   const handleBackFromTime = () => {
+    setDirection("back");
     setCurrentStep(1);
   };
 
   const handleBackFromCustom = () => {
+    setDirection("back");
     setCurrentStep(1);
   };
 
@@ -201,290 +208,277 @@ const ScheduleCallScreen = ({ clientId, brokerName, onComplete, onBack }) => {
     }
   };
 
-  // Day Selection Page
-  if (currentStep === 1) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.logoContainer}>
-            <Logo
-              width={120}
-              height={42}
-              variant="black"
-              style={styles.brandLogo}
-            />
-          </View>
-
-          <View style={styles.contentWrapper}>
-            <Text style={styles.questionText}>
-              Please select a day that work for you
-            </Text>
-            {/* <Text style={styles.subQuestionText}>Select a day</Text> */}
-
-            <View style={styles.optionsContainer}>
-              {dayOptions.map((day) => (
-                <TouchableOpacity
-                  key={day}
+  const renderStepContent = () => {
+    if (currentStep === 1) {
+      return (
+        <View style={{ width: "100%" }}>
+          <Text style={styles.questionText}>
+            Please select a day that work for you
+          </Text>
+          <View style={styles.optionsContainer}>
+            {dayOptions.map((day) => (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.optionButton,
+                  selectedDay === day && styles.selectedButton,
+                ]}
+                onPress={() => setSelectedDay(day)}
+              >
+                <Text
                   style={[
-                    styles.optionButton,
-                    selectedDay === day && styles.selectedButton,
+                    styles.optionText,
+                    selectedDay === day && styles.selectedText,
                   ]}
-                  onPress={() => setSelectedDay(day)}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      selectedDay === day && styles.selectedText,
-                    ]}
-                  >
-                    {day}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  {day}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
+      );
+    }
 
-        {/* Fixed Footer */}
-        {(Platform.OS === "ios" || true) && (
-          <View style={styles.footer}>
-            <View style={styles.buttonContainer}>
-              <Button
-                title="Continue"
-                onPress={handleContinueFromDay}
-                variant="primary"
-                disabled={!selectedDay}
-                style={styles.continueButton}
-              />
+    if (currentStep === 2) {
+      return (
+        <View style={{ width: "100%" }}>
+          <Text style={styles.questionText}>
+            Please select a time that work for you
+          </Text>
+          <View style={styles.optionsContainer}>
+            {timeOptions.map((time) => (
+              <TouchableOpacity
+                key={time.label}
+                style={[
+                  styles.optionButton,
+                  selectedTime === time.label && styles.selectedButton,
+                ]}
+                onPress={() => setSelectedTime(time.label)}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedTime === time.label && styles.selectedText,
+                  ]}
+                >
+                  {time.label}{" "}
+                  <Text
+                    style={[
+                      styles.timeRangeText,
+                      selectedTime === time.label && styles.selectedTimeRange,
+                    ]}
+                  >
+                    {time.range}
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    }
 
-              {onBack && (
-                <Button
-                  Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
-                  onPress={onBack}
-                  variant="outline"
-                  style={styles.backButton}
+    if (currentStep === 3) {
+      return (
+        <View style={{ width: "100%" }}>
+          <Text style={styles.questionText}>Select date and time</Text>
+          <View style={styles.pickerSection}>
+            <Text style={styles.pickerLabel}>Date</Text>
+            {Platform.OS === "ios" ? (
+              <View style={styles.iosPickerContainer}>
+                <DateTimePicker
+                  value={customDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={onDateChange}
+                  minimumDate={new Date()}
+                  maximumDate={getMaxDate()}
+                  textColor={COLORS.black}
+                  style={styles.iosPicker}
                 />
-              )}
-            </View>
-          </View>
-        )}
-      </SafeAreaView>
-    );
-  }
-
-  // Time Selection Page (for Today/Tomorrow)
-  if (currentStep === 2) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.logoContainer}>
-            <Logo
-              width={120}
-              height={42}
-              variant="black"
-              style={styles.brandLogo}
-            />
-          </View>
-
-          <View style={styles.contentWrapper}>
-            <Text style={styles.questionText}>
-              Please select a time that work for you
-            </Text>
-
-            <View style={styles.optionsContainer}>
-              {timeOptions.map((time) => (
+              </View>
+            ) : (
+              <>
                 <TouchableOpacity
-                  key={time.label}
-                  style={[
-                    styles.optionButton,
-                    selectedTime === time.label && styles.selectedButton,
-                  ]}
-                  onPress={() => setSelectedTime(time.label)}
+                  style={styles.dateTimeButton}
+                  onPress={() => setShowDatePicker(true)}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      selectedTime === time.label && styles.selectedText,
-                    ]}
-                  >
-                    {time.label}{" "}
-                    <Text
-                      style={[
-                        styles.timeRangeText,
-                        selectedTime === time.label && styles.selectedTimeRange,
-                      ]}
-                    >
-                      {time.range}
-                    </Text>
+                  <Text style={styles.dateTimeText}>
+                    {formatDate(customDate)}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Fixed Footer */}
-        {(Platform.OS === "ios" || true) && (
-          <View style={styles.footer}>
-            <View style={styles.buttonContainer}>
-              <Button
-                title="Schedule Call"
-                onPress={handleSubmit}
-                variant="primary"
-                disabled={!selectedTime || loading}
-                style={styles.continueButton}
-              />
-
-              <Button
-                Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
-                onPress={handleBackFromTime}
-                variant="outline"
-                style={styles.backButton}
-              />
-            </View>
-          </View>
-        )}
-
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={COLORS.green} />
-          </View>
-        )}
-      </SafeAreaView>
-    );
-  }
-
-  // Custom Date and Time Selection Page (for "Other")
-  if (currentStep === 3) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.logoContainer}>
-            <Logo
-              width={120}
-              height={42}
-              variant="black"
-              style={styles.brandLogo}
-            />
-          </View>
-
-          <View style={styles.contentWrapper}>
-            <Text style={styles.questionText}>Select date and time</Text>
-
-            <View style={styles.pickerSection}>
-              <Text style={styles.pickerLabel}>Date</Text>
-              {Platform.OS === "ios" ? (
-                <View style={styles.iosPickerContainer}>
+                {showDatePicker && (
                   <DateTimePicker
                     value={customDate}
                     mode="date"
-                    display="spinner"
+                    display="default"
                     onChange={onDateChange}
                     minimumDate={new Date()}
                     maximumDate={getMaxDate()}
-                    textColor={COLORS.black}
-                    style={styles.iosPicker}
                   />
-                </View>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={styles.dateTimeButton}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Text style={styles.dateTimeText}>
-                      {formatDate(customDate)}
-                    </Text>
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={customDate}
-                      mode="date"
-                      display="default"
-                      onChange={onDateChange}
-                      minimumDate={new Date()}
-                      maximumDate={getMaxDate()}
-                    />
-                  )}
-                </>
-              )}
-            </View>
+                )}
+              </>
+            )}
+          </View>
 
-            <View style={styles.pickerSection}>
-              <Text style={styles.pickerLabel}>Time</Text>
-              {Platform.OS === "ios" ? (
-                <View style={styles.iosPickerContainer}>
+          <View style={styles.pickerSection}>
+            <Text style={styles.pickerLabel}>Time</Text>
+            {Platform.OS === "ios" ? (
+              <View style={styles.iosPickerContainer}>
+                <DateTimePicker
+                  value={customTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={onTimeChange}
+                  minimumDate={getMinTime()}
+                  maximumDate={getMaxTime()}
+                  textColor={COLORS.black}
+                  style={styles.iosPicker}
+                  minuteInterval={30}
+                />
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.dateTimeButton}
+                  onPress={() => setShowTimePicker(true)}
+                >
+                  <Text style={styles.dateTimeText}>
+                    {formatTime(customTime)}
+                  </Text>
+                </TouchableOpacity>
+                {showTimePicker && (
                   <DateTimePicker
                     value={customTime}
                     mode="time"
-                    display="spinner"
+                    display="default"
                     onChange={onTimeChange}
                     minimumDate={getMinTime()}
                     maximumDate={getMaxTime()}
-                    textColor={COLORS.black}
-                    style={styles.iosPicker}
                     minuteInterval={30}
                   />
-                </View>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={styles.dateTimeButton}
-                    onPress={() => setShowTimePicker(true)}
-                  >
-                    <Text style={styles.dateTimeText}>
-                      {formatTime(customTime)}
-                    </Text>
-                  </TouchableOpacity>
-                  {showTimePicker && (
-                    <DateTimePicker
-                      value={customTime}
-                      mode="time"
-                      display="default"
-                      onChange={onTimeChange}
-                      minimumDate={getMinTime()}
-                      maximumDate={getMaxTime()}
-                      minuteInterval={30}
-                    />
-                  )}
-                </>
-              )}
-            </View>
+                )}
+              </>
+            )}
           </View>
         </View>
+      );
+    }
+    return null;
+  };
 
-        {/* Fixed Footer */}
-        {(Platform.OS === "ios" || true) && (
-          <View style={styles.footer}>
-            <View style={styles.buttonContainer}>
-              <Button
-                title="Schedule Call"
-                onPress={handleSubmit}
-                variant="primary"
-                disabled={loading}
-                style={styles.continueButton}
-              />
-
+  const renderFooter = () => {
+    if (currentStep === 1) {
+      return (
+        <View style={styles.footer}>
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Continue"
+              onPress={handleContinueFromDay}
+              variant="primary"
+              disabled={!selectedDay}
+              style={styles.continueButton}
+            />
+            {onBack && (
               <Button
                 Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
-                onPress={handleBackFromCustom}
+                onPress={onBack}
                 variant="outline"
                 style={styles.backButton}
               />
+            )}
+          </View>
+        </View>
+      );
+    }
+
+    if (currentStep === 2) {
+      return (
+        <View style={styles.footer}>
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Schedule Call"
+              onPress={handleSubmit}
+              variant="primary"
+              disabled={!selectedTime || loading}
+              style={styles.continueButton}
+            />
+            <Button
+              Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
+              onPress={handleBackFromTime}
+              variant="outline"
+              style={styles.backButton}
+            />
+          </View>
+        </View>
+      );
+    }
+
+    if (currentStep === 3) {
+      return (
+        <View style={styles.footer}>
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Schedule Call"
+              onPress={handleSubmit}
+              variant="primary"
+              disabled={loading}
+              style={styles.continueButton}
+            />
+            <Button
+              Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
+              onPress={handleBackFromCustom}
+              variant="outline"
+              style={styles.backButton}
+            />
+          </View>
+        </View>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <View style={styles.logoContainer}>
+            <Logo
+              width={112}
+              height={39}
+              variant="black"
+              style={styles.brandLogo}
+            />
+          </View>
+
+          <View style={styles.content}>
+            <View style={styles.contentWrapper}>
+              <SlideTransition id={currentStep} direction={direction}>
+                {renderStepContent()}
+              </SlideTransition>
             </View>
           </View>
-        )}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={COLORS.green} />
-          </View>
-        )}
-      </SafeAreaView>
-    );
-  }
+      {/* Fixed Footer */}
+      {(Platform.OS === "ios" || true) && renderFooter()}
 
-  return null;
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={COLORS.green} />
+        </View>
+      )}
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -492,16 +486,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 120,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 48,
-    paddingTop: 63,
-    justifyContent: "flex-start",
+    paddingVertical: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "visible",
   },
   logoContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginTop: 24,
+    marginBottom: 32,
   },
   brandLogo: {
     // Logo component will handle its own styling
@@ -509,9 +513,8 @@ const styles = StyleSheet.create({
   contentWrapper: {
     maxWidth: 500,
     minWidth: 310,
-    alignSelf: "center",
     width: "100%",
-    marginTop: "30%",
+    justifyContent: "center",
   },
   questionText: {
     fontSize: 24,

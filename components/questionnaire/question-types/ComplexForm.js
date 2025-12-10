@@ -346,7 +346,7 @@ const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
     );
   };
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <View style={styles.formContainer}>
         {question.sections
           ? question.sections.map(renderSection)
@@ -354,13 +354,13 @@ const ComplexForm = ({ question, value, onValueChange, fieldErrors = {} }) => {
           ? question.fields.map(renderField)
           : null}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: "100%",
   },
   formContainer: {
     gap: 2,

@@ -31,7 +31,7 @@ const Dropdown = ({ question, value, onValueChange }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: "100%",
   },
   dropdown: {
     marginBottom: 0,

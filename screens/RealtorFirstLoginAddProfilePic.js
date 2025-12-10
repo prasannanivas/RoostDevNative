@@ -171,7 +171,7 @@ export default function RealtorFirstLoginAddProfilePic() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Logo width={120} height={42} variant="black" style={styles.brandLogo} />
+      <Logo width={112} height={39} variant="black" style={styles.brandLogo} />
 
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Brand Logo */}

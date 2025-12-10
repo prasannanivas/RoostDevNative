@@ -125,8 +125,8 @@ const AccountTypeScreen = React.forwardRef(
           >
             {/* Brand Title */}
             <Logo
-              width={120}
-              height={42}
+              width={112}
+              height={39}
               variant="black"
               style={styles.brandLogo}
             />

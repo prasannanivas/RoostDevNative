@@ -33,7 +33,6 @@ const NumericInput = ({ question, value, onValueChange }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: "100%", // Full width
     maxWidth: 500, // Maximum width
     alignItems: "flex-start", // Left-align content

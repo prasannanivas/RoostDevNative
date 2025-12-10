@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Platform,
+  ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import Button from "../components/common/Button";
 import BackButton from "../components/icons/BackButton";
@@ -37,58 +39,69 @@ const PreQuestionnaireScreen = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Logo
-            width={120}
-            height={42}
-            variant="black"
-            style={styles.brandLogo}
-          />
-        </View>
-
-        <View style={styles.contentWrapper}>
-          <Text style={styles.questionText}>
-            Do you want to apply online or by phone?
-          </Text>
-
-          <View style={styles.optionsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.optionButton,
-                selectedOption === "online" && styles.selectedButton,
-              ]}
-              onPress={() => setSelectedOption("online")}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  selectedOption === "online" && styles.selectedText,
-                ]}
-              >
-                Online
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.optionButton,
-                selectedOption === "call" && styles.selectedButton,
-              ]}
-              onPress={() => setSelectedOption("call")}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  selectedOption === "call" && styles.selectedText,
-                ]}
-              >
-                Schedule a call with {brokerName || "a mortgage broker"}
-              </Text>
-            </TouchableOpacity>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <View style={styles.logoContainer}>
+            <Logo
+              width={112}
+              height={39}
+              variant="black"
+              style={styles.brandLogo}
+            />
           </View>
-        </View>
-      </View>
+
+          <View style={styles.content}>
+            <View style={styles.contentWrapper}>
+              <Text style={styles.questionText}>
+                Do you want to apply online or by phone?
+              </Text>
+
+              <View style={styles.optionsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.optionButton,
+                    selectedOption === "online" && styles.selectedButton,
+                  ]}
+                  onPress={() => setSelectedOption("online")}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selectedOption === "online" && styles.selectedText,
+                    ]}
+                  >
+                    Online
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.optionButton,
+                    selectedOption === "call" && styles.selectedButton,
+                  ]}
+                  onPress={() => setSelectedOption("call")}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selectedOption === "call" && styles.selectedText,
+                    ]}
+                  >
+                    Schedule a call with {brokerName || "a mortgage broker"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Fixed Footer */}
       {(Platform.OS === "ios" || true) && (
@@ -126,31 +139,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: 48,
-    paddingTop: 63,
-    justifyContent: "flex-start",
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 120, // Add padding at the bottom for better scrolling experience and footer clearance
   },
   logoContainer: {
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 24, // Add some top margin
     marginBottom: 32,
   },
   brandLogo: {
     // Logo component will handle its own styling
-    marginBottom: 16,
+  },
+  content: {
+    flex: 1, // Ensure content takes up available space
+    paddingHorizontal: 48, // 8px increment spacing
+    overflow: "visible", // Prevent content overflow
+    paddingVertical: 24,
+    justifyContent: "center", // Center questions vertically
+    alignItems: "center",
   },
   contentWrapper: {
-    maxWidth: 500,
-    minWidth: 310,
-    alignSelf: "center",
+    maxWidth: 500, // Consistent maximum width
+    minWidth: 310, // Consistent minimum width
     width: "100%",
-    height: "100%",
-    marginTop: "30%",
+    justifyContent: "center", // Center content vertically
   },
   questionText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "700",
     letterSpacing: 0,
     fontFamily: "Futura",
@@ -213,10 +233,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
-  continueButtonDisabled: {
-    backgroundColor: "#E8E8E8",
+  continueButton: {
+    backgroundColor: COLORS.green,
     color: COLORS.white,
     borderColor: COLORS.green,
+    borderRadius: 33,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginRight: 12,
+  },
+  continueButtonDisabled: {
+    backgroundColor: "#E8E8E8",
+    color: "#797979",
+    borderColor: "#E8E8E8",
     borderRadius: 33,
     paddingVertical: 12,
     paddingHorizontal: 24,
