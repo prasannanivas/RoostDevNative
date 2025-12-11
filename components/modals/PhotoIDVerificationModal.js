@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
+import CropModal from "./CropModal";
 import Logo from "../Logo";
 import BackButton from "../icons/BackButton";
 
@@ -45,6 +46,8 @@ const PhotoIDVerificationModal = ({
   const [capturedImages, setCapturedImages] = useState([]); // Array of image URIs
   const [pdfFile, setPdfFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null); // { uri, width, height }
 
   // Reset state when modal closes
   const handleClose = () => {
@@ -71,17 +74,15 @@ const PhotoIDVerificationModal = ({
 
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
+        allowsEditing: false, // we'll show our own cropper for freeform crop
         quality: 0.8,
         exif: false,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        setCapturedImages((prev) => [...prev, result.assets[0].uri]);
-        // Move to page 3 after first photo
-        if (capturedImages.length === 0) {
-          setCurrentPage(3);
-        }
+        const a = result.assets[0];
+        setPendingImage({ uri: a.uri, width: a.width, height: a.height });
+        setShowCropper(true);
       }
     } catch (error) {
       console.error("Error taking photo:", error);
@@ -92,10 +93,6 @@ const PhotoIDVerificationModal = ({
   // Remove image from array
   const removeImage = (index) => {
     setCapturedImages((prev) => prev.filter((_, i) => i !== index));
-    // If no images left, go back to page 2
-    if (capturedImages.length === 1) {
-      setCurrentPage(2);
-    }
   };
 
   // Convert images to PDF
@@ -143,22 +140,50 @@ const PhotoIDVerificationModal = ({
 
   // Upload PDF to server
   const handleContinue = async () => {
-    if (!pdfFile) {
-      Alert.alert("Error", "Please complete the photo capture process");
+    if (capturedImages.length === 0) {
+      Alert.alert("Error", "Please capture at least one photo");
       return;
     }
 
     setIsLoading(true);
 
     try {
+      // Convert captured images to PDF
+      const html = await Promise.all(
+        capturedImages.map(async (u) => {
+          const blob = await (await fetch(u)).blob();
+          const b64 = await new Promise((res) => {
+            const r = new FileReader();
+            r.onloadend = () => res(r.result);
+            r.readAsDataURL(blob);
+          });
+          return `<div style="width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; page-break-after: always;">
+            <img src="${b64}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+          </div>`;
+        })
+      ).then(
+        (arr) =>
+          `<html><body style="margin:0; padding:0;">${arr.join(
+            ""
+          )}</body></html>`
+      );
+
+      const { uri: pdfUri } = await Print.printToFileAsync({ html });
+      const pdfData = {
+        uri: pdfUri,
+        name: `photoid_${clientName}_${Date.now()}.pdf`,
+        type: "application/pdf",
+      };
+
+      // Upload PDF
       const formData = new FormData();
       formData.append("docType", "photoid");
       formData.append("pdfFile", {
         uri:
           Platform.OS === "android"
-            ? pdfFile.uri
-            : pdfFile.uri.replace("file://", ""),
-        name: pdfFile.name || "photoid.pdf",
+            ? pdfData.uri
+            : pdfData.uri.replace("file://", ""),
+        name: pdfData.name || "photoid.pdf",
         type: "application/pdf",
       });
 
@@ -214,7 +239,7 @@ const PhotoIDVerificationModal = ({
 
         <TouchableOpacity
           style={styles.takePhotoButton}
-          onPress={() => setCurrentPage(2)}
+          onPress={takePhoto}
           activeOpacity={0.8}
         >
           <Text style={styles.takePhotoButtonText}>Take photo</Text>
@@ -241,94 +266,49 @@ const PhotoIDVerificationModal = ({
           Drivers license please include both sides
         </Text>
 
-        <View style={styles.photoPlaceholder}>
-          <View style={styles.placeholderBox} />
-        </View>
+        {capturedImages.length === 0 ? (
+          <>
+            <View style={styles.photoPlaceholder}>
+              <View style={styles.placeholderBox} />
+            </View>
 
-        <TouchableOpacity
-          style={styles.outlineButton}
-          onPress={takePhoto}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.outlineButtonText}>Take photo of front side</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  // Page 3: Show captured images and allow adding more
-  const renderPage3 = () => (
-    <View style={styles.contentContainer}>
-      <View style={styles.logoContainer}>
-        <Logo width={112} height={39} variant="black" />
-      </View>
-
-      <View style={styles.photoContainer}>
-        <View style={styles.photoTitleContainer}>
-          <Text style={styles.title}>Verify your identity</Text>
-        </View>
-
-        <Text style={styles.subtitle}>
-          Drivers license - please include both sides
-        </Text>
-
-        <ScrollView style={styles.imageScrollView}>
-          <View style={styles.imageGrid}>
+            <TouchableOpacity
+              style={styles.outlineButton}
+              onPress={takePhoto}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.outlineButtonText}>
+                Take photo of front side
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
             {capturedImages.map((uri, index) => (
-              <View key={index} style={styles.gridItem}>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri }}
-                    style={styles.gridImage}
-                    resizeMode="cover"
-                  />
+              <View key={index} style={{ gap: 8 }}>
+                <View style={styles.photoPlaceholder}>
+                  <Image source={{ uri }} style={styles.capturedImage} />
                 </View>
                 <TouchableOpacity
-                  style={styles.removeButton}
+                  style={styles.outlineButton}
                   onPress={() => removeImage(index)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.removeButtonText}>Remove</Text>
+                  <Text style={styles.outlineButtonText}>Retake</Text>
                 </TouchableOpacity>
               </View>
             ))}
-          </View>
-        </ScrollView>
-
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            style={styles.outlineButton}
-            onPress={takePhoto}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.outlineButtonText}>
-              {capturedImages.length < 2
-                ? "Take photo of back side"
-                : "Add Another Photo"}
-            </Text>
-          </TouchableOpacity>
-
-          {capturedImages.length >= 2 && (
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={convertImagesToPDF}
-              activeOpacity={0.8}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <Text style={styles.doneButtonText}>Done</Text>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+          </>
+        )}
       </View>
     </View>
   );
 
+
+
   // Footer with Back and Continue buttons
   const renderFooter = () => {
-    const canContinue = currentPage === 1 || pdfFile !== null;
+    const canContinue = currentPage === 1 || capturedImages.length > 0;
 
     return (
       <View style={styles.footer}>
@@ -340,13 +320,6 @@ const PhotoIDVerificationModal = ({
             } else if (currentPage === 2) {
               setCurrentPage(1);
               setCapturedImages([]);
-            } else if (currentPage === 3) {
-              if (pdfFile) {
-                setPdfFile(null);
-              } else {
-                setCurrentPage(2);
-                setCapturedImages([]);
-              }
             }
           }}
           activeOpacity={0.8}
@@ -364,7 +337,7 @@ const PhotoIDVerificationModal = ({
             if (currentPage === 1) {
               setCurrentPage(2);
               takePhoto();
-            } else if (pdfFile) {
+            } else if (capturedImages.length > 0) {
               handleContinue();
             }
           }}
@@ -381,7 +354,7 @@ const PhotoIDVerificationModal = ({
                 !canContinue && styles.continueButtonTextDisabled,
               ]}
             >
-              {pdfFile ? "Upload" : "Continue"}
+              {currentPage === 2 && capturedImages.length > 0 ? "Upload" : "Continue"}
             </Text>
           )}
         </TouchableOpacity>
@@ -393,7 +366,7 @@ const PhotoIDVerificationModal = ({
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
       <View style={styles.container}>
@@ -404,10 +377,30 @@ const PhotoIDVerificationModal = ({
         >
           {currentPage === 1 && renderPage1()}
           {currentPage === 2 && renderPage2()}
-          {currentPage === 3 && renderPage3()}
         </ScrollView>
 
         {renderFooter()}
+        {/* Cropping Modal */}
+        <CropModal
+          visible={showCropper}
+          imageUri={pendingImage?.uri}
+          originalWidth={pendingImage?.width}
+          originalHeight={pendingImage?.height}
+          onCancel={() => {
+            setShowCropper(false);
+            setPendingImage(null);
+          }}
+          onCrop={(croppedUri) => {
+            setShowCropper(false);
+            setPendingImage(null);
+            if (croppedUri) {
+              setCapturedImages((prev) => [...prev, croppedUri]);
+              if (currentPage === 1) {
+                setCurrentPage(2);
+              }
+            }
+          }}
+        />
       </View>
     </Modal>
   );
@@ -437,12 +430,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     alignSelf: "stretch",
+    marginTop: 70,
   },
 
   // Page 1: Instructions
   instructionsContainer: {
     gap: 32,
     flex: 1,
+    justifyContent: "center"
   },
   titleContainer: {
     gap: 8,
@@ -513,7 +508,7 @@ const styles = StyleSheet.create({
   capturedImage: {
     width: "100%",
     height: "100%",
-    resizeMode: "cover",
+    resizeMode: "stretch",
   },
   buttonsContainer: {
     gap: 8,
@@ -523,17 +518,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.green,
     borderRadius: 33,
-    paddingVertical: 13,
+    paddingVertical: 12,
     paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
-    height: 42,
   },
   outlineButtonText: {
     fontFamily: "Futura",
-    fontWeight: "700",
     fontSize: 12,
-    lineHeight: 16,
+    fontWeight: "700",
     textAlign: "center",
     color: COLORS.green,
   },
@@ -618,10 +611,9 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     paddingHorizontal: 32,
-    paddingTop: 32,
-    gap: 66,
+    width: "100%",
     height: 130,
     backgroundColor: COLORS.footerBg,
   },
@@ -648,8 +640,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontFamily: "Futura",
     fontWeight: "700",
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 12,
     color: COLORS.buttonDisabledText,
   },
   continueButtonTextEnabled: {
