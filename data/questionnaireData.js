@@ -822,9 +822,26 @@ const questions = [
       "Your selection is missing, this field is mandatory for your application",
     nextQuestionMap: {
       employed: 107,
-      self_employed: 107,
+      self_employed: 998,
       pension: 114,
       other: 114,
+    },
+  },
+  {
+    id: 998,
+    category: "employment_details",
+    text: "Is your business a",
+    type: "multipleChoice",
+    options: [
+      { value: "self_employed_sole_proprietor", label: "Sole proprietor" },
+      { value: "self_employed_corporation", label: "Corporation" },
+    ],
+    required: true,
+    errorMessage:
+      "Your selection is missing, this field is mandatory for your application",
+    nextQuestionMap: {
+      self_employed_sole_proprietor: 107,
+      self_employed_corporation: 107,
     },
   },
   {
@@ -1201,9 +1218,26 @@ const questions = [
       "Your selection is missing, this field is mandatory for your application",
     nextQuestionMap: {
       employed: 111,
-      self_employed: 111,
+      self_employed: 997,
       pension: 113,
       other: 113,
+    },
+  },
+  {
+    id: 997,
+    category: "co_employment_details",
+    text: "Is [coFirstName]'s business a",
+    type: "multipleChoice",
+    options: [
+      { value: "self_employed_sole_proprietor", label: "Sole proprietor" },
+      { value: "self_employed_corporation", label: "Corporation" },
+    ],
+    required: true,
+    errorMessage:
+      "Your selection is missing, this field is mandatory for your application",
+    nextQuestionMap: {
+      self_employed_sole_proprietor: 111,
+      self_employed_corporation: 111,
     },
   },
   {

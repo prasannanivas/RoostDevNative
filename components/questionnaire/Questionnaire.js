@@ -1009,7 +1009,13 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
       if (responses["9"] === "employed") {
         employmentStatus = "Employed";
       } else if (responses["9"] === "self_employed") {
-        employmentStatus = "Self-employed";
+        // Check question 999 for specific self-employed type
+        if (responses["999"] === "self_employed_corporation") {
+          employmentStatus = "self_employed_corporation";
+        } else {
+          // Sole proprietor or not specified - use generic Self-employed
+          employmentStatus = "Self-employed";
+        }
       } else {
         employmentStatus = "Unemployed";
       }
@@ -1019,7 +1025,13 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
       if (responses["106"] === "employed") {
         employmentStatus = "Employed";
       } else if (responses["106"] === "self_employed") {
-        employmentStatus = "Self-employed";
+        // Check question 998 for specific self-employed type (co-signer flow)
+        if (responses["998"] === "self_employed_corporation") {
+          employmentStatus = "self_employed_corporation";
+        } else {
+          // Sole proprietor or not specified - use generic Self-employed
+          employmentStatus = "Self-employed";
+        }
       } else {
         employmentStatus = "Unemployed";
       }
@@ -1035,7 +1047,13 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
       return "Employed";
     }
     if (responses["110"] === "self_employed") {
-      return "Self-employed";
+      // Check question 997 for specific self-employed type (co-applicant flow)
+      if (responses["997"] === "self_employed_corporation") {
+        return "self_employed_corporation";
+      } else {
+        // Sole proprietor or not specified - use generic Self-employed
+        return "Self-employed";
+      }
     }
     if (responses["110"] === "unemployed") {
       return "Unemployed";
