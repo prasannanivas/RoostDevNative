@@ -161,6 +161,7 @@ const ClientHome = ({ questionnaireData }) => {
         contextDocuments.length,
         "documents"
       );
+      console.log("cdcd",contextDocuments);
       setClientDocs(contextDocuments);
     }
   }, [contextDocuments]);
@@ -300,10 +301,26 @@ const ClientHome = ({ questionnaireData }) => {
       return clientDocs;
     }
     const result = documentsFromApi.map((apiDoc) => {
-      const match = clientDocs.find(
+      // Find matches with the same docType
+      const matches = clientDocs.filter(
         (d) => d.docType?.toLowerCase() === apiDoc.docType?.toLowerCase()
       );
-      return match ? { ...apiDoc, ...match } : apiDoc;
+      
+      if (matches.length === 0) {
+        return apiDoc;
+      }
+      
+      // If multiple matches, prioritize by status: submitted > approved > rejected > pending
+      const statusPriority = { approved: 0, submitted: 1, rejected: 2, pending: 3 };
+      const match = matches.reduce((best, current) => {
+        const bestStatus = best.status?.toLowerCase() || 'pending';
+        const currentStatus = current.status?.toLowerCase() || 'pending';
+        const bestPriority = statusPriority[bestStatus] ?? 999;
+        const currentPriority = statusPriority[currentStatus] ?? 999;
+        return currentPriority < bestPriority ? current : best;
+      });
+      
+      return { ...apiDoc, ...match };
     });
     // Log merge results on changes
     console.log(
