@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     height: 40, // Increased height to accommodate padding
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 10, // Add padding on the sides
+    //paddingHorizontal: 10, // Add padding on the sides
   },
   toggleBackground: {
     width: "100%",

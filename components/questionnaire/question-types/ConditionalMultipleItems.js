@@ -37,7 +37,7 @@ const COLORS = {
   silver: "#CCC",
   white: "#FFFFFF",
   background: "#F6F6F6",
-  error: "#FF3B30",
+  error: "#A20E0E",
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
@@ -345,13 +345,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.error,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 33,
     justifyContent: "center",
   },
   removeButtonText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: "medium",
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   itemFields: {
@@ -368,7 +368,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 33,
+
     minWidth: 140,
     alignItems: "center",
     justifyContent: "center",
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   svgContainer: {

@@ -263,6 +263,10 @@ const CategorySelectionModal = ({
           // Sole proprietor or not specified - use generic Self-employed
           employmentStatus = "Self-employed";
         }
+      } else if (responses["9"] === "pension") {
+        employmentStatus = "Pension";
+      } else if (responses["9"] === "other") {
+        employmentStatus = "Other";
       } else {
         employmentStatus = "Unemployed";
       }
@@ -279,6 +283,10 @@ const CategorySelectionModal = ({
           // Sole proprietor or not specified - use generic Self-employed
           employmentStatus = "Self-employed";
         }
+      } else if (responses["106"] === "pension") {
+        employmentStatus = "Pension";
+      } else if (responses["106"] === "other") {
+        employmentStatus = "Other";
       } else {
         employmentStatus = "Unemployed";
       }
@@ -301,6 +309,12 @@ const CategorySelectionModal = ({
         // Sole proprietor or not specified - use generic Self-employed
         return "Self-employed";
       }
+    }
+    if (responses["110"] === "pension") {
+      return "Pension";
+    }
+    if (responses["110"] === "other") {
+      return "Other";
     }
     if (responses["110"] === "unemployed") {
       return "Unemployed";
@@ -388,16 +402,18 @@ const CategorySelectionModal = ({
     console.log("Invalid responses for co-signer details");
     return {};
   };
-
-  // Check if we're in co-signer flow based on response to question 5
-  const isCoSignerFlow =
-    localResponses["5"] === "co_signer" || localResponses[5] === "co_signer";
-  console.log(
-    "Is co-signer flow:",
-    isCoSignerFlow,
-    "Response to Q5:",
-    localResponses["5"] || localResponses[5]
+  // Only show co-signer toggle if a co-signer name exists
+  const coSignerHasName = Boolean(
+    localResponses["101"]?.coFirstName || localResponses[101]?.coFirstName || localResponses["101"]?.coLastName || localResponses[101]?.coLastName 
   );
+  // Check if we're in co-signer flow based on response to question 5
+  const isCoSignerFlow = (localResponses["5"] === "co_signer" || localResponses[5] === "co_signer") && coSignerHasName;
+  // console.log(
+  //   "Is co-signer flow:",
+  //   isCoSignerFlow,
+  //   "Response to Q5:",
+  //   localResponses["5"] || localResponses[5] , "Co-signer has name:", coSignerHasName
+  // );
 
   // Map the questionnaire categories to our UI categories with dynamic starting question IDs
   // based on whether we're in the co-signer flow or not
@@ -527,13 +543,7 @@ const CategorySelectionModal = ({
   // Function to check if a category has missing fields required for pre-approval
   const isCategoryMissingPreApprovalFields = (categoryId) => {
     // Check Basic category - needs downPaymentAmount from question 2
-    if (categoryId === "basic") {
-      const response2 = localResponses["2"] || localResponses[2] || {};
-      console.log("Validating Basic category for pre-approval:", response2);
-      if (!response2.downPaymentAmount || response2.downPaymentAmount === "") {
-        return true;
-      }
-    }
+
 
     // Check Income Details category for main applicant - needs income and bonuses from question 11
     if (categoryId === "income_details") {
@@ -1770,8 +1780,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 20,
-
-    paddingTop: 5,
   },
   logoContainer: {
     marginVertical: 20,
@@ -1980,7 +1988,7 @@ const styles = StyleSheet.create({
   // Question view styles
   header: {
     paddingHorizontal: 24,
-    paddingVertical: 8,
+   // paddingVertical: 8,
     borderBottomWidth: 0,
     width: "100%",
   },

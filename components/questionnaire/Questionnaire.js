@@ -1016,6 +1016,10 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
           // Sole proprietor or not specified - use generic Self-employed
           employmentStatus = "Self-employed";
         }
+      } else if (responses["9"] === "pension") {
+        employmentStatus = "Pension";
+      } else if (responses["9"] === "other") {
+        employmentStatus = "Other";
       } else {
         employmentStatus = "Unemployed";
       }
@@ -1032,6 +1036,10 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
           // Sole proprietor or not specified - use generic Self-employed
           employmentStatus = "Self-employed";
         }
+      } else if (responses["106"] === "pension") {
+        employmentStatus = "Pension";
+      } else if (responses["106"] === "other") {
+        employmentStatus = "Other";
       } else {
         employmentStatus = "Unemployed";
       }
@@ -1054,6 +1062,12 @@ const Questionnaire = ({ questionnaireData, showCloseButton, onBack }) => {
         // Sole proprietor or not specified - use generic Self-employed
         return "Self-employed";
       }
+    }
+    if (responses["110"] === "pension") {
+      return "Pension";
+    }
+    if (responses["110"] === "other") {
+      return "Other";
     }
     if (responses["110"] === "unemployed") {
       return "Unemployed";
