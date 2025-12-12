@@ -536,6 +536,14 @@ const questions = [
         ],
       },
       {
+        key: "bonusComissionAnnualAmount",
+        placeholder: "$",
+        prefix: "$",
+        type: "text",
+        keyboard: "numeric",
+        condition: { key: "bonuses", value: "yes" },
+      },
+      {
         key: "benefits",
         label: "Benefits?",
         type: "toggleButtonGroup",
@@ -546,17 +554,12 @@ const questions = [
         ],
       },
       {
-        key: "bonusComissionAnnualAmount",
-        placeholder: "Annual Amount",
+        key: "benefitsAnnualAmount",
+        placeholder: "$",
         prefix: "$",
         type: "text",
         keyboard: "numeric",
-        condition: {
-          anyOf: [
-            { key: "bonuses", value: "yes" },
-            { key: "benefits", value: "yes" },
-          ],
-        },
+        condition: { key: "benefits", value: "yes" },
       },
     ],
 
@@ -926,6 +929,14 @@ const questions = [
         ],
       },
       {
+        key: "bonusComissionAnnualAmount",
+        placeholder: "$",
+        prefix: "$",
+        type: "text",
+        keyboard: "numeric",
+        condition: { key: "bonuses", value: "yes" },
+      },
+      {
         key: "benefits",
         label: "Benefits?",
         type: "toggleButtonGroup",
@@ -935,17 +946,12 @@ const questions = [
         ],
       },
       {
-        key: "bonusComissionAnnualAmount",
-        placeholder: "Annual Amount",
+        key: "benefitsAnnualAmount",
+        placeholder: "$",
         prefix: "$",
         type: "text",
         keyboard: "numeric",
-        condition: {
-          anyOf: [
-            { key: "bonuses", value: "yes" },
-            { key: "benefits", value: "yes" },
-          ],
-        },
+        condition: { key: "benefits", value: "yes" },
       },
     ],
     nextQuestion: 114, // Skip to co-signer income question
@@ -1317,6 +1323,14 @@ const questions = [
         ],
       },
       {
+        key: "coBonusComissionAnnualAmount",
+        placeholder: "$",
+        prefix: "$",
+        type: "text",
+        keyboard: "numeric",
+        condition: { key: "coBonuses", value: "yes" },
+      },
+      {
         key: "coBenefits",
         label: "Benefits?",
         type: "toggleButtonGroup",
@@ -1326,17 +1340,12 @@ const questions = [
         ],
       },
       {
-        key: "coBonusComissionAnnualAmount",
-        placeholder: "Annual Amount",
+        key: "coBenefitsAnnualAmount",
+        placeholder: "$",
         prefix: "$",
         type: "text",
         keyboard: "numeric",
-        condition: {
-          anyOf: [
-            { key: "coBonuses", value: "yes" },
-            { key: "coBenefits", value: "yes" },
-          ],
-        },
+        condition: { key: "coBenefits", value: "yes" },
       },
     ],
     nextQuestion: 115, // Continue with banking questions
