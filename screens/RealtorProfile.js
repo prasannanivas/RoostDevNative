@@ -55,7 +55,7 @@ const COLORS = {
 
 // Scroll Animation Thresholds
 const SCROLL_ANIMATION = {
-  START: 60,  // Animation starts at this scroll position
+  START: 20,  // Animation starts at this scroll position
   END: 110,   // Animation completes at this scroll position
   HEADER_SWITCH: 100, // isScrolled state changes at this position
 };
@@ -944,10 +944,11 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
           isScrolled && {
             justifyContent: "center",
             alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 4,
-            elevation: 4,
+            shadowColor: "#0E1D1D",
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 6,
           },
         ]}
       >

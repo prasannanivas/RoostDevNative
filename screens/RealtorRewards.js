@@ -283,9 +283,12 @@ export default function RealtorRewards({
             isScrolled && {
               backgroundColor: COLORS.white,
               borderTopLeftRadius: 16,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.5,
+              shadowColor: "#0E1D1D",
+              shadowOffset: { width: 0, height: 5 },
+              shadowOpacity: 0.1,
+              shadowRadius: 6,
+              // Android
+              elevation: 6,
             },
           ]}
         >
@@ -556,7 +559,12 @@ export default function RealtorRewards({
                         </Text>
                       </View>
                     )}
-                    <View style={styles.rewardCardContent}>
+                    <View
+                      style={[
+                        styles.rewardCardContent,
+                        { flex: 1, justifyContent: "space-between" },
+                      ]}
+                    >
                       <Text style={styles.rewardType}>{reward.rewardName}</Text>
                       <Text style={styles.rewardName}>
                         ${reward.rewardAmount}
@@ -574,11 +582,11 @@ export default function RealtorRewards({
           )}
           {/* Realtor Rewards */}
           <Text style={styles.rewardsSubTitle}>FOR YOU</Text>
-          <Text style={styles.rewardsDescription}>
+          {/* <Text style={styles.rewardsDescription}>
             Rewards will be mailed to the address listed in your profile. Make
             sure it’s up to date — we’ll also send a referral document for your
             records.
-          </Text>
+          </Text> */}
           {fetchingRewards ? (
             <ActivityIndicator />
           ) : (
@@ -609,10 +617,15 @@ export default function RealtorRewards({
                         </Text>
                       </View>
                     )}
-                    <View style={styles.rewardCardContent}>
+                    <View
+                      style={[
+                        styles.rewardCardContent,
+                        { flex: 1, justifyContent: "space-between" },
+                      ]}
+                    >
                       <Text style={styles.rewardType}>{reward.rewardName}</Text>
                       <Text style={styles.rewardName}>
-                        {reward.rewardAmount}
+                        ${reward.rewardAmount}
                       </Text>
                       <OrangeProgressBar
                         progress={
