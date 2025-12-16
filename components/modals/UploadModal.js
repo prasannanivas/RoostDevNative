@@ -60,12 +60,16 @@ const UploadModal = ({
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewImageUri, setPreviewImageUri] = useState(null);
   const [previewImageIndex, setPreviewImageIndex] = useState(null);
+  const [showCaptureModal, setShowCaptureModal] = useState(false);
 
   // Animation values
   const slideAnim = useRef(new Animated.Value(600)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const [internalVisible, setInternalVisible] = useState(false);
+  
+  // Track if camera has been auto-opened for this modal session
+  const hasAutoOpenedCamera = useRef(false);
 
   useEffect(() => {
     if (visible) {
@@ -93,6 +97,21 @@ const UploadModal = ({
       ]).start();
     }
   }, [visible]);
+
+  // Auto-open camera only the first time capture modal opens
+  useEffect(() => {
+    if (showCaptureModal && capturedImages.length === 0 && !hasAutoOpenedCamera.current) {
+      hasAutoOpenedCamera.current = true;
+      setTimeout(() => {
+        takePhoto();
+      }, 300);
+    }
+    
+    // Reset the flag when modal closes
+    if (!showCaptureModal) {
+      hasAutoOpenedCamera.current = false;
+    }
+  }, [showCaptureModal]);
 
   console.log("Selected document type:", selectedDocType);
 
@@ -143,30 +162,33 @@ const UploadModal = ({
     }
   };
 
-  // Scan & PDF
+  // Open capture modal
   const pickCameraFile = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      return Alert.alert(
+        "Camera Permission Required",
+        "Please enable camera access in your device settings to scan documents.",
+        [
+          { text: "OK" },
+          {
+            text: "Open Settings",
+            onPress: () => Linking.openSettings(),
+          },
+        ]
+      );
+    }
+    setShowCaptureModal(true);
+  };
+
+  // Take photo in capture modal
+  const takePhoto = async () => {
     try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        return Alert.alert(
-          "Camera Permission Required",
-          "Please enable camera access in your device settings to scan documents.",
-          [
-            { text: "OK" },
-            {
-              text: "Open Settings",
-              onPress: () => Linking.openSettings(),
-            },
-          ]
-        );
-      }
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: "images",
         allowsEditing: false,
         quality: 0.8,
-        aspect: [3, 4], // Remove fixed aspect ratio to allow free rectangular cropping
-        allowsMultipleSelection: true,
-        exif: false, // Don't include EXIF data to reduce file size
+        exif: false,
       });
 
       if (!result.canceled && result.assets?.length) {
@@ -174,11 +196,7 @@ const UploadModal = ({
       }
     } catch (error) {
       console.error("Camera error:", error);
-      Alert.alert(
-        "Scanner Error",
-        "An unexpected error occurred while accessing the camera.",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Scanner Error", "Failed to capture photo.");
     }
   };
   // Remove image from gallery
@@ -287,6 +305,16 @@ const UploadModal = ({
       Alert.alert("Error", "Failed to capture new image.");
     }
   };
+  // Handle done from capture modal
+  const handleDoneCaptureModal = async () => {
+    if (capturedImages.length === 0) {
+      Alert.alert("No Images", "Please capture at least one image.");
+      return;
+    }
+    await convertImagesToPDF();
+    setShowCaptureModal(false);
+  };
+
   // Convert images to PDF
   const convertImagesToPDF = async () => {
     if (capturedImages.length === 0) return;
@@ -407,7 +435,6 @@ const UploadModal = ({
         <Animated.View
           style={[
             styles.modalContent,
-            capturedImages.length > 0 && styles.modalContentFullscreen,
             {
               transform: [{ translateY: slideAnim }],
               opacity: modalOpacity,
@@ -449,56 +476,7 @@ const UploadModal = ({
 
           <Text style={styles.infotext}>{selectedDocType?.description}</Text>
 
-          {capturedImages.length > 0 ? (
-            <>
-              <ScrollView style={styles.imageScrollView}>
-                <View style={styles.imageGrid}>
-                  {capturedImages.map((uri, index) => (
-                    <View key={index} style={styles.gridItem}>
-                      <TouchableOpacity
-                        onPress={() => openImagePreview(uri, index)}
-                        style={styles.imageContainer}
-                      >
-                        <Image
-                          source={{ uri }}
-                          style={styles.gridImage}
-                          resizeMode="cover"
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => removeImage(index)}
-                      >
-                        <Text style={styles.removeButtonText}>Remove</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
-              <View style={styles.bottomButtonContainer}>
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => setCapturedImages([])}
-                >
-                  <BackButton color={COLORS.slate} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.addMoreButton}
-                  onPress={pickCameraFile}
-                >
-                  <Text style={styles.addMoreButtonText}>
-                    Add Another Photo
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={convertImagesToPDF}
-                >
-                  <Text style={styles.doneButtonText}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : !selectedFile ? (
+          {!selectedFile ? (
             <View style={styles.buttonGroup}>
               <TouchableOpacity
                 style={[styles.actionButton]}
@@ -617,6 +595,105 @@ const UploadModal = ({
               </View>
             </Modal>
           )}
+
+          {/* Capture Modal - Full Screen */}
+          {showCaptureModal && (
+            <Modal
+              visible={showCaptureModal}
+              animationType="slide"
+              transparent={false}
+              onRequestClose={() => setShowCaptureModal(false)}
+            >
+              <View style={styles.captureModal}>
+                <View style={styles.captureHeader}>
+                  <TouchableOpacity
+                    style={styles.closeCaptureButton}
+                    onPress={() => {
+                      setShowCaptureModal(false);
+                      setCapturedImages([]);
+                    }}
+                  >
+                    <CloseIconSvg width={26} height={26} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+
+                {capturedImages.length > 0 ? (
+                  <ScrollView style={styles.captureScrollView}>
+                    <View style={styles.captureGrid}>
+                      {capturedImages.map((uri, index) => (
+                        <View key={index} style={styles.captureGridItem}>
+                          <TouchableOpacity
+                            onPress={() => openImagePreview(uri, index)}
+                            style={styles.captureImageContainer}
+                          >
+                            <Image
+                              source={{ uri }}
+                              style={styles.captureGridImage}
+                              resizeMode="cover"
+                            />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.captureRemoveButton}
+                            onPress={() => removeImage(index)}
+                          >
+                            <Text style={styles.captureRemoveButtonText}>
+                              Remove
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
+                ) : (
+                  <View style={styles.captureEmptyContainer}>
+                    <TouchableOpacity
+                      style={styles.captureOpenCameraButton}
+                      onPress={takePhoto}
+                    >
+                      <Text style={styles.captureOpenCameraButtonText}>
+                        Open Camera
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <View style={styles.captureBottomBar}>
+                  <TouchableOpacity
+                    style={styles.captureBackButton}
+                    onPress={() => {
+                      setShowCaptureModal(false);
+                      setCapturedImages([]);
+                    }}
+                  >
+                    <BackButton color={COLORS.white} width={26} height={26} />
+                  </TouchableOpacity>
+
+                  {capturedImages.length > 0 && (
+                    <TouchableOpacity
+                      style={styles.captureAddMoreButton}
+                      onPress={takePhoto}
+                    >
+                      <Text style={styles.captureAddMoreButtonText}>
+                        Add Another Photo
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    style={[
+                      styles.captureDoneButton,
+                      capturedImages.length === 0 &&
+                        styles.captureDoneButtonDisabled,
+                    ]}
+                    onPress={handleDoneCaptureModal}
+                    disabled={capturedImages.length === 0}
+                  >
+                    <Text style={styles.captureDoneButtonText}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -647,14 +724,7 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 2,
   },
-  modalContentFullscreen: {
-    width: "100%",
-    height: "100%",
-    maxWidth: "100%",
-    borderRadius: 0,
-    backgroundColor: COLORS.white,
-    paddingTop: Platform.OS === "ios" ? 40 : 20, // Add more padding for iOS notch
-  },
+
   modalHeader: {
     flexDirection: "row",
     justifyContent: "center",
@@ -663,6 +733,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingTop: 10,
     position: "relative",
+    paddingHorizontal: 16,
   },
   clientNameText: {
     fontSize: 16,
@@ -701,117 +772,128 @@ const styles = StyleSheet.create({
   closeModalText: {
     color: COLORS.black,
   },
-  removeButton: {
-    position: "absolute",
-    overflow: "scroll",
-    borderRadius: 33,
-    bottom: -30,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  removeButtonText: {
-    backgroundColor: COLORS.green,
-    color: COLORS.white,
-    textAlign: "center",
-    borderRadius: 33,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 12, // H4 size
-    fontWeight: 700, // H4 weight
-    fontFamily: "Futura",
-  },
-  imageScrollView: {
+
+  // Capture Modal Styles
+  captureModal: {
     flex: 1,
-    width: "100%",
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.black,
   },
-  imageGrid: {
+  captureHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 50 : 30,
+    paddingBottom: 15,
+    backgroundColor: COLORS.black,
+  },
+  closeCaptureButton: {
+    padding: 5,
+  },
+  captureScrollView: {
+    flex: 1,
+  },
+  captureGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    padding: 4,
-
-    backgroundColor: COLORS.white,
+    padding: 16,
+    paddingBottom: 180,
   },
-  gridItem: {
+  captureGridItem: {
     width: "48%",
-    aspectRatio: 0.75, // 3:4 ratio to match document cropping
-    marginBottom: 24,
+    aspectRatio: 0.75,
+    marginBottom: 40,
     position: "relative",
-    backgroundColor: COLORS.silver,
     borderRadius: 8,
     overflow: "visible",
-    marginVertical: 32,
-    padding: 4,
   },
-  gridImage: {
+  captureImageContainer: {
     width: "100%",
     height: "100%",
     borderRadius: 8,
-    backgroundColor: COLORS.black,
+    overflow: "hidden",
   },
-  imageContainer: {
+  captureGridImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 8,
   },
-  bottomButtonContainer: {
+  captureRemoveButton: {
+   marginVertical: 4,
+    alignItems: "flex-start",
+  },
+  captureRemoveButtonText: {
+    backgroundColor: COLORS.green,
+    color: COLORS.white,
+    textAlign: "left",
+    borderRadius: 33,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  captureEmptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  captureOpenCameraButton: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 999,
+  },
+  captureOpenCameraButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  captureBottomBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
+    backgroundColor: COLORS.black,
+    gap: 12,
+  },
+  captureBackButton: {
+    padding: 8,
+  },
+  captureAddMoreButton: {
+    flex: 1,
+    backgroundColor: COLORS.white,
     paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
-    backgroundColor: COLORS.white,
-    gap: 8,
-  },
-  backButton: {
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backButtonText: {
-    color: COLORS.slate,
-    fontSize: 14, // P size
-    fontWeight: "500", // P weight
-    fontFamily: "Futura",
-  },
-  addMoreButton: {
-    backgroundColor: COLORS.white,
     paddingHorizontal: 24,
-    paddingVertical: 12,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.green,
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
   },
-  addMoreButtonText: {
+  captureAddMoreButtonText: {
     color: COLORS.green,
     fontSize: 12,
-    fontWeight: 700,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
-  doneButton: {
+  captureDoneButton: {
     backgroundColor: COLORS.green,
-    paddingHorizontal: 24,
     paddingVertical: 12,
+    paddingHorizontal: 32,
     borderRadius: 999,
-    minWidth: 80,
     alignItems: "center",
-    justifyContent: "center",
   },
-  doneButtonText: {
+  captureDoneButtonDisabled: {
+    opacity: 0.5,
+  },
+  captureDoneButtonText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 700,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   buttonGroup: {

@@ -40,6 +40,8 @@ const PhotoIDVerificationModal = ({
   onClose,
   clientId,
   clientName,
+  coClientName = "",
+  selectedDocType,
   onUploadSuccess,
 }) => {
   const [currentPage, setCurrentPage] = useState(1); // 1, 2, or 3
@@ -169,9 +171,10 @@ const PhotoIDVerificationModal = ({
       );
 
       const { uri: pdfUri } = await Print.printToFileAsync({ html });
+      const applicantName = selectedDocType?.type === "Needed" ? clientName : (coClientName || clientName);
       const pdfData = {
         uri: pdfUri,
-        name: `photoid_${clientName}_${Date.now()}.pdf`,
+        name: `photoid_${applicantName}_${Date.now()}.pdf`,
         type: "application/pdf",
       };
 

@@ -30,6 +30,8 @@ const SINInputModal = ({
   onClose,
   clientId,
   clientName,
+  coClientName = "",
+  selectedDocType,
   onUploadSuccess,
 }) => {
   const [sinNumber, setSinNumber] = useState("");
@@ -103,7 +105,7 @@ const SINInputModal = ({
               <h1>Social Insurance Number (SIN)</h1>
               <div class="info-row">
                 <div class="label">Client Name:</div>
-                <div class="value">${clientName}</div>
+                <div class="value">${selectedDocType?.type === "Needed" ? clientName : (coClientName || clientName)}</div>
               </div>
               <div class="info-row">
                 <div class="label">SIN Number:</div>
@@ -118,12 +120,13 @@ const SINInputModal = ({
       console.log("PDF created at:", uri);
 
       // Upload to server
+      const applicantName = selectedDocType?.type === "Needed" ? clientName : (coClientName || clientName);
       const formData = new FormData();
       formData.append("clientId", clientId);
       formData.append("docType", "SIN_Number");
       formData.append("pdfFile", {
         uri: uri,
-        name: `SIN_Number_${clientName.replace(/\s+/g, "_")}.pdf`,
+        name: `SIN_Number_${applicantName.replace(/\s+/g, "_")}.pdf`,
         type: "application/pdf",
       });
 

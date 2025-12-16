@@ -370,12 +370,12 @@ const ClientHome = ({ questionnaireData }) => {
   const handleAdd = (doc) => {
     setSelectedDocType(doc);
 
-    // Check if it's a SIN Number document type
-    if (doc.docType?.toLowerCase() === "sin_number") {
+    // Check if it's a SIN Number document type (for both main applicant and co-applicant)
+    if (doc.docType?.toLowerCase().includes("sin_number")) {
       setShowSINModal(true);
     }
-    // Check if it's a PhotoID document type
-    else if (doc.docType?.toLowerCase() === "photoid") {
+    // Check if it's a PhotoID document type (for both main applicant and co-applicant)
+    else if (doc.docType?.toLowerCase().includes("photoid")) {
       setShowPhotoIDModal(true);
     } else {
       setShowModal(true);
@@ -1211,6 +1211,8 @@ const ClientHome = ({ questionnaireData }) => {
         }}
         clientId={clientId}
         clientName={clientFromContext.name}
+        coClientName={clientFromContext.otherDetails?.name || ""}
+        selectedDocType={selectedDocType}
         onUploadSuccess={() =>
           fetchRefreshData(clientId).then((result) => {
             if (result?.neededDocsResponse?.documents_needed) {
@@ -1229,6 +1231,8 @@ const ClientHome = ({ questionnaireData }) => {
         }}
         clientId={clientId}
         clientName={clientFromContext.name}
+        coClientName={clientFromContext.otherDetails?.name || ""}
+        selectedDocType={selectedDocType}
         onUploadSuccess={() =>
           fetchRefreshData(clientId).then((result) => {
             if (result?.neededDocsResponse?.documents_needed) {
