@@ -8,7 +8,8 @@ import {
   Text,
   ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Button from "../components/common/Button";
+import BackButton from "../components/icons/BackButton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   NavigationContainer,
@@ -263,11 +264,14 @@ export default function SignupStackWithFixedBar({
         {/* Back Arrow - hidden on first screen */}
 
         {!isLastScreen ? (
-          <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={26} color="#FFFFFF" />
-          </TouchableOpacity>
+          <Button
+            Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
+            onPress={handleBack}
+            variant="outline"
+            style={styles.backButton}
+          />
         ) : (
-          <View style={{ width: 36 }} /> // Empty spacer
+          <View style={{ width: 26 }} /> // Empty spacer
         )}
 
         {/* Next Button */}
@@ -308,35 +312,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: COLORS.black,
-    paddingHorizontal: 24,
+    //paddingHorizontal: 24,
     paddingVertical: 24,
     paddingBottom: 24,
     minHeight: 120,
     zIndex: 999, // Ensure the bar is above other content
   },
-  backCircle: {
-    borderRadius: 50,
-    padding: 3,
+  backButton: {
+    borderWidth: 0,
     backgroundColor: COLORS.black,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.white,
-    backCircle: {
-      borderRadius: 50,
-      padding: 3,
-      backgroundColor: COLORS.black,
-      justifyContent: "center",
-      alignItems: "center",
-      borderWidth: 2,
-      borderColor: COLORS.white,
-    },
+    shadowOpacity: 0,
+    elevation: 0,
   },
   nextButton: {
     backgroundColor: COLORS.green,
     borderRadius: 50,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginRight: 24,
   },
   nextButtonDisabled: {
     opacity: 0.7,

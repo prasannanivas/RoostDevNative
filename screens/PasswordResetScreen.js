@@ -11,7 +11,8 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Button from "../components/common/Button";
+import BackButton from "../components/icons/BackButton";
 // Keep the import for future use
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Logo from "../components/Logo";
@@ -641,27 +642,26 @@ export default function PasswordResetScreen({ navigation, route }) {
           ]}
         >
           {/* Back Arrow */}
-          <TouchableOpacity style={styles.backCircle} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
-          </TouchableOpacity>
+          <Button
+            Icon={<BackButton width={26} height={26} color="#FFFFFF" />}
+            onPress={handleBack}
+            variant="outline"
+            style={styles.backButton}
+          />
 
           {/* Continue Button */}
-          <TouchableOpacity
-            style={[
-              styles.continueButton,
-              isLoading && styles.continueButtonDisabled,
-            ]}
+          <Button
+            title={stage === STAGES.NEW_PASSWORD ? "Reset Password" : "Continue"}
             onPress={() => {
               if (stage === STAGES.CONTACT_INFO) handleContactInfoSubmit();
               else if (stage === STAGES.OTP_VERIFICATION) handleVerifyOTP();
               else if (stage === STAGES.NEW_PASSWORD) handleResetPassword();
             }}
+            variant="primary"
+            loading={isLoading}
             disabled={isLoading}
-          >
-            <Text style={styles.continueButtonText}>
-              {stage === STAGES.NEW_PASSWORD ? "Reset Password" : "Continue"}
-            </Text>
-          </TouchableOpacity>
+            style={styles.continueButton}
+          />
         </View>
       )}
     </SafeAreaView>
@@ -854,37 +854,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: COLORS.black,
-    paddingHorizontal: 24,
+  //  paddingHorizontal: 24,
     paddingVertical: 24,
 
     paddingBottom: 24, // Ensure enough space for bottom safe area
 
     minHeight: 120,
   },
-  backCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 50,
+  backButton: {
+    borderWidth: 0,
     backgroundColor: COLORS.black,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.white,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   continueButton: {
     backgroundColor: COLORS.green,
-    borderRadius: 50,
+    color: COLORS.white,
+    borderColor: COLORS.green,
+    borderRadius: 33,
     paddingVertical: 12,
     paddingHorizontal: 24,
-  },
-  continueButtonDisabled: {
-    opacity: 0.7,
-  },
-  continueButtonText: {
-    color: COLORS.white,
-    fontSize: 14, // H3 size
-    fontWeight: "700", // H3 weight
-    fontFamily: "Futura",
+    marginRight: 12,
   },
   // Add new styles
   successContainer: {
