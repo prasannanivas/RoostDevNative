@@ -19,6 +19,7 @@ import * as Print from "expo-print";
 import { Linking } from "react-native";
 import CloseIconSvg from "../icons/CloseIconSvg";
 import BackButton from "../icons/BackButton";
+import CropModal from "./CropModal";
 
 /**
  * Color palette from UX team design system
@@ -57,10 +58,11 @@ const UploadModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [capturedImages, setCapturedImages] = useState([]);
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [previewModalVisible, setPreviewModalVisible] = useState(false);
-  const [previewImageUri, setPreviewImageUri] = useState(null);
-  const [previewImageIndex, setPreviewImageIndex] = useState(null);
-  const [showCaptureModal, setShowCaptureModal] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
+  
+  // Screen states: 'upload' | 'capture' | 'crop'
+  const [currentScreen, setCurrentScreen] = useState('upload');
 
   // Animation values
   const slideAnim = useRef(new Animated.Value(600)).current;
@@ -74,6 +76,7 @@ const UploadModal = ({
   useEffect(() => {
     if (visible) {
       setInternalVisible(true);
+      setCurrentScreen('upload'); // Reset to upload screen
       // Sequential animation: backdrop fades in, then modal slides up
       Animated.sequence([
         Animated.timing(backdropOpacity, {
@@ -97,21 +100,6 @@ const UploadModal = ({
       ]).start();
     }
   }, [visible]);
-
-  // Auto-open camera only the first time capture modal opens
-  useEffect(() => {
-    if (showCaptureModal && capturedImages.length === 0 && !hasAutoOpenedCamera.current) {
-      hasAutoOpenedCamera.current = true;
-      setTimeout(() => {
-        takePhoto();
-      }, 300);
-    }
-    
-    // Reset the flag when modal closes
-    if (!showCaptureModal) {
-      hasAutoOpenedCamera.current = false;
-    }
-  }, [showCaptureModal]);
 
   console.log("Selected document type:", selectedDocType);
 
@@ -162,7 +150,7 @@ const UploadModal = ({
     }
   };
 
-  // Open capture modal
+  // Open camera directly
   const pickCameraFile = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
@@ -178,7 +166,9 @@ const UploadModal = ({
         ]
       );
     }
-    setShowCaptureModal(true);
+    setCurrentScreen('capture'); // Switch to capture screen
+    // Take first photo immediately
+    setTimeout(() => takePhoto(), 100);
   };
 
   // Take photo in capture modal
@@ -192,7 +182,9 @@ const UploadModal = ({
       });
 
       if (!result.canceled && result.assets?.length) {
-        setCapturedImages((prev) => [...prev, result.assets[0].uri]);
+        const asset = result.assets[0];
+        setPendingImage({ uri: asset.uri, width: asset.width, height: asset.height });
+        setCurrentScreen('crop'); // Switch to crop screen
       }
     } catch (error) {
       console.error("Camera error:", error);
@@ -204,107 +196,9 @@ const UploadModal = ({
     setCapturedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Open image preview modal
-  const openImagePreview = (uri, index) => {
-    setPreviewImageUri(uri);
-    setPreviewImageIndex(index);
-    setPreviewModalVisible(true);
-  };
 
-  // Close image preview modal
-  const closeImagePreview = () => {
-    setPreviewModalVisible(false);
-    setPreviewImageUri(null);
-    setPreviewImageIndex(null);
-  };
 
-  // Re-crop existing image
-  const recropImage = async (imageUri, imageIndex) => {
-    try {
-      Alert.alert("Edit Image", "How would you like to edit this image?", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Crop Again",
-          onPress: () => replaceWithCroppedImage(imageIndex),
-        },
-        {
-          text: "Replace with New",
-          onPress: () => replaceWithNewImage(imageIndex),
-        },
-      ]);
-    } catch (error) {
-      console.error("Recrop error:", error);
-      Alert.alert("Error", "Failed to edit image.");
-    }
-  };
-  // Replace image with newly cropped version
-  const replaceWithCroppedImage = async (imageIndex) => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        quality: 0.8,
-        // aspect: [3, 4], // Remove fixed aspect ratio to allow free rectangular cropping
-        allowsMultipleSelection: false,
-        exif: false,
-      });
 
-      if (!result.canceled && result.assets?.length) {
-        setCapturedImages((prev) => {
-          const newImages = [...prev];
-          newImages[imageIndex] = result.assets[0].uri;
-          return newImages;
-        });
-        closeImagePreview();
-        Alert.alert("Success", "Image replaced successfully!");
-      }
-    } catch (error) {
-      console.error("Replace image error:", error);
-      Alert.alert("Error", "Failed to replace image.");
-    }
-  };
-  // Replace with new image from camera
-  const replaceWithNewImage = (imageIndex) => {
-    Alert.alert("Replace Image", "Take a new photo to replace this image?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Take Photo",
-        onPress: () => replaceFromCamera(imageIndex),
-      },
-    ]);
-  };
-
-  // Replace from camera
-  const replaceFromCamera = async (imageIndex) => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission denied", "Camera access is required");
-        return;
-      }
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        quality: 0.8,
-        // aspect: [3, 4], // Remove fixed aspect ratio to allow free rectangular cropping
-        allowsMultipleSelection: false,
-        exif: false,
-      });
-
-      if (!result.canceled && result.assets?.length) {
-        setCapturedImages((prev) => {
-          const newImages = [...prev];
-          newImages[imageIndex] = result.assets[0].uri;
-          return newImages;
-        });
-        closeImagePreview();
-        Alert.alert("Success", "Image replaced successfully!");
-      }
-    } catch (error) {
-      console.error("Replace from camera error:", error);
-      Alert.alert("Error", "Failed to capture new image.");
-    }
-  };
   // Handle done from capture modal
   const handleDoneCaptureModal = async () => {
     if (capturedImages.length === 0) {
@@ -312,7 +206,7 @@ const UploadModal = ({
       return;
     }
     await convertImagesToPDF();
-    setShowCaptureModal(false);
+    setCurrentScreen('upload'); // Return to upload screen
   };
 
   // Convert images to PDF
@@ -418,289 +312,238 @@ const UploadModal = ({
       setInternalVisible(false);
       setSelectedFile(null);
       setCapturedImages([]);
+      setCurrentScreen('upload');
+      setPendingImage(null);
       onClose();
     });
+  };
+
+  // Handle back from capture screen
+  const handleBackFromCapture = () => {
+    setCapturedImages([]);
+    setCurrentScreen('upload');
   };
 
   return (
     <Modal
       visible={internalVisible}
       animationType="none"
-      transparent
+      transparent={currentScreen === 'upload'}
       onRequestClose={handleClose}
     >
-      <Animated.View
-        style={[styles.modalOverlay, { opacity: backdropOpacity }]}
-      >
+      {/* Upload Screen */}
+      {currentScreen === 'upload' && (
         <Animated.View
-          style={[
-            styles.modalContent,
-            {
-              transform: [{ translateY: slideAnim }],
-              opacity: modalOpacity,
-            },
-          ]}
+          style={[styles.modalOverlay, { opacity: backdropOpacity }]}
         >
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {(
-                selectedDocType?.displayName ||
-                selectedDocType?.docType ||
-                "Document"
-              )
-                .charAt(0)
-                .toUpperCase() +
-                (
+          <Animated.View
+            style={[
+              styles.modalContent,
+              {
+                transform: [{ translateY: slideAnim }],
+                opacity: modalOpacity,
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {(
                   selectedDocType?.displayName ||
                   selectedDocType?.docType ||
                   "Document"
-                ).slice(1)}
-            </Text>
+                )
+                  .charAt(0)
+                  .toUpperCase() +
+                  (
+                    selectedDocType?.displayName ||
+                    selectedDocType?.docType ||
+                    "Document"
+                  ).slice(1)}
+              </Text>
 
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                onPress={handleClose}
+              >
+                <CloseIconSvg width={26} height={26} color="#797979" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.clientNameText}>
+              {selectedDocType?.type === "Needed" ? clientName : coClientName}
+            </Text>
+            {selectedDocType?.displayName?.toLowerCase().includes("paystub") && (
+              <Text style={styles.infotext}>
+                Please include your two most recent
+              </Text>
+            )}
+
+            <Text style={styles.infotext}>{selectedDocType?.description}</Text>
+
+            {!selectedFile ? (
+              <View style={styles.buttonGroup}>
+                <TouchableOpacity
+                  style={[styles.actionButton]}
+                  onPress={pickCameraFile}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.actionButtonText}>Take a picture</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.actionButtonHalf]}
+                  onPress={pickDocumentFile}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.actionButtonHalfText}>
+                    Upload from files
+                  </Text>
+                </TouchableOpacity>
+
+                <Text style={styles.emailInfoText}>
+                  You can just email all your files to{"\n"}
+                  <Text style={styles.emailBold}>
+                    Documents@inbound.roostapp.io
+                  </Text>{" "}
+                  on your{"\n"}
+                  computer. We will take it from there.
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.fileSelected}>
+                {selectedFile?.name || "File selected"}
+              </Text>
+            )}
+            {isLoading && (
+              <ActivityIndicator
+                size="small"
+                color={COLORS.green}
+                style={styles.loadingIndicator}
+              />
+            )}
+            {selectedFile && (
+              <TouchableOpacity
+                style={[
+                  styles.uploadButton,
+                  uploadLoading && styles.buttonDisabled,
+                ]}
+                onPress={handleUpload}
+                disabled={uploadLoading}
+              >
+                {uploadLoading ? (
+                  <ActivityIndicator color={COLORS.white} size="small" />
+                ) : (
+                  <Text style={styles.uploadButtonText}>Upload</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </Animated.View>
+      )}
+
+      {/* Capture Screen - Full Screen */}
+      {currentScreen === 'capture' && (
+        <View style={styles.captureModal}>
+          <View style={styles.captureHeader}>
             <TouchableOpacity
-              style={styles.closeModalButton}
-              onPress={handleClose}
+              style={styles.closeCaptureButton}
+              onPress={handleBackFromCapture}
             >
-              <CloseIconSvg width={26} height={26} color="#797979" />
+              <CloseIconSvg width={26} height={26} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.clientNameText}>
-            {selectedDocType?.type === "Needed" ? clientName : coClientName}
-          </Text>
-          {selectedDocType?.displayName?.toLowerCase().includes("paystub") && (
-            <Text style={styles.infotext}>
-              Please include your two most recent
-            </Text>
-          )}
+          {capturedImages.length > 0 ? (
+            <ScrollView style={styles.captureScrollView}>
+              <View style={styles.captureGrid}>
+                {capturedImages.map((uri, index) => (
+                  <View key={index} style={styles.captureGridItem}>
+                    <View style={styles.captureImageContainer}>
+                      <Image
+                        source={{ uri }}
+                        style={styles.captureGridImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={styles.captureRemoveButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Text style={styles.captureRemoveButtonText}>
+                        Remove
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          ) : null}
 
-          <Text style={styles.infotext}>{selectedDocType?.description}</Text>
+          <View style={styles.captureBottomBar}>
+            <TouchableOpacity
+              style={styles.captureBackButton}
+              onPress={handleBackFromCapture}
+            >
+              <BackButton color={COLORS.white} width={26} height={26} />
+            </TouchableOpacity>
 
-          {!selectedFile ? (
-            <View style={styles.buttonGroup}>
+            {capturedImages.length > 0 && (
               <TouchableOpacity
-                style={[styles.actionButton]}
-                onPress={pickCameraFile}
-                disabled={isLoading}
+                style={styles.captureAddMoreButton}
+                onPress={takePhoto}
               >
-                <Text style={styles.actionButtonText}>Take a picture</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.actionButtonHalf]}
-                onPress={pickDocumentFile}
-                disabled={isLoading}
-              >
-                <Text style={styles.actionButtonHalfText}>
-                  Upload from files
+                <Text style={styles.captureAddMoreButtonText}>
+                  Add Another Photo
                 </Text>
               </TouchableOpacity>
+            )}
 
-              <Text style={styles.emailInfoText}>
-                You can just email all your files to{"\n"}
-                <Text style={styles.emailBold}>
-                  Documents@inbound.roostapp.io
-                </Text>{" "}
-                on your{"\n"}
-                computer. We will take it from there.
-              </Text>
-            </View>
-          ) : (
-            <Text style={styles.fileSelected}>
-              {selectedFile?.name || "File selected"}
-            </Text>
-          )}
-          {isLoading && (
-            <ActivityIndicator
-              size="small"
-              color={COLORS.green}
-              style={styles.loadingIndicator}
-            />
-          )}
-          {selectedFile && (
             <TouchableOpacity
               style={[
-                styles.uploadButton,
-                uploadLoading && styles.buttonDisabled,
+                styles.captureDoneButton,
+                capturedImages.length === 0 &&
+                  styles.captureDoneButtonDisabled,
               ]}
-              onPress={handleUpload}
-              disabled={uploadLoading}
+              onPress={handleDoneCaptureModal}
+              disabled={capturedImages.length === 0}
             >
-              {uploadLoading ? (
-                <ActivityIndicator color={COLORS.white} size="small" />
-              ) : (
-                <Text style={styles.uploadButtonText}>Upload</Text>
-              )}
+              <Text style={styles.captureDoneButtonText}>Done</Text>
             </TouchableOpacity>
-          )}
-          {/* Preview Modal */}
-          {previewModalVisible && (
-            <Modal
-              visible={previewModalVisible}
-              animationType="slide"
-              transparent={false}
-              onRequestClose={closeImagePreview}
-            >
-              <View style={styles.previewModal}>
-                <View style={styles.previewHeader}>
-                  <Text style={styles.previewTitle}>Image Preview</Text>
-                  <TouchableOpacity
-                    style={styles.closePreviewButton}
-                    onPress={closeImagePreview}
-                  >
-                    <CloseIconSvg />
-                  </TouchableOpacity>
-                </View>
+          </View>
+        </View>
+      )}
 
-                {previewImageUri && (
-                  <View style={styles.previewImageContainer}>
-                    <Image
-                      source={{ uri: previewImageUri }}
-                      style={styles.previewImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                )}
-
-                <View style={styles.previewActions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.editButton]}
-                    onPress={() =>
-                      recropImage(previewImageUri, previewImageIndex)
-                    }
-                  >
-                    <Text style={styles.actionButtonText}>Edit</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.removePreviewButton]}
-                    onPress={() => {
-                      removeImage(previewImageIndex);
-                      closeImagePreview();
-                    }}
-                  >
-                    <Text style={styles.actionButtonText}>Remove</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.actionButton,
-                      styles.closePreviewActionButton,
-                    ]}
-                    onPress={closeImagePreview}
-                  >
-                    <Text style={styles.actionButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-          )}
-
-          {/* Capture Modal - Full Screen */}
-          {showCaptureModal && (
-            <Modal
-              visible={showCaptureModal}
-              animationType="slide"
-              transparent={false}
-              onRequestClose={() => setShowCaptureModal(false)}
-            >
-              <View style={styles.captureModal}>
-                <View style={styles.captureHeader}>
-                  <TouchableOpacity
-                    style={styles.closeCaptureButton}
-                    onPress={() => {
-                      setShowCaptureModal(false);
-                      setCapturedImages([]);
-                    }}
-                  >
-                    <CloseIconSvg width={26} height={26} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-
-                {capturedImages.length > 0 ? (
-                  <ScrollView style={styles.captureScrollView}>
-                    <View style={styles.captureGrid}>
-                      {capturedImages.map((uri, index) => (
-                        <View key={index} style={styles.captureGridItem}>
-                          <TouchableOpacity
-                            onPress={() => openImagePreview(uri, index)}
-                            style={styles.captureImageContainer}
-                          >
-                            <Image
-                              source={{ uri }}
-                              style={styles.captureGridImage}
-                              resizeMode="cover"
-                            />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.captureRemoveButton}
-                            onPress={() => removeImage(index)}
-                          >
-                            <Text style={styles.captureRemoveButtonText}>
-                              Remove
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      ))}
-                    </View>
-                  </ScrollView>
-                ) : (
-                  <View style={styles.captureEmptyContainer}>
-                    <TouchableOpacity
-                      style={styles.captureOpenCameraButton}
-                      onPress={takePhoto}
-                    >
-                      <Text style={styles.captureOpenCameraButtonText}>
-                        Open Camera
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                <View style={styles.captureBottomBar}>
-                  <TouchableOpacity
-                    style={styles.captureBackButton}
-                    onPress={() => {
-                      setShowCaptureModal(false);
-                      setCapturedImages([]);
-                    }}
-                  >
-                    <BackButton color={COLORS.white} width={26} height={26} />
-                  </TouchableOpacity>
-
-                  {capturedImages.length > 0 && (
-                    <TouchableOpacity
-                      style={styles.captureAddMoreButton}
-                      onPress={takePhoto}
-                    >
-                      <Text style={styles.captureAddMoreButtonText}>
-                        Add Another Photo
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-                  <TouchableOpacity
-                    style={[
-                      styles.captureDoneButton,
-                      capturedImages.length === 0 &&
-                        styles.captureDoneButtonDisabled,
-                    ]}
-                    onPress={handleDoneCaptureModal}
-                    disabled={capturedImages.length === 0}
-                  >
-                    <Text style={styles.captureDoneButtonText}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-          )}
-        </Animated.View>
-      </Animated.View>
+      {/* Crop Screen - Full Screen */}
+      {currentScreen === 'crop' && pendingImage && (
+        <View style={styles.fullScreenContainer}>
+          <CropModal
+            visible={true}
+            imageUri={pendingImage?.uri}
+            originalWidth={pendingImage?.width}
+            originalHeight={pendingImage?.height}
+            onCancel={() => {
+              setPendingImage(null);
+              setCurrentScreen('capture');
+            }}
+            onCrop={(croppedUri) => {
+              setPendingImage(null);
+              if (croppedUri) {
+                setCapturedImages((prev) => [...prev, croppedUri]);
+              }
+              setCurrentScreen('capture');
+            }}
+          />
+        </View>
+      )}
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  fullScreenContainer: {
+    flex: 1,
+    backgroundColor: COLORS.black,
+  },
   modalOverlay: {
     position: "absolute",
     top: 0,
@@ -817,6 +660,7 @@ const styles = StyleSheet.create({
   captureGridImage: {
     width: "100%",
     height: "100%",
+    backgroundColor: "#3d3e3fff",
   },
   captureRemoveButton: {
    marginVertical: 4,
