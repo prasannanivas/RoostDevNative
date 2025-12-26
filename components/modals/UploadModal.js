@@ -199,14 +199,82 @@ const UploadModal = ({
 
 
 
-  // Handle done from capture modal
-  const handleDoneCaptureModal = async () => {
+  // Handle upload from capture modal
+  const handleUploadFromCapture = async () => {
     if (capturedImages.length === 0) {
       Alert.alert("No Images", "Please capture at least one image.");
       return;
     }
-    await convertImagesToPDF();
-    setCurrentScreen('upload'); // Return to upload screen
+
+    setUploadLoading(true);
+
+    try {
+      // Convert images to PDF
+      const html = await Promise.all(
+        capturedImages.map(async (u) => {
+          const blob = await (await fetch(u)).blob();
+          const b64 = await new Promise((res) => {
+            const r = new FileReader();
+            r.onloadend = () => res(r.result);
+            r.readAsDataURL(blob);
+          });
+          return `<div style="width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; page-break-after: always;">
+            <img src="${b64}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+          </div>`;
+        })
+      ).then(
+        (arr) =>
+          `<html><body style="margin:0; padding:0;">${arr.join("")}</body></html>`
+      );
+
+      const { uri: pdfUri } = await Print.printToFileAsync({ html });
+      const pdfFile = {
+        uri: pdfUri,
+        name: `scan-${Date.now()}.pdf`,
+        type: "application/pdf",
+      };
+
+      // Upload the PDF
+      const data = new FormData();
+      data.append("docType", selectedDocType.docType);
+      data.append("pdfFile", {
+        uri:
+          Platform.OS === "android"
+            ? pdfFile.uri
+            : pdfFile.uri.replace("file://", ""),
+        name: pdfFile.name || "file.pdf",
+        type: "application/pdf",
+      });
+
+      const resp = await fetch(
+        `https://signup.roostapp.io/documents/${clientId}/documents`,
+        {
+          method: "POST",
+          body: data,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      
+      if (!resp.ok) throw new Error("upload failed" + (await resp.text()));
+
+      Alert.alert("Success", "Document uploaded successfully");
+
+      // Call the onUploadSuccess callback to refresh data in the parent component
+      if (onUploadSuccess) {
+        onUploadSuccess();
+      }
+
+      // Clear state and close modal
+      setCapturedImages([]);
+      setSelectedFile(null);
+      setCurrentScreen('upload');
+      handleClose();
+    } catch (e) {
+      console.error("Upload error:", e);
+      Alert.alert("Error", "Upload failed. Please try again.");
+    } finally {
+      setUploadLoading(false);
+    }
   };
 
   // Convert images to PDF
@@ -501,13 +569,17 @@ const UploadModal = ({
             <TouchableOpacity
               style={[
                 styles.captureDoneButton,
-                capturedImages.length === 0 &&
+                (capturedImages.length === 0 || uploadLoading) &&
                   styles.captureDoneButtonDisabled,
               ]}
-              onPress={handleDoneCaptureModal}
-              disabled={capturedImages.length === 0}
+              onPress={handleUploadFromCapture}
+              disabled={capturedImages.length === 0 || uploadLoading}
             >
-              <Text style={styles.captureDoneButtonText}>Done</Text>
+              {uploadLoading ? (
+                <ActivityIndicator color={COLORS.white} size="small" />
+              ) : (
+                <Text style={styles.captureDoneButtonText}>Upload</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

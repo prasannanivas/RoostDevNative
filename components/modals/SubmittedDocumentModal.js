@@ -200,14 +200,14 @@ const SubmittedDocumentModal = ({
               {deleteLoading ? (
                 <ActivityIndicator color={COLORS.white} size="small" />
               ) : (
-                <Text style={styles.modalButtonText}>Delete</Text>
+                <Text style={styles.modalButtonText}>Change</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.nevermindButton]}
               onPress={handleClose}
             >
-              <Text style={styles.modalButtonText}>Never Mind</Text>
+              <Text style={styles.modalButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

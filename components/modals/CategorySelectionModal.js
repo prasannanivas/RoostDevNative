@@ -510,8 +510,8 @@ const CategorySelectionModal = ({
 
   // List of categories for the UI, ordered as they should appear
   const primaryCategories = [
-    categoryMapping.basic,
-    categoryMapping.personal_details,
+   //  categoryMapping.basic,
+   // categoryMapping.personal_details,
     categoryMapping.employment_details,
     categoryMapping.living_details,
     categoryMapping.income_details,

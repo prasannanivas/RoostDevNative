@@ -356,7 +356,7 @@ const Chat = ({
         setMessages([
           {
             id: "welcome",
-            text: `Hello ${displayName}! Welcome to ${supportType}. How can I help you today?`,
+            text: `Hey ${displayName}, what can I help you with?`,
             sender: "support",
             timestamp: new Date(),
             status: "delivered",
@@ -524,7 +524,7 @@ const Chat = ({
         setMessages([
           {
             id: "welcome",
-            text: `Hello ${displayName}! Welcome to Roost Support. How can I help you today?`,
+            text: `Hey ${displayName}, what can I help you with?`,
             sender: "support",
             timestamp: new Date(),
             status: "delivered",
