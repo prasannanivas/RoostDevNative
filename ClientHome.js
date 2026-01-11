@@ -980,11 +980,17 @@ const ClientHome = ({ questionnaireData }) => {
               button above.
             </Text>
           </>
-        ) : clientFromContext.status === "FullyApproved" ? (
+        ) : clientFromContext.status === "FullyApproved" || clientFromContext.status === "BrokerSignoff" ? (
           <>
             <FullyApprovedModal
               visible={true}
               details={clientFromContext.fullyApprovedDetails || {}}
+              clientStatus={clientFromContext.status}
+              fullyApprovedOptions={clientFromContext.fullyApprovedOptions || []}
+              clientId={clientId}
+              preApprovalAmount={clientFromContext?.preApprovalAmount}
+              onRefresh={onRefresh}
+              actionLoading={actionLoading}
               onPurchasedPress={() => {
                 // Placeholder: potential navigation or action when user indicates purchase intent
               }}
@@ -1112,7 +1118,7 @@ const ClientHome = ({ questionnaireData }) => {
               style={styles.loadingIndicator}
             />
           ) : (
-            !["FullyApproved", "Completed"].includes(
+            !["FullyApproved", "Completed", "BrokerSignoff"].includes(
               clientFromContext.status
             ) && (
               <View>
