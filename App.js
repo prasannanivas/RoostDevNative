@@ -21,11 +21,12 @@ import SplashScreen from "./components/SplashScreen";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  // Splash only acts as an overlay; underlying app renders immediately
+  // Keep custom splash overlay for 3 seconds
   const [isSplashVisible, setSplashVisible] = useState(true);
   const hideSplash = () => setSplashVisible(false);
 
-  const bgColor = Platform.OS === "android" ? "#F6F6F6" : "#ffffff";
+  // Match native splash background to prevent white flash
+  const bgColor = "#CB003F";
 
   const navTheme = {
     ...DefaultTheme,
@@ -34,10 +35,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider style={{ flex: 1, backgroundColor: bgColor }}>
-      <StatusBar
-        style={Platform.OS === "android" ? "dark" : "light"}
-        backgroundColor={bgColor}
-      />
+      <StatusBar style="light" backgroundColor={bgColor} />
       <NavigationContainer theme={navTheme}>
         <AuthProvider>
           <NetworkProvider>
