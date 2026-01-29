@@ -92,6 +92,7 @@ export default function RealtorRewards({
   // Add scroll state for header transition
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollAnimation = useRef(new Animated.Value(0)).current;
+  const isMounted = useRef(true);
 
   const { fetchLatestRealtor } = useRealtor();
 
@@ -103,8 +104,10 @@ export default function RealtorRewards({
         {
           useNativeDriver: false,
           listener: (event) => {
-            const scrollY = event.nativeEvent.contentOffset.y;
-            setIsScrolled(scrollY > 20);
+            if (isMounted.current) {
+              const scrollY = event.nativeEvent.contentOffset.y;
+              setIsScrolled(scrollY > 20);
+            }
           },
         }
       ),
@@ -120,22 +123,36 @@ export default function RealtorRewards({
   const MAXIMUM_REALTORS_INVITE_LIMIT = 10;
 
   const fetchRewards = async () => {
+    if (!isMounted.current) return;
     setFetchingRewards(true);
     try {
       const resp = await fetch("https://signup.roostapp.io/admin/rewards");
       console.log("Rewards response", resp);
       const data = await resp.json();
-      setRewards(data);
-      fetchLatestRealtor();
+      if (isMounted.current) {
+        setRewards(data);
+        fetchLatestRealtor();
+      }
     } catch (e) {
       console.error(e);
     }
-    setFetchingRewards(false);
+    if (isMounted.current) {
+      setFetchingRewards(false);
+    }
   };
 
   // Fetch rewards on mount
   useEffect(() => {
     fetchRewards();
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      // Remove all listeners from the animated value
+      scrollAnimation.removeAllListeners();
+    };
   }, []);
 
   const getRewardProgress = (rewardAmount) => {
@@ -151,6 +168,7 @@ export default function RealtorRewards({
 
   // Get selected client data when client is selected
   useEffect(() => {
+    if (!isMounted.current) return;
     if (selectedClient) {
       const client = invitedClients.find((c) => c._id === selectedClient);
       if (client) {
@@ -175,6 +193,7 @@ export default function RealtorRewards({
 
   // Populate address when realtor is selected for reward
   useEffect(() => {
+    if (!isMounted.current) return;
     if (selectedReward && selectedReward.rewardFor === "Realtors" && realtor) {
       // Use realtor's brokerage address if available
 
@@ -237,15 +256,19 @@ export default function RealtorRewards({
           "https://signup.roostapp.io/admin/rewards"
         ).then((r) => r.json());
         console.log("Claim successful", fresh);
-        setRewards(fresh);
-        fetchLatestRealtor();
-        setClaimModal(false);
-        setAddressConfirmation(false);
-        setShowSuccessModal(true); // Show success modal instead of alert
+        if (isMounted.current) {
+          setRewards(fresh);
+          fetchLatestRealtor();
+          setClaimModal(false);
+          setAddressConfirmation(false);
+          setShowSuccessModal(true); // Show success modal instead of alert
+        }
       } else {
         const errorData = await resp.json();
         console.error("Claim failed", errorData);
-        Alert.alert("Error", errorData.message || "Failed to claim reward");
+        if (isMounted.current) {
+          Alert.alert("Error", errorData.message || "Failed to claim reward");
+        }
       }
     } catch (e) {
       console.error(e);
