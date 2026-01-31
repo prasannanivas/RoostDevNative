@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { TouchableOpacity, StyleSheet, Animated, View } from "react-native";
 import Svg, { Rect, Path } from "react-native-svg";
 
 /**
@@ -43,19 +43,18 @@ const GiftIcon = ({
   });
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.container,
-        style,
-        {
-          borderWidth: 6,
-          borderColor: borderColor,
-        },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Svg width={width} height={height} viewBox="0 0 46 46" fill="none">
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <Animated.View
+        style={[
+          styles.container,
+          style,
+          {
+            borderWidth: 6,
+            borderColor: borderColor,
+          },
+        ]}
+      >
+        <Svg width={width} height={height} viewBox="0 0 46 46" fill="none">
         <Rect
           x="1.5"
           y="1.5"
@@ -72,6 +71,7 @@ const GiftIcon = ({
           strokeLinejoin="round"
         />
       </Svg>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
