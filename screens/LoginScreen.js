@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Logo from "../components/Logo";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import AIChatModal from "../components/AIChatModal";
 import { getAccounts, upsertAccount } from "../utils/accountStore";
 import {
   authenticateBiometric,
@@ -65,6 +66,7 @@ export default function LoginScreen() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [showSavedPassword, setShowSavedPassword] = useState(false); // Reveal password+login in saved-only mode
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false); // AI Chat modal
 
   // Create refs for form inputs
   const passwordInputRef = useRef(null);
@@ -709,6 +711,25 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {/* AI Chat Button - Get Pre-Approved */}
+      {!showSavedOnly && (Platform.OS === "ios" || !keyboardVisible) && (
+        <View style={styles.aiChatContainer}>
+          <TouchableOpacity
+            style={styles.aiChatButton}
+            onPress={() => setShowAIChat(true)}
+            accessible={true}
+            accessibilityLabel="Chat with AI for pre-approval"
+            accessibilityRole="button"
+          >
+            <Ionicons name="chatbubbles" size={20} color={COLORS.white} />
+            <Text style={styles.aiChatButtonText}>Get Pre-Approved with AI</Text>
+          </TouchableOpacity>
+          <Text style={styles.aiChatSubtext}>
+            Chat with our AI mortgage specialist in minutes
+          </Text>
+        </View>
+      )}
+
       {/* Sign Up Section moved to bottom above footer (hidden in saved-only mode and when keyboard is visible on Android) */}
       {!showSavedOnly && (Platform.OS === "ios" || !keyboardVisible) && (
         <View style={styles.signUpContainer}>
@@ -759,6 +780,12 @@ export default function LoginScreen() {
           </Text>
         </View>
       )}
+
+      {/* AI Chat Modal */}
+      <AIChatModal
+        visible={showAIChat}
+        onClose={() => setShowAIChat(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -915,6 +942,39 @@ const styles = StyleSheet.create({
     color: COLORS.green,
     fontSize: 12, // H3 size
     fontWeight: "700", // H3 weight
+    fontFamily: "Futura",
+  },
+  // AI Chat styles
+  aiChatContainer: {
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 24,
+    paddingTop: 4,
+    paddingBottom: 20,
+    alignItems: "center",
+  },
+  aiChatButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 13,
+    paddingHorizontal: 24,
+    width: 334,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  aiChatButtonText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  aiChatSubtext: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: COLORS.slate,
+    marginTop: 8,
+    textAlign: "center",
     fontFamily: "Futura",
   },
   realtorButton: {
