@@ -563,7 +563,7 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
 
   const handleInviteClient = async () => {
     setIsLoading(true);
-    setFeedback({ message, type: "" });
+    setFeedback({ msg: "", type: "" });
 
     // Validation
     let hasError = false;
@@ -617,7 +617,7 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
           inviteCode: data.invite.inviteCode,
         });
         setFeedback({
-          message: "Client invited successfully!",
+          msg: "Client invited successfully!",
           type: "success",
         });
 
@@ -639,14 +639,14 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
         }, 1000); // Small delay to ensure the new client is available
       } else {
         setFeedback({
-          message: "Failed to invite client. Please try again.",
+          msg: "Failed to invite client. Please try again.",
           type: "error",
         });
       }
     } catch (error) {
       console.error("Error inviting client:", error);
       setFeedback({
-        message: "An error occurred. Please try again.",
+        msg: "An error occurred. Please try again.",
         type: "error",
       });
     } finally {
