@@ -1364,7 +1364,12 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
         <View
           style={[
             styles.section,
-            { paddingHorizontal: 0, backgroundColor: "transparent" },
+            { 
+              paddingHorizontal: 0, 
+              backgroundColor: "transparent",
+              shadowOpacity: 0,
+              elevation: 0,
+            },
           ]}
         >
           <Text style={styles.sectionTitle}>Invite Code</Text>
