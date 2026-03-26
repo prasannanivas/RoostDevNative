@@ -712,7 +712,7 @@ export default function LoginScreen() {
       </KeyboardAvoidingView>
 
       {/* AI Chat Button - Get Pre-Approved */}
-      {!showSavedOnly && (Platform.OS === "ios" || !keyboardVisible) && (
+      {/* {!showSavedOnly && (Platform.OS === "ios" || !keyboardVisible) && (
         <View style={styles.aiChatContainer}>
           <TouchableOpacity
             style={styles.aiChatButton}
@@ -728,7 +728,7 @@ export default function LoginScreen() {
             Chat with our AI mortgage specialist in minutes
           </Text>
         </View>
-      )}
+      )} */}
 
       {/* Sign Up Section moved to bottom above footer (hidden in saved-only mode and when keyboard is visible on Android) */}
       {!showSavedOnly && (Platform.OS === "ios" || !keyboardVisible) && (

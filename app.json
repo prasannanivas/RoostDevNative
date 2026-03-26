@@ -2,11 +2,16 @@
   "expo": {
     "name": "Roost",
     "slug": "RoostDevNative",
-    "version": "4.0.3",
+    "version": "5.2.0",
     "orientation": "portrait",
     "icon": "./assets/app-icon-main.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "facebookScheme": "fb902644532531488",
+    "facebookAppId": "902644532531488",
+    "facebookDisplayName": "Roost App",
+    "facebookAutoLogAppEventsEnabled": true,
+    "facebookAdvertiserIDCollectionEnabled": true,
     "description": "Roost - Streamline your real estate transactions with secure document management, client communication, and reward tracking for realtors and clients.",
     "keywords": [
       "real estate",
@@ -24,7 +29,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.roostapp.roost",
-      "buildNumber": "2",
+      "buildNumber": "6",
       "icon": "./assets/app-icon-main.png",
       "splash": {
         "backgroundColor": "#CB003F"
@@ -36,6 +41,21 @@
         },
         "UIUserInterfaceStyle": "Light",
         "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "fb902644532531488"
+            ]
+          }
+        ],
+        "FacebookAppID": "902644532531488",
+        "FacebookDisplayName": "Roost App",
+        "LSApplicationQueriesSchemes": [
+          "fbapi",
+          "fb-messenger-api",
+          "fbauth2",
+          "fbshareextension"
+        ],
         "NSCameraUsageDescription": "Roost needs camera access to allow you to take photos of documents for secure upload and verification.",
         "NSPhotoLibraryUsageDescription": "Roost needs photo library access to allow you to select and upload documents from your device.",
         "NSContactsUsageDescription": "Roost needs contacts access to help you invite clients and realtors more easily.",
@@ -98,6 +118,16 @@
           "icon": "./assets/app-icon-main.png",
           "color": "#ffffff",
           "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-facebook",
+        {
+          "appId": "902644532531488",
+          "displayName": "Roost App",
+          "isAutoInitEnabled": true,
+          "autoLogAppEventsEnabled": true,
+          "advertiserIDCollectionEnabled": true
         }
       ]
     ]

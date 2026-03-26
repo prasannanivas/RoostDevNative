@@ -190,7 +190,7 @@ const TagScreen = ({ onShowNotifications, navigation, onNavigateToHome }) => {
   };
 
   // API base used by web admin endpoints
-  const API_BASE = "http://159.203.58.60:5000";
+  const API_BASE = "https://signup.roostapp.io";
 
   // Reusable fetch with silent updates
   const fetchSplashScreens = async ({ showSpinner = true } = {}) => {

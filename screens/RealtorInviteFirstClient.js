@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../components/Logo";
 import { COLORS } from "../styles";
@@ -94,9 +95,24 @@ export default function RealtorInviteFirstClient() {
       setLoading(false);
     }
   };
-  const handleNext = () => {
-    // Navigate to the main realtor home screen
-    navigation.navigate("Home");
+  const handleNext = async () => {
+    // Mark realtor onboarding as completed
+    try {
+      const realtorId = realtorInfo?._id || auth?.realtor?._id || auth?.realtor?.id;
+      if (realtorId) {
+        const key = `realtor_onboarding_completed_${realtorId}`;
+        await AsyncStorage.setItem(key, "true");
+        console.log(`Realtor ${realtorId} onboarding marked as completed`);
+      }
+    } catch (error) {
+      console.error("Error marking realtor onboarding as completed:", error);
+    }
+    
+    // Reset navigation to exit the onboarding stack completely
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
   };
 
   const handleBack = () => {

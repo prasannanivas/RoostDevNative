@@ -42,8 +42,7 @@ const RealtorOnboardingCheck = ({ onCompleted }) => {
           // Fallback to individually created screens if available
           alert("Please set up your profile picture to continue");
         }
-        // Call onCompleted callback to indicate check is done
-        onCompleted?.();
+        // Don't call onCompleted - onboarding is not complete yet
         return;
       }
 
@@ -63,14 +62,13 @@ const RealtorOnboardingCheck = ({ onCompleted }) => {
         } else {
           alert("Please invite your first client to continue");
         }
-        // Call onCompleted callback to indicate check is done
-        onCompleted?.();
+        // Don't call onCompleted - onboarding is not complete yet
         return;
       }
 
       // If we reach here, both conditions are met so no onboarding needed
-      console.log("Realtor onboarding complete");
-      // Call onCompleted callback to indicate check is done
+      console.log("Realtor onboarding complete - all checks passed");
+      // Only call onCompleted when checks actually pass
       onCompleted?.();
     }
   }, [realtorInfo, invitedClients, loadingRealtor, auth]);

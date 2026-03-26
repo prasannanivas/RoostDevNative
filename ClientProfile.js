@@ -273,6 +273,7 @@ export default function ClientProfile({ onClose }) {
           postalCode: formData.postalCode,
         },
       };
+      console.log('Auto-save payload being sent:', JSON.stringify(payload, null, 2));
       const response = await axios.put(
         `https://signup.roostapp.io/client/${clientInfo.id}`,
         payload

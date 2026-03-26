@@ -141,6 +141,13 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
 
   // Determine notification type based on the notification data
   let notificationType = "warning";
+  
+  // Debug log to see what category we're receiving
+  console.log("NotificationItem category check:", {
+    category: notification.category,
+    title: notification.title,
+  });
+  
   if (
     notification.category === "DOCUMENT_REJECTED" ||
     notification.category === ""
@@ -153,12 +160,16 @@ const NotificationItem = ({ notification, markNotificationAsRead }) => {
     notificationType = "warning-orange";
   } else if (
     notification.category === "DOCUMENT_SUBMITTED" ||
-    notification.category === "NEW_CLIENT" ||
-    notification.category === "POINTS_AWARDED" ||
-    notification.category === "REWARD_APPROVED"
+    notification.category === "NEW_CLIENT"
   ) {
     notificationType = "success-green";
-  } else if (notification.category === "DOCUMENT_APPROVED") {
+  } else if (
+    notification.category === "POINTS_AWARDED" ||
+    notification.category === "POINTS_EARNED" ||
+    notification.category === "REWARD_APPROVED" ||
+    notification.category === "DOCUMENT_APPROVED" ||
+    notification.category === "NEW_REALTOR_REFERRAL"
+  ) {
     notificationType = "success-blue";
   } else if (notification.category === "MORTGAGE_COMPLETED") {
     notificationType = "success-blue";

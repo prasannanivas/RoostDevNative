@@ -28,7 +28,7 @@ const COLORS = {
   orange: '#F0913A',
 };
 
-const API_BASE = 'http://159.203.58.60:5000'; // Update this to your server URL
+const API_BASE = 'https://signup.roostapp.io'; // Update this to your server URL
 
 const AIChatModal = ({ visible, onClose }) => {
   const [sessionId, setSessionId] = useState(null);

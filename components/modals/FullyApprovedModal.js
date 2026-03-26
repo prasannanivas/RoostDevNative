@@ -254,7 +254,7 @@ Select a mortgage that works best for you.      </Text>
 
                   try {
                     const response = await axios.patch(
-                      `http://159.203.58.60:5000/admin/client/${clientId}/select-lender-option`,
+                      `https://signup.roostapp.io/admin/client/${clientId}/select-lender-option`,
                       { optionIndex: index }
                     );
 

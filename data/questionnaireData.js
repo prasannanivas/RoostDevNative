@@ -105,7 +105,7 @@ const questions = [
         label: "Where are you considering?",
         type: "select",
         optionsApi:
-          "http://159.203.58.60:5000/admin/preapproval-settings/cities",
+          "https://signup.roostapp.io/admin/preapproval-settings/cities",
         options: [
           { value: "toronto", label: "Toronto" },
           { value: "halton", label: "Halton" },
@@ -169,7 +169,7 @@ const questions = [
         label: "What's the city?",
         type: "select",
         optionsApi:
-          "http://159.203.58.60:5000/admin/preapproval-settings/cities",
+          "https://signup.roostapp.io/admin/preapproval-settings/cities",
         options: [
           { value: "toronto", label: "Toronto" },
           { value: "halton", label: "Halton" },
@@ -211,7 +211,7 @@ const questions = [
         label: "Whats the city?",
         type: "select",
         optionsApi:
-          "http://159.203.58.60:5000/admin/preapproval-settings/cities",
+          "https://signup.roostapp.io/admin/preapproval-settings/cities",
         options: [
           { value: "toronto", label: "Toronto" },
           { value: "halton", label: "Halton" },
