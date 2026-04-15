@@ -120,6 +120,9 @@ const Chat = ({
   const [currentChatId, setCurrentChatId] = useState(null);
   const [imageCached, setImageCached] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [requestingCall, setRequestingCall] = useState(false);
+  const [callRequestStatus, setCallRequestStatus] = useState(null);
+  const [loadingCallStatus, setLoadingCallStatus] = useState(false);
 
   const scrollViewRef = useRef(null);
   const wsConnectionRef = useRef(null);
@@ -135,6 +138,147 @@ const Chat = ({
   // Use dynamic context data based on userType
   const userFromContext = contextInfo;
   const displayName = contextName;
+
+  // Fetch call request status
+  const fetchCallRequestStatus = async () => {
+    if (userType !== "client" || chatType !== "mortgage-broker") return;
+    
+    setLoadingCallStatus(true);
+    try {
+      const clientId = userId || auth.user?._id || auth.client?._id;
+      if (!clientId) {
+        console.log("No client ID found for call request status");
+        return;
+      }
+
+      console.log("Fetching call request status for client:", clientId);
+
+      const response = await fetch(
+        `https://signup.roostapp.io/client/${clientId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Call request status response:", JSON.stringify(data, null, 2));
+        
+        // Try different possible response structures
+        const callSchedule = data.generalCallSchedule || data.client?.generalCallSchedule;
+        
+        console.log("Call schedule:", callSchedule);
+        console.log("Is active:", callSchedule?.isActive);
+        console.log("Has MB returned call:", callSchedule?.hasMBReturnedCall);
+        
+        if (callSchedule && callSchedule.isActive && !callSchedule.hasMBReturnedCall) {
+          console.log("Setting call request status - active request found");
+          setCallRequestStatus(callSchedule);
+        } else {
+          console.log("No active call request or MB has already called");
+          setCallRequestStatus(null);
+        }
+      } else {
+        console.log("Failed to fetch call status:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching call request status:", error);
+    } finally {
+      setLoadingCallStatus(false);
+    }
+  };
+
+  // Handle request call button press
+  const handleRequestCall = async () => {
+    if (requestingCall) return;
+
+    setRequestingCall(true);
+    try {
+      const clientId = userId || auth.user?._id || auth.client?._id;
+      if (!clientId) {
+        Alert.alert("Error", "Unable to identify client. Please try logging in again.");
+        return;
+      }
+
+      console.log("Requesting call for client:", clientId);
+
+      const response = await fetch(
+        `https://signup.roostapp.io/client/${clientId}/schedule-general-call`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            preferredDay: new Date().toLocaleDateString(),
+            preferredTime: "Anytime",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCallRequestStatus(data.generalCallSchedule);
+        Alert.alert(
+          "Success",
+          "Your call request has been submitted. We will call you soon!",
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert("Error", data.error || "Failed to request call");
+      }
+    } catch (error) {
+      console.error("Error requesting call:", error);
+      Alert.alert("Error", "Failed to request call. Please try again.");
+    } finally {
+      setRequestingCall(false);
+    }
+  };
+
+  // Handle cancel call request
+  const handleCancelCallRequest = async () => {
+    if (requestingCall) return;
+
+    setRequestingCall(true);
+    try {
+      const clientId = userId || auth.user?._id || auth.client?._id;
+      if (!clientId) {
+        Alert.alert("Error", "Unable to identify client.");
+        return;
+      }
+
+      const response = await fetch(
+        `https://signup.roostapp.io/client/${clientId}/cancel-general-call`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        setCallRequestStatus(null);
+        Alert.alert(
+          "Cancelled",
+          "Your call request has been cancelled.",
+          [{ text: "OK" }]
+        );
+      } else {
+        const data = await response.json();
+        Alert.alert("Error", data.error || "Failed to cancel call request");
+      }
+    } catch (error) {
+      console.error("Error cancelling call request:", error);
+      Alert.alert("Error", "Failed to cancel call request. Please try again.");
+    } finally {
+      setRequestingCall(false);
+    }
+  };
 
   // Function to play notification sound
   const playNotificationSound = async () => {
@@ -203,6 +347,13 @@ const Chat = ({
       }
     };
   }, []);
+
+  // Fetch call request status when component mounts
+  useEffect(() => {
+    if (visible && chatType === "mortgage-broker" && userType === "client") {
+      fetchCallRequestStatus();
+    }
+  }, [visible, chatType, userType]);
 
   // Handle sending typing indicators
   const handleTypingStart = () => {
@@ -1809,6 +1960,65 @@ const Chat = ({
 
       {/* Messages Area */}
       <View style={styles.messagesContainer}>
+
+        
+          {/* Request Call Button - Only show for mortgage broker chat and client users */}
+          {chatType === "mortgage-broker" && userType === "client" && (
+            <View style={styles.requestCallButtonContainer}>
+              {(() => {
+                console.log("Rendering call request UI - Status:", callRequestStatus);
+                console.log("Is active?", callRequestStatus?.isActive);
+                console.log("Has MB returned?", callRequestStatus?.hasMBReturnedCall);
+                return callRequestStatus && callRequestStatus.isActive && !callRequestStatus.hasMBReturnedCall ? (
+                  // Show status card when call is pending
+                  <View style={styles.callStatusCard}>
+                    <Text style={styles.callStatusTitle}>Request a call</Text>
+                    <Text style={styles.callStatusMessage}>We will be calling you soon!</Text>
+                    <TouchableOpacity
+                      style={styles.cancelRequestButton}
+                      onPress={handleCancelCallRequest}
+                      disabled={requestingCall}
+                    >
+                      {requestingCall ? (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                      ) : (
+                        <Text style={styles.cancelRequestButtonText}>Cancel request</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  // Show request button when no active call
+                  <TouchableOpacity
+                    style={styles.requestCallButton}
+                    onPress={handleRequestCall}
+                    disabled={requestingCall || loadingCallStatus}
+                  >
+                    {requestingCall || loadingCallStatus ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <>
+                        <Ionicons name="call" size={16} color={COLORS.white} />
+                        <Text style={styles.requestCallButtonText}>Request a call</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                );
+              })()}
+                >
+                  {requestingCall || loadingCallStatus ? (
+                    <ActivityIndicator size="small" color={COLORS.white} />
+                  ) : (
+                    <>
+                      <Ionicons name="call" size={16} color={COLORS.white} />
+                      <Text style={styles.requestCallButtonText}>Request a call</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.green} />
@@ -2054,6 +2264,87 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FDFDFD",
+    fontFamily: "Futura",
+  },
+  requestCallButtonContainer: {
+    width: "100%",
+    alignItems: "center",
+  },
+  requestCallButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#377473",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 999,
+    marginTop: 8,
+    gap: 6,
+    width: "90%",
+    height: 43,
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  requestCallButtonText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "Futura",
+  },
+  callStatusCard: {
+    width: "90%",
+    alignSelf: "center",
+    backgroundColor: "#C5D6D6",
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    alignItems: "center",
+  },
+  callStatusTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    marginBottom: 8,
+  },
+  callStatusMessage: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: COLORS.black,
+    fontFamily: "Futura",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  cancelRequestButton: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#377473",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 999,
+    height: 43,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  cancelRequestButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "700",
     fontFamily: "Futura",
   },
   statusContainer: {
