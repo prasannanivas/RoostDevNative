@@ -2004,17 +2004,6 @@ const Chat = ({
                   </TouchableOpacity>
                 );
               })()}
-                >
-                  {requestingCall || loadingCallStatus ? (
-                    <ActivityIndicator size="small" color={COLORS.white} />
-                  ) : (
-                    <>
-                      <Ionicons name="call" size={16} color={COLORS.white} />
-                      <Text style={styles.requestCallButtonText}>Request a call</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
             </View>
           )}
 
