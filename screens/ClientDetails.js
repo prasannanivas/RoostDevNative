@@ -144,7 +144,7 @@ const ClientDetails = ({
   }, [clientId, realtorId]);
 
   // Helpers for invite actions (copy/send)
-  const getInviteLink = () => clientData?.inviteLink || "";
+  const getInviteLink = () => clientData?.shortInviteLink || clientData?.inviteLink || "";
   const buildInviteMessage = () =>
     `Please accept my invitation to sign up and complete your details: ${getInviteLink()}`;
 
@@ -442,7 +442,7 @@ const ClientDetails = ({
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
-                  {clientData?.inviteLink || "—"}
+                  {clientData?.shortInviteLink || clientData?.inviteLink || "—"}
                 </Text>
                 {clientData?.inviteLink ? (
                   <TouchableOpacity

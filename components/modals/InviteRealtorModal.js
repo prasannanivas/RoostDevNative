@@ -58,6 +58,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
   const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState({ msg: "", type: "" });
   const [inviteLink, setInviteLink] = useState("");
+  const [shortInviteLink, setShortInviteLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [modalReady, setModalReady] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -179,6 +180,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
           responseData.inviteLink ||
             `http://signup.roostapp.io/?realtorCode=${realtorInfo?.inviteCode}&iv=r`
         );
+        setShortInviteLink(responseData.shortInviteLink || "");
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
 
         console.log("InviteRealtorModal - Realtor invited successfully!");
@@ -207,6 +209,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
   // Handle opening SMS
   const openSMS = () => {
     const signupLink =
+      shortInviteLink ||
       inviteLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
@@ -225,6 +228,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
   // Handle opening Email
   const openEmail = () => {
     const signupLink =
+      shortInviteLink ||
       inviteLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
@@ -260,6 +264,7 @@ Looking forward to working with you!`;
     });
     setInviteFeedback({ msg: "", type: "" });
     setInviteLink("");
+    setShortInviteLink("");
     setCopied(false);
 
     // Delay onClose to allow animation to complete
@@ -512,13 +517,15 @@ Looking forward to working with you!`;
                     Share this link with them
                   </Text>
                   <Text style={styles.shareLinkText}>
-                    {inviteLink ||
+                    {shortInviteLink ||
+                      inviteLink ||
                       `Roostapp.io/signup/${realtorInfo?.inviteCode || "..."}`}
                   </Text>
                   <TouchableOpacity
                     style={styles.copyButton}
                     onPress={() => {
                       const linkToCopy =
+                        shortInviteLink ||
                         inviteLink ||
                         `https://signup.roostapp.io/?realtorCode=${
                           realtorInfo?.inviteCode || ""

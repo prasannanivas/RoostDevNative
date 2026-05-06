@@ -2123,7 +2123,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                               onPress={async () => {
                                 const email = selectedClientCard.email;
                                 const link =
-                                  selectedClientCard.inviteLink || "";
+                                  selectedClientCard.shortInviteLink ||
+                                  selectedClientCard.inviteLink ||
+                                  "";
                                 if (!link) {
                                   Alert.alert(
                                     "No Link",
@@ -2164,7 +2166,9 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
                               onPress={async () => {
                                 const phone = selectedClientCard.phone || "";
                                 const link =
-                                  selectedClientCard.inviteLink || "";
+                                  selectedClientCard.shortInviteLink ||
+                                  selectedClientCard.inviteLink ||
+                                  "";
                                 if (!link) {
                                   Alert.alert(
                                     "No Link",
