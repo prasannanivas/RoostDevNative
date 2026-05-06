@@ -71,18 +71,23 @@ export const ClientProvider = ({ children }) => {
     }
   }
   // Comprehensive refresh function that updates all client data
-  async function fetchRefreshData(clientID) {
+  // Pass { silent: true } to skip the loading indicator (used by background polls)
+  async function fetchRefreshData(clientID, { silent = false } = {}) {
     if (!clientID) {
       console.error("Cannot refresh: No client ID provided");
       return { success: false, error: "No client ID provided" };
     }
 
-    console.log("Refreshing all client data for ID:", clientID);
-    setLoadingClient(true);
+    if (!silent) {
+      console.log("Refreshing all client data for ID:", clientID);
+      setLoadingClient(true);
+    }
 
     try {
-      // Add a small delay to ensure loading state is visible for better UX
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Add a small delay when visible to ensure loading state is shown
+      if (!silent) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
 
       // Fetch everything in parallel for better performance
       const [documentsResponse, clientResponse, neededDocsResponse] =
@@ -112,14 +117,20 @@ export const ClientProvider = ({ children }) => {
       // Process responses
       if (documentsResponse.ok) {
         const documentsData = await documentsResponse.json();
-        console.log("Documents refreshed:", documentsData.length);
-        setDocuments(documentsData);
+        if (!silent) console.log("Documents refreshed:", documentsData.length);
+        setDocuments((prev) =>
+          JSON.stringify(prev) === JSON.stringify(documentsData)
+            ? prev
+            : documentsData
+        );
       }
 
       if (clientResponse.ok) {
         const clientData = await clientResponse.json();
-        console.log("Client data refreshed");
-        setClientInfo(clientData);
+        if (!silent) console.log("Client data refreshed");
+        setClientInfo((prev) =>
+          JSON.stringify(prev) === JSON.stringify(clientData) ? prev : clientData
+        );
       } else {
         console.warn(
           `Client refresh failed for ${clientID} (status ${clientResponse.status}). Logging out.`
@@ -139,10 +150,10 @@ export const ClientProvider = ({ children }) => {
           : null,
       };
     } catch (error) {
-      console.error("Error during data refresh:", error);
+      if (!silent) console.error("Error during data refresh:", error);
       return { success: false, error };
     } finally {
-      setLoadingClient(false);
+      if (!silent) setLoadingClient(false);
     }
   }
 

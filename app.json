@@ -2,7 +2,7 @@
   "expo": {
     "name": "Roost",
     "slug": "RoostDevNative",
-    "version": "5.2.0",
+    "version": "5.4.0",
     "orientation": "portrait",
     "icon": "./assets/app-icon-main.png",
     "userInterfaceStyle": "light",
@@ -29,7 +29,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.roostapp.roost",
-      "buildNumber": "6",
+      "buildNumber": "8",
       "icon": "./assets/app-icon-main.png",
       "splash": {
         "backgroundColor": "#CB003F"
@@ -78,7 +78,7 @@
       },
       "icon": "./assets/android/mipmap-xxxhdpi/ic_launcher.png",
       "package": "com.roostapp.roost",
-      "versionCode": 11,
+      "versionCode": 12,
       "splash": {
         "backgroundColor": "#CB003F"
       },

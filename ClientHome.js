@@ -1,5 +1,5 @@
 // ClientHome.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -416,6 +416,30 @@ const ClientHome = ({ questionnaireData }) => {
     }
     fetchCustomMessages();
   }, [auth, clientId, refreshing]);
+
+  // Silent background poller — runs every 10 seconds, no spinner, only updates
+  // state when the server data has actually changed.
+  useEffect(() => {
+    if (!clientId) return;
+
+    const silentPoll = async () => {
+      try {
+        const result = await fetchRefreshData(clientId, { silent: true });
+        if (result?.neededDocsResponse?.documents_needed) {
+          const newDocs = result.neededDocsResponse.documents_needed;
+          setDocumentsFromApi((prev) =>
+            JSON.stringify(prev) === JSON.stringify(newDocs) ? prev : newDocs
+          );
+        }
+        fetchCustomMessages();
+      } catch (_) {
+        // silent fail — never crash UI from background poll
+      }
+    };
+
+    const interval = setInterval(silentPoll, 10000);
+    return () => clearInterval(interval);
+  }, [clientId]);
 
   // Download and cache profile picture
   const downloadAndCacheProfilePicture = async (filename) => {

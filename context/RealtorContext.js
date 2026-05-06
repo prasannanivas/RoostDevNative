@@ -114,7 +114,9 @@ export const RealtorProvider = ({ children }) => {
       );
       if (response.ok) {
         const freshData = await response.json();
-        setRealtorInfo(freshData);
+        setRealtorInfo((prev) =>
+          JSON.stringify(prev) === JSON.stringify(freshData) ? prev : freshData
+        );
         console.log("Realtor data refreshed successfully");
         return freshData;
       } else {

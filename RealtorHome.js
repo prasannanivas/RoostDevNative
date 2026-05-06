@@ -339,6 +339,10 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
   const resendButtonSlideAnim = useRef(new Animated.Value(0)).current;
   const inviteOptionsFadeAnim = useRef(new Animated.Value(0)).current;
   const inviteOptionsSlideAnim = useRef(new Animated.Value(20)).current;
+  // Stable key for InviteRealtorModal — only incremented when the modal opens
+  const inviteRealtorKey = useRef(0);
+  // Ref to track whether any modal is open — polled by the background poller
+  const anyModalOpenRef = useRef(false);
   const [showClientReferralModal, setShowClientReferralModal] = useState(false);
   // ClientDetails modal state
   const [showClientDetailsModal, setShowClientDetailsModal] = useState(false);
@@ -505,6 +509,41 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
     }
   }, [showResendInviteOptions]);
 
+  // Keep anyModalOpenRef in sync with all modal states so the background poller
+  // can skip updates while the user has anything open.
+  useEffect(() => {
+    anyModalOpenRef.current =
+      showForm ||
+      showInviteForm ||
+      showInviteOptionsModal ||
+      showClientCardModal ||
+      showClientReferralModal ||
+      showClientDetailsModal ||
+      showFullyApprovedModal ||
+      showCustomMessageModal ||
+      showChat ||
+      showProfile ||
+      showRewards ||
+      showProfileUpdateModal ||
+      showMortgageModal ||
+      showCSVUploadForm;
+  }, [
+    showForm,
+    showInviteForm,
+    showInviteOptionsModal,
+    showClientCardModal,
+    showClientReferralModal,
+    showClientDetailsModal,
+    showFullyApprovedModal,
+    showCustomMessageModal,
+    showChat,
+    showProfile,
+    showRewards,
+    showProfileUpdateModal,
+    showMortgageModal,
+    showCSVUploadForm,
+  ]);
+
   // Effect to fetch needed documents counts when invited clients change
   useEffect(() => {
     if (invited.length > 0) {
@@ -572,8 +611,12 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
       newFieldErrors.firstName = "First name is required.";
       hasError = true;
     }
-    if (!formData.email && !formData.phone) {
-      newFieldErrors.emailPhone = "Email or phone is required.";
+    if (!formData.email || formData.email.trim() === "") {
+      newFieldErrors.email = "Email is required.";
+      hasError = true;
+    }
+    if (formData.phone && formData.phone.replace(/\D/g, "").length !== 10) {
+      newFieldErrors.phone = "Please enter a valid 10-digit phone number.";
       hasError = true;
     }
     setFieldErrors(newFieldErrors);
@@ -803,6 +846,31 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
         setRefreshing(false);
       });
   }, [auth, realtorFromContext, refreshNotifications]);
+
+  // Silent background poller — runs every 10 seconds, no spinner, only updates
+  // state when the server data has actually changed.
+  // Skips polling while any modal is open to avoid triggering re-renders that
+  // disrupt animations or user interaction.
+  useEffect(() => {
+    if (!realtor?.id || !realtorFromContext) return;
+
+    const silentPoll = async () => {
+      if (anyModalOpenRef.current) return; // skip while user has a modal open
+      try {
+        await Promise.all([
+          realtorFromContext.fetchRefreshData?.(realtor.id),
+          refreshNotifications?.(),
+        ]);
+        if (!anyModalOpenRef.current) updateNeededDocumentsCounts();
+      } catch (_) {
+        // silent fail — never crash UI from background poll
+      }
+    };
+
+    const interval = setInterval(silentPoll, 10000);
+    return () => clearInterval(interval);
+  }, [realtor?.id, realtorFromContext, refreshNotifications]);
+
   const pickContact = async () => {
     try {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -1296,7 +1364,11 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
       <View style={styles.inviteBanner}>
         <TouchableOpacity
           style={styles.inviteRealtorsButton}
-          onPress={() => setShowInviteForm(true)}
+          onPress={() => {
+            inviteRealtorKey.current += 1;
+            anyModalOpenRef.current = true;
+            setShowInviteForm(true);
+          }}
         >
           <Text style={styles.inviteRealtorsText}>Invite Realtors</Text>
         </TouchableOpacity>
@@ -1848,7 +1920,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
         />
       </Modal>
       <InviteRealtorModal
-        key={Date.now()} // Force remount on each open
+        key={inviteRealtorKey.current}
         visible={showInviteForm}
         onClose={() => setShowInviteForm(false)}
         realtorInfo={realtorFromContext?.realtorInfo}

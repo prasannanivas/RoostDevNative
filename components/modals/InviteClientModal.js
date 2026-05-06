@@ -133,7 +133,7 @@ const InviteClientModal = ({
   const isFormValid =
     formData.firstName &&
     formData.firstName.trim() !== "" &&
-    (formData.email?.trim() || formData.phone?.trim());
+    formData.email?.trim();
 
   return (
     <Modal
@@ -261,10 +261,10 @@ const InviteClientModal = ({
               value={formData.email}
               onChangeText={(text) => {
                 setFormData({ ...formData, email: trimLeft(text) });
-                if (fieldErrors.emailPhone)
+                if (fieldErrors.email)
                   setFieldErrors({
                     ...fieldErrors,
-                    emailPhone: "",
+                    email: "",
                   });
               }}
               onBlur={() =>
@@ -290,10 +290,10 @@ const InviteClientModal = ({
                   ...formData,
                   phone: unFormatPhoneNumber(trimLeft(text)),
                 });
-                if (fieldErrors.emailPhone)
+                if (fieldErrors.phone)
                   setFieldErrors({
                     ...fieldErrors,
-                    emailPhone: "",
+                    phone: "",
                   });
               }}
               onBlur={() =>
@@ -307,16 +307,21 @@ const InviteClientModal = ({
               onSubmitEditing={Keyboard.dismiss}
             />
 
-            {(fieldErrors.emailPhone || fieldErrors.firstName) && (
+            {(fieldErrors.email || fieldErrors.phone || fieldErrors.firstName) && (
               <View style={styles.errorContainer}>
-                {fieldErrors.emailPhone && (
-                  <Text style={styles.errorText}>
-                    * {fieldErrors.emailPhone}
-                  </Text>
-                )}
                 {fieldErrors.firstName && (
                   <Text style={styles.errorText}>
                     * {fieldErrors.firstName}
+                  </Text>
+                )}
+                {fieldErrors.email && (
+                  <Text style={styles.errorText}>
+                    * {fieldErrors.email}
+                  </Text>
+                )}
+                {fieldErrors.phone && (
+                  <Text style={styles.errorText}>
+                    * {fieldErrors.phone}
                   </Text>
                 )}
               </View>
