@@ -921,6 +921,7 @@ const RealtorHome = React.forwardRef(({ onShowNotifications }, ref) => {
     // Updated SMS message content
     const signupLink =
       formData.inviteLink ||
+      realtorFromContext?.realtorInfo?.shortReferralLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorFromContext?.realtorInfo?.inviteCode || ""
       }`;
@@ -947,6 +948,7 @@ I'm sending you an invite to get a mortgage with Roost, here is the link to sign
     // Updated email content
     const signupLink =
       formData.inviteLink ||
+      realtorFromContext?.realtorInfo?.shortReferralLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorFromContext?.realtorInfo?.inviteCode || ""
       }`;

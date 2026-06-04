@@ -178,7 +178,8 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
         const responseData = await resp.json();
         setInviteLink(
           responseData.inviteLink ||
-            `http://signup.roostapp.io/?realtorCode=${realtorInfo?.inviteCode}&iv=r`
+            realtorInfo?.shortReferralLink ||
+            `https://signup.roostapp.io/?realtorCode=${realtorInfo?.inviteCode}`
         );
         setShortInviteLink(responseData.shortInviteLink || "");
         setInviteFeedback({ msg: "Realtor invited!", type: "success" });
@@ -211,6 +212,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     const signupLink =
       shortInviteLink ||
       inviteLink ||
+      realtorInfo?.shortReferralLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
       }`;
@@ -230,6 +232,7 @@ const InviteRealtorModal = ({ visible, onClose, realtorInfo, realtorId }) => {
     const signupLink =
       shortInviteLink ||
       inviteLink ||
+      realtorInfo?.shortReferralLink ||
       `https://signup.roostapp.io/?realtorCode=${
         realtorInfo?.inviteCode || ""
       }`;
@@ -519,7 +522,10 @@ Looking forward to working with you!`;
                   <Text style={styles.shareLinkText}>
                     {shortInviteLink ||
                       inviteLink ||
-                      `Roostapp.io/signup/${realtorInfo?.inviteCode || "..."}`}
+                      realtorInfo?.shortReferralLink ||
+                      `https://signup.roostapp.io/?realtorCode=${
+                        realtorInfo?.inviteCode || "..."
+                      }`}
                   </Text>
                   <TouchableOpacity
                     style={styles.copyButton}
@@ -527,6 +533,7 @@ Looking forward to working with you!`;
                       const linkToCopy =
                         shortInviteLink ||
                         inviteLink ||
+                        realtorInfo?.shortReferralLink ||
                         `https://signup.roostapp.io/?realtorCode=${
                           realtorInfo?.inviteCode || ""
                         }`;

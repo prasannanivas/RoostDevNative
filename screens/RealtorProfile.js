@@ -301,7 +301,8 @@ export default function RealtorProfile({ onClose, preloadedImage }) {
 
       if (response.ok) {
         const data = await response.json();
-        setShareableLink(data.shareableLink || "");
+        // Prefer the new short referral link (/r/<code>); fall back to the long link
+        setShareableLink(data.shortReferralLink || data.shareableLink || "");
       } else {
         console.error("Failed to fetch shareable link");
       }

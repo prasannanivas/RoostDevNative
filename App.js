@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Platform } from "react-native";
 import SignupStackWithFixedBar from "./navigation/SignupStackWithFixedBar";
 import RealtorOnboardingStack from "./navigation/RealtorOnboardingStack";
 import Home from "./Home";
@@ -17,8 +16,6 @@ import OfflineGame from "./components/OfflineGame";
 import PasswordResetScreen from "./screens/PasswordResetScreen";
 import { StatusBar } from "expo-status-bar";
 import SplashScreen from "./components/SplashScreen";
-import { initializeFacebook, trackAppOpen } from "./utils/FacebookTracking";
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -33,25 +30,6 @@ export default function App() {
     ...DefaultTheme,
     colors: { ...DefaultTheme.colors, background: bgColor },
   };
-
-  // Initialize Facebook SDK on app start
-  useEffect(() => {
-    const initializeFacebookSDK = async () => {
-      try {
-        console.log('🚀 Initializing Facebook SDK...');
-        const initialized = await initializeFacebook();
-        
-        if (initialized) {
-          await trackAppOpen();
-          console.log('✅ Facebook SDK ready and app open tracked');
-        }
-      } catch (error) {
-        console.error('❌ Facebook SDK initialization error:', error);
-      }
-    };
-
-    initializeFacebookSDK();
-  }, []);
 
   return (
     <SafeAreaProvider style={{ flex: 1, backgroundColor: bgColor }}>
